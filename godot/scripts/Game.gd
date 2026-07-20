@@ -187,6 +187,19 @@ func hashs(s: String) -> int:
 		h = int((h * 33 + ch) % 4294967296)
 	return h
 
+func body_of(a: Dictionary) -> Dictionary:
+	var seed := hashs(str(a.get("id", "")))
+	var height_min := 168 if str(a.get("g", "m")) == "m" else 155
+	var generated_height := height_min + seed % 26
+	var height := int(a.get("height_cm", 0))
+	if height <= 0:
+		height = generated_height
+	var bmi := 19.0 + float(int(seed / 97) % 71) / 10.0
+	var weight := int(a.get("weight_kg", 0))
+	if weight <= 0:
+		weight = roundi(bmi * pow(float(height) / 100.0, 2.0))
+	return {"height": height, "weight": weight}
+
 # ---------- Ökonomie & Karriere-Mathematik ----------
 func infl(year: float) -> float:
 	return pow(1.03, year - 1925.0)

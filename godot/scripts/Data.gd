@@ -29,7 +29,7 @@ func _init() -> void:
 
 func reload() -> void:
 	ACTORS = DataLoader.load_entries("actors", ["id"],
-		{"death": null, "films": [], "ethnicity": "white", "genres": [], "ego": 50},
+		{"death": null, "films": [], "ethnicity": "white", "genres": [], "ego": 50, "height_cm": 0, "weight_kg": 0},
 		["id", "name", "birth", "g", "debut", "talent", "peak", "peakFame"])
 	STUDIOS = DataLoader.load_entries("studios", ["id"],
 		{"from": 0, "to": 9999, "style": "commercial"}, ["id", "name"])

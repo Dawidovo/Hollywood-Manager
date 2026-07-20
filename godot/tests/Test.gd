@@ -20,6 +20,19 @@ func _ready() -> void:
 	check(pool.size() > 20, "Talentpool 1950: %d Schauspieler" % pool.size())
 	check(pool.any(func(a): return a.id == "bogart"), "Bogart 1950 verfügbar")
 	check(not pool.any(func(a): return a.id == "chalamet"), "Chalamet 1950 nicht verfügbar")
+	var body_m_actor := {"id": "body_test_m", "g": "m", "height_cm": 0, "weight_kg": 0}
+	var body_m_a := Game.body_of(body_m_actor)
+	var body_m_b := Game.body_of(body_m_actor)
+	var body_f := Game.body_of({"id": "body_test_f", "g": "f", "height_cm": 0, "weight_kg": 0})
+	check(body_m_a == body_m_b, "Körperdaten sind je Schauspieler deterministisch")
+	check(int(body_m_a.height) >= 168 and int(body_m_a.height) <= 193, "Prozedurale Männergröße liegt im plausiblen Bereich")
+	check(int(body_f.height) >= 155 and int(body_f.height) <= 180, "Prozedurale Frauengröße liegt im plausiblen Bereich")
+	var body_m_bmi := float(body_m_a.weight) / pow(float(body_m_a.height) / 100.0, 2.0)
+	var body_f_bmi := float(body_f.weight) / pow(float(body_f.height) / 100.0, 2.0)
+	check(body_m_bmi >= 18.5 and body_m_bmi <= 26.5 and body_f_bmi >= 18.5 and body_f_bmi <= 26.5, "Prozedurale Gewichte entsprechen einem plausiblen BMI")
+	var bogart_body := Game.body_of(Game.actor_by_id["bogart"])
+	check(int(bogart_body.height) == 173 and int(bogart_body.weight) == 70, "JSON-Körperdaten überschreiben prozedurale Werte (Bogart)")
+	check(Data.ACTORS.any(func(a): return str(a.id) == "bogart" and int(a.height_cm) > 0 and int(a.weight_kg) > 0), "DataLoader: body_core-Paket an Bogart gemergt")
 	var wayne_fame = Game.fame_at(Game.actor_by_id["wayne"], 1950)
 	check(Game.start_negotiation("wayne").get("locked", false), "Ruf-Schranke: Wayne (Ruhm %d) gesperrt" % wayne_fame)
 
@@ -786,7 +799,7 @@ func _ready() -> void:
 	dl_f2.store_string(JSON.stringify([{"id": "testling", "talent": 77, "films": [{"title": "Testfilm", "year": 1925}]}]))
 	dl_f2.close()
 	var dl_loaded := DataLoader.load_entries("actors", ["id"],
-		{"death": null, "films": [], "ethnicity": "white", "genres": [], "ego": 50},
+		{"death": null, "films": [], "ethnicity": "white", "genres": [], "ego": 50, "height_cm": 0, "weight_kg": 0},
 		["id", "name", "birth", "g", "debut", "talent", "peak", "peakFame"])
 	var dl_testling = null
 	for dl_a in dl_loaded:

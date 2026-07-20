@@ -44,6 +44,7 @@ Ordner legen.** Kein Code nötig.
 	"id": "bogart", "name": "Humphrey Bogart",
 	"birth": 1899, "death": 1957,
 	"g": "m", "ethnicity": "white",
+	"height_cm": 173, "weight_kg": 70,
 	"debut": 1928, "talent": 90, "ego": 60,
 	"genres": ["crime", "drama", "thriller"],
 	"peak": 1944, "peakFame": 93,
@@ -56,6 +57,13 @@ Pflichtfelder: `id`, `name`, `birth`, `g` (`"m"`/`"f"`), `debut`, `talent`,
 angezeigt, wirkt aber in der Simulation), `ethnicity` (Standard `"white"`,
 Kürzel siehe `ethnicities/core.json`), `films` (reale Filmografie, im
 Talentpool als „Bekannt aus“ sichtbar), `ego`, `genres`.
+
+`height_cm` (Größe in Zentimetern) und `weight_kg` (Basisgewicht in
+Kilogramm) sind optional und haben den Standardwert `0`. Bei `0` bestimmt das
+Spiel einen plausiblen, je Schauspieler-ID deterministischen Wert. Positive
+JSON-Werte gewinnen immer. Das Anreicherungspaket `actors/body_core.json`
+enthält Körperdaten für rund 40 bekannte Schauspieler und kann durch weitere
+Actor-Pakete feldweise ergänzt oder überschrieben werden.
 
 Hinweis zu `ethnicity`: Best-Effort-Daten mit Standardwert — Korrekturen sind
 ausdrücklich erwünscht und gehören in eine eigene JSON-Datei (wie

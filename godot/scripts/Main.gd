@@ -473,6 +473,9 @@ func _actor_meta(a: Dictionary, year: int) -> String:
 	if eth_s != "":
 		parts.append(eth_s)
 	parts.append(" · ".join(a.genres.map(_genre_de)))
+	var body := Game.body_of(a)
+	parts.append("%d cm" % int(body.height))
+	parts.append("%d kg" % int(body.weight))
 	return " · ".join(parts)
 
 # "Bekannt aus: „Titel“ (Jahr) · …" — reale Filmografie bis zum aktuellen Spieljahr
@@ -1492,9 +1495,10 @@ func _open_negotiation(actor_id: String) -> void:
 func _render_negotiation(hint: String) -> void:
 	var n = Game.nego
 	var a: Dictionary = n.actor
+	var body := Game.body_of(a)
 	_open_modal()
 	modal_box.add_child(_lbl("🤝 Verhandlung: %s" % a.name, 22, ACC))
-	modal_box.add_child(_lbl("Runde %d/%d · %s · ⭐ Ruhm %d · Talent %s · %d Jahre · 💰 Gagen-Niveau %s" % [int(n.round), int(n.maxRounds), _gender_symbol(a), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Game.age_of(a, Game.state.year), Game.fmt_money(n.ask)], 12, DIM))
+	modal_box.add_child(_lbl("Runde %d/%d · %s · ⭐ Ruhm %d · Talent %s · %d Jahre · %d cm · %d kg · 💰 Gagen-Niveau %s" % [int(n.round), int(n.maxRounds), _gender_symbol(a), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Game.age_of(a, Game.state.year), int(body.height), int(body.weight), Game.fmt_money(n.ask)], 12, DIM))
 	var nego_known := _filmography_line(a, Game.state.year)
 	if nego_known != "":
 		modal_box.add_child(_lbl(nego_known, 12, DIM))

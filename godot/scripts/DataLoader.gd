@@ -73,6 +73,7 @@ static func _key_of(e: Dictionary, key_fields: Array) -> String:
 # anreichern — z. B. eine Filmografie-Datei — brauchen nur die key_fields).
 static func load_entries(cat: String, key_fields: Array = ["id"], defaults: Dictionary = {}, required: Array = []) -> Array:
 	var by_key: Dictionary = {}
+	var pending: Dictionary = {}
 	var order: Array = []
 	for path in _files(cat):
 		var parsed = _read_json(path)
@@ -104,12 +105,23 @@ static func load_entries(cat: String, key_fields: Array = ["id"], defaults: Dict
 				if not e.has(rf) or e[rf] == null:
 					missing.append(rf)
 			if missing.size():
-				push_warning("DataLoader: %s[%d] („%s“) — Pflichtfeld(er) %s fehlen — Eintrag übersprungen." % [path, i, key, str(missing)])
+				if not pending.has(key):
+					pending[key] = {}
+				pending[key].merge(e, true)
 				continue
 			var full: Dictionary = defaults.duplicate(true)
+			if pending.has(key):
+				full.merge(pending[key], true)
+				pending.erase(key)
 			full.merge(e, true)
 			by_key[key] = full
 			order.append(key)
+	for key in pending:
+		var missing: Array = []
+		for rf in required:
+			if not pending[key].has(rf) or pending[key][rf] == null:
+				missing.append(rf)
+		push_warning("DataLoader: unvollständiger Eintrag („%s“) — Pflichtfeld(er) %s fehlen — Eintrag übersprungen." % [key, str(missing)])
 	var out: Array = []
 	for k in order:
 		out.append(by_key[k])
