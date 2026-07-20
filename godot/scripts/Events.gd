@@ -223,16 +223,22 @@ func _b_poach() -> Dictionary:
 	var sorted = Game.state.clients.duplicate()
 	sorted.sort_custom(func(a, b): return a.fame > b.fame)
 	var c = sorted[0]
+	var rival = Game.pick_poach_rival()
+	var rival_id := str(rival.id) if rival != null else ""
+	var rival_name := str(rival.name) if rival != null else "eine große Konkurrenz-Agentur"
 	var prepared := Game.has_mitigated_secret(c, "wechselabsicht")
 	var cost = roundi(c.fame * (540.0 if prepared else 900.0) * Game.infl(Game.state.year))
 	return {"title": "Die Abwerbung",
-		"text": "[i]„Bei uns wären Sie kein Klient. Sie wären DER Klient.“[/i]\n\nEine große Konkurrenz-Agentur umgarnt deinen wertvollsten Namen: %s (Loyalität %d/100).%s" % [_nm(c), roundi(c.loyalty), "\n\n[color=#7da05c]Du wusstest von den Wechselgedanken. Vertrag, Argumente und Budget liegen bereits bereit.[/color]" if prepared else ""],
+		"text": "[i]„Bei uns wären Sie kein Klient. Sie wären DER Klient.“[/i]\n\n%s umgarnt deinen wertvollsten Namen: %s (Loyalität %d/100).%s" % [rival_name, _nm(c), roundi(c.loyalty), "\n\n[color=#7da05c]Du wusstest von den Wechselgedanken. Vertrag, Argumente und Budget liegen bereits bereit.[/color]" if prepared else ""],
 		"choices": [
 			{"label": "Finanziell übertreffen (%s)" % _fmt(cost), "fn": func():
 				Game.book(-float(cost), "bonus", "Loyalitäts-Prämie: %s" % _nm(c))
 				c.loyalty = clampf(c.loyalty + 15.0, 0.0, 100.0)
 				c.mood = clampf(c.mood + 5.0, 0.0, 100.0)
 				Game.change_trust(c, 6.0 if prepared else 3.0)
+				if rival != null:
+					rival.grudge = clampf(float(rival.grudge) + 14.0, 0.0, 100.0)
+					rival.rel = clampf(float(rival.rel) - 8.0, -100.0, 100.0)
 				return "Ein besseres Auto, eine bessere Suite, ein besserer Vertrag. %s bleibt – Loyalität kann man mieten." % _nm(c)},
 			{"label": "Mit Erfolgen und Loyalität argumentieren", "fn": func():
 				var wins = c.films.filter(func(f): return f.verdict == "Hit" or f.verdict == "Blockbuster").size()
@@ -240,15 +246,24 @@ func _b_poach() -> Dictionary:
 				if Game.chance(p):
 					c.loyalty = clampf(c.loyalty + 8.0, 0.0, 100.0)
 					Game.change_trust(c, 8.0 if prepared else 3.0)
+					if rival != null:
+						rival.grudge = clampf(float(rival.grudge) + 18.0, 0.0, 100.0)
+						rival.rel = clampf(float(rival.rel) - 10.0, -100.0, 100.0)
 					return "„Ich weiß, wem ich meine Karriere verdanke.“ %s sagt ab — aus Überzeugung." % _nm(c)
-				Game.state.clients.erase(c)
+				if rival_id != "":
+					Game.rival_poach_client(rival_id, c)
+				else:
+					Game.state.clients.erase(c)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 4, 0, 100)
-				Game.log_msg("%s wechselt zur Konkurrenz." % _nm(c), "bad")
+				Game.log_msg("%s wechselt zu %s." % [_nm(c), rival_name], "bad")
 				return "Die Argumente reichen nicht. %s unterschreibt woanders — ein schwerer Schlag." % _nm(c)},
 			{"label": "Ziehen lassen", "fn": func():
-				Game.state.clients.erase(c)
+				if rival_id != "":
+					Game.rival_poach_client(rival_id, c)
+				else:
+					Game.state.clients.erase(c)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 3, 0, 100)
-				Game.log_msg("%s verlässt die Agentur Richtung Konkurrenz." % _nm(c), "info")
+				Game.log_msg("%s verlässt die Agentur Richtung %s." % [_nm(c), rival_name], "info")
 				return "Kein Bieterkrieg. Man trennt sich höflich — der Ruf leidet ein wenig, die Kasse nicht."},
 		]}
 
@@ -347,6 +362,7 @@ func _b_stunt() -> Dictionary:
 				return "Der Sprung geht schief — Prellungen, Drehpause, Schrecken. %s erholt sich, aber der Plan wackelt." % _nm(c)},
 			{"label": "Stuntdouble verlangen", "fn": func():
 				_rel(prod.studioId, -2)
+				Game.record_identity("klientenorientiert", 2.0)
 				return "Das Double übernimmt. Der Regisseur murrt, dein Klient bleibt heil. Genau dafür wirst du bezahlt."},
 			{"label": "Gefahrenzulage & Versicherung aushandeln", "fn": func():
 				var extra = roundi(Game.ask_fee(c.fame, Game.state.year) * 0.2)
@@ -377,6 +393,7 @@ func _b_franchise() -> Dictionary:
 				c.busyUntil = Game.mi() + 4
 				_dna(c, "unikat", -12.0)
 				_dna(c, "popular", 8.0)
+				Game.record_identity("kommerziell", 2.0)
 				return "Unterschrift, Scheck, Schlagzeile: %s Provision sofort. Aber von nun an sehen alle nur noch die eine Figur (Typecasting)." % _fmt(fee * c.commission / 100.0)},
 			{"label": "Weniger Filme, höhere Gage fordern", "fn": func():
 				if Game.chance(0.5):
@@ -409,6 +426,8 @@ func _b_passion() -> Dictionary:
 				Game.quick_production(c, {"feeMult": 0.15, "prestige": 3, "genre": "drama"})
 				c.loyalty = clampf(c.loyalty + 12.0, 0.0, 100.0)
 				c.mood = clampf(c.mood + 10.0, 0.0, 100.0)
+				Game.record_identity("kuenstlerisch", 2.0)
+				Game.record_identity("klientenorientiert", 1.0)
 				return "Kaum Gage, viel Herz. %s strahlt — und Prestige-Filme haben schon manche Karriere neu erfunden." % _nm(c)},
 			{"label": "Davon abraten", "fn": func():
 				c.mood = clampf(c.mood - 8.0, 0.0, 100.0)
@@ -416,6 +435,7 @@ func _b_passion() -> Dictionary:
 			{"label": "Als Agentur mitfinanzieren (%s)" % _fmt(invest), "fn": func():
 				Game.book(-float(invest), "investition", "Beteiligung Herzensprojekt: %s" % _nm(c))
 				Game.quick_production(c, {"feeMult": 0.15, "prestige": 3, "genre": "drama", "qualityMod": 5.0})
+				Game.record_identity("kuenstlerisch", 3.0)
 				c.loyalty = clampf(c.loyalty + 15.0, 0.0, 100.0)
 				if Game.chance(0.35):
 					Game.book(float(invest * 4), "investition", "Rückfluss Herzensprojekt: %s" % _nm(c))
@@ -602,8 +622,10 @@ func _b_breakdown() -> Dictionary:
 				c.exhaustion = clampf(c.exhaustion - 35.0, 0.0, 100.0)
 				c.loyalty = clampf(c.loyalty + 10.0, 0.0, 100.0)
 				Game.change_trust(c, 6.0)
+				Game.record_identity("klientenorientiert", 2.0)
 				return "Du stellst dich vor deinen Klienten: zwei Wochen Pause, keine Diskussion. Das Studio zürnt, %s atmet auf." % _nm(c)},
 			{"label": "Diskreten Arzt organisieren (%s)" % _fmt(cost), "fn": func():
+				Game.record_identity("diskret", 1.5)
 				Game.book(-float(cost), "events", "Diskreter Arzt: %s" % _nm(c))
 				c.exhaustion = clampf(c.exhaustion - 45.0, 0.0, 100.0)
 				c.mood = clampf(c.mood + 6.0, 0.0, 100.0)
@@ -644,6 +666,7 @@ func _b_strike() -> Dictionary:
 				return "Kein Statement, keine Feinde. Du wartest ab, bis sich der Staub legt."},
 			{"label": "Ausnahmeregelungen für eigene Produktionen suchen", "fn": func():
 				Game.state.strikeExempt = true
+				Game.record_identity("studiotreu", 2.0)
 				if Game.chance(0.4):
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 3, 0, 100)
 					return "Deine Drehs laufen weiter — aber „Streikbrecher-Agentur“ steht trotzdem in einer Kolumne."
@@ -965,6 +988,7 @@ func _b_gala() -> Dictionary:
 				msg += " Und %s lässt ebenfalls etwas für dich liegen." % str(f2["from"].get("name", "ein Produzent"))
 			return msg},
 		{"label": "Einen Gefallen dem Hausherrn überlassen", "fn": func():
+			Game.record_identity("studiotreu", 1.5)
 			if Game.pass_any_favor_to_studio(studio.id):
 				return "Du lässt %s spüren, dass du auf deine Trümpfe verzichten kannst. Die Beziehung vertieft sich sichtbar." % studio.name
 			_rel(studio.id, 2)

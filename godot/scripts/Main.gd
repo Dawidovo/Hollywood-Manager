@@ -135,10 +135,24 @@ func _ready() -> void:
 		var shot_client: Dictionary = Game.state.clients[0]
 		Game.reveal_secret(shot_client, "beziehung", 2)
 		var shot_rumor := Game.add_rumor(int(shot_client.id), "Louella Parsons hört von nächtlichen Treffen in einem Bungalow am Strand.", true, "affäre", ["Assistenten", "Journalisten", "Partygäste"], 67.0, true, "beziehung")
+		shot_rumor.industryBelief = 38.0
 		shot_rumor.impactApplied = true
-		Game.add_rumor(int(shot_client.id), "Ein Studiobote behauptet, der nächste Vertrag werde heimlich anderswo verhandelt.", false, "wechsel", ["Studios", "Regisseure"], 42.0, true)
+		Game.add_rumor(int(shot_client.id), "Ein Studiobote behauptet, der nächste Vertrag werde heimlich anderswo verhandelt.", false, "wechsel", ["Studios", "Regisseure"], 24.0, true, "", 72.0)
 		_switch_tab("rumors")
 		await _take_shot("rumors")
+	elif args.has("--shot-zeitung"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": ["pr"], "promise": null})
+		var news_client: Dictionary = Game.state.clients[0]
+		var news_prod: Dictionary = Game.quick_production(news_client, {"genre":"drama", "prestige":3, "qualityMod":12.0}).prod
+		Game.release_film(news_prod)
+		Game.state.productions.erase(news_prod)
+		Game.add_rumor(int(news_client.id), "Eine Kolumnistin sammelt Material für eine Geschichte, die noch keinen Namen nennt.", false, "skandal", ["Journalisten", "Partygäste"], 44.0, true, "", 31.0)
+		Game.tick_rivals([], true)
+		Newspaper.build_newspaper()
+		_switch_tab("zeitung")
+		await _take_shot("zeitung")
 	elif args.has("--shot-nego"):
 		_on_era_selected(1950)
 		_open_negotiation("monroe")
@@ -557,7 +571,7 @@ func render() -> void:
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
 	var tabs := [["buero", "🏢 Agentur"], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
-		["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.size()], ["filme", "🎞 Filme"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
+		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.size()], ["filme", "🎞 Filme"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
 
@@ -566,6 +580,7 @@ func render() -> void:
 		"buero": _render_buero()
 		"klienten": _render_klienten()
 		"rumors": _render_rumors()
+		"zeitung": _render_zeitung()
 		"pool": _render_pool()
 		"castings": _render_castings()
 		"filme": _render_filme()
@@ -695,6 +710,42 @@ func _render_buero() -> void:
 	if not any_pr:
 		c4[1].add_child(_lbl("Keine. Ein Agent ohne Versprechen ist ein Agent ohne Klienten.", 13, DIM))
 
+	var ci = _card("Moralische Identität", "🪞")
+	grid.add_child(ci[0])
+	var top_labels := Game.identity_top_labels()
+	ci[1].add_child(_lbl("Deine Agentur gilt als: %s" % ("noch unbeschrieben" if top_labels.is_empty() else " & ".join(top_labels)), 14, ACC))
+	var identity_max := 1.0
+	for key in Game.IDENTITY_KEYS:
+		identity_max = maxf(identity_max, float(st.identity.get(key, 0.0)))
+	for key in Game.IDENTITY_KEYS:
+		var identity_row := HBoxContainer.new()
+		var identity_name := _lbl(Game.IDENTITY_LABELS[key].capitalize(), 12, DIM)
+		identity_name.custom_minimum_size = Vector2(150 * font_scale, 0)
+		identity_name.autowrap_mode = TextServer.AUTOWRAP_OFF
+		identity_row.add_child(identity_name)
+		var identity_bar := _bar(float(st.identity.get(key, 0.0)) / identity_max * 100.0, ACC_DIM, 7)
+		identity_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		identity_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		identity_row.add_child(identity_bar)
+		ci[1].add_child(identity_row)
+
+	var cr = _card("Rivalisierende Agenturen", "⚔")
+	grid.add_child(cr[0])
+	for rival in st.rivals:
+		var info: Dictionary = Game.RIVAL_STYLE_INFO.get(str(rival.style), {"label":str(rival.style), "icon":"◆"})
+		var rr := HBoxContainer.new()
+		var rival_text := _lbl("%s %s · %s · %d Klienten" % [info.icon, rival.name, info.label, rival.clients.size()], 12, DIM)
+		rival_text.custom_minimum_size = Vector2(280 * font_scale, 0)
+		rival_text.autowrap_mode = TextServer.AUTOWRAP_OFF
+		rr.add_child(rival_text)
+		var rel_value := (float(rival.rel) + 100.0) * 0.5
+		var rel_bar := _bar(rel_value, GREEN if float(rival.rel) >= 20.0 else (RED if float(rival.grudge) >= 60.0 else ACC_DIM), 8)
+		rel_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rel_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rr.add_child(rel_bar)
+		cr[1].add_child(rr)
+		cr[1].add_child(_lbl("Verhältnis %+d · Groll %d/100%s" % [roundi(float(rival.rel)), roundi(float(rival.grudge)), (" · Hausstudio: " + Game._studio(str(rival.studioId)).name) if str(rival.get("studioId", "")) != "" else ""], 11, RED if float(rival.grudge) >= 60.0 else DIM))
+
 # ---------- Tab: Klienten (inkl. Karriere-DNA & Dossier) ----------
 func _render_klienten() -> void:
 	var st = Game.state
@@ -748,6 +799,21 @@ func _render_klienten() -> void:
 		box.add_child(_lbl("🧬 Karriere-DNA — öffentliches Image: „%s“" % Game.dna_label(c), 13, ACC))
 		for ax in Game.DNA_AXES:
 			box.add_child(_dna_row(ax, c.dna[ax.key]))
+		var narrative: Dictionary = c.get("narrative", {})
+		if not narrative.is_empty():
+			var narrative_info: Dictionary = Game.NARRATIVE_TYPES.get(str(narrative.type), {"label":str(narrative.type), "desc":""})
+			var narrative_color := GREEN if str(narrative.status) == "abgeschlossen" else ACC
+			box.add_child(_lbl("📖 %s%s" % [narrative_info.label, " · abgeschlossen" if str(narrative.status) == "abgeschlossen" else ""], 13, narrative_color))
+			box.add_child(_lbl(str(narrative_info.desc), 11, DIM))
+			box.add_child(_bar(float(narrative.get("progress", 0.0)), narrative_color, 8))
+		elif Game.narrative_candidate_types(c).size():
+			box.add_child(_lbl("📖 Mögliches Karrierenarrativ ausrufen (PR-Budget)", 13, ACC))
+			var narrative_buttons := HFlowContainer.new()
+			narrative_buttons.add_theme_constant_override("h_separation", 6)
+			narrative_buttons.add_theme_constant_override("v_separation", 6)
+			for type_s in Game.narrative_candidate_types(c):
+				narrative_buttons.add_child(_btn(str(Game.NARRATIVE_TYPES[type_s].label), _on_narrative.bind(int(c.id), str(type_s))))
+			box.add_child(narrative_buttons)
 		for pr in c.promises:
 			var icon := "✅" if pr.fulfilled else ("❌" if pr.get("broken", false) else "📜")
 			var pcol := GREEN if pr.fulfilled else (RED if pr.get("broken", false) else DIM)
@@ -772,12 +838,26 @@ func _render_klienten() -> void:
 			var fcol := GREEN if f.verdict in ["Hit", "Blockbuster"] else (RED if f.verdict == "Flop" else DIM)
 			box.add_child(_lbl("🎞 „%s“ (%d) — %s, Q %d" % [f.title, int(f.year), f.verdict, int(f.quality)], 12, fcol))
 
+func _on_narrative(cid: int, type_s: String) -> void:
+	_show_simple_modal("Eine Karriere wird zur Geschichte", Game.declare_narrative(cid, type_s))
+
 # ---------- Tab: Gerüchte ----------
 func _render_rumors() -> void:
 	content_box.add_child(_lbl("🗣 Das Flüstern der Stadt", 22, ACC))
-	content_box.add_child(_lbl("Gerüchte werden von Menschen getragen. Auch eine Lüge kann Karrieren beschädigen, wenn Hollywood sie oft genug wiederholt.", 13, DIM))
+	content_box.add_child(_lbl("Publikum und Branche glauben nicht dasselbe. Eine Lüge kann an den Kinokassen verpuffen und trotzdem hinter Studiotüren eine Karriere beenden.", 13, DIM))
+	var launch_card = _card("Gerücht lancieren", "🕸")
+	content_box.add_child(launch_card[0])
+	launch_card[1].add_child(_lbl("Streue bewusst ein Gerücht über freie oder rivalisierend vertretene Talente. Riskant: Wird die Agentur enttarnt, leiden Ruf, Vertrauen und moralische Identität.", 12, DIM))
+	var target_buttons := HFlowContainer.new()
+	target_buttons.add_theme_constant_override("h_separation", 6)
+	target_buttons.add_theme_constant_override("v_separation", 6)
+	for actor in Game.rumor_targets().slice(0, 6):
+		var owner = Game.rival_for_actor(str(actor.id))
+		var suffix := " · %s" % owner.name if owner != null else ""
+		target_buttons.add_child(_btn("🕸 %s%s" % [actor.name, suffix], _on_rumor_launch.bind(str(actor.id))))
+	launch_card[1].add_child(target_buttons)
 	var known: Array = Game.state.rumors.filter(func(r): return r.knownToPlayer)
-	known.sort_custom(func(a, b): return float(a.belief) > float(b.belief))
+	known.sort_custom(func(a, b): return maxf(float(a.belief), float(a.get("industryBelief", 0.0))) > maxf(float(b.belief), float(b.get("industryBelief", 0.0))))
 	if known.is_empty():
 		var empty = _card("Noch ist das Vorzimmer still", "🤫")
 		empty[1].add_child(_lbl("Gute Assistenten, Studiokontakte und ein starkes Netzwerk lassen dich früher hören, was die Stadt erzählt.", 13, DIM))
@@ -794,15 +874,21 @@ func _render_rumors() -> void:
 		if Game.player_knows_rumor_truth(rumor):
 			chips.append(_chip("🔒 Aus deinem Dossier bestätigt", GREEN))
 		if rumor.belief >= 60:
-			chips.append(_chip("⚠ Wirkt bereits", RED))
+			chips.append(_chip("⚠ Öffentlich wirksam", RED))
+		if float(rumor.get("industryBelief", 0.0)) >= 60:
+			chips.append(_chip("🏛 Branchenintern wirksam", AMBER))
 		box.add_child(_chip_row(chips))
-		box.add_child(_lbl("Glaubwürdigkeit %d/100" % roundi(rumor.belief), 12, RED if rumor.belief >= 60 else DIM))
+		box.add_child(_lbl("Öffentlichkeit %d/100" % roundi(rumor.belief), 12, RED if rumor.belief >= 60 else DIM))
 		box.add_child(_bar(rumor.belief, RED if rumor.belief >= 60 else ACC_DIM, 10))
+		box.add_child(_lbl("Branche %d/100" % roundi(float(rumor.get("industryBelief", 0.0))), 12, AMBER if float(rumor.get("industryBelief", 0.0)) >= 60 else DIM))
+		box.add_child(_bar(float(rumor.get("industryBelief", 0.0)), AMBER if float(rumor.get("industryBelief", 0.0)) >= 60 else BLUE, 10))
 		box.add_child(_lbl("👥 Bekannte Träger: %s" % ", ".join(rumor.holders), 12, DIM))
-		var actions := HBoxContainer.new()
-		actions.add_theme_constant_override("separation", 6)
+		var actions := HFlowContainer.new()
+		actions.add_theme_constant_override("h_separation", 6)
+		actions.add_theme_constant_override("v_separation", 6)
 		box.add_child(actions)
 		actions.add_child(_btn("📢 Dementieren", _on_rumor_action.bind(int(rumor.id), "deny")))
+		actions.add_child(_btn("🏛 Studiogespräche", _on_rumor_action.bind(int(rumor.id), "studio")))
 		actions.add_child(_btn("🤫 Unterdrücken", _on_rumor_action.bind(int(rumor.id), "suppress"), true))
 		actions.add_child(_btn("🌀 Gegengerücht", _on_rumor_action.bind(int(rumor.id), "counter")))
 		actions.add_child(_btn("⏳ Aussitzen", _on_rumor_action.bind(int(rumor.id), "wait")))
@@ -811,10 +897,14 @@ func _on_rumor_action(rid: int, action: String) -> void:
 	var outcome := ""
 	match action:
 		"deny": outcome = Game.deny_rumor(rid)
+		"studio": outcome = Game.studio_talk_rumor(rid)
 		"suppress": outcome = Game.suppress_rumor(rid)
 		"counter": outcome = Game.counter_rumor(rid)
 		"wait": outcome = Game.wait_out_rumor(rid)
 	_show_simple_modal("Die Geschichte hinter der Geschichte", outcome)
+
+func _on_rumor_launch(actor_id: String) -> void:
+	_show_simple_modal("Ein Satz macht die Runde", Game.launch_rumor(actor_id, str(Game.pick(["skandal", "wechsel", "affäre"]))))
 
 func _on_secret_action(cid: int, type_s: String, action: String) -> void:
 	var outcome := Game.prepare_secret(cid, type_s) if action == "prepare" else Game.sell_secret(cid, type_s)
@@ -846,7 +936,7 @@ func _refresh_pool_list() -> void:
 
 func _fill_pool_list(list: VBoxContainer) -> void:
 	var st = Game.state
-	var all = Game.available_actors()
+	var all = Game.pool_actors()
 	if pool_filter.strip_edges() != "":
 		var f := pool_filter.to_lower()
 		all = all.filter(func(a): return a.name.to_lower().contains(f))
@@ -854,9 +944,10 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 	list.add_child(grid)
 	for a in all.slice(0, 48):
 		var fame := Game.fame_at(a, st.year)
-		var req := Game.required_rep(fame)
+		var owner = Game.rival_for_actor(str(a.id))
+		var req := Game.required_rep(fame) + (10 if owner != null else 0)
 		var locked: bool = st.agency.rep < req
-		var cv = _card(a.name, "🔒" if locked else "")
+		var cv = _card(a.name, "⚔" if owner != null else ("🔒" if locked else ""))
 		grid.add_child(cv[0])
 		var box: VBoxContainer = cv[1]
 		var chips: Array = []
@@ -866,6 +957,8 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 			chips.append(_chip("📉 Verblassend", DIM))
 		if locked:
 			chips.append(_chip("🔒 Ruf ≥ %d nötig" % req, RED))
+		if owner != null:
+			chips.append(_chip("⚔ Bei %s unter Vertrag" % owner.name, AMBER))
 		if chips.size():
 			box.add_child(_chip_row(chips))
 		var death_s: String = (" †%d" % int(a.death)) if a.death != null else ""
@@ -881,13 +974,14 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 			lb.disabled = true
 			box.add_child(lb)
 		else:
-			box.add_child(_btn("Anwerben", _open_negotiation.bind(a.id)))
+			box.add_child(_btn("Abwerben" if owner != null else "Anwerben", _open_negotiation.bind(a.id)))
 
 # ---------- Verhandlung v2 ----------
 func _open_negotiation(actor_id: String) -> void:
 	var n = Game.start_negotiation(actor_id)
 	if n.get("locked", false):
-		_show_simple_modal("Kein Termin", "[i]„%s lässt ausrichten: Man kennt Ihre Agentur nicht.“[/i]\n\nStars dieses Kalibers (Ruhm %d) verhandeln erst mit Agenturen ab Ruf %d (aktuell: %d)." % [n.actor.name, n.fame, n.reqRep, int(Game.state.agency.rep)])
+		var rival_note := (" Der bestehende Vertrag bei %s erhöht die Hürde." % n.rivalName) if str(n.get("rivalName", "")) != "" else ""
+		_show_simple_modal("Kein Termin", "[i]„%s lässt ausrichten: Man kennt Ihre Agentur nicht.“[/i]\n\nStars dieses Kalibers (Ruhm %d) verhandeln erst mit Agenturen ab Ruf %d (aktuell: %d).%s" % [n.actor.name, n.fame, n.reqRep, int(Game.state.agency.rep), rival_note])
 		return
 	nego_form = {"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null}
 	_render_negotiation("")
@@ -1282,6 +1376,34 @@ func _render_finanzen() -> void:
 		shown += 1
 	if shown == 0:
 		jc[1].add_child(_lbl("Noch keine Buchungen.", 12, DIM))
+
+# ---------- Tab: Hollywood-Zeitung ----------
+func _render_zeitung() -> void:
+	content_box.add_child(_lbl("🗞 Die alternative Geschichte Hollywoods", 22, ACC))
+	content_box.add_child(_lbl("Jede Ausgabe entsteht aus echten Premieren, Besetzungen, Gerüchten, Klientenwechseln und Machtkämpfen deiner Simulation.", 13, DIM))
+	if Game.state.newspaper.is_empty():
+		var empty = _card("Die Druckmaschinen warten", "📰")
+		empty[1].add_child(_lbl("Beende den ersten Monat. Danach erscheint hier die aktuelle Ausgabe — und bleibt im Archiv erhalten.", 13, DIM))
+		content_box.add_child(empty[0])
+		return
+	var issue: Dictionary = Game.state.newspaper[0]
+	var front = _card(str(issue.name), "🗞")
+	content_box.add_child(front[0])
+	front[1].add_child(_lbl(Game.mi_str(issue.mi).to_upper(), 11, ACC))
+	for i in issue.headlines.size():
+		var h: Dictionary = issue.headlines[i]
+		var cat := str(h.get("cat", "Stadtgespräch"))
+		var col: Color = {"Kritik":ACC, "Kasse":GREEN, "Blind Item":AMBER, "Skandal":RED, "Titelstory":GOLD, "Awards":GOLD, "Rivalen-Deals":BLUE, "Casting":BLUE}.get(cat, TEXT_C)
+		front[1].add_child(_lbl("%s  %s" % [cat.to_upper(), h.get("text", "")], 17 if i == 0 else 14, col))
+
+	content_box.add_child(_lbl("Archiv · letzte %d Ausgaben" % mini(24, Game.state.newspaper.size()), 17, ACC))
+	var archive_grid := _grid(520.0)
+	content_box.add_child(archive_grid)
+	for old_issue in Game.state.newspaper.slice(1, 24):
+		var archive_card = _card("%s · %s" % [old_issue.name, Game.mi_str(old_issue.mi)], "▤")
+		archive_grid.add_child(archive_card[0])
+		for headline in old_issue.headlines.slice(0, 5):
+			archive_card[1].add_child(_lbl("%s · %s" % [str(headline.cat), str(headline.text)], 12, DIM))
 
 # ---------- Tab: Chronik ----------
 func _render_chronik() -> void:

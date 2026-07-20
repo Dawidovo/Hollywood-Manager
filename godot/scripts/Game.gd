@@ -51,12 +51,12 @@ const SECRET_TYPES := {
 # Reichweite wird als monatliche Weitergabechance gelesen. Zuverlässigkeit
 # beeinflusst, wie stark ein Gerücht beim Weitertragen an Glauben gewinnt.
 const RUMOR_CARRIERS := {
-	"Schauspieler": {"reliability":0.68, "reach":0.18, "interest":["affäre","wechsel","skandal"]},
-	"Assistenten": {"reliability":0.82, "reach":0.12, "interest":["gesundheit","affäre","wechsel","politik","skandal"]},
-	"Journalisten": {"reliability":0.58, "reach":0.34, "interest":["affäre","skandal","gesundheit","politik"]},
-	"Regisseure": {"reliability":0.76, "reach":0.16, "interest":["gesundheit","wechsel","skandal"]},
-	"Studios": {"reliability":0.84, "reach":0.22, "interest":["wechsel","gesundheit","politik","skandal"]},
-	"Partygäste": {"reliability":0.38, "reach":0.28, "interest":["affäre","skandal"]},
+	"Schauspieler": {"reliability":0.68, "reach":0.18, "industry":0.55, "public":0.55, "interest":["affäre","wechsel","skandal"]},
+	"Assistenten": {"reliability":0.82, "reach":0.12, "industry":1.00, "public":0.25, "interest":["gesundheit","affäre","wechsel","politik","skandal"]},
+	"Journalisten": {"reliability":0.58, "reach":0.34, "industry":0.20, "public":1.15, "interest":["affäre","skandal","gesundheit","politik"]},
+	"Regisseure": {"reliability":0.76, "reach":0.16, "industry":1.10, "public":0.20, "interest":["gesundheit","wechsel","skandal"]},
+	"Studios": {"reliability":0.84, "reach":0.22, "industry":1.25, "public":0.10, "interest":["wechsel","gesundheit","politik","skandal"]},
+	"Partygäste": {"reliability":0.38, "reach":0.28, "industry":0.10, "public":1.05, "interest":["affäre","skandal"]},
 }
 
 # ---------------------------------------------------------------------
@@ -111,6 +111,29 @@ const GENRE_DNA = {
 	"crime":    {"romantik":-6.0, "familie":-4.0, "unikat":2.0},
 	"scifi":    {"popular":4.0,   "unikat":3.0},
 	"adventure":{"popular":5.0,   "familie":3.0},
+}
+
+const IDENTITY_KEYS := ["klientenorientiert", "studiotreu", "skrupellos", "diskret", "kuenstlerisch", "kommerziell"]
+const IDENTITY_LABELS := {
+	"klientenorientiert": "klientenorientiert", "studiotreu": "studiotreu",
+	"skrupellos": "skrupellos", "diskret": "diskret",
+	"kuenstlerisch": "künstlerisch", "kommerziell": "kommerziell",
+}
+
+const NARRATIVE_TYPES := {
+	"kinderstar_ernst": {"label":"Vom Kinderstar zum Charakterfach", "desc":"Eine erwachsene Prestige-Rolle sprengt das niedliche Jugendimage."},
+	"comeback": {"label":"Das große Comeback", "desc":"Nach einem Ruhmestief schreibt ein starker neuer Erfolg Kapitel zwei."},
+	"spaetberufen": {"label":"Endlich im Mittelpunkt", "desc":"Viele Nebenrollen münden spät in die erste große Hauptrolle."},
+	"action_prestige": {"label":"Vom Actionstar zum Prestige", "desc":"Kassenerfolge werden gegen eine anspruchsvolle Hauptrolle eingetauscht."},
+	"skandal_respekt": {"label":"Vom Skandal zum Respekt", "desc":"Ein kontroverses Image wird durch verlässliche Arbeit neu erzählt."},
+	"ensemble_star": {"label":"Aus der zweiten Reihe zum Star", "desc":"Ein bewährtes Ensemble-Gesicht beansprucht endlich die Leinwandmitte."},
+}
+
+const RIVAL_STYLE_INFO := {
+	"aggressiv": {"label":"Aggressiv", "icon":"🦈"},
+	"nachwuchs": {"label":"Nachwuchs", "icon":"🌱"},
+	"studiotreu": {"label":"Studiotreu", "icon":"🏛"},
+	"prestige": {"label":"Prestige", "icon":"🎩"},
 }
 
 var state = null
@@ -255,6 +278,100 @@ func dna_label(c: Dictionary) -> String:
 			return ax.pos if best_val > 0 else ax.neg
 	return ""
 
+func snapshot_client(c: Dictionary) -> void:
+	if not c.has("fameHistory"):
+		c["fameHistory"] = []
+	if not c.has("dnaHistory"):
+		c["dnaHistory"] = []
+	c.fameHistory.append({"mi":mi(), "v":float(c.fame)})
+	c.dnaHistory.append({"mi":mi(), "romantik":float(c.dna.romantik), "popular":float(c.dna.popular), "verlass":float(c.dna.verlass), "unikat":float(c.dna.unikat), "familie":float(c.dna.familie)})
+	while c.fameHistory.size() > 60:
+		c.fameHistory.pop_front()
+	while c.dnaHistory.size() > 60:
+		c.dnaHistory.pop_front()
+
+func narrative_candidate_types(c: Dictionary) -> Array:
+	var actor: Dictionary = actor_by_id[c.aid]
+	var age := age_of(actor, state.year)
+	var films: Array = c.get("films", [])
+	var support_n: int = films.filter(func(f): return not bool(f.get("lead", false))).size()
+	var action_n: int = films.filter(func(f): return str(f.get("genre", "")) == "action").size()
+	var fame_high := float(c.fame)
+	var fame_low := float(c.fame)
+	for point in c.get("fameHistory", []):
+		fame_high = maxf(fame_high, float(point.get("v", c.fame)))
+		fame_low = minf(fame_low, float(point.get("v", c.fame)))
+	var family_low := float(c.dna.familie)
+	for point in c.get("dnaHistory", []):
+		family_low = minf(family_low, float(point.get("familie", c.dna.familie)))
+	var out: Array = []
+	if int(actor.debut) - int(actor.birth) <= 16 and age >= 20:
+		out.append("kinderstar_ernst")
+	if fame_high - fame_low >= 12.0 and (float(c.fame) - fame_low >= 3.0 or fame_high - float(c.fame) >= 10.0):
+		out.append("comeback")
+	if age >= 45 and support_n >= 2:
+		out.append("spaetberufen")
+	if actor.genres.has("action") or action_n >= 2:
+		out.append("action_prestige")
+	if family_low <= -25.0 or float(c.dna.familie) <= -20.0:
+		out.append("skandal_respekt")
+	if support_n >= 3:
+		out.append("ensemble_star")
+	return out
+
+func declare_narrative(cid: int, type_s: String) -> String:
+	var c = client(cid)
+	if c == null or not NARRATIVE_TYPES.has(type_s):
+		return "Diese Geschichte lässt sich nicht ausrufen."
+	if not c.get("narrative", {}).is_empty() and str(c.narrative.get("status", "aktiv")) == "aktiv":
+		return "Für %s läuft bereits ein Narrativ." % client_name(c)
+	if not narrative_candidate_types(c).has(type_s):
+		return "Die bisherige Karriere trägt dieses Narrativ noch nicht."
+	var cost := roundi(7500.0 * infl(state.year))
+	if float(state.agency.cash) < float(cost):
+		return "Die PR-Kampagne kostet %s — zu viel für die aktuelle Kasse." % fmt_money(cost)
+	book(-float(cost), "pr_recht", "Karrierenarrativ: %s" % client_name(c))
+	c.narrative = {"type":type_s, "startedMi":mi(), "progress":0.0, "status":"aktiv"}
+	press_event("Karrieren", "Kapitel 1: %s — %s beginnt" % [client_name(c), NARRATIVE_TYPES[type_s].label])
+	return "Die Pressemappe trägt eine klare Überschrift: „%s“. Passende Rollen zahlen doppelt auf die Geschichte ein." % NARRATIVE_TYPES[type_s].label
+
+func narrative_role_match(c: Dictionary, prod: Dictionary, role: Dictionary) -> bool:
+	var narrative: Dictionary = c.get("narrative", {})
+	if narrative.is_empty() or str(narrative.get("status", "")) != "aktiv":
+		return false
+	var lead := str(role.get("type", "support")) == "lead"
+	var prestige := int(prod.get("prestige", 0))
+	var genre := str(prod.get("genre", ""))
+	match str(narrative.type):
+		"kinderstar_ernst": return lead and prestige >= 2 and genre in ["drama", "thriller", "crime"]
+		"comeback": return lead and (prestige >= 2 or genre in ["drama", "thriller"])
+		"spaetberufen": return lead
+		"action_prestige": return lead and prestige >= 2 and genre == "drama"
+		"skandal_respekt": return prestige >= 2 and genre in ["drama", "adventure", "western"]
+		"ensemble_star": return lead
+	return false
+
+func narrative_multiplier(c: Dictionary, prod: Dictionary, role: Dictionary) -> float:
+	return 2.0 if narrative_role_match(c, prod, role) else 1.0
+
+func advance_narrative_on_release(c: Dictionary, prod: Dictionary, role: Dictionary) -> void:
+	var narrative: Dictionary = c.get("narrative", {})
+	if narrative.is_empty() or str(narrative.get("status", "")) != "aktiv":
+		return
+	var info: Dictionary = NARRATIVE_TYPES.get(str(narrative.type), {})
+	if narrative_role_match(c, prod, role):
+		narrative.progress = minf(100.0, float(narrative.progress) + (60.0 if str(role.type) == "lead" else 35.0))
+		press_event("Karrieren", "Kapitel %d: %s setzt „%s“ mit „%s“ fort" % [2 + int(float(narrative.progress) / 55.0), client_name(c), info.get("label", "eine neue Geschichte"), prod.title])
+		if float(narrative.progress) >= 100.0:
+			narrative.status = "abgeschlossen"
+			c.fame = clampf(float(c.fame) + 8.0, 5.0, 100.0)
+			state.agency.rep = clampi(int(state.agency.rep) + 5, 0, 100)
+			press_event("Titelstory", "%s vollendet „%s“ — Hollywood sieht eine Karriere mit neuen Augen" % [client_name(c), info.get("label", "die Verwandlung")])
+			log_msg("Karrierenarrativ abgeschlossen: %s — %s." % [client_name(c), info.get("label", "Neuanfang")], "history")
+	else:
+		narrative.progress = maxf(0.0, float(narrative.progress) - 25.0)
+		press_event("Presse-Spott", "Kapitel vertauscht? %s nimmt mit „%s“ der eigenen PR-Erzählung den Schwung" % [client_name(c), prod.title])
+
 func studio_style(studio_id: String) -> String:
 	for s in Data.STUDIOS:
 		if s.id == studio_id:
@@ -271,12 +388,16 @@ func new_game(agency_name: String, start_year: int) -> void:
 		"favors": [], "debts": [],
 		"ledger": [], "ledgerMonthly": [],
 		"clients": [], "castings": [], "productions": [], "released": [], "log": [],
-		"rumors": [],
+		"rumors": [], "newspaper": [], "pressFeed": [],
+		"rivals": [], "identity": {}, "identityLastTop": [],
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [],
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
 	}
+	for key in IDENTITY_KEYS:
+		state.identity[key] = 0.0
+	_init_rivals(start_year)
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = rndi(20, 45)
 	book(float(roundi(120000.0 * infl(start_year))), "sonstiges", "Eröffnungskapital — Büroeröffnung am Sunset Boulevard")
@@ -293,6 +414,64 @@ func log_msg(text: String, type: String = "info") -> void:
 	state.log.push_front({"y": state.year, "m": state.month, "text": text, "type": type})
 	if state.log.size() > 300:
 		state.log.pop_back()
+
+func press_event(cat: String, text_s: String) -> void:
+	if state == null:
+		return
+	state.pressFeed.append({"cat": cat, "text": text_s})
+	while state.pressFeed.size() > 30:
+		state.pressFeed.pop_front()
+
+func identity_total() -> float:
+	var total := 0.0
+	for key in IDENTITY_KEYS:
+		total += float(state.identity.get(key, 0.0))
+	return total
+
+func identity_top_labels() -> Array:
+	if state == null or identity_total() <= 0.0:
+		return []
+	var keys: Array = IDENTITY_KEYS.duplicate()
+	keys.sort_custom(func(a, b): return float(state.identity.get(a, 0.0)) > float(state.identity.get(b, 0.0)))
+	var out: Array = []
+	for key in keys.slice(0, 2):
+		if float(state.identity.get(key, 0.0)) > 0.0:
+			out.append(str(IDENTITY_LABELS[key]))
+	return out
+
+func identity_strength(key: String) -> float:
+	var total := identity_total()
+	if total <= 0.0:
+		return 0.0
+	var avg := total / float(IDENTITY_KEYS.size())
+	return clampf((float(state.identity.get(key, 0.0)) - avg) / maxf(4.0, avg + 4.0), -1.0, 2.0)
+
+func record_identity(key: String, amount: float = 1.0) -> void:
+	if not IDENTITY_KEYS.has(key) or amount <= 0.0:
+		return
+	var before: Array = identity_top_labels()
+	state.identity[key] = float(state.identity.get(key, 0.0)) + amount
+	var after: Array = identity_top_labels()
+	if after != before and identity_total() >= 3.0:
+		state.identityLastTop = after.duplicate()
+		press_event("Agenturen", "%s trägt ein neues Etikett: %s" % [state.agency.name, " & ".join(after)])
+
+func _rival_names(year: int) -> Array:
+	if year < 1940:
+		return ["Continental Artists Bureau", "Majestic Players Office", "Selznick & Rowe", "Pacific Star Exchange"]
+	if year < 1970:
+		return ["Avalon Artists", "Gold Coast Agency", "Monarch Talent", "Sterling Representation"]
+	if year < 2000:
+		return ["Apex Artists", "Canyon Talent Group", "TriStar Representation", "Westwood Creative"]
+	return ["Velocity Entertainment", "Northstar Talent", "Mosaic Artists Group", "Summit Creative Partners"]
+
+func _init_rivals(year: int) -> void:
+	var names := _rival_names(year)
+	var styles := ["aggressiv", "nachwuchs", "studiotreu", "prestige"]
+	var studios := active_studios()
+	for i in styles.size():
+		state.rivals.append({"id":"rival_%d" % i, "name":names[i], "style":styles[i], "clients":[], "grudge":0.0, "rel":0.0,
+			"studioId":str(studios[i % studios.size()].id) if studios.size() else ""})
 
 func date_str() -> String:
 	return "%s %d" % [MONTHS_DE[int(state.month) - 1], int(state.year)]
@@ -314,10 +493,26 @@ func is_client(actor_id: String) -> bool:
 			return true
 	return false
 
-func available_actors() -> Array:
+func rival_for_actor(actor_id: String) -> Variant:
+	for rival in state.get("rivals", []):
+		if rival.get("clients", []).has(actor_id):
+			return rival
+	return null
+
+func is_rival_client(actor_id: String) -> bool:
+	return rival_for_actor(actor_id) != null
+
+func pool_actors() -> Array:
 	var y = state.year
 	var out = Data.ACTORS.filter(func(a):
 		return a.debut <= y and (a.death == null or a.death > y) and age_of(a, y) <= 85 and not is_client(a.id))
+	out.sort_custom(func(a, b): return fame_at(a, y) > fame_at(b, y))
+	return out
+
+func available_actors() -> Array:
+	var y = state.year
+	var out = Data.ACTORS.filter(func(a):
+		return a.debut <= y and (a.death == null or a.death > y) and age_of(a, y) <= 85 and not is_client(a.id) and not is_rival_client(a.id))
 	out.sort_custom(func(a, b): return fame_at(a, y) > fame_at(b, y))
 	return out
 
@@ -329,6 +524,112 @@ func client(cid) -> Variant:
 
 func client_name(c: Dictionary) -> String:
 	return actor_by_id[c.aid].name
+
+func rival_by_id(rival_id: String) -> Variant:
+	for rival in state.get("rivals", []):
+		if str(rival.id) == rival_id:
+			return rival
+	return null
+
+func pick_poach_rival() -> Variant:
+	if state.get("rivals", []).is_empty():
+		return null
+	var sorted: Array = state.rivals.duplicate()
+	sorted.sort_custom(func(a, b):
+		var av := float(a.grudge) + (25.0 if str(a.style) == "aggressiv" else 0.0)
+		var bv := float(b.grudge) + (25.0 if str(b.style) == "aggressiv" else 0.0)
+		return av > bv)
+	return sorted[0]
+
+func rival_poach_client(rival_id: String, c: Dictionary) -> void:
+	var rival = rival_by_id(rival_id)
+	if rival == null or c == null:
+		return
+	var actor_id := str(c.aid)
+	var actor_name := client_name(c)
+	state.clients.erase(c)
+	if not rival.clients.has(actor_id):
+		rival.clients.append(actor_id)
+	rival.grudge = clampf(float(rival.grudge) + 20.0, 0.0, 100.0)
+	rival.rel = clampf(float(rival.rel) - 15.0, -100.0, 100.0)
+	press_event("Klientenwechsel", "%s wechselt von %s zu %s" % [actor_name, state.agency.name, rival.name])
+
+func _rival_candidate(rival: Dictionary) -> Variant:
+	var pool := available_actors()
+	if pool.is_empty():
+		return null
+	match str(rival.style):
+		"nachwuchs":
+			var young: Array = pool.filter(func(a): return age_of(a, state.year) <= 28)
+			if young.size():
+				young.sort_custom(func(a, b): return float(a.talent) > float(b.talent))
+				return young[0]
+		"prestige":
+			var artists: Array = pool.filter(func(a): return float(a.talent) >= 82.0)
+			if artists.size():
+				artists.sort_custom(func(a, b): return float(a.talent) > float(b.talent))
+				return artists[0]
+		"aggressiv":
+			return pool[0]
+		"studiotreu":
+			var reliable: Array = pool.filter(func(a): return float(attrs(a).discipline) >= 60.0)
+			if reliable.size():
+				return reliable[0]
+	return pool[0]
+
+func _rival_coop_event(rival: Dictionary) -> Variant:
+	var c = random_client(func(x): return is_free(x))
+	if c == null:
+		return null
+	var rid := str(rival.id)
+	var cid := int(c.id)
+	var rival_name := str(rival.name)
+	return {"title":"Ein Anruf von %s" % rival_name,
+		"text":"[i]„Man muss sich nicht mögen, um gemeinsam einen guten Film zu bauen.“[/i]\n\n%s bietet eine Package-Kooperation an: Dein Klient %s erhält eine Rolle, das rivalisierende Haus ergänzt den übrigen Cast." % [rival_name, client_name(c)],
+		"choices":[
+			{"label":"Gemeinsam packagen", "fn":func():
+				var cl = client(cid)
+				var rv = rival_by_id(rid)
+				if cl == null or rv == null:
+					return "Die Gelegenheit ist verstrichen."
+				var result = quick_production(cl, {"prestige":2 if str(rv.style) == "prestige" else 1})
+				rv.grudge = maxf(0.0, float(rv.grudge) - 12.0)
+				rv.rel = clampf(float(rv.rel) + 14.0, -100.0, 100.0)
+				press_event("Agenturen", "%s und %s schnüren gemeinsam „%s“" % [state.agency.name, rv.name, result.title])
+				return "Zwei Adressbücher, ein Vertrag: „%s“ geht in Produktion." % result.title},
+			{"label":"Höflich ablehnen", "fn":func(): return "Man lässt die Tür offen. In Hollywood ist morgen ein anderer Monat."},
+		]}
+
+func tick_rivals(events: Array = [], force: bool = false) -> void:
+	var cooperation_added := false
+	for rival in state.get("rivals", []):
+		for actor_id in rival.clients.duplicate():
+			var actor: Dictionary = actor_by_id.get(str(actor_id), {})
+			if actor.is_empty() or (actor.death != null and float(actor.death) <= float(state.year)):
+				rival.clients.erase(actor_id)
+		var sign_chance := 0.07 if str(rival.style) == "nachwuchs" else 0.035
+		if force or chance(sign_chance):
+			var actor = _rival_candidate(rival)
+			if actor != null:
+				rival.clients.append(str(actor.id))
+				press_event("Rivalen-Deals", "%s nimmt %s unter Vertrag" % [rival.name, actor.name])
+				log_msg("Konkurrenz: %s verpflichtet %s." % [rival.name, actor.name], "info")
+		if float(rival.grudge) >= 60.0 and state.clients.size() and (force or chance(0.18)):
+			var target: Dictionary = pick(state.clients)
+			var rumor := add_rumor(int(target.id), "%s lässt in Studiokorridoren Zweifel an der Zuverlässigkeit von %s säen." % [rival.name, client_name(target)], false, "skandal", ["Studios", "Assistenten"], 14.0, true, "", 34.0)
+			rumor["sourceRival"] = str(rival.id)
+			press_event("Agenturen", "Eiszeit zwischen %s und %s: Studiokorridore werden zum Schlachtfeld" % [state.agency.name, rival.name])
+		if not force and not cooperation_added and float(rival.grudge) <= 12.0 and float(rival.rel) >= 20.0 and chance(0.04):
+			var coop = _rival_coop_event(rival)
+			if coop != null:
+				events.append(coop)
+				cooperation_added = true
+
+func rival_casting_block(studio_id: String) -> float:
+	for rival in state.get("rivals", []):
+		if str(rival.style) == "studiotreu" and str(rival.get("studioId", "")) == studio_id and rival.clients.size():
+			return clampf(8.0 + float(rival.grudge) / 12.0 - maxf(0.0, float(rival.rel)) / 20.0, 4.0, 16.0)
+	return 0.0
 
 func random_client(filter: Callable = Callable()) -> Variant:
 	var list = state.clients if not filter.is_valid() else state.clients.filter(filter)
@@ -402,6 +703,8 @@ func prepare_secret(cid: int, type_s: String, cost: int = -1) -> String:
 		return "Die diskrete Vorbereitung würde %s kosten. Dafür reicht die Kasse noch nicht – das Geheimnis bleibt geschützt." % fmt_money(actual_cost)
 	book(-float(actual_cost), "pr_recht", "Diskrete Vorbereitung: %s (%s)" % [SECRET_TYPES[type_s].label, client_name(c)])
 	secret.status = "entschärft"
+	record_identity("diskret", 1.0)
+	record_identity("klientenorientiert", 0.5)
 	change_trust(c, 9.0)
 	c.loyalty = clampf(float(c.loyalty) + 5.0, 0.0, 100.0)
 	match type_s:
@@ -434,10 +737,11 @@ func maybe_reveal_secret(c: Dictionary, events: Array, force: bool = false) -> b
 				return true
 	return false
 
-func add_rumor(subject, text_s: String, truth: bool, topic: String, holders: Array = [], belief: float = 10.0, known: bool = false, source_secret: String = "") -> Dictionary:
+func add_rumor(subject, text_s: String, truth: bool, topic: String, holders: Array = [], belief: float = 10.0, known: bool = false, source_secret: String = "", industry_belief: float = -1.0) -> Dictionary:
+	var industry_start := belief if industry_belief < 0.0 else industry_belief
 	var rumor := {"id":next_id(), "subject":subject, "text":text_s, "truth":truth, "topic":topic,
-		"holders":holders.duplicate(), "belief":clampf(belief, 0.0, 100.0), "knownToPlayer":known, "age":0,
-		"impactApplied":false, "sourceSecret":source_secret}
+		"holders":holders.duplicate(), "belief":clampf(belief, 0.0, 100.0), "industryBelief":clampf(industry_start, 0.0, 100.0),
+		"knownToPlayer":known, "age":0, "impactApplied":false, "industryImpactApplied":false, "sourceSecret":source_secret}
 	state.rumors.append(rumor)
 	return rumor
 
@@ -487,6 +791,7 @@ func sell_secret(cid: int, type_s: String) -> String:
 		return "Diese Geschichte ist nicht mehr exklusiv."
 	var payment: int = roundi((7000.0 + int(secret.severity) * 9000.0 + float(c.fame) * 300.0) * infl(state.year))
 	book(float(payment), "pr_recht", "Exklusivgeschichte an die Presse verkauft (%s)" % client_name(c))
+	record_identity("skrupellos", 3.0)
 	secret.status = "publik"
 	c.trustCap = 20.0
 	c.trust = 0.0
@@ -504,6 +809,8 @@ func sell_secret(cid: int, type_s: String) -> String:
 	return "Die Kolumne zahlt %s. Das Vertrauen ist zerstört und dauerhaft gedeckelt.%s" % [fmt_money(payment), ending]
 
 func _apply_rumor_impact(rumor: Dictionary) -> void:
+	# Öffentliche Wirkung: Ruhm und Image. Die Branchenwirkung bleibt separat
+	# und wird beim Casting über rumor_fit_penalty() gelesen.
 	rumor.impactApplied = true
 	var c = rumor_subject_client(rumor)
 	if c != null:
@@ -512,8 +819,6 @@ func _apply_rumor_impact(rumor: Dictionary) -> void:
 		c.mood = clampf(float(c.mood) - 9.0, 0.0, 100.0)
 		c.dna.familie = clampf(float(c.dna.familie) - 7.0, -100.0, 100.0)
 		c.dna.verlass = clampf(float(c.dna.verlass) - 5.0, -100.0, 100.0)
-		if str(rumor.topic) == "wechsel":
-			c.flags["rumorFitUntil"] = mi() + 6
 		if str(rumor.get("sourceSecret", "")) != "":
 			var secret = secret_of(c, str(rumor.sourceSecret))
 			if secret != null:
@@ -524,6 +829,10 @@ func _apply_rumor_impact(rumor: Dictionary) -> void:
 		log_msg("Das Gerücht wird zur Schlagzeile. In der Agentur fragt sich jeder, wer geredet hat.", "bad")
 	else:
 		log_msg("Ein Gerücht über %s gilt in Hollywood plötzlich als Tatsache." % rumor_subject_name(rumor), "bad")
+
+func _apply_industry_rumor_impact(rumor: Dictionary) -> void:
+	rumor.industryImpactApplied = true
+	log_msg("Die Branche behandelt das Gerücht über %s nun als interne Wahrheit — auch ohne Schlagzeile." % rumor_subject_name(rumor), "bad")
 
 func tick_rumors(events: Array = [], force_spread: bool = false) -> void:
 	# Wahre Geheimnisse können unbemerkt aus dem Büro sickern.
@@ -553,14 +862,21 @@ func tick_rumors(events: Array = [], force_spread: bool = false) -> void:
 				max_reach = maxf(max_reach, float(RUMOR_CARRIERS.get(holder, {}).get("reach", 0.1)))
 			if force_spread or chance(max_reach):
 				rumor.holders.append(str(pick(candidates)))
-		var momentum := 0.0
+		var public_momentum := 0.0
+		var industry_momentum := 0.0
 		for holder in rumor.holders:
 			var spec: Dictionary = RUMOR_CARRIERS.get(holder, {"reach":0.1, "reliability":0.5})
-			momentum += float(spec.reach) * (5.0 + float(spec.reliability) * 8.0)
+			var base: float = float(spec.reach) * (5.0 + float(spec.reliability) * 8.0)
+			public_momentum += base * float(spec.get("public", 0.5))
+			industry_momentum += base * float(spec.get("industry", 0.5))
 		if rumor.get("impactApplied", false):
 			rumor.belief = maxf(0.0, float(rumor.belief) - 5.0)
 		else:
-			rumor.belief = clampf(float(rumor.belief) + momentum, 0.0, 100.0)
+			rumor.belief = clampf(float(rumor.belief) + public_momentum, 0.0, 100.0)
+		if rumor.get("industryImpactApplied", false):
+			rumor.industryBelief = maxf(0.0, float(rumor.industryBelief) - 3.0)
+		else:
+			rumor.industryBelief = clampf(float(rumor.industryBelief) + industry_momentum, 0.0, 100.0)
 		if not rumor.knownToPlayer:
 			var contact_bonus: float = minf(0.2, state.favors.size() * 0.025)
 			for rel in state.studioRel.values():
@@ -570,16 +886,22 @@ func tick_rumors(events: Array = [], force_spread: bool = false) -> void:
 				events.append({"title":"Ein Flüstern im Vorzimmer", "text":"[i]„Noch ist es nur Gerede – aber Sie sollten wissen, was man über %s erzählt.“[/i]\n\n%s" % [rumor_subject_name(rumor), rumor.text], "choices":[{"label":"Zum Gerüchte-Dossier"}]})
 		if float(rumor.belief) >= 60.0 and not rumor.get("impactApplied", false):
 			_apply_rumor_impact(rumor)
-		if int(rumor.age) > 6 and float(rumor.belief) < 8.0:
+		if float(rumor.industryBelief) >= 60.0 and not rumor.get("industryImpactApplied", false):
+			_apply_industry_rumor_impact(rumor)
+		if int(rumor.age) > 6 and maxf(float(rumor.belief), float(rumor.industryBelief)) < 8.0:
 			state.rumors.erase(rumor)
 
 func rumor_fit_penalty(c: Dictionary) -> float:
-	if int(c.flags.get("rumorFitUntil", 0)) > mi():
-		return 12.0
+	var penalty := 0.0
 	for rumor in state.get("rumors", []):
-		if str(rumor.topic) == "wechsel" and float(rumor.belief) >= 60.0 and rumor_subject_client(rumor) == c:
-			return 12.0
-	return 0.0
+		if rumor_subject_client(rumor) != c:
+			continue
+		var industry := float(rumor.get("industryBelief", rumor.get("belief", 0.0)))
+		if industry >= 60.0:
+			penalty = maxf(penalty, 12.0)
+		elif industry >= 40.0:
+			penalty = maxf(penalty, 6.0)
+	return penalty
 
 func deny_rumor(rid: int) -> String:
 	var rumor = rumor_by_id(rid)
@@ -606,9 +928,30 @@ func suppress_rumor(rid: int) -> String:
 		if float(state.agency.cash) < cost:
 			return "Kein passender Gefallen – und die verlangten %s fehlen in der Kasse." % fmt_money(cost)
 		book(-float(cost), "pr_recht", "Gerücht unterdrückt: %s" % rumor_subject_name(rumor))
+	record_identity("diskret", 1.5)
 	rumor.belief = maxf(0.0, float(rumor.belief) - 38.0)
-	rumor.holders = ["Assistenten"]
+	rumor.holders = rumor.holders.filter(func(h): return str(h) not in ["Journalisten", "Partygäste"])
+	if rumor.holders.is_empty():
+		rumor.holders = ["Assistenten"]
 	return "Ein Anruf, eine Gegengefälligkeit, eine geschlossene Schublade. Die Story verliert fast ihre gesamte Reichweite."
+
+func studio_talk_rumor(rid: int) -> String:
+	var rumor = rumor_by_id(rid)
+	if rumor == null:
+		return "In den Studios erinnert sich niemand mehr an die Geschichte."
+	var paid_with_favor := consume_any_favor()
+	var cost := roundi(9000.0 * infl(state.year))
+	if not paid_with_favor:
+		if float(state.agency.cash) < float(cost):
+			return "Für diskrete Studiogespräche fehlen ein Gefallen oder %s." % fmt_money(cost)
+		book(-float(cost), "pr_recht", "Diskrete Studiogespräche: %s" % rumor_subject_name(rumor))
+	rumor.industryBelief = maxf(0.0, float(rumor.get("industryBelief", 0.0)) - 34.0)
+	rumor.holders = rumor.holders.filter(func(h): return str(h) not in ["Studios", "Regisseure"])
+	if rumor.holders.is_empty():
+		rumor.holders = ["Assistenten"]
+	record_identity("diskret", 1.0)
+	record_identity("studiotreu", 0.5)
+	return "Hinter verschlossenen Türen werden Fakten, Garantien und alte Schulden sortiert. Die Branche wird deutlich skeptischer gegenüber dem Gerücht."
 
 func counter_rumor(rid: int) -> String:
 	var rumor = rumor_by_id(rid)
@@ -631,6 +974,36 @@ func wait_out_rumor(rid: int) -> String:
 		return "Das Gerücht ist schon vergessen."
 	rumor["waitingOut"] = true
 	return "Keine Pressekonferenz, kein Futter. Du setzt darauf, dass Hollywood morgen eine neue Obsession findet."
+
+func rumor_targets() -> Array:
+	var targets: Array = pool_actors().filter(func(a): return not is_client(str(a.id)))
+	targets.sort_custom(func(a, b):
+		var ar := 1 if is_rival_client(str(a.id)) else 0
+		var br := 1 if is_rival_client(str(b.id)) else 0
+		return ar > br if ar != br else fame_at(a, state.year) > fame_at(b, state.year))
+	return targets
+
+func launch_rumor(actor_id: String, topic: String = "skandal") -> String:
+	if not actor_by_id.has(actor_id) or is_client(actor_id):
+		return "Das Ziel taugt nicht für diese Kampagne."
+	var actor: Dictionary = actor_by_id[actor_id]
+	var owner = rival_for_actor(actor_id)
+	var text_s := "In den Vorzimmern heißt es, bei %s gebe es eine Geschichte, die noch niemand drucken will." % actor.name
+	var rumor := add_rumor(actor_id, text_s, false, topic, ["Assistenten", "Partygäste"], 14.0, true, "", 20.0)
+	rumor["launchedByAgency"] = true
+	record_identity("skrupellos", 2.0)
+	var exposure: float = clampf(0.34 - identity_strength("skrupellos") * 0.10, 0.12, 0.45)
+	if chance(exposure):
+		rumor["agencyExposed"] = true
+		state.agency.rep = clampi(int(state.agency.rep) - 5, 0, 100)
+		for c in state.clients:
+			change_trust(c, -5.0)
+		record_identity("skrupellos", 2.0)
+		if owner != null:
+			owner.grudge = clampf(float(owner.grudge) + 18.0, 0.0, 100.0)
+		press_event("Skandal", "Schmutzkampagne enttarnt: Spuren führen zu %s" % state.agency.name)
+		return "Das Gerücht läuft — doch ein Assistent erkennt deine Handschrift. Ruf und Klientenvertrauen leiden."
+	return "Ein Nebensatz hier, eine anonyme Notiz dort. Das Gerücht ist im Netz, und vorerst kennt niemand den Urheber."
 
 func is_free(c: Dictionary) -> bool:
 	return int(c.busyUntil) <= mi()
@@ -879,16 +1252,24 @@ func start_negotiation(actor_id: String) -> Dictionary:
 	var actor: Dictionary = actor_by_id[actor_id]
 	var fame := fame_at(actor, state.year)
 	var req := required_rep(fame)
-	if state.agency.rep < req:
-		return {"locked": true, "actor": actor, "fame": fame, "reqRep": req}
+	var owner = rival_for_actor(actor_id)
+	var poach_req := req + (10 if owner != null else 0)
+	if state.agency.rep < poach_req:
+		return {"locked": true, "actor": actor, "fame": fame, "reqRep": poach_req, "rivalName": str(owner.name) if owner != null else ""}
 	var ask := ask_fee(fame, state.year)
 	var profile := actor_profile(actor, fame)
 	nego = {
 		"actor": actor, "fame": fame, "ask": ask, "profile": profile,
 		"demands": actor_demands(actor, fame, ask, profile),
 		"round": 1, "maxRounds": 4, "counter": null, "done": false, "locked": false,
+		"rivalId": str(owner.id) if owner != null else "",
 	}
 	return nego
+
+func identity_offer_modifier(actor: Dictionary) -> float:
+	if float(actor.talent) >= 88.0:
+		return (identity_strength("kuenstlerisch") + identity_strength("klientenorientiert")) * 4.5
+	return (identity_strength("kommerziell") + identity_strength("studiotreu")) * 2.5
 
 func evaluate_offer(offer: Dictionary) -> float:
 	var p: Dictionary = nego.profile
@@ -911,7 +1292,7 @@ func evaluate_offer(offer: Dictionary) -> float:
 		perks_score += 13.0 if d.perks.has(pk) else 4.0
 	var years_score: float = -absf(offer.years - d.years) * 2.5
 	var standing: float = (rep - nego.fame * 0.55) * 0.9
-	return money_raw * p.money * 2.6 + promise_raw * trust + perks_score + years_score + standing - (nego.round - 1) * 3.0
+	return money_raw * p.money * 2.6 + promise_raw * trust + perks_score + years_score + standing + identity_offer_modifier(nego.actor) - (nego.round - 1) * 3.0
 
 func mood_label(score: float) -> Array:
 	if score >= 65.0: return ["begeistert", "pos"]
@@ -972,10 +1353,23 @@ func sign_client(terms: Dictionary) -> Dictionary:
 		"dna": initial_dna(actor),
 		"signedAt": mi(),
 		"trust": float(rndi(28, 34)), "trustCap": 100.0, "secrets": [], "secretThresholds": [],
+		"narrative": {}, "fameHistory": [], "dnaHistory": [],
 	}
+	c.fameHistory.append({"mi":mi(), "v":float(c.fame)})
+	c.dnaHistory.append({"mi":mi(), "romantik":float(c.dna.romantik), "popular":float(c.dna.popular), "verlass":float(c.dna.verlass), "unikat":float(c.dna.unikat), "familie":float(c.dna.familie)})
 	if terms.get("promise") != null:
 		c.promises.append({"type": terms.promise, "label": PROMISES[terms.promise].label, "due": mi() + int(PROMISES[terms.promise].months), "fulfilled": false, "broken": false})
 	state.clients.append(c)
+	var rival_id := str(nego.get("rivalId", ""))
+	if rival_id != "":
+		for rival in state.rivals:
+			if str(rival.id) == rival_id:
+				rival.clients.erase(str(actor.id))
+				rival.grudge = clampf(float(rival.grudge) + 25.0, 0.0, 100.0)
+				press_event("Agenturen", "%s entreißt %s dem Haus %s" % [state.agency.name, actor.name, rival.name])
+				break
+	else:
+		press_event("Klientenwechsel", "%s unterschreibt bei %s" % [actor.name, state.agency.name])
 	state.agency.rep = clampi(int(state.agency.rep) + roundi(nego.fame / 22.0), 0, 100)
 	log_msg("%s unterschreibt für %d Jahre (%d %% Provision%s%s)." % [actor.name, terms.years, terms.commission,
 		(", Bonus " + fmt_money(terms.bonus)) if terms.bonus > 0 else "",
@@ -1088,6 +1482,12 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	fit -= maxf(0.0, (c.exhaustion - 50.0) / 2.5)
 	# Karriere-DNA: passt das öffentliche Bild zur Rolle?
 	fit += dna_fit(c, casting.genre, studio_style(casting.studioId))
+	var style := studio_style(casting.studioId)
+	if style == "prestige" or style == "indie":
+		fit += (identity_strength("kuenstlerisch") + identity_strength("klientenorientiert")) * (4.5 if eff_talent(c) >= 88.0 else 2.5)
+	else:
+		fit += (identity_strength("studiotreu") + identity_strength("kommerziell")) * 3.5
+	fit -= rival_casting_block(str(casting.studioId))
 	fit -= rumor_fit_penalty(c)
 	if age < role.ageMin:
 		fit -= (role.ageMin - age) * 2.5
@@ -1148,6 +1548,11 @@ func close_deal(fee: float, extra_log: String = "") -> void:
 		"die Hauptrolle" if role.type == "lead" else "eine Nebenrolle", casting.title,
 		fmt_money(fee), fmt_money(fee * c.commission / 100.0), extra_log], "deal")
 	check_promises_on_deal(c, casting, role)
+	press_event("Casting", "%s übernimmt %s in „%s“ für %s" % [client_name(c), "die Hauptrolle" if role.type == "lead" else "eine Nebenrolle", casting.title, _studio(str(casting.studioId)).name])
+	if int(casting.prestige) >= 2:
+		record_identity("kuenstlerisch", 0.35)
+	elif studio_style(str(casting.studioId)) == "commercial":
+		record_identity("kommerziell", 0.35)
 	c.mood = clampf(c.mood + 8.0, 0.0, 100.0)
 	if chance(0.18):
 		var kind_s: String = pick(["extraAudition", "scriptAccess", "billing"])
@@ -1253,6 +1658,11 @@ func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	change_trust(c, 1.5)
 	# Auch Sofort-Deals zählen unmittelbar für Versprechen (Hauptrolle/Prestige)
 	check_promises_on_deal(c, prod, prod.roles[0])
+	press_event("Casting", "%s unterschreibt für die %s in „%s“ (%s)" % [client_name(c), "Hauptrolle" if role_type == "lead" else "Nebenrolle", prod.title, studio.name])
+	if int(prod.prestige) >= 2:
+		record_identity("kuenstlerisch", 0.35)
+	elif studio_style(str(prod.studioId)) == "commercial":
+		record_identity("kommerziell", 0.35)
 	log_msg("Sofort-Deal: %s in „%s“ (%s) — %s Gage, %s Provision." % [client_name(c), prod.title, studio.name, fmt_money(fee), fmt_money(income)], "deal")
 	return {"fee": fee, "income": income, "title": prod.title, "studioName": studio.name, "prod": prod}
 
@@ -1328,6 +1738,7 @@ func end_month() -> Array:
 
 	tick_clients(events)
 	tick_rumors(events)
+	tick_rivals(events)
 
 	# Follow-ups
 	for fu in state.followups.duplicate():
@@ -1353,6 +1764,7 @@ func end_month() -> Array:
 			events.append({"title": "Game Over", "text": "Drei Monate in den roten Zahlen — die Gläubiger übernehmen. %s schließt für immer die Türen.\n\nErreicht: %d Klienten, Ruf %d, %d vermittelte Filme." % [state.agency.name, state.clients.size(), int(state.agency.rep), state.released.size()], "choices": [{"label": "Neues Spiel", "action": "restart"}]})
 	else:
 		state.agency.debtMonths = 0
+	Newspaper.build_newspaper()
 	save_game()
 	return events
 
@@ -1430,6 +1842,12 @@ func tick_clients(events: Array) -> void:
 				c.loyalty = clampf(c.loyalty - 2.0, 0.0, 100.0)
 		else:
 			c.mood = clampf(c.mood + 1.0, 0.0, 100.0)
+		# Eine nachweisbar skrupellose Hauskultur erleichtert schmutzige Tricks,
+		# lässt aber das Vertrauen aller Klienten langsam erodieren.
+		var ruthless := identity_strength("skrupellos")
+		if ruthless > 0.25:
+			change_trust(c, -0.18 * ruthless)
+		snapshot_client(c)
 		# Versprechen
 		for pr in c.promises:
 			if not pr.fulfilled and not pr.get("broken", false) and mi() > int(pr.due):
@@ -1484,6 +1902,18 @@ func start_production(casting: Dictionary) -> void:
 	var y = state.year
 	for role in casting.roles:
 		if role.filled != null:
+			continue
+		var rival_candidates: Array = []
+		for rival in state.get("rivals", []):
+			for actor_id in rival.clients:
+				var rival_actor: Dictionary = actor_by_id.get(str(actor_id), {})
+				if not rival_actor.is_empty() and rival_actor.g == role.gender and fame_at(rival_actor, y) >= role.minFame * 0.6 and age_of(rival_actor, y) >= role.ageMin - 6 and age_of(rival_actor, y) <= role.ageMax + 8:
+					rival_candidates.append({"actor":rival_actor, "rival":rival})
+		if rival_candidates.size() and chance(0.68):
+			var rc: Dictionary = pick(rival_candidates)
+			var ra: Dictionary = rc.actor
+			role.filled = {"npc":true, "name":ra.name, "talent":ra.talent, "fame":fame_at(ra, y), "actorId":ra.id, "rivalId":rc.rival.id}
+			press_event("Casting", "%s setzt %s in „%s“ durch" % [rc.rival.name, ra.name, casting.title])
 			continue
 		var candidates = available_actors().filter(func(a):
 			return a.g == role.gender and fame_at(a, y) >= role.minFame * 0.6 and age_of(a, y) >= role.ageMin - 6 and age_of(a, y) <= role.ageMax + 8)
@@ -1542,7 +1972,9 @@ func release_film(prod: Dictionary) -> Dictionary:
 		if c == null:
 			continue
 		var mult := 1.0 if r.type == "lead" else 0.5
+		var narrative_mult := narrative_multiplier(c, prod, r)
 		var delta: float = clampf(((quality - 55.0) / 8.0 + (ratio - 1.6) * 2.5) * mult, -8.0, 10.0)
+		delta = clampf(delta * narrative_mult, -12.0, 18.0)
 		# Gefallen "billing": prominente Platzierung im Vorspann bringt Extra-Ruhm.
 		if c.flags.get("billingBoost", false):
 			c.flags.erase("billingBoost")
@@ -1551,16 +1983,20 @@ func release_film(prod: Dictionary) -> Dictionary:
 		c.fame = clampf(c.fame + delta, 5.0, 100.0)
 		c.heat = clampf(c.heat + delta * 0.7, -10.0, 10.0)
 		c.loyalty = clampf(c.loyalty + (3.0 if delta > 0 else -2.0), 0.0, 100.0)
-		c.films.push_front({"title": prod.title, "year": int(state.year), "verdict": verdict, "quality": quality, "lead": r.type == "lead"})
+		c.films.push_front({"title": prod.title, "year": int(state.year), "verdict": verdict, "quality": quality, "lead": r.type == "lead", "genre":prod.genre, "prestige":int(prod.prestige), "ratio":ratio, "fameDelta":delta})
 		if c.films.size() > 12:
 			c.films.pop_back()
 		# Karriere-DNA: jede Rolle prägt das öffentliche Bild
-		imprint_dna(c, prod.genre, mult, int(prod.prestige), ratio)
+		imprint_dna(c, prod.genre, mult * narrative_mult, int(prod.prestige), ratio)
+		advance_narrative_on_release(c, prod, r)
+		if delta >= 5.0:
+			press_event("Neue Stars", "%s springt mit „%s“ um %d Ruhmpunkte nach vorn" % [client_name(c), prod.title, roundi(delta)])
+		snapshot_client(c)
 		affected.append("%s (%s%d Ruhm)" % [client_name(c), "+" if delta >= 0 else "", roundi(delta)])
 	if affected.size():
 		state.agency.rep = clampi(int(state.agency.rep) + (2 if ratio >= 2.0 else (-1 if ratio < 1.0 else 0)), 0, 100)
 	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) + (5 if ratio >= 2.0 else (-3 if ratio < 1.0 else 1)), 0, 100)
-	state.released.push_front({"title": prod.title, "genre": prod.genre, "year": int(state.year), "studioId": prod.studioId, "quality": quality, "revenue": revenue, "budget": prod.budget, "ratio": ratio, "verdict": verdict, "prestige": int(prod.prestige), "roles": prod.roles})
+	state.released.push_front({"title": prod.title, "genre": prod.genre, "year": int(state.year), "releaseMi":mi(), "studioId": prod.studioId, "quality": quality, "revenue": revenue, "budget": prod.budget, "ratio": ratio, "verdict": verdict, "prestige": int(prod.prestige), "roles": prod.roles})
 	var studio_name: String = _studio(prod.studioId).name
 	log_msg("Premiere „%s“ (%s): %s — %s Einspielergebnis bei Qualität %d." % [prod.title, studio_name, verdict, fmt_money(revenue), quality], "bad" if ratio < 1.0 else "deal")
 	return {"title": "Premiere: „%s“" % prod.title,
@@ -1582,6 +2018,7 @@ func awards_ceremony() -> Variant:
 	sorted.sort_custom(func(a, b): return a.quality > b.quality)
 	var noms = sorted.slice(0, 3)
 	var winner: Dictionary = noms[0]
+	press_event("Awards", "Award-Saison: „%s“ führt die Bestenliste des Jahrgangs %d an" % [winner.title, int(state.year) - 1])
 	var text := "Die Academy ehrt die Filme des Jahres %d.\n\nBester Film: „%s“" % [int(state.year) - 1, winner.title]
 	var perfs: Array = []
 	for f in noms:
@@ -1605,6 +2042,7 @@ func awards_ceremony() -> Variant:
 			state.agency.rep = clampi(int(state.agency.rep) + 6, 0, 100)
 			text += "\n\nDein Klient gewinnt! Ruf +6, Ruhm +8 — und dauerhaft mehr Verhandlungsmacht."
 			log_msg("%s gewinnt den Academy Award — vermittelt von %s!" % [best.name, state.agency.name], "history")
+			press_event("Awards", "%s gewinnt für „%s“ — Triumph für %s" % [best.name, best.film, state.agency.name])
 		for p in perfs.slice(0, 3):
 			if p.c != null:
 				for pr in p.c.promises:
@@ -1649,6 +2087,21 @@ func load_game() -> bool:
 		state["ledger"] = []
 	if not state.has("ledgerMonthly"):
 		state["ledgerMonthly"] = []
+	if not state.has("newspaper"):
+		state["newspaper"] = []
+	if not state.has("pressFeed"):
+		state["pressFeed"] = []
+	if not state.has("rivals"):
+		state["rivals"] = []
+	if state.rivals.is_empty():
+		_init_rivals(int(state.year))
+	if not state.has("identity"):
+		state["identity"] = {}
+	for identity_key in IDENTITY_KEYS:
+		if not state.identity.has(identity_key):
+			state.identity[identity_key] = 0.0
+	if not state.has("identityLastTop"):
+		state["identityLastTop"] = []
 	# Migration: alter Netzwerk-Wert wird in konkrete Gefallen umgewandelt
 	# (pro 15 Punkte ein Gefallen), das Feld danach entfernt.
 	if state.has("network"):
@@ -1671,9 +2124,29 @@ func load_game() -> bool:
 			c["secrets"] = []
 		if not c.has("secretThresholds"):
 			c["secretThresholds"] = []
+		if not c.has("narrative"):
+			c["narrative"] = {}
+		if not c.has("fameHistory"):
+			c["fameHistory"] = [{"mi":mi(), "v":float(c.fame)}]
+		if not c.has("dnaHistory"):
+			c["dnaHistory"] = [{"mi":mi(), "romantik":float(c.dna.romantik), "popular":float(c.dna.popular), "verlass":float(c.dna.verlass), "unikat":float(c.dna.unikat), "familie":float(c.dna.familie)}]
 	for rumor in state.rumors:
 		if not rumor.has("impactApplied"):
 			rumor["impactApplied"] = false
 		if not rumor.has("sourceSecret"):
 			rumor["sourceSecret"] = ""
+		if not rumor.has("industryBelief"):
+			rumor["industryBelief"] = float(rumor.get("belief", 0.0))
+		if not rumor.has("industryImpactApplied"):
+			rumor["industryImpactApplied"] = false
+	for rival in state.rivals:
+		if not rival.has("clients"):
+			rival["clients"] = []
+		if not rival.has("grudge"):
+			rival["grudge"] = 0.0
+		if not rival.has("rel"):
+			rival["rel"] = 0.0
+		if not rival.has("studioId"):
+			var studios := active_studios()
+			rival["studioId"] = str(studios[0].id) if studios.size() else ""
 	return true

@@ -59,6 +59,12 @@ py -3 tools/import_imdb.py --top 2000
 
 Bekanntheit wird aus den IMDb-Stimmenzahlen abgeleitet, Debüt/Peak aus den Jahren der bekanntesten Filme. **Lizenzhinweis:** Die IMDb-Datasets sind nur für persönliche, nicht-kommerzielle Nutzung freigegeben (siehe imdb.com/interfaces). Für ein kommerzielles Spiel müssen die Daten ersetzt werden (z. B. TMDb-API mit eigenem Key oder Wikidata).
 
+## Code-Qualität & Aufgaben
+
+- **Aufgaben-Chunks:** `prompts/tasks/` — kleine, abgeschlossene Arbeitspakete (Features + Technical-Debt-Abbau) mit Statusliste in `prompts/tasks/README.md`. Pro Session ein Chunk, pro Chunk ein Commit.
+- **SonarQube (lokal):** analysiert `js/`, `tools/`, `index.html`. Server: `powershell -File tools\sonar-server.ps1`, Scan: `powershell -File tools\sonar-analyze.ps1`, Dashboard: http://localhost:9000/dashboard?id=hollywood-manager. Details: `tools/sonar-README.md`.
+- **GDScript:** wird von SonarQube nicht unterstützt → gdlint einführen (Chunk 06).
+
 ## Struktur
 
 ```

@@ -18,6 +18,7 @@ config/features=PackedStringArray("4.7")
 
 Data="*res://scripts/Data.gd"
 Game="*res://scripts/Game.gd"
+Newspaper="*res://scripts/Newspaper.gd"
 Ev="*res://scripts/Events.gd"
 Jukebox="*res://scripts/MusicGen.gd"
 
