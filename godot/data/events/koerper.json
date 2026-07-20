@@ -1,0 +1,151 @@
+[
+	{
+		"id": "rollen_transformation",
+		"cd": 24,
+		"weight": {"base": 0.45, "mods": [{"if": {"min_year": 1950}, "add": 0.15}]},
+		"conditions": {"requires_client": {"min_fame": 35, "free": true}, "requires_studio": true},
+		"title": "Die Rolle verlangt alles",
+		"text": "{studio} bietet {client} eine Prestige-Rolle an. Die Regie verlangt eine sichtbare Verwandlung: zehn Kilogramm leichter oder schwerer bis zur Premiere.",
+		"choices": [
+			{
+				"label": "Zusagen: zehn Kilo abnehmen",
+				"effects": [
+					{"op": "exhaustion", "amount": 7},
+					{"op": "trust", "amount": 2},
+					{"op": "followup", "event": "rollen_transformation_abnahme", "delay_weeks": 12}
+				],
+				"outcome": "{client} nimmt die Herausforderung an. Trainer, Kostümproben und strenge Wochenpläne bestimmen fortan den Alltag."
+			},
+			{
+				"label": "Zusagen: zehn Kilo zunehmen",
+				"effects": [
+					{"op": "exhaustion", "amount": 7},
+					{"op": "trust", "amount": 2},
+					{"op": "followup", "event": "rollen_transformation_zunahme", "delay_weeks": 12}
+				],
+				"outcome": "{client} sagt zu. Die Verwandlung wird zum Gesprächsthema am Set, lange bevor eine Kamera läuft."
+			},
+			{
+				"label": "Double und Kostüm verhandeln",
+				"effects": [
+					{"op": "studio_rel", "amount": -6},
+					{"op": "trust", "amount": 1}
+				],
+				"outcome": "Das Kostümdepartement findet einen Weg. {client} ist erleichtert, doch {studio} hält die Lösung für einen teuren Kompromiss."
+			},
+			{
+				"label": "Die Rolle ablehnen",
+				"effects": [{"op": "studio_rel", "amount": -2}],
+				"outcome": "Die Rolle geht weiter. Niemand ist begeistert, aber die Grenze war klar."
+			}
+		]
+	},
+	{
+		"id": "rollen_transformation_abnahme",
+		"followup_only": true,
+		"title": "Premiere: Die Verwandlung",
+		"text": "Zwölf anstrengende Wochen liegen hinter {client}. Die Premiere entscheidet, ob Publikum und Kritik die körperliche Verwandlung als große Leistung sehen.",
+		"choices": [
+			{
+				"label": "Bis zur Premiere durchziehen",
+				"success_chance": 0.65,
+				"effects": [
+					{"op": "weight", "amount": -10},
+					{"op": "exhaustion", "amount": 12},
+					{"op": "fame", "amount": 5},
+					{"op": "heat", "amount": 2}
+				],
+				"effects_fail": [
+					{"op": "weight", "amount": -10},
+					{"op": "exhaustion", "amount": 18},
+					{"op": "mood", "amount": -5},
+					{"op": "fame", "amount": 1}
+				],
+				"outcome": "Die Premiere wird zum Triumph. Die Verwandlung bringt {client} neue Bewunderung und einen kräftigen Ruhmschub.",
+				"outcome_fail": "Die Leistung wird respektiert, der Film aber nicht. Zurück bleiben zehn verlorene Kilo und tiefe Erschöpfung."
+			},
+			{
+				"label": "Die Verwandlung vorzeitig abbrechen",
+				"effects": [
+					{"op": "weight", "amount": -4},
+					{"op": "studio_rel", "amount": -7},
+					{"op": "mood", "amount": 3}
+				],
+				"outcome": "{client} steigt aus dem strengen Programm aus. {studio} schäumt, doch der Alltag wird sofort leichter."
+			}
+		]
+	},
+	{
+		"id": "rollen_transformation_zunahme",
+		"followup_only": true,
+		"title": "Premiere: Die Verwandlung",
+		"text": "Zwölf anstrengende Wochen liegen hinter {client}. Die Premiere entscheidet, ob Publikum und Kritik die körperliche Verwandlung als große Leistung sehen.",
+		"choices": [
+			{
+				"label": "Bis zur Premiere durchziehen",
+				"success_chance": 0.65,
+				"effects": [
+					{"op": "weight", "amount": 10},
+					{"op": "exhaustion", "amount": 12},
+					{"op": "fame", "amount": 5},
+					{"op": "heat", "amount": 2}
+				],
+				"effects_fail": [
+					{"op": "weight", "amount": 10},
+					{"op": "exhaustion", "amount": 18},
+					{"op": "mood", "amount": -5},
+					{"op": "fame", "amount": 1}
+				],
+				"outcome": "Die Premiere wird zum Triumph. Die Verwandlung bringt {client} neue Bewunderung und einen kräftigen Ruhmschub.",
+				"outcome_fail": "Die Leistung wird respektiert, der Film aber nicht. Zurück bleiben zehn zusätzliche Kilo und tiefe Erschöpfung."
+			},
+			{
+				"label": "Die Verwandlung vorzeitig abbrechen",
+				"effects": [
+					{"op": "weight", "amount": 4},
+					{"op": "studio_rel", "amount": -7},
+					{"op": "mood", "amount": 3}
+				],
+				"outcome": "{client} steigt aus dem strengen Programm aus. {studio} schäumt, doch der Alltag wird sofort leichter."
+			}
+		]
+	},
+	{
+		"id": "boulevard_figur",
+		"cd": 18,
+		"weight": {"base": 0.65},
+		"conditions": {"requires_client": {"min_fame": 20, "weight_dev_min": 8}},
+		"title": "Die Figur in den Schlagzeilen",
+		"text": "Ein Klatschblatt spottet über die veränderte Figur von {client}. Die Bilder sind gehässig gewählt, die Überschrift noch schlimmer.",
+		"choices": [
+			{
+				"label": "Mit einer PR-Kampagne kontern ({money_fmt:6000})",
+				"requirements": {"min_cash": 6000},
+				"effects": [
+					{"op": "money", "amount": -6000, "inflate": true, "cat": "pr_recht", "label": "Figur-PR für {client}"},
+					{"op": "trust", "amount": 2},
+					{"op": "rep", "amount": 1}
+				],
+				"outcome": "Die Kampagne dreht den Ton: Aus Häme wird eine Debatte über Rollenbilder. {client} weiß, wer den Rücken freigehalten hat."
+			},
+			{
+				"label": "Das Gerede aussitzen",
+				"effects": [
+					{"op": "mood", "amount": -4},
+					{"op": "rumor", "text": "Die Boulevardpresse zerreißt die veränderte Figur von {client}.", "truth": false, "topic": "skandal", "belief": 28}
+				],
+				"outcome": "Nach einigen Tagen verschwinden die Bilder von der Titelseite. Bei {client} sitzt der Spott tiefer."
+			},
+			{
+				"label": "Eine Diät-Story inszenieren",
+				"effects": [
+					{"op": "weight", "amount": -2},
+					{"op": "exhaustion", "amount": 5},
+					{"op": "heat", "amount": 2},
+					{"op": "dna", "key": "popular", "amount": 2}
+				],
+				"outcome": "Das Magazin bekommt Trainingsfotos und einen exklusiven Plan. Die Geschichte verkauft sich – und {client} zahlt mit Kraft und Nerven."
+			}
+		]
+	}
+]

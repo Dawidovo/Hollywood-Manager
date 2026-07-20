@@ -64,6 +64,8 @@ Spiel einen plausiblen, je Schauspieler-ID deterministischen Wert. Positive
 JSON-Werte gewinnen immer. Das Anreicherungspaket `actors/body_core.json`
 enthält Körperdaten für rund 40 bekannte Schauspieler und kann durch weitere
 Actor-Pakete feldweise ergänzt oder überschrieben werden.
+Bei Klienten wird daraus `weightKg` als veränderliches Karrieregewicht; der
+Actor-Datensatz und der Talentpool behalten stets den unveränderten Basiswert.
 
 Hinweis zu `ethnicity`: Best-Effort-Daten mit Standardwert — Korrekturen sind
 ausdrücklich erwünscht und gehören in eine eigene JSON-Datei (wie
@@ -75,6 +77,10 @@ Siehe `events/core.json` — deklaratives Format mit `conditions`, `weight`,
 `choices` (je mit `requirements`, `effects`, `outcome`) und Eventketten über
 den Effekt `{"op": "followup", "event": "<id>", "delay_weeks": N}`.
 Kettenglieder tragen `"followup_only": true` und erscheinen nie im Zufallspool.
+`requires_client` unterstützt `weight_dev_min` als Mindestabweichung vom
+Basisgewicht in Kilogramm. Der Effekt `{"op": "weight", "amount": N}` ändert
+das aktuelle Klientengewicht um `N` kg; die zentrale Grenze von ±25 % des
+Basisgewichts gilt auch für Eventeffekte.
 
 ## Kern-Dateien regenerieren
 

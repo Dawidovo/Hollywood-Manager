@@ -467,7 +467,7 @@ func _ethnicity_de(a: Dictionary) -> String:
 
 # Meta-Zeile eines Schauspielers: Geschlecht · Alter · Geburtsjahr [· Ethnie] · Genres
 # Bewusst OHNE Todesjahr — reale Todesdaten werden dem Spieler nicht gespoilert.
-func _actor_meta(a: Dictionary, year: int) -> String:
+func _actor_meta(a: Dictionary, year: int, client_data: Dictionary = {}) -> String:
 	var parts: Array = [_gender_symbol(a), "%d J." % Game.age_of(a, year), "*%d" % int(a.birth)]
 	var eth_s := _ethnicity_de(a)
 	if eth_s != "":
@@ -475,7 +475,12 @@ func _actor_meta(a: Dictionary, year: int) -> String:
 	parts.append(" · ".join(a.genres.map(_genre_de)))
 	var body := Game.body_of(a)
 	parts.append("%d cm" % int(body.height))
-	parts.append("%d kg" % int(body.weight))
+	if client_data.is_empty():
+		parts.append("%d kg" % int(body.weight))
+	else:
+		var trend := float(client_data.get("weightTrend", 0.0))
+		var arrow := " ↗" if trend > 0.1 else (" ↘" if trend < -0.1 else "")
+		parts.append(("%.1f kg%s" % [float(client_data.get("weightKg", body.weight)), arrow]).replace(".", ","))
 	return " · ".join(parts)
 
 # "Bekannt aus: „Titel“ (Jahr) · …" — reale Filmografie bis zum aktuellen Spieljahr
@@ -1189,7 +1194,7 @@ func _render_klienten() -> void:
 			chips.append(_chip("🎬 Machtfigur: %s" % ("Regie" if str(c.flags.powerFigure) == "director" else "Produktion"), GOLD))
 		chips.append(_chip("📈 Aufsteigend", GREEN) if st.year < a.peak else _chip("📉 Nach dem Zenit", DIM))
 		box.add_child(_chip_row(chips))
-		box.add_child(_lbl(_actor_meta(a, st.year), 12, DIM))
+		box.add_child(_lbl(_actor_meta(a, st.year, c), 12, DIM))
 		box.add_child(_lbl("Talent %s · Charisma %s · Disziplin %s · Präsenz %s" % [
 			Game.grade_range(Game.eff_talent(c), 4, str(a.id) + "tal"), Game.grade_range(Game.attrs(a).charisma, 4, str(a.id) + "cha"),
 			Game.grade_range(Game.attrs(a).discipline, 4, str(a.id) + "dis"), Game.grade_range(Game.attrs(a).presence, 4, str(a.id) + "pre")], 12, DIM))

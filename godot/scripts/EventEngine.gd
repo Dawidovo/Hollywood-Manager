@@ -7,7 +7,7 @@ extends Node
 #
 # Schema-Kurzfassung:
 #   conditions: min_year/max_year, min_rep/max_rep, min_cash, min_clients,
-#     requires_client (true oder {min_fame, max_fame, free}),
+#     requires_client (true oder {min_fame, max_fame, free, weight_dev_min}),
 #     requires_studio, has_favor, backstory, chance
 #   weight: Zahl oder {base, mods:[{if:<conditions>, add, mult}]}
 #   choices: [{label, requirements, success_chance,
@@ -98,6 +98,9 @@ func _client_candidates(req) -> Array:
 		if float(c.fame) > float(r.get("max_fame", 101)):
 			return false
 		if bool(r.get("free", false)) and not Game.is_free(c):
+			return false
+		var weight_dev_min := float(r.get("weight_dev_min", 0.0))
+		if weight_dev_min > 0.0 and absf(float(c.get("weightKg", Game.client_base_weight(c))) - Game.client_base_weight(c)) < weight_dev_min:
 			return false
 		return true)
 
@@ -217,6 +220,9 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 		"exhaustion":
 			if c != null:
 				c.exhaustion = clampf(float(c.exhaustion) + amount, 0.0, 100.0)
+		"weight":
+			if c != null:
+				Game.change_client_weight(c, amount)
 		"loyalty":
 			if c != null:
 				c.loyalty = clampf(float(c.loyalty) + amount, 0.0, 100.0)

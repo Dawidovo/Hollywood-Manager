@@ -44,6 +44,7 @@ func _ready() -> void:
 	check(res.get("accepted", false), "Monroe unterschrieben")
 	var c = Game.state.clients[0]
 	check(c.dna.size() == 5, "Karriere-DNA initialisiert (5 Achsen)")
+	check(c.has("weightKg") and c.has("weightTrend") and absf(float(c.weightKg) - float(Game.body_of(Game.actor_by_id["monroe"]).weight)) < 0.01, "Signing initialisiert aktuelles Gewicht und Trend")
 	var dna_before = c.dna.duplicate()
 	print("  DNA-Start Monroe: ", c.dna)
 
@@ -92,13 +93,16 @@ func _ready() -> void:
 	Game.save_game()
 	var cash_before = Game.state.agency.cash
 	var dna_saved = null
+	var weight_saved = null
 	if Game.state.clients.size():
 		dna_saved = Game.state.clients[0].dna.duplicate()
+		weight_saved = float(Game.state.clients[0].weightKg)
 	Game.state = null
 	check(Game.load_game(), "Spielstand geladen")
 	check(int(Game.state.agency.cash) == int(cash_before), "Kasse identisch nach Load")
 	if dna_saved != null and Game.state.clients.size():
 		check(absf(Game.state.clients[0].dna.romantik - dna_saved.romantik) < 0.01, "DNA überlebt Save/Load")
+		check(absf(float(Game.state.clients[0].weightKg) - float(weight_saved)) < 0.01, "Klientengewicht überlebt Save/Load")
 
 	# 8. Vertrauen, Geheimnisse und vorbereitete Krisen
 	Game.new_game("Diskretion & Partner", 1950)
@@ -736,6 +740,50 @@ func _ready() -> void:
 	var own_filled: int = worst_casting.roles.slice(0, 2).filter(func(r): return r.filled != null and r.filled.get("clientId") != null).size()
 	check(str(worst_result.outcome) == "worst" and bool(worst_result.ownRetained) and own_filled >= 1, "Fremdbesetzungs-Pfad lässt mindestens einen eigenen Klienten in der Rolle")
 	check(Game.state.history_pairs.size() >= 1, "Chemistry-Read-Ergebnis schreibt die Paarhistorie fort")
+
+	# =====================================================================
+	# Gewichtsdynamik: Drift, Clamp, Planer, Events und Alt-Save-Migration
+	# =====================================================================
+	Game.new_game("Gewichts-Test", 1950)
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	var weight_client: Dictionary = Game.state.clients[0]
+	var weight_base := Game.client_base_weight(weight_client)
+	var weight_before_drift := float(weight_client.weightKg)
+	for weight_week in 4:
+		Game.end_week()
+	var drift_amount := absf(float(weight_client.weightKg) - weight_before_drift)
+	check(drift_amount >= 0.09 and drift_amount <= 0.41, "Monatliche Gewichtstrift nach vier Wochen bleibt plausibel (%0.2f kg)" % drift_amount)
+	weight_client.weightKg = weight_base
+	EvEngine.apply_effects([{"op": "weight", "amount": 2.0}], {"cid": int(weight_client.id)})
+	check(absf(float(weight_client.weightKg) - (weight_base + 2.0)) < 0.01, "EventEngine: weight-Op verändert das Klientengewicht")
+	EvEngine.apply_effects([{"op": "weight", "amount": 1000.0}], {"cid": int(weight_client.id)})
+	check(absf(float(weight_client.weightKg) - weight_base * 1.25) < 0.01, "Gewichts-Clamp greift bei +25 % des Basiswerts")
+	weight_client.weightKg = weight_base + 5.0
+	var weight_before_training := float(weight_client.weightKg)
+	Game._planner_client_week(weight_client, {"training": 4})
+	check(float(weight_client.weightKg) < weight_before_training and absf(float(weight_client.weightKg) - (weight_before_training - 0.20)) < 0.01, "Training zieht das Gewicht Richtung Basiswert")
+	weight_client.weightKg = weight_base + 8.1
+	check(EvEngine.check_conditions({"requires_client": {"weight_dev_min": 8}}), "weight_dev_min findet deutlich abweichenden Klienten")
+	weight_client.weightKg = weight_base + 7.9
+	check(not EvEngine.check_conditions({"requires_client": {"weight_dev_min": 8}}), "weight_dev_min sperrt bei zu kleiner Abweichung")
+	check(not EvEngine.def_by_id("rollen_transformation").is_empty() and not EvEngine.def_by_id("boulevard_figur").is_empty(), "Körper-Ereignisse aus koerper.json geladen")
+	check(not EvEngine.all_events().any(func(weight_ev): return str(weight_ev.id).begins_with("rollen_transformation_")), "Transformations-Folgeglieder bleiben aus dem Zufallspool")
+	weight_client.weightKg = weight_base + 3.25
+	weight_client.weightTrend = 0.25
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Gewichts-Spielstand geladen")
+	var loaded_weight_client: Dictionary = Game.state.clients[0]
+	check(absf(float(loaded_weight_client.weightKg) - (weight_base + 3.25)) < 0.01 and absf(float(loaded_weight_client.weightTrend) - 0.25) < 0.01, "weightKg und weightTrend überleben Save/Load")
+	loaded_weight_client.erase("weightKg")
+	loaded_weight_client.erase("weightTrend")
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Alt-Spielstand ohne Gewichtsfelder geladen")
+	loaded_weight_client = Game.state.clients[0]
+	check(absf(float(loaded_weight_client.weightKg) - weight_base) < 0.01 and absf(float(loaded_weight_client.weightTrend)) < 0.01, "Migration ergänzt Gewichtsfelder aus dem Basiswert")
 
 	# =====================================================================
 	# Wochenrhythmus: 4 Wochen = 1 Monat, Fixkosten nur beim Monatsabschluss

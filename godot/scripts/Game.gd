@@ -200,6 +200,45 @@ func body_of(a: Dictionary) -> Dictionary:
 		weight = roundi(bmi * pow(float(height) / 100.0, 2.0))
 	return {"height": height, "weight": weight}
 
+func client_base_weight(c: Dictionary) -> float:
+	var actor: Dictionary = actor_by_id.get(str(c.get("aid", "")), {})
+	if actor.is_empty():
+		return maxf(float(c.get("weightKg", 1.0)), 1.0)
+	return float(body_of(actor).weight)
+
+func clamp_client_weight(c: Dictionary, value: float) -> float:
+	var base := client_base_weight(c)
+	return clampf(value, base * 0.75, base * 1.25)
+
+func change_client_weight(c: Dictionary, amount: float) -> float:
+	var before := float(c.get("weightKg", client_base_weight(c)))
+	var after := snappedf(clamp_client_weight(c, before + amount), 0.01)
+	c["weightKg"] = after
+	c["weightTrend"] = after - before
+	return after - before
+
+func _tick_client_weight(c: Dictionary, actor: Dictionary, discipline: float) -> void:
+	var seed := hashs(str(actor.id) + "weight_drift")
+	var natural_dir := 1.0 if seed % 2 == 0 else -1.0
+	var delta := natural_dir * (0.10 + float(int(seed / 2) % 3) * 0.05)
+	var age := age_of(actor, state.year)
+	if age >= 40:
+		delta += minf(0.15, 0.08 + float(age - 40) * 0.002)
+	var base := client_base_weight(c)
+	var current := float(c.get("weightKg", base))
+	if discipline >= 70.0:
+		delta += clampf((base - current) * 0.08, -0.20, 0.20)
+	elif discipline < 40.0:
+		delta += natural_dir * 0.05
+	if float(c.exhaustion) > 60.0:
+		var stress_dir := 1.0 if hashs(str(actor.id) + "weight_stress") % 2 == 0 else -1.0
+		delta += stress_dir * 0.15
+	delta = clampf(delta, -0.40, 0.40)
+	if absf(delta) < 0.10:
+		var fallback_dir := 1.0 if delta > 0.0 or (is_zero_approx(delta) and age >= 40) else -1.0
+		delta = fallback_dir * 0.10
+	change_client_weight(c, delta)
+
 # ---------- Ökonomie & Karriere-Mathematik ----------
 func infl(year: float) -> float:
 	return pow(1.03, year - 1925.0)
@@ -1526,6 +1565,7 @@ func sign_client(terms: Dictionary) -> Dictionary:
 	var c := {
 		"id": next_id(), "aid": actor.id, "fame": float(nego.fame), "heat": 0.0,
 		"loyalty": float(rndi(45, 60) + (6 if terms.bonus > 0 else 0)), "mood": 60.0, "exhaustion": 0.0,
+		"weightKg": float(body_of(actor).weight), "weightTrend": 0.0,
 		"commission": int(terms.commission), "perks": terms.get("perks", []),
 		"years": int(terms.years), "contractEnd": mi() + int(terms.years) * 12,
 		"promises": [], "busyUntil": 0, "films": [], "flags": {}, "talentBonus": 0.0,
@@ -1680,6 +1720,7 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	fit += float(casting.get("agencyBoost", 0.0))
 	fit -= float(casting.get("powerRivalBlock", 0.0))
 	fit -= maxf(0.0, (c.exhaustion - 50.0) / 2.5)
+	# Erweiterungspunkt: Körpergewicht wirkt bewusst noch nicht auf die Besetzung.
 	# Karriere-DNA: passt das öffentliche Bild zur Rolle?
 	fit += dna_fit(c, casting.genre, studio_style(casting.studioId))
 	var style := studio_style(casting.studioId)
@@ -2109,6 +2150,7 @@ func tick_clients(events: Array) -> void:
 		var busy := not is_free(c)
 		var disc: float = attrs(actor).discipline
 		# Kleine monatliche Schritte; große Sprünge kommen aus Entscheidungen.
+		_tick_client_weight(c, actor, disc)
 		var trust_growth := 0.28 + minf(0.28, c.perks.size() * 0.07) + (0.10 if busy else 0.0)
 		change_trust(c, trust_growth)
 		if busy:
@@ -2568,6 +2610,12 @@ func load_game() -> bool:
 	for c in state.clients:
 		if not c.has("dna"):
 			c["dna"] = initial_dna(actor_by_id[c.aid])
+		if not c.has("weightKg"):
+			c["weightKg"] = client_base_weight(c)
+		else:
+			c["weightKg"] = clamp_client_weight(c, float(c.weightKg))
+		if not c.has("weightTrend"):
+			c["weightTrend"] = 0.0
 		if not c.has("clauses"):
 			c["clauses"] = []
 		if not c.has("exclusiveStudio"):
@@ -3789,6 +3837,9 @@ func _apply_planner(_events: Array) -> void:
 		state.planner.clients[key] = _empty_week()
 
 func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
+	var base_weight := client_base_weight(c)
+	var weight_start := float(c.get("weightKg", base_weight))
+	var weight_next := weight_start
 	var n_erh := int(counts.get("erholung", 0))
 	if n_erh > 0:
 		c.exhaustion = clampf(c.exhaustion - 0.6 * n_erh, 0.0, 100.0)
@@ -3799,8 +3850,11 @@ func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
 	var n_tr := int(counts.get("training", 0))
 	if n_tr > 0:
 		c.talentBonus = minf(10.0, float(c.get("talentBonus", 0.0)) + 0.015 * n_tr)
+		weight_next = move_toward(weight_next, base_weight, 0.05 * n_tr)
 	var n_gala := int(counts.get("gala", 0))
 	if n_gala > 0:
+		var gala_dir := -1.0 if weight_next < base_weight else 1.0
+		weight_next += gala_dir * 0.02 * n_gala
 		book(-float(roundi(60.0 * n_gala * infl(state.year))), "events", "Gala-Abende: %s" % client_name(c))
 		# Höchstens ein Gefallen pro Woche — Galas sind kein Bauernhof
 		if chance(1.0 - pow(0.95, float(n_gala))):
@@ -3812,6 +3866,8 @@ func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
 	if n_vor > 0:
 		var fit := 8.0 * minf(1.0, float(n_vor) / 3.0)
 		c.flags["prepFit"] = maxf(float(c.flags.get("prepFit", 0.0)), fit)
+	if not is_equal_approx(weight_next, weight_start):
+		change_client_weight(c, weight_next - weight_start)
 
 func _planner_presse() -> void:
 	# Gerücht-Früherkennung: das jüngste unbekannte Gerücht kommt auf den Tisch
