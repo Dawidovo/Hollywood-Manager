@@ -1,0 +1,180 @@
+{
+	"action": {
+		"a": [
+			"Operation",
+			"Codename",
+			"Projekt",
+			"Countdown",
+			"Kommando"
+		],
+		"b": [
+			"Falke",
+			"Mitternacht",
+			"Omega",
+			"Feuersturm",
+			"Sieben"
+		]
+	},
+	"adventure": {
+		"a": [
+			"Der Schatz von",
+			"Expedition",
+			"Flucht aus",
+			"Sturm über",
+			"Safari nach"
+		],
+		"b": [
+			"Sansibar",
+			"Macao",
+			"Nairobi",
+			"Borneo",
+			"Java"
+		]
+	},
+	"comedy": {
+		"a": [
+			"Ärger mit",
+			"Chaos mit",
+			"Ferien mit",
+			"Hochzeit mit",
+			"Ein Abend mit"
+		],
+		"b": [
+			"dem Boss",
+			"Tante Polly",
+			"Millionären",
+			"dem falschen Mann",
+			"Mr. Pennyworth"
+		]
+	},
+	"crime": {
+		"a": [
+			"Der Pate von",
+			"Straßen von",
+			"Die Nacht von",
+			"Der Coup von",
+			"Das Syndikat von"
+		],
+		"b": [
+			"Chicago",
+			"San Francisco",
+			"Marseille",
+			"Havanna",
+			"Brooklyn"
+		]
+	},
+	"drama": {
+		"a": [
+			"Der lange",
+			"Ein bitterer",
+			"Der letzte",
+			"Der stille",
+			"Der fremde",
+			"Ein kurzer"
+		],
+		"b": [
+			"Abschied",
+			"Sommer",
+			"Morgen",
+			"Regen",
+			"Fluss",
+			"Winter"
+		]
+	},
+	"horror": {
+		"a": [
+			"Das Flüstern von",
+			"Der Fluch von",
+			"Schreie aus",
+			"Die Nacht von",
+			"Das Ritual von"
+		],
+		"b": [
+			"Blackwood",
+			"Ravenhill",
+			"Croft Manor",
+			"Innsfield",
+			"St. Mary"
+		]
+	},
+	"musical": {
+		"a": [
+			"Rhythmus von",
+			"Sterne über",
+			"Swing in",
+			"Eine Nacht in",
+			"Melodie von"
+		],
+		"b": [
+			"Harlem",
+			"Manhattan",
+			"New Orleans",
+			"Hollywood",
+			"Havanna"
+		]
+	},
+	"romance": {
+		"a": [
+			"Eine Nacht in",
+			"Briefe aus",
+			"Wiedersehen in",
+			"Ein Frühling in",
+			"Abschied von"
+		],
+		"b": [
+			"Paris",
+			"Verona",
+			"Casablanca",
+			"Manhattan",
+			"Rom"
+		]
+	},
+	"scifi": {
+		"a": [
+			"Signal aus",
+			"Kolonie",
+			"Jenseits von",
+			"Protokoll",
+			"Expedition"
+		],
+		"b": [
+			"Andromeda",
+			"Orion",
+			"Eden",
+			"Titan",
+			"Proxima"
+		]
+	},
+	"thriller": {
+		"a": [
+			"Die Akte",
+			"Der Fall",
+			"Das Protokoll",
+			"Der Schatten von",
+			"Die Nacht von"
+		],
+		"b": [
+			"Kestrel",
+			"Marlowe",
+			"Blackwood",
+			"Monte Carlo",
+			"Havanna"
+		]
+	},
+	"western": {
+		"a": [
+			"Der Marshal von",
+			"Die Legende von",
+			"Zwölf Meilen bis",
+			"Der letzte Ritt nach",
+			"Goldrausch in"
+		],
+		"b": [
+			"Abilene",
+			"Red Creek",
+			"Laredo",
+			"Cheyenne",
+			"Eldorado"
+		]
+	}
+}

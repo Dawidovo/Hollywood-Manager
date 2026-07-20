@@ -1,0 +1,35 @@
+{
+	"action": {
+		"de": "Action"
+	},
+	"adventure": {
+		"de": "Abenteuer"
+	},
+	"comedy": {
+		"de": "Komödie"
+	},
+	"crime": {
+		"de": "Krimi"
+	},
+	"drama": {
+		"de": "Drama"
+	},
+	"horror": {
+		"de": "Horror"
+	},
+	"musical": {
+		"de": "Musical"
+	},
+	"romance": {
+		"de": "Romanze"
+	},
+	"scifi": {
+		"de": "Science-Fiction"
+	},
+	"thriller": {
+		"de": "Thriller"
+	},
+	"western": {
+		"de": "Western"
+	}
+}

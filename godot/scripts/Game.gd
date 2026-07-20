@@ -208,7 +208,11 @@ func ask_fee(fame: float, year: float) -> float:
 	return maxf(infl(year) * 900000.0 * pow(fame / 100.0, 2.6), 5000.0 * infl(year))
 
 func required_rep(fame: float) -> int:
-	return 0 if fame <= 45 else roundi((fame - 45.0) * 1.1)
+	var req := 0 if fame <= 45 else roundi((fame - 45.0) * 1.1)
+	# Backstory-Schwäche (z. B. Aufsteiger): A-Lister verlangen zusätzlichen Ruf
+	if fame >= 70.0:
+		req += int(backstory_mod("required_rep_add", 0.0))
+	return req
 
 func grade(v: float) -> String:
 	for band in GRADE_BANDS:
@@ -217,6 +221,9 @@ func grade(v: float) -> String:
 	return "F"
 
 func grade_range(v: float, spread: float, seed_s: String) -> String:
+	# Backstory-Trait (z. B. gescheiterte:r Schauspieler:in): engere Einschätzung
+	if state != null:
+		spread = maxf(2.0, spread + backstory_mod("grade_spread_add", 0.0))
 	var jitter: float = float(hashs(seed_s) % 9) - 4.0
 	var center: float = clampf(v + jitter, 3.0, 100.0)
 	var lo := grade(clampf(center - spread, 0.0, 100.0))
@@ -402,10 +409,11 @@ func studio_style(studio_id: String) -> String:
 # =====================================================================
 # Spielzustand
 # =====================================================================
-func new_game(agency_name: String, start_year: int) -> void:
+func new_game(agency_name: String, start_year: int, backstory_id: String = "") -> void:
 	state = {
 		"agency": {"name": agency_name, "cash": 0.0, "rep": 15, "debtMonths": 0},
-		"year": start_year, "month": 1, "startYear": start_year,
+		"year": start_year, "month": 1, "week": 1, "startYear": start_year,
+		"saveVersion": 2, "backstory": backstory_id,
 		"favors": [], "debts": [],
 		"ledger": [], "ledgerMonthly": [],
 		"clients": [], "castings": [], "productions": [], "released": [], "log": [],
@@ -413,7 +421,8 @@ func new_game(agency_name: String, start_year: int) -> void:
 		"rivals": [], "powerFigures": [], "identity": {}, "identityLastTop": [],
 		"instinct": 20, "predictions": [], "history_pairs": {},
 		"audition": null, "directors": {},
-		"planner": {"player": [null, null, null, null], "clients": {}}, "scoutBonus": 0,
+		"planner": {"player": _empty_week(), "clients": {}}, "scoutBonus": 0,
+		"plannerMonthCounts": {},
 		"coverage": {"current": null, "history": []}, "coverageQueue": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [],
@@ -429,7 +438,59 @@ func new_game(agency_name: String, start_year: int) -> void:
 	# Ein alter Bekannter aus den Anfangsjahren erinnert sich.
 	grant_favor("galaInvite", favor_contact_for("galaInvite"))
 	log_msg("%s öffnet ihre Büros am Sunset Boulevard. Zeit, Karrieren zu machen." % agency_name, "history")
+	_apply_backstory_start()
 	spawn_castings(rndi(2, 3))
+
+# ---------- Backstory (wählbare Vorgeschichte der Spielfigur) ----------
+func has_backstory(id_s: String) -> bool:
+	return state != null and str(state.get("backstory", "")) == id_s
+
+func backstory_def() -> Dictionary:
+	if state == null:
+		return {}
+	var id_s := str(state.get("backstory", ""))
+	if id_s == "":
+		return {}
+	for b in Data.BACKSTORIES:
+		if str(b.id) == id_s:
+			return b
+	return {}
+
+# Numerischer Trait-/Schwächen-Wert der aktiven Backstory (Summe aus beiden).
+func backstory_mod(key: String, def_val: float = 0.0) -> float:
+	var b := backstory_def()
+	if b.is_empty():
+		return def_val
+	var t: Dictionary = b.get("trait", {}).get("effects", {})
+	var w: Dictionary = b.get("weakness", {}).get("effects", {})
+	if not t.has(key) and not w.has(key):
+		return def_val
+	return float(t.get(key, 0.0)) + float(w.get(key, 0.0))
+
+# Wie viele Klienten die Agentur seriös betreuen kann. Noch KEIN hartes Limit —
+# Durchsetzung kommt mit dem Personal-System in einer späteren Iteration.
+func client_capacity() -> int:
+	var b := backstory_def()
+	return 6 + int(b.get("client_capacity_mod", 0))
+
+func _apply_backstory_start() -> void:
+	var b := backstory_def()
+	if b.is_empty():
+		return
+	var start: Dictionary = b.get("start", {})
+	if float(start.get("cash_add", 0)) != 0.0:
+		book(roundf(float(start.cash_add) * infl(state.startYear)), "sonstiges", "Vorgeschichte: %s" % str(b.name))
+	state.agency.rep = clampi(int(state.agency.rep) + int(start.get("rep_add", 0)), 0, 100)
+	state.instinct = clampi(int(state.instinct) + int(start.get("instinct_add", 0)), 5, 100)
+	for kind_s in start.get("favors", []):
+		grant_favor(str(kind_s), favor_contact_for(str(kind_s)), true)
+	var by_style: Dictionary = start.get("studio_rel_style", {})
+	var rel_all := int(start.get("studio_rel_all", 0))
+	for s in Data.STUDIOS:
+		var add := rel_all + int(by_style.get(str(s.style), 0))
+		if add != 0 and state.studioRel.has(s.id):
+			state.studioRel[s.id] = clampi(int(state.studioRel[s.id]) + add, 0, 100)
+	log_msg("Vorgeschichte: %s — %s" % [str(b.name), str(b.get("desc", ""))], "history")
 
 func next_id() -> int:
 	state.nextId = int(state.nextId) + 1
@@ -499,10 +560,14 @@ func _init_rivals(year: int) -> void:
 			"studioId":str(studios[i % studios.size()].id) if studios.size() else ""})
 
 func date_str() -> String:
-	return "%s %d" % [MONTHS_DE[int(state.month) - 1], int(state.year)]
+	return "%d. Woche · %s %d" % [int(state.get("week", 1)), MONTHS_DE[int(state.month) - 1], int(state.year)]
 
 func mi() -> int:
 	return int(state.year) * 12 + int(state.month) - 1
+
+# Wochenindex (4 Wochen pro Monat)
+func wi() -> int:
+	return mi() * 4 + int(state.get("week", 1)) - 1
 
 func mi_str(m) -> String:
 	return "%s %d" % [MONTHS_DE[int(m) % 12], int(m) / 12]
@@ -717,6 +782,9 @@ func random_client(filter: Callable = Callable()) -> Variant:
 
 # ---------- Vertrauen, Geheimnisse & Gerüchte ----------
 func change_trust(c: Dictionary, delta: float) -> void:
+	# Backstory-Trait: manche gewinnen Vertrauen schneller
+	if delta > 0.0:
+		delta *= backstory_mod("trust_gain_mult", 1.0)
 	var cap: float = clampf(float(c.get("trustCap", 100.0)), 0.0, 100.0)
 	c["trust"] = clampf(float(c.get("trust", 30.0)) + delta, 0.0, cap)
 
@@ -818,6 +886,9 @@ func maybe_reveal_secret(c: Dictionary, events: Array, force: bool = false) -> b
 	return false
 
 func add_rumor(subject, text_s: String, truth: bool, topic: String, holders: Array = [], belief: float = 10.0, known: bool = false, source_secret: String = "", industry_belief: float = -1.0) -> Dictionary:
+	# Backstory-Trait (Kolumnist:in): neue Gerüchte erreichen dich sofort
+	if not known and backstory_mod("rumor_auto_known", 0.0) > 0.0 and chance(backstory_mod("rumor_auto_known", 0.0)):
+		known = true
 	var industry_start := belief if industry_belief < 0.0 else industry_belief
 	var rumor := {"id":next_id(), "subject":subject, "text":text_s, "truth":truth, "topic":topic,
 		"holders":holders.duplicate(), "belief":clampf(belief, 0.0, 100.0), "industryBelief":clampf(industry_start, 0.0, 100.0),
@@ -1388,7 +1459,7 @@ func evaluate_offer(offer: Dictionary) -> float:
 			"likenessRights": clause_score += 4.0
 			"sequelOption": clause_score -= 8.0 * p.prestige * 2.0
 			"moralClause": clause_score -= 7.0
-	return money_raw * p.money * 2.6 + promise_raw * trust + perks_score + years_score + standing + clause_score + identity_offer_modifier(nego.actor) - (nego.round - 1) * 3.0
+	return money_raw * p.money * 2.6 + promise_raw * trust + perks_score + years_score + standing + clause_score + identity_offer_modifier(nego.actor) - (nego.round - 1) * 3.0 + backstory_mod("nego_bonus", 0.0)
 
 func mood_label(score: float) -> Array:
 	if score >= 65.0: return ["begeistert", "pos"]
@@ -1564,7 +1635,7 @@ func _make_casting() -> Dictionary:
 		"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
 		"prestige": prestige,
 		"budget": roundi(fee_sum * rndf(3.0, 4.5) + 400000.0 * infl(y) * rndf(0.6, 1.4) * (1.0 + prestige * 0.3)),
-		"deadline": rndi(2, 3), "roles": roles, "qualityMod": 0.0,
+		"deadline": rndi(8, 12), "roles": roles, "qualityMod": 0.0,
 	}
 	# Seltene offene Einladung auch für eine Nebenrolle.
 	casting["auditionSupport"] = chance(0.12)
@@ -1694,7 +1765,7 @@ func close_deal(fee: float, extra_log: String = "", clauses: Array = [], billing
 	role.filled = {"clientId": int(c.id), "fee": roundi(fee), "billing": billing}
 	if clauses.size():
 		role.filled["clauses"] = clauses.duplicate()
-	c.busyUntil = mi() + int(casting.deadline)
+	c.busyUntil = mi() + ceili(float(casting.deadline) / 4.0)
 	# Studiosystem-Ära: erste Zusammenarbeit bindet den Klienten exklusiv (Feature 14)
 	if int(state.year) < 1948 and str(c.get("exclusiveStudio", "")) == "":
 		c["exclusiveStudio"] = str(casting.studioId)
@@ -1760,7 +1831,7 @@ func try_package(support_role_idx: int, second_client_id) -> Dictionary:
 		var fee2 := roundi(role_fee_for(casting, role2, c2) * 1.12)
 		close_deal(fee1, " (Package-Deal)")
 		role2.filled = {"clientId": int(c2.id), "fee": fee2}
-		c2.busyUntil = mi() + int(casting.deadline)
+		c2.busyUntil = mi() + ceili(float(casting.deadline) / 4.0)
 		c2.mood = clampf(c2.mood + 8.0, 0.0, 100.0)
 		check_promises_on_deal(c2, casting, role2)
 		log_msg("Package-Deal perfekt: %s übernimmt zusätzlich eine Nebenrolle in „%s“ für %s." % [client_name(c2), casting.title, fmt_money(fee2)], "deal")
@@ -1807,7 +1878,7 @@ func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
 		"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
 		"prestige": opts.get("prestige", rndi(1, 2)),
 		"budget": roundi(fee * rndf(3.0, 4.5) + 300000.0 * infl(state.year)),
-		"monthsLeft": months, "qualityMod": opts.get("qualityMod", 0.0),
+		"weeksLeft": months * 4, "qualityMod": opts.get("qualityMod", 0.0),
 		"roles": [{"type": role_type, "gender": actor.g, "minFame": 30, "ageMin": 18, "ageMax": 99, "fee": fee, "filled": {"clientId": int(c.id), "fee": fee, "billing": 1}, "rejected": []}],
 	}
 	_init_production_uncertainty(prod)
@@ -1833,16 +1904,71 @@ func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
 # =====================================================================
 # Monatswechsel
 # =====================================================================
+# Kompatibilitäts-Helfer (Tests/Hooks): simuliert Wochen bis zum Monatswechsel.
 func end_month() -> Array:
+	var events: Array = []
+	var m := int(state.month)
+	var guard := 0
+	while int(state.month) == m and not state.over and guard < 5:
+		events.append_array(end_week())
+		guard += 1
+	return events
+
+# ---------- Wochen-Zug ----------
+func end_week() -> Array:
 	if state.over:
 		return []
 	var events: Array = []
+	var strike: bool = int(state.strikeMonths) > 0
+
+	# Wochenplaner: die geplante Woche wirkt VOR den Ereignissen
+	_apply_planner(events)
+
+	# Castings → Produktionen (Deadline in Wochen)
+	if not strike:
+		for casting in state.castings.duplicate():
+			casting.deadline = int(casting.deadline) - 1
+			if int(casting.deadline) <= 0:
+				start_production(casting, events)
+				state.castings.erase(casting)
+
+	# Produktionen → Release (Restzeit in Wochen)
+	if not strike or state.strikeExempt:
+		for prod in state.productions.duplicate():
+			ensure_prod_fields(prod)
+			prod.weeksLeft = int(prod.weeksLeft) - 1
+			if int(prod.weeksLeft) <= 0:
+				events.append(release_film(prod))
+				state.productions.erase(prod)
+
+	# Follow-ups (Ketten): fällige Folge-Ereignisse (due bleibt im Monatsindex)
+	for fu in state.followups.duplicate():
+		if mi() >= int(fu.due):
+			state.followups.erase(fu)
+			var ev = EvEngine.build_by_id(str(fu.event), fu.get("ctx", {})) if str(fu.get("type", "")) == "json" else Ev.build_followup(fu)
+			if ev != null:
+				events.append(ev)
+
+	maybe_fire_event(events)
+
+	if int(state.get("week", 1)) >= 4:
+		state.week = 1
+		_month_close(events)
+	else:
+		state.week = int(state.get("week", 1)) + 1
+	save_game()
+	return events
+
+# ---------- Monatsabschluss (läuft nach der 4. Woche) ----------
+func _month_close(events: Array) -> void:
+	var strike: bool = int(state.strikeMonths) > 0
 	# Fixkosten des abgelaufenen Monats buchen und die Buchhaltung
 	# des Monats abschließen (Aggregat in ledgerMonthly).
-	# Weekly Planner: „Bücher prüfen“ senkt die Bürokosten des Monats um 10 %
-	var base_cost := roundi((2200.0 + state.clients.size() * 600.0) * infl(state.year))
-	if _planner_has("buecher"):
+	# Wochenplaner: ≥3 „Bücher prüfen“-Slots im Monat senken die Bürokosten um 10 %
+	var base_cost := roundi((2200.0 + state.clients.size() * 600.0) * infl(state.year) * backstory_mod("office_cost_mult", 1.0))
+	if int(state.get("plannerMonthCounts", {}).get("buecher", 0)) >= 3:
 		base_cost = roundi(base_cost * 0.9)
+	state["plannerMonthCounts"] = {}
 	var perk_cost := roundi(perk_costs())
 	book(-float(base_cost), "buero", "Büro, Personal & Fixkosten")
 	if perk_cost > 0:
@@ -1883,8 +2009,7 @@ func end_month() -> Array:
 	if state.marketHistory.size() > 24:
 		state.marketHistory.pop_front()
 
-	# Streik
-	var strike: bool = int(state.strikeMonths) > 0
+	# Streik (Countdown monatlich; blockiert die Wochen-Ticks über strikeMonths > 0)
 	if strike:
 		state.strikeMonths = int(state.strikeMonths) - 1
 		log_msg("Der Streik legt Hollywood lahm%s." % (" — deine Produktionen laufen per Ausnahme weiter" if state.strikeExempt else ""), "bad")
@@ -1892,21 +2017,7 @@ func end_month() -> Array:
 			log_msg("Der Streik ist beendet. Die Studios fahren die Produktion wieder hoch.", "history")
 			state.strikeExempt = false
 
-	# Castings → Produktionen
-	if not strike:
-		for casting in state.castings.duplicate():
-			casting.deadline = int(casting.deadline) - 1
-			if int(casting.deadline) <= 0:
-				start_production(casting, events)
-				state.castings.erase(casting)
-
-	# Produktionen → Release (+ monatliche Set-Signale, Feature 13)
-	if not strike or state.strikeExempt:
-		for prod in state.productions.duplicate():
-			prod.monthsLeft = int(prod.monthsLeft) - 1
-			if int(prod.monthsLeft) <= 0:
-				events.append(release_film(prod))
-				state.productions.erase(prod)
+	# Monatliche, unzuverlässige Set-Signale (Feature 13)
 	if not strike:
 		_tick_signals(events)
 
@@ -1919,8 +2030,6 @@ func end_month() -> Array:
 	# ggf. neues Blatt auf den Schreibtisch (neue Blätter nur ohne Streik)
 	_tick_coverage(events, strike)
 
-	# Weekly Planner: geplante Wochen-Aktivitäten wirken VOR den Ereignissen
-	_apply_planner(events)
 	tick_clients(events)
 	tick_rumors(events)
 	tick_rivals(events)
@@ -1929,20 +2038,10 @@ func end_month() -> Array:
 	# Instinkt-Prognosen (Feature 6): fällige Wetten auflösen
 	tick_predictions(events)
 
-	# Follow-ups
-	for fu in state.followups.duplicate():
-		if mi() >= int(fu.due):
-			state.followups.erase(fu)
-			var ev = Ev.build_followup(fu)
-			if ev != null:
-				events.append(ev)
-
 	if int(state.month) == 2:
 		var aw = awards_ceremony()
 		if aw != null:
 			events.append(aw)
-
-	maybe_fire_event(events)
 
 	_expire_favors()
 	if state.agency.cash < 0:
@@ -1954,12 +2053,12 @@ func end_month() -> Array:
 	else:
 		state.agency.debtMonths = 0
 	Newspaper.build_newspaper()
-	save_game()
-	return events
 
+# Feuert wöchentlich — die Chancen sind so gewählt, dass die Monatsfrequenz
+# der alten Werte (0,45 bzw. 0,8 pro Monat) erhalten bleibt: 1−(1−p)⁴.
 func maybe_fire_event(events: Array) -> void:
 	var candidates: Array = []
-	for e in Ev.all_events():
+	for e in Ev.all_events() + EvEngine.all_events():
 		if int(state.eventCd.get(e.id, 0)) > mi():
 			continue
 		var w: float = e.weight.call()
@@ -1973,7 +2072,7 @@ func maybe_fire_event(events: Array) -> void:
 		total += x.w
 		if x.w >= 3.0:
 			seasonal = true
-	if not chance(0.8 if seasonal else 0.45):
+	if not chance(0.33 if seasonal else 0.14):
 		return
 	var r := randf() * total
 	var chosen: Dictionary = candidates[0]
@@ -2137,7 +2236,7 @@ func start_production(casting: Dictionary, events: Array = []) -> void:
 		log_msg("Drehbeginn „%s“ — Provisionen über %s gehen ein." % [casting.title, fmt_money(income)], "deal")
 	var prod = casting.duplicate(true)
 	# WICHTIG: Rollen-Referenzen behalten? Produktion arbeitet auf Kopie — Klienten-IDs bleiben gültig.
-	prod["monthsLeft"] = months
+	prod["weeksLeft"] = months * 4
 	_init_production_uncertainty(prod)
 	state.productions.append(prod)
 	# Instinkt-Prognose (Feature 6a): „Wird das ein Hit?“ beim Drehbeginn anbieten
@@ -2365,7 +2464,27 @@ func load_game() -> bool:
 	f.close()
 	if parsed == null:
 		return false
+	if int(parsed.get("saveVersion", 1)) > 2:
+		push_warning("Spielstand stammt aus einer neueren Version — Laden abgelehnt.")
+		return false
 	state = parsed
+	# v1 → v2: Umstellung auf den Wochenrhythmus.
+	if int(state.get("saveVersion", 1)) < 2:
+		state["week"] = 1
+		for prod in state.get("productions", []):
+			prod["weeksLeft"] = int(prod.get("monthsLeft", 4)) * 4
+			prod.erase("monthsLeft")
+		for cs in state.get("castings", []):
+			cs["deadline"] = int(cs.get("deadline", 2)) * 4
+		# Alte 4-Slot-Planung verwerfen — ensure_planner baut die 21-Slot-Woche auf.
+		state["planner"] = {"player": [], "clients": {}}
+		state["saveVersion"] = 2
+	if not state.has("week"):
+		state["week"] = 1
+	if not state.has("backstory"):
+		state["backstory"] = ""
+	if not state.has("plannerMonthCounts"):
+		state["plannerMonthCounts"] = {}
 	# Migration: neue rein JSON-basierte Felder für ältere Stände nachrüsten.
 	if not state.has("rumors"):
 		state["rumors"] = []
@@ -2408,9 +2527,9 @@ func load_game() -> bool:
 	if not state.has("scoutBonus"):
 		state["scoutBonus"] = 0
 	if not state.has("planner"):
-		state["planner"] = {"player": [null, null, null, null], "clients": {}}
+		state["planner"] = {"player": _empty_week(), "clients": {}}
 	if not state.planner.has("player"):
-		state.planner["player"] = [null, null, null, null]
+		state.planner["player"] = _empty_week()
 	if not state.planner.has("clients"):
 		state.planner["clients"] = {}
 	# Migration Bewertungs-Cluster (Coverage & Karrierebretter)
@@ -3380,6 +3499,10 @@ func _init_production_uncertainty(prod: Dictionary) -> void:
 		prod["reactions"] = {}
 
 func ensure_prod_fields(prod: Dictionary) -> void:
+	# Wochen-Migration: alte Produktionen zählten in Monaten
+	if not prod.has("weeksLeft"):
+		prod["weeksLeft"] = int(prod.get("monthsLeft", 4)) * 4
+		prod.erase("monthsLeft")
 	if not prod.has("signals"):
 		prod["signals"] = []
 	if not prod.has("reactions"):
@@ -3510,114 +3633,172 @@ func prod_demand_share(prod_id: int) -> String:
 	return "Wette auf den Erfolg: 30 % der Gage wandern in eine Gewinnbeteiligung. Wird der Film ein Hit, klingelt die Kasse doppelt."
 
 # ---------- Weekly Planner ----------
+# 7 Tage × 3 Tagesabschnitte (Vormittag/Nachmittag/Abend) = 21 Slots pro Woche.
+# Flaches Array, Index = tag * 3 + abschnitt. Aufgelöst wird wöchentlich in
+# end_week(); danach beginnt die Planung der neuen Woche leer.
+const PLANNER_SLOTS := 21
+const PLANNER_PARTS := ["Vormittag", "Nachmittag", "Abend"]
+const PLANNER_DAYS := ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+
 const PLANNER_CLIENT = {
-	"erholung": {"de": "Erholung", "icon": "🌴", "desc": "Erschöpfung −12"},
-	"pr": {"de": "PR-Termin", "icon": "📸", "desc": "Heat +1,5, kleine Kosten"},
+	"erholung": {"de": "Erholung", "icon": "🌴", "desc": "Erschöpfung −0,6 je Slot"},
+	"pr": {"de": "PR-Termin", "icon": "📸", "desc": "Heat +0,08 je Slot, kleine Kosten"},
 	"training": {"de": "Training", "icon": "🎭", "desc": "Talent wächst langsam"},
-	"gala": {"de": "Gala", "icon": "🥂", "desc": "Chance auf Gefallen & Kontakte"},
-	"vorbereitung": {"de": "Vorbereitung", "icon": "📖", "desc": "Nächster Pitch: Passung +8 (einmalig)"},
+	"gala": {"de": "Gala", "icon": "🥂", "desc": "Nur abends: Chance auf Gefallen & Kontakte"},
+	"vorbereitung": {"de": "Vorbereitung", "icon": "📖", "desc": "Nächster Pitch: Passung +8 (ab 3 Slots/Woche)"},
 }
 const PLANNER_PLAYER = {
 	"scouting": {"de": "Scouting", "icon": "🔭", "desc": "Talentpool-Einschätzung wird genauer"},
-	"dinner": {"de": "Studio-Dinner", "icon": "🍽", "desc": "Beziehung +4 beim Wahlstudio"},
-	"pflege": {"de": "Klientenpflege", "icon": "🤝", "desc": "Vertrauen +3 beim Wahlklienten"},
-	"presse": {"de": "Pressearbeit", "icon": "🗞", "desc": "Gerücht-Früherkennung"},
-	"buecher": {"de": "Bücher prüfen", "icon": "🧾", "desc": "Bürokosten des Monats −10 %"},
+	"dinner": {"de": "Studio-Dinner", "icon": "🍽", "desc": "Beziehung +0,2 je Slot beim Wahlstudio"},
+	"pflege": {"de": "Klientenpflege", "icon": "🤝", "desc": "Vertrauen +0,15 je Slot beim Wahlklienten"},
+	"presse": {"de": "Pressearbeit", "icon": "🗞", "desc": "Gerücht-Früherkennung (ab 2 Slots/Woche)"},
+	"buecher": {"de": "Bücher prüfen", "icon": "🧾", "desc": "Bürokosten −10 % (ab 3 Slots/Monat)"},
 }
+
+
+func _empty_week() -> Array:
+	var out: Array = []
+	out.resize(PLANNER_SLOTS)
+	return out
 
 func ensure_planner() -> void:
 	if not state.has("planner"):
-		state["planner"] = {"player": [null, null, null, null], "clients": {}}
+		state["planner"] = {"player": _empty_week(), "clients": {}}
 	if not state.planner.has("player"):
-		state.planner["player"] = [null, null, null, null]
+		state.planner["player"] = _empty_week()
 	if not state.planner.has("clients"):
 		state.planner["clients"] = {}
-	while state.planner.player.size() < 4:
+	while state.planner.player.size() < PLANNER_SLOTS:
 		state.planner.player.append(null)
+	if not state.has("plannerMonthCounts"):
+		state["plannerMonthCounts"] = {}
 	var clients: Dictionary = state.planner.clients
 	for c in state.clients:
 		var key := str(int(c.id))
 		if not clients.has(key):
-			clients[key] = [null, null, null, null]
+			clients[key] = _empty_week()
+		while clients[key].size() < PLANNER_SLOTS:
+			clients[key].append(null)
 	for key in clients.keys().duplicate():
 		if client(key) == null:
 			clients.erase(key)
 
-func _planner_has(action: String) -> bool:
-	if not state.has("planner") or not state.planner.has("player"):
-		return false
-	for s in state.planner.player:
-		if s != null and str(s.get("a", "")) == action:
-			return true
-	return false
-
-func planner_slot_set(who: String, cid: int, week: int, action, target = null) -> void:
+func planner_slot_set(who: String, cid: int, day: int, part: int, action, target = null) -> void:
 	ensure_planner()
+	var idx := clampi(day * 3 + part, 0, PLANNER_SLOTS - 1)
 	var slot = null
 	if action != null:
 		slot = {"a": str(action)}
 		if target != null:
 			slot["t"] = str(target)
 	if who == "player":
-		state.planner.player[week] = slot
+		state.planner.player[idx] = slot
 	else:
 		var key := str(cid)
 		if not state.planner.clients.has(key):
-			state.planner.clients[key] = [null, null, null, null]
-		state.planner.clients[key][week] = slot
+			state.planner.clients[key] = _empty_week()
+		state.planner.clients[key][idx] = slot
 
-# Auswertung in end_month VOR den Ereignissen
-func _apply_planner(events: Array) -> void:
+# Bequemlichkeit: eine Aktion in alle (oder alle leeren) Slots eines Tracks legen
+func planner_fill(who: String, cid: int, action, target = null, only_empty: bool = true) -> void:
 	ensure_planner()
-	state["scoutBonus"] = 0
+	var track: Array = state.planner.player if who == "player" else state.planner.clients.get(str(cid), _empty_week())
+	for idx in PLANNER_SLOTS:
+		if only_empty and track[idx] != null:
+			continue
+		var day := int(idx / 3.0)
+		var part := idx % 3
+		if action != null and who != "player" and str(action) == "gala" and part != 2:
+			continue  # Galas finden abends statt
+		planner_slot_set(who, cid, day, part, action, target)
+
+# Wöchentliche Auswertung in end_week() VOR den Ereignissen.
+# Effekte sind pro Slot skaliert (÷21 gegenüber den alten Monats-Slots),
+# damit ein voll geplanter Monat ≈ dem alten 4-Slot-Monat entspricht.
+func _apply_planner(_events: Array) -> void:
+	ensure_planner()
+	var counts: Dictionary = state.get("plannerMonthCounts", {})
+	var scouting := 0
+	var presse := 0
+	var dinner_slots: Dictionary = {}
+	var pflege_slots: Dictionary = {}
 	for s in state.planner.player:
 		if s == null:
 			continue
-		match str(s.get("a", "")):
+		var a := str(s.get("a", ""))
+		counts[a] = int(counts.get(a, 0)) + 1
+		match a:
 			"scouting":
-				state["scoutBonus"] = int(state.scoutBonus) + 1
+				scouting += 1
 			"dinner":
 				var sid := str(s.get("t", ""))
-				if sid != "" and state.studioRel.has(sid):
-					state.studioRel[sid] = clampi(int(state.studioRel[sid]) + 4, 0, 100)
-					log_msg("Studio-Dinner: Die Beziehung zu %s vertieft sich (+4)." % _studio(sid).name, "deal")
+				if sid != "":
+					dinner_slots[sid] = int(dinner_slots.get(sid, 0)) + 1
 			"pflege":
-				var pc = client(s.get("t", ""))
-				if pc != null:
-					change_trust(pc, 3.0)
+				var pcid := str(s.get("t", ""))
+				if pcid != "":
+					pflege_slots[pcid] = int(pflege_slots.get(pcid, 0)) + 1
 			"presse":
-				_planner_presse()
+				presse += 1
 			"buecher":
-				pass  # wird bei den Fixkosten berücksichtigt
+				pass  # zählt über plannerMonthCounts in den Monatsabschluss
+	# ~5 Scouting-Slots wirken wie früher eine ganze Scouting-Woche
+	state["scoutBonus"] = clampi(roundi(scouting / 5.0), 0, 4)
+	for sid in dinner_slots:
+		if state.studioRel.has(sid):
+			var delta := roundi(0.2 * float(dinner_slots[sid]) * backstory_mod("dinner_mult", 1.0))
+			if delta > 0:
+				state.studioRel[sid] = clampi(int(state.studioRel[sid]) + delta, 0, 100)
+				log_msg("Studio-Dinner: Die Beziehung zu %s vertieft sich (+%d)." % [_studio(str(sid)).name, delta], "deal")
+	for pcid in pflege_slots:
+		var pc = client(pcid)
+		if pc != null:
+			change_trust(pc, 0.15 * float(pflege_slots[pcid]))
+	if presse >= maxi(1, 2 - int(backstory_mod("presse_slot_bonus", 0.0))):
+		_planner_presse()
+	state["plannerMonthCounts"] = counts
+	# Klienten-Wochen auswerten
 	for c in state.clients:
 		if not is_free(c):
 			continue  # Dreh-Wochen sind automatisch belegt
-		var slots: Array = state.planner.clients.get(str(int(c.id)), [null, null, null, null])
+		var slots: Array = state.planner.clients.get(str(int(c.id)), _empty_week())
+		var week_counts: Dictionary = {}
 		for s in slots:
 			# Default-Autoplanung: Erholung bei Erschöpfung > 50, sonst PR
 			var action := "erholung" if float(c.exhaustion) > 50.0 else "pr"
 			if s != null:
 				action = str(s.get("a", action))
-			_planner_client_effect(c, action)
+			week_counts[action] = int(week_counts.get(action, 0)) + 1
+		_planner_client_week(c, week_counts)
+	# Die neue Woche beginnt mit leerem Plan
+	state.planner.player = _empty_week()
+	for key in state.planner.clients:
+		state.planner.clients[key] = _empty_week()
 
-func _planner_client_effect(c: Dictionary, action: String) -> void:
-	match action:
-		"erholung":
-			c.exhaustion = clampf(c.exhaustion - 12.0, 0.0, 100.0)
-		"pr":
-			c.heat = clampf(c.heat + 1.5, -10.0, 10.0)
-			book(-float(roundi(400.0 * infl(state.year))), "pr_recht", "PR-Termin: %s" % client_name(c))
-		"training":
-			c.talentBonus = minf(10.0, float(c.get("talentBonus", 0.0)) + 0.3)
-		"gala":
-			book(-float(roundi(400.0 * infl(state.year))), "events", "Gala-Besuch: %s" % client_name(c))
-			if chance(0.3):
-				var kind_s: String = pick(["galaInvite", "extraAudition", "billing"])
-				grant_favor(kind_s, favor_contact_for(kind_s))
-			else:
-				c.heat = clampf(c.heat + 1.0, -10.0, 10.0)
-		"vorbereitung":
-			c.flags["prepFit"] = 8.0
+func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
+	var n_erh := int(counts.get("erholung", 0))
+	if n_erh > 0:
+		c.exhaustion = clampf(c.exhaustion - 0.6 * n_erh, 0.0, 100.0)
+	var n_pr := int(counts.get("pr", 0))
+	if n_pr > 0:
+		c.heat = clampf(c.heat + 0.08 * n_pr, -10.0, 10.0)
+		book(-float(roundi(20.0 * n_pr * infl(state.year))), "pr_recht", "PR-Termine: %s" % client_name(c))
+	var n_tr := int(counts.get("training", 0))
+	if n_tr > 0:
+		c.talentBonus = minf(10.0, float(c.get("talentBonus", 0.0)) + 0.015 * n_tr)
+	var n_gala := int(counts.get("gala", 0))
+	if n_gala > 0:
+		book(-float(roundi(60.0 * n_gala * infl(state.year))), "events", "Gala-Abende: %s" % client_name(c))
+		# Höchstens ein Gefallen pro Woche — Galas sind kein Bauernhof
+		if chance(1.0 - pow(0.95, float(n_gala))):
+			var kind_s: String = pick(["galaInvite", "extraAudition", "billing"])
+			grant_favor(kind_s, favor_contact_for(kind_s))
+		else:
+			c.heat = clampf(c.heat + 0.05 * n_gala, -10.0, 10.0)
+	var n_vor := int(counts.get("vorbereitung", 0))
+	if n_vor > 0:
+		var fit := 8.0 * minf(1.0, float(n_vor) / 3.0)
+		c.flags["prepFit"] = maxf(float(c.flags.get("prepFit", 0.0)), fit)
 
 func _planner_presse() -> void:
 	# Gerücht-Früherkennung: das jüngste unbekannte Gerücht kommt auf den Tisch
@@ -3822,7 +4003,7 @@ func coverage_mark(stmt_idx: int, cat: String) -> String:
 		return "Keine Marker mehr übrig — nur wenige klare Wetten pro Blatt."
 	st["marked"] = cat
 	var cs = _casting(cur.get("castingRef", -1))
-	var due := mi() + (int(cs.deadline) if cs != null else 2) + 7
+	var due := mi() + (ceili(float(cs.deadline) / 4.0) if cs != null else 2) + 7
 	add_prediction("coverage",
 		{"castingId": int(cur.get("castingRef", -1)), "cat": cat, "roleIdx": int(cur.get("roleIdx", 0)), "sheetId": int(cur.get("id", 0))},
 		true, due, "Coverage „%s“: %s" % [str(cur.get("title", "?")), COVERAGE_CATS[cat].de])

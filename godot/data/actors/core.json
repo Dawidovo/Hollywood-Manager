@@ -1,0 +1,3325 @@
+[
+	{
+		"birth": 1889,
+		"death": 1977,
+		"debut": 1914,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"drama"
+		],
+		"id": "chaplin",
+		"name": "Charlie Chaplin",
+		"peak": 1925,
+		"peakFame": 98,
+		"talent": 96
+	},
+	{
+		"birth": 1895,
+		"death": 1966,
+		"debut": 1917,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"action"
+		],
+		"id": "keaton",
+		"name": "Buster Keaton",
+		"peak": 1926,
+		"peakFame": 88,
+		"talent": 93
+	},
+	{
+		"birth": 1892,
+		"death": 1979,
+		"debut": 1909,
+		"ego": 70,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "pickford",
+		"name": "Mary Pickford",
+		"peak": 1920,
+		"peakFame": 95,
+		"talent": 85
+	},
+	{
+		"birth": 1883,
+		"death": 1939,
+		"debut": 1915,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"adventure",
+			"action"
+		],
+		"id": "fairbanks",
+		"name": "Douglas Fairbanks",
+		"peak": 1922,
+		"peakFame": 92,
+		"talent": 80
+	},
+	{
+		"birth": 1895,
+		"death": 1926,
+		"debut": 1918,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"romance",
+			"drama"
+		],
+		"id": "valentino",
+		"name": "Rudolph Valentino",
+		"peak": 1925,
+		"peakFame": 94,
+		"talent": 70
+	},
+	{
+		"birth": 1905,
+		"death": 1990,
+		"debut": 1924,
+		"ego": 78,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "garbo",
+		"name": "Greta Garbo",
+		"peak": 1932,
+		"peakFame": 95,
+		"talent": 92
+	},
+	{
+		"birth": 1893,
+		"death": 1993,
+		"debut": 1912,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"drama"
+		],
+		"id": "gish",
+		"name": "Lillian Gish",
+		"peak": 1920,
+		"peakFame": 85,
+		"talent": 90
+	},
+	{
+		"birth": 1905,
+		"death": 1965,
+		"debut": 1922,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance"
+		],
+		"id": "bow",
+		"name": "Clara Bow",
+		"peak": 1927,
+		"peakFame": 88,
+		"talent": 75
+	},
+	{
+		"birth": 1899,
+		"death": 1983,
+		"debut": 1915,
+		"ego": 85,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "swanson",
+		"name": "Gloria Swanson",
+		"peak": 1925,
+		"peakFame": 87,
+		"talent": 82
+	},
+	{
+		"birth": 1893,
+		"death": 1971,
+		"debut": 1914,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"comedy"
+		],
+		"id": "lloyd",
+		"name": "Harold Lloyd",
+		"peak": 1925,
+		"peakFame": 85,
+		"talent": 85
+	},
+	{
+		"birth": 1901,
+		"death": 1960,
+		"debut": 1924,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance",
+			"adventure"
+		],
+		"id": "gable",
+		"name": "Clark Gable",
+		"peak": 1939,
+		"peakFame": 96,
+		"talent": 82
+	},
+	{
+		"birth": 1899,
+		"death": 1957,
+		"debut": 1928,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"crime",
+			"drama",
+			"thriller"
+		],
+		"id": "bogart",
+		"name": "Humphrey Bogart",
+		"peak": 1944,
+		"peakFame": 93,
+		"talent": 90
+	},
+	{
+		"birth": 1908,
+		"death": 1989,
+		"debut": 1929,
+		"ego": 85,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller"
+		],
+		"id": "bdavis",
+		"name": "Bette Davis",
+		"peak": 1940,
+		"peakFame": 90,
+		"talent": 95
+	},
+	{
+		"birth": 1907,
+		"death": 2003,
+		"debut": 1932,
+		"ego": 80,
+		"g": "f",
+		"genres": [
+			"drama",
+			"comedy",
+			"romance"
+		],
+		"id": "khepburn",
+		"name": "Katharine Hepburn",
+		"peak": 1942,
+		"peakFame": 90,
+		"talent": 96
+	},
+	{
+		"birth": 1904,
+		"death": 1986,
+		"debut": 1932,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"romance",
+			"thriller"
+		],
+		"id": "grant",
+		"name": "Cary Grant",
+		"peak": 1946,
+		"peakFame": 93,
+		"talent": 88
+	},
+	{
+		"birth": 1908,
+		"death": 1997,
+		"debut": 1935,
+		"ego": 35,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western",
+			"thriller"
+		],
+		"id": "stewart",
+		"name": "James Stewart",
+		"peak": 1946,
+		"peakFame": 91,
+		"talent": 90
+	},
+	{
+		"birth": 1901,
+		"death": 1961,
+		"debut": 1926,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"western",
+			"drama"
+		],
+		"id": "cooper",
+		"name": "Gary Cooper",
+		"peak": 1942,
+		"peakFame": 90,
+		"talent": 80
+	},
+	{
+		"birth": 1900,
+		"death": 1967,
+		"debut": 1930,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"drama",
+			"comedy"
+		],
+		"id": "tracy",
+		"name": "Spencer Tracy",
+		"peak": 1942,
+		"peakFame": 87,
+		"talent": 92
+	},
+	{
+		"birth": 1904,
+		"death": 1977,
+		"debut": 1925,
+		"ego": 90,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "crawford",
+		"name": "Joan Crawford",
+		"peak": 1945,
+		"peakFame": 88,
+		"talent": 83
+	},
+	{
+		"birth": 1915,
+		"death": 1982,
+		"debut": 1935,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance",
+			"thriller"
+		],
+		"id": "bergman",
+		"name": "Ingrid Bergman",
+		"peak": 1944,
+		"peakFame": 92,
+		"talent": 93
+	},
+	{
+		"birth": 1913,
+		"death": 1967,
+		"debut": 1935,
+		"ego": 70,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "leigh",
+		"name": "Vivien Leigh",
+		"peak": 1940,
+		"peakFame": 89,
+		"talent": 90
+	},
+	{
+		"birth": 1909,
+		"death": 1959,
+		"debut": 1933,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"adventure",
+			"action",
+			"romance"
+		],
+		"id": "flynn",
+		"name": "Errol Flynn",
+		"peak": 1938,
+		"peakFame": 90,
+		"talent": 72
+	},
+	{
+		"birth": 1918,
+		"death": 1987,
+		"debut": 1937,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"musical",
+			"romance",
+			"drama"
+		],
+		"id": "hayworth",
+		"name": "Rita Hayworth",
+		"peak": 1946,
+		"peakFame": 89,
+		"talent": 78
+	},
+	{
+		"birth": 1899,
+		"death": 1987,
+		"debut": 1933,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"musical",
+			"comedy",
+			"romance"
+		],
+		"id": "astaire",
+		"name": "Fred Astaire",
+		"peak": 1936,
+		"peakFame": 88,
+		"talent": 92
+	},
+	{
+		"birth": 1911,
+		"death": 1995,
+		"debut": 1930,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"musical",
+			"comedy",
+			"romance"
+		],
+		"id": "rogers",
+		"name": "Ginger Rogers",
+		"peak": 1936,
+		"peakFame": 86,
+		"talent": 85
+	},
+	{
+		"birth": 1905,
+		"death": 1982,
+		"debut": 1935,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western"
+		],
+		"id": "hfonda",
+		"name": "Henry Fonda",
+		"peak": 1946,
+		"peakFame": 87,
+		"talent": 91
+	},
+	{
+		"birth": 1907,
+		"death": 1979,
+		"debut": 1930,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"western",
+			"action",
+			"adventure"
+		],
+		"id": "wayne",
+		"name": "John Wayne",
+		"peak": 1952,
+		"peakFame": 94,
+		"talent": 72
+	},
+	{
+		"birth": 1907,
+		"death": 1990,
+		"debut": 1929,
+		"ego": 65,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller",
+			"western"
+		],
+		"id": "stanwyck",
+		"name": "Barbara Stanwyck",
+		"peak": 1944,
+		"peakFame": 86,
+		"talent": 90
+	},
+	{
+		"birth": 1915,
+		"death": 1985,
+		"debut": 1938,
+		"ego": 95,
+		"g": "m",
+		"genres": [
+			"drama",
+			"thriller",
+			"crime"
+		],
+		"id": "welles",
+		"name": "Orson Welles",
+		"peak": 1941,
+		"peakFame": 88,
+		"talent": 97
+	},
+	{
+		"birth": 1907,
+		"death": 1989,
+		"debut": 1930,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"drama"
+		],
+		"id": "olivier",
+		"name": "Laurence Olivier",
+		"peak": 1948,
+		"peakFame": 87,
+		"talent": 97
+	},
+	{
+		"birth": 1922,
+		"death": 1969,
+		"debut": 1936,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"musical",
+			"drama"
+		],
+		"id": "garland",
+		"name": "Judy Garland",
+		"peak": 1944,
+		"peakFame": 90,
+		"talent": 92
+	},
+	{
+		"birth": 1912,
+		"death": 1996,
+		"debut": 1942,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"musical",
+			"comedy",
+			"romance"
+		],
+		"id": "gkelly",
+		"name": "Gene Kelly",
+		"peak": 1952,
+		"peakFame": 88,
+		"talent": 90
+	},
+	{
+		"birth": 1926,
+		"death": 1962,
+		"debut": 1947,
+		"ego": 65,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance",
+			"drama"
+		],
+		"id": "monroe",
+		"name": "Marilyn Monroe",
+		"peak": 1956,
+		"peakFame": 97,
+		"talent": 76
+	},
+	{
+		"birth": 1924,
+		"death": 2004,
+		"debut": 1950,
+		"ego": 92,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime"
+		],
+		"id": "brando",
+		"name": "Marlon Brando",
+		"peak": 1954,
+		"peakFame": 94,
+		"talent": 99
+	},
+	{
+		"birth": 1931,
+		"death": 1955,
+		"debut": 1951,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"drama"
+		],
+		"id": "dean",
+		"name": "James Dean",
+		"peak": 1955,
+		"peakFame": 92,
+		"talent": 88
+	},
+	{
+		"birth": 1929,
+		"death": 1993,
+		"debut": 1951,
+		"ego": 30,
+		"g": "f",
+		"genres": [
+			"romance",
+			"comedy",
+			"drama"
+		],
+		"id": "ahepburn",
+		"name": "Audrey Hepburn",
+		"peak": 1957,
+		"peakFame": 93,
+		"talent": 88
+	},
+	{
+		"birth": 1932,
+		"death": 2011,
+		"debut": 1942,
+		"ego": 88,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "taylor",
+		"name": "Elizabeth Taylor",
+		"peak": 1960,
+		"peakFame": 95,
+		"talent": 85
+	},
+	{
+		"birth": 1929,
+		"death": 1982,
+		"debut": 1951,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"romance",
+			"thriller",
+			"drama"
+		],
+		"id": "gracekelly",
+		"name": "Grace Kelly",
+		"peak": 1955,
+		"peakFame": 90,
+		"talent": 82
+	},
+	{
+		"birth": 1925,
+		"death": 2008,
+		"debut": 1954,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western",
+			"crime"
+		],
+		"id": "newman",
+		"name": "Paul Newman",
+		"peak": 1967,
+		"peakFame": 92,
+		"talent": 92
+	},
+	{
+		"birth": 1925,
+		"death": 1985,
+		"debut": 1948,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"romance",
+			"comedy",
+			"drama"
+		],
+		"id": "hudson",
+		"name": "Rock Hudson",
+		"peak": 1959,
+		"peakFame": 88,
+		"talent": 72
+	},
+	{
+		"birth": 1927,
+		"death": 2022,
+		"debut": 1950,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"drama"
+		],
+		"id": "poitier",
+		"name": "Sidney Poitier",
+		"peak": 1967,
+		"peakFame": 89,
+		"talent": 92
+	},
+	{
+		"birth": 1930,
+		"death": 1980,
+		"debut": 1956,
+		"ego": 88,
+		"g": "m",
+		"genres": [
+			"action",
+			"thriller",
+			"western"
+		],
+		"id": "mcqueen",
+		"name": "Steve McQueen",
+		"peak": 1968,
+		"peakFame": 92,
+		"talent": 80
+	},
+	{
+		"birth": 1930,
+		"death": 2020,
+		"debut": 1954,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"action",
+			"thriller",
+			"adventure"
+		],
+		"id": "connery",
+		"name": "Sean Connery",
+		"peak": 1965,
+		"peakFame": 93,
+		"talent": 82
+	},
+	{
+		"birth": 1934,
+		"death": null,
+		"debut": 1951,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance",
+			"comedy"
+		],
+		"id": "loren",
+		"name": "Sophia Loren",
+		"peak": 1961,
+		"peakFame": 91,
+		"talent": 85
+	},
+	{
+		"birth": 1934,
+		"death": null,
+		"debut": 1955,
+		"ego": 65,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"drama"
+		],
+		"id": "maclaine",
+		"name": "Shirley MacLaine",
+		"peak": 1963,
+		"peakFame": 84,
+		"talent": 89
+	},
+	{
+		"birth": 1925,
+		"death": 2001,
+		"debut": 1953,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"drama"
+		],
+		"id": "lemmon",
+		"name": "Jack Lemmon",
+		"peak": 1962,
+		"peakFame": 86,
+		"talent": 92
+	},
+	{
+		"birth": 1923,
+		"death": 2008,
+		"debut": 1950,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"adventure",
+			"drama",
+			"scifi"
+		],
+		"id": "heston",
+		"name": "Charlton Heston",
+		"peak": 1959,
+		"peakFame": 90,
+		"talent": 75
+	},
+	{
+		"birth": 1932,
+		"death": 2013,
+		"debut": 1959,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"drama",
+			"adventure"
+		],
+		"id": "otoole",
+		"name": "Peter O'Toole",
+		"peak": 1964,
+		"peakFame": 86,
+		"talent": 94
+	},
+	{
+		"birth": 1935,
+		"death": null,
+		"debut": 1964,
+		"ego": 35,
+		"g": "f",
+		"genres": [
+			"musical",
+			"comedy"
+		],
+		"id": "andrews",
+		"name": "Julie Andrews",
+		"peak": 1965,
+		"peakFame": 91,
+		"talent": 90
+	},
+	{
+		"birth": 1937,
+		"death": null,
+		"debut": 1958,
+		"ego": 85,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"comedy"
+		],
+		"id": "nicholson",
+		"name": "Jack Nicholson",
+		"peak": 1975,
+		"peakFame": 93,
+		"talent": 96
+	},
+	{
+		"birth": 1943,
+		"death": null,
+		"debut": 1968,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"crime",
+			"drama",
+			"comedy"
+		],
+		"id": "deniro",
+		"name": "Robert De Niro",
+		"peak": 1980,
+		"peakFame": 93,
+		"talent": 98
+	},
+	{
+		"birth": 1940,
+		"death": null,
+		"debut": 1969,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"crime",
+			"drama"
+		],
+		"id": "pacino",
+		"name": "Al Pacino",
+		"peak": 1975,
+		"peakFame": 92,
+		"talent": 97
+	},
+	{
+		"birth": 1937,
+		"death": null,
+		"debut": 1966,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"drama",
+			"comedy"
+		],
+		"id": "hoffman",
+		"name": "Dustin Hoffman",
+		"peak": 1976,
+		"peakFame": 89,
+		"talent": 95
+	},
+	{
+		"birth": 1949,
+		"death": null,
+		"debut": 1977,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"drama",
+			"comedy",
+			"romance"
+		],
+		"id": "streep",
+		"name": "Meryl Streep",
+		"peak": 1985,
+		"peakFame": 92,
+		"talent": 100
+	},
+	{
+		"birth": 1937,
+		"death": null,
+		"debut": 1960,
+		"ego": 70,
+		"g": "f",
+		"genres": [
+			"drama",
+			"comedy"
+		],
+		"id": "jfonda",
+		"name": "Jane Fonda",
+		"peak": 1972,
+		"peakFame": 88,
+		"talent": 90
+	},
+	{
+		"birth": 1941,
+		"death": null,
+		"debut": 1966,
+		"ego": 85,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller",
+			"crime"
+		],
+		"id": "dunaway",
+		"name": "Faye Dunaway",
+		"peak": 1975,
+		"peakFame": 86,
+		"talent": 89
+	},
+	{
+		"birth": 1930,
+		"death": null,
+		"debut": 1955,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"western",
+			"action",
+			"thriller"
+		],
+		"id": "eastwood",
+		"name": "Clint Eastwood",
+		"peak": 1972,
+		"peakFame": 92,
+		"talent": 80
+	},
+	{
+		"birth": 1930,
+		"death": 2025,
+		"debut": 1964,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"thriller"
+		],
+		"id": "hackman",
+		"name": "Gene Hackman",
+		"peak": 1972,
+		"peakFame": 86,
+		"talent": 94
+	},
+	{
+		"birth": 1946,
+		"death": 2025,
+		"debut": 1970,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"drama",
+			"romance"
+		],
+		"id": "dkeaton",
+		"name": "Diane Keaton",
+		"peak": 1977,
+		"peakFame": 86,
+		"talent": 90
+	},
+	{
+		"birth": 1937,
+		"death": null,
+		"debut": 1961,
+		"ego": 88,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"romance"
+		],
+		"id": "beatty",
+		"name": "Warren Beatty",
+		"peak": 1975,
+		"peakFame": 88,
+		"talent": 84
+	},
+	{
+		"birth": 1936,
+		"death": 2025,
+		"debut": 1962,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western",
+			"romance"
+		],
+		"id": "redford",
+		"name": "Robert Redford",
+		"peak": 1974,
+		"peakFame": 92,
+		"talent": 85
+	},
+	{
+		"birth": 1949,
+		"death": null,
+		"debut": 1977,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"scifi",
+			"action",
+			"drama"
+		],
+		"id": "weaver",
+		"name": "Sigourney Weaver",
+		"peak": 1986,
+		"peakFame": 86,
+		"talent": 88
+	},
+	{
+		"birth": 1942,
+		"death": null,
+		"debut": 1966,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"action",
+			"adventure",
+			"scifi"
+		],
+		"id": "ford",
+		"name": "Harrison Ford",
+		"peak": 1984,
+		"peakFame": 96,
+		"talent": 80
+	},
+	{
+		"birth": 1946,
+		"death": null,
+		"debut": 1970,
+		"ego": 85,
+		"g": "m",
+		"genres": [
+			"action",
+			"drama"
+		],
+		"id": "stallone",
+		"name": "Sylvester Stallone",
+		"peak": 1985,
+		"peakFame": 92,
+		"talent": 70
+	},
+	{
+		"birth": 1947,
+		"death": null,
+		"debut": 1970,
+		"ego": 85,
+		"g": "m",
+		"genres": [
+			"action",
+			"scifi",
+			"comedy"
+		],
+		"id": "schwarzenegger",
+		"name": "Arnold Schwarzenegger",
+		"peak": 1991,
+		"peakFame": 95,
+		"talent": 62
+	},
+	{
+		"birth": 1956,
+		"death": null,
+		"debut": 1980,
+		"ego": 30,
+		"g": "m",
+		"genres": [
+			"drama",
+			"comedy",
+			"romance"
+		],
+		"id": "hanks",
+		"name": "Tom Hanks",
+		"peak": 1995,
+		"peakFame": 96,
+		"talent": 94
+	},
+	{
+		"birth": 1967,
+		"death": null,
+		"debut": 1987,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"romance",
+			"comedy",
+			"drama"
+		],
+		"id": "roberts",
+		"name": "Julia Roberts",
+		"peak": 1997,
+		"peakFame": 94,
+		"talent": 84
+	},
+	{
+		"birth": 1962,
+		"death": null,
+		"debut": 1981,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"action",
+			"drama",
+			"thriller"
+		],
+		"id": "cruise",
+		"name": "Tom Cruise",
+		"peak": 1996,
+		"peakFame": 97,
+		"talent": 82
+	},
+	{
+		"birth": 1954,
+		"death": null,
+		"debut": 1977,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"thriller"
+		],
+		"id": "denzel",
+		"name": "Denzel Washington",
+		"peak": 2001,
+		"peakFame": 92,
+		"talent": 96
+	},
+	{
+		"birth": 1963,
+		"death": null,
+		"debut": 1988,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"action"
+		],
+		"id": "pitt",
+		"name": "Brad Pitt",
+		"peak": 2000,
+		"peakFame": 95,
+		"talent": 86
+	},
+	{
+		"birth": 1958,
+		"death": null,
+		"debut": 1980,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"drama",
+			"crime",
+			"romance"
+		],
+		"id": "pfeiffer",
+		"name": "Michelle Pfeiffer",
+		"peak": 1992,
+		"peakFame": 88,
+		"talent": 88
+	},
+	{
+		"birth": 1962,
+		"death": null,
+		"debut": 1972,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"thriller",
+			"drama"
+		],
+		"id": "foster",
+		"name": "Jodie Foster",
+		"peak": 1991,
+		"peakFame": 88,
+		"talent": 94
+	},
+	{
+		"birth": 1937,
+		"death": null,
+		"debut": 1971,
+		"ego": 35,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"thriller"
+		],
+		"id": "freeman",
+		"name": "Morgan Freeman",
+		"peak": 1995,
+		"peakFame": 90,
+		"talent": 93
+	},
+	{
+		"birth": 1937,
+		"death": null,
+		"debut": 1968,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"drama",
+			"thriller",
+			"horror"
+		],
+		"id": "hopkins",
+		"name": "Anthony Hopkins",
+		"peak": 1993,
+		"peakFame": 89,
+		"talent": 96
+	},
+	{
+		"birth": 1967,
+		"death": null,
+		"debut": 1989,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller",
+			"romance"
+		],
+		"id": "kidman",
+		"name": "Nicole Kidman",
+		"peak": 2002,
+		"peakFame": 91,
+		"talent": 90
+	},
+	{
+		"birth": 1964,
+		"death": null,
+		"debut": 1990,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance",
+			"thriller"
+		],
+		"id": "bullock",
+		"name": "Sandra Bullock",
+		"peak": 2010,
+		"peakFame": 90,
+		"talent": 82
+	},
+	{
+		"birth": 1968,
+		"death": null,
+		"debut": 1992,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"action",
+			"comedy",
+			"scifi"
+		],
+		"id": "wsmith",
+		"name": "Will Smith",
+		"peak": 2005,
+		"peakFame": 95,
+		"talent": 82
+	},
+	{
+		"birth": 1964,
+		"death": null,
+		"debut": 1986,
+		"ego": 25,
+		"g": "m",
+		"genres": [
+			"action",
+			"scifi",
+			"thriller"
+		],
+		"id": "reeves",
+		"name": "Keanu Reeves",
+		"peak": 2015,
+		"peakFame": 91,
+		"talent": 72
+	},
+	{
+		"birth": 1974,
+		"death": null,
+		"debut": 1991,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"thriller"
+		],
+		"id": "dicaprio",
+		"name": "Leonardo DiCaprio",
+		"peak": 2013,
+		"peakFame": 96,
+		"talent": 95
+	},
+	{
+		"birth": 1975,
+		"death": null,
+		"debut": 1994,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "winslet",
+		"name": "Kate Winslet",
+		"peak": 2008,
+		"peakFame": 89,
+		"talent": 94
+	},
+	{
+		"birth": 1969,
+		"death": null,
+		"debut": 1997,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller"
+		],
+		"id": "blanchett",
+		"name": "Cate Blanchett",
+		"peak": 2013,
+		"peakFame": 89,
+		"talent": 97
+	},
+	{
+		"birth": 1963,
+		"death": null,
+		"debut": 1984,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"adventure",
+			"drama",
+			"comedy"
+		],
+		"id": "depp",
+		"name": "Johnny Depp",
+		"peak": 2006,
+		"peakFame": 94,
+		"talent": 88
+	},
+	{
+		"birth": 1975,
+		"death": null,
+		"debut": 1993,
+		"ego": 75,
+		"g": "f",
+		"genres": [
+			"action",
+			"drama"
+		],
+		"id": "jolie",
+		"name": "Angelina Jolie",
+		"peak": 2008,
+		"peakFame": 94,
+		"talent": 83
+	},
+	{
+		"birth": 1975,
+		"death": null,
+		"debut": 1996,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"action",
+			"drama",
+			"thriller"
+		],
+		"id": "theron",
+		"name": "Charlize Theron",
+		"peak": 2015,
+		"peakFame": 88,
+		"talent": 90
+	},
+	{
+		"birth": 1965,
+		"death": null,
+		"debut": 1996,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"drama"
+		],
+		"id": "vdavis",
+		"name": "Viola Davis",
+		"peak": 2016,
+		"peakFame": 85,
+		"talent": 96
+	},
+	{
+		"birth": 1974,
+		"death": null,
+		"debut": 1995,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime"
+		],
+		"id": "phoenix",
+		"name": "Joaquin Phoenix",
+		"peak": 2019,
+		"peakFame": 88,
+		"talent": 96
+	},
+	{
+		"birth": 1969,
+		"death": null,
+		"debut": 1993,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance",
+			"thriller"
+		],
+		"id": "mcconaughey",
+		"name": "Matthew McConaughey",
+		"peak": 2014,
+		"peakFame": 88,
+		"talent": 87
+	},
+	{
+		"birth": 1962,
+		"death": null,
+		"debut": 1997,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"action",
+			"drama"
+		],
+		"id": "yeoh",
+		"name": "Michelle Yeoh",
+		"peak": 2022,
+		"peakFame": 85,
+		"talent": 88
+	},
+	{
+		"birth": 1972,
+		"death": null,
+		"debut": 2001,
+		"ego": 85,
+		"g": "m",
+		"genres": [
+			"action",
+			"comedy",
+			"adventure"
+		],
+		"id": "johnson",
+		"name": "Dwayne Johnson",
+		"peak": 2018,
+		"peakFame": 94,
+		"talent": 60
+	},
+	{
+		"birth": 1980,
+		"death": null,
+		"debut": 2001,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance",
+			"comedy"
+		],
+		"id": "gosling",
+		"name": "Ryan Gosling",
+		"peak": 2017,
+		"peakFame": 89,
+		"talent": 88
+	},
+	{
+		"birth": 1984,
+		"death": null,
+		"debut": 1996,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"action",
+			"scifi",
+			"drama"
+		],
+		"id": "johansson",
+		"name": "Scarlett Johansson",
+		"peak": 2015,
+		"peakFame": 93,
+		"talent": 85
+	},
+	{
+		"birth": 1990,
+		"death": null,
+		"debut": 2008,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"drama",
+			"action",
+			"comedy"
+		],
+		"id": "lawrence",
+		"name": "Jennifer Lawrence",
+		"peak": 2014,
+		"peakFame": 92,
+		"talent": 89
+	},
+	{
+		"birth": 1988,
+		"death": null,
+		"debut": 2007,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"drama",
+			"musical"
+		],
+		"id": "estone",
+		"name": "Emma Stone",
+		"peak": 2018,
+		"peakFame": 90,
+		"talent": 91
+	},
+	{
+		"birth": 1990,
+		"death": null,
+		"debut": 2011,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"drama",
+			"crime"
+		],
+		"id": "robbie",
+		"name": "Margot Robbie",
+		"peak": 2020,
+		"peakFame": 91,
+		"talent": 87
+	},
+	{
+		"birth": 1976,
+		"death": null,
+		"debut": 1997,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"action"
+		],
+		"id": "reynolds",
+		"name": "Ryan Reynolds",
+		"peak": 2018,
+		"peakFame": 90,
+		"talent": 75
+	},
+	{
+		"birth": 1995,
+		"death": null,
+		"debut": 2014,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance",
+			"scifi"
+		],
+		"id": "chalamet",
+		"name": "Timothée Chalamet",
+		"peak": 2024,
+		"peakFame": 92,
+		"talent": 91
+	},
+	{
+		"birth": 1996,
+		"death": null,
+		"debut": 2015,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance",
+			"scifi"
+		],
+		"id": "zendaya",
+		"name": "Zendaya",
+		"peak": 2024,
+		"peakFame": 93,
+		"talent": 87
+	},
+	{
+		"birth": 1996,
+		"death": null,
+		"debut": 2016,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"drama",
+			"horror",
+			"action"
+		],
+		"id": "pugh",
+		"name": "Florence Pugh",
+		"peak": 2023,
+		"peakFame": 87,
+		"talent": 92
+	},
+	{
+		"birth": 1996,
+		"death": null,
+		"debut": 2012,
+		"ego": 35,
+		"g": "m",
+		"genres": [
+			"action",
+			"adventure"
+		],
+		"id": "holland",
+		"name": "Tom Holland",
+		"peak": 2019,
+		"peakFame": 90,
+		"talent": 80
+	},
+	{
+		"birth": 1996,
+		"death": null,
+		"debut": 2015,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"horror",
+			"drama",
+			"thriller"
+		],
+		"id": "taylorjoy",
+		"name": "Anya Taylor-Joy",
+		"peak": 2021,
+		"peakFame": 86,
+		"talent": 89
+	},
+	{
+		"birth": 1991,
+		"death": null,
+		"debut": 2007,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"drama",
+			"action"
+		],
+		"id": "butler",
+		"name": "Austin Butler",
+		"peak": 2023,
+		"peakFame": 84,
+		"talent": 85
+	},
+	{
+		"birth": 1996,
+		"death": null,
+		"debut": 2020,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "mescal",
+		"name": "Paul Mescal",
+		"peak": 2024,
+		"peakFame": 83,
+		"talent": 90
+	},
+	{
+		"birth": 1997,
+		"death": null,
+		"debut": 2018,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance",
+			"thriller"
+		],
+		"id": "sweeney",
+		"name": "Sydney Sweeney",
+		"peak": 2024,
+		"peakFame": 86,
+		"talent": 78
+	},
+	{
+		"birth": 1975,
+		"death": null,
+		"debut": 2011,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"action",
+			"drama",
+			"adventure"
+		],
+		"id": "pascal",
+		"name": "Pedro Pascal",
+		"peak": 2024,
+		"peakFame": 89,
+		"talent": 84
+	},
+	{
+		"birth": 1901,
+		"death": 1992,
+		"debut": 1923,
+		"ego": 85,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "dietrich",
+		"name": "Marlene Dietrich",
+		"peak": 1932,
+		"peakFame": 92,
+		"talent": 87
+	},
+	{
+		"birth": 1899,
+		"death": 1986,
+		"debut": 1930,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"crime",
+			"drama",
+			"musical"
+		],
+		"id": "cagney",
+		"name": "James Cagney",
+		"peak": 1938,
+		"peakFame": 89,
+		"talent": 88
+	},
+	{
+		"birth": 1893,
+		"death": 1973,
+		"debut": 1929,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"crime",
+			"drama",
+			"thriller"
+		],
+		"id": "robinson",
+		"name": "Edward G. Robinson",
+		"peak": 1940,
+		"peakFame": 84,
+		"talent": 89
+	},
+	{
+		"birth": 1887,
+		"death": 1969,
+		"debut": 1919,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"horror",
+			"thriller"
+		],
+		"id": "karloff",
+		"name": "Boris Karloff",
+		"peak": 1935,
+		"peakFame": 85,
+		"talent": 82
+	},
+	{
+		"birth": 1882,
+		"death": 1956,
+		"debut": 1923,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"horror"
+		],
+		"id": "lugosi",
+		"name": "Bela Lugosi",
+		"peak": 1932,
+		"peakFame": 82,
+		"talent": 74
+	},
+	{
+		"birth": 1903,
+		"death": 1996,
+		"debut": 1927,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance",
+			"drama"
+		],
+		"id": "colbert",
+		"name": "Claudette Colbert",
+		"peak": 1936,
+		"peakFame": 86,
+		"talent": 86
+	},
+	{
+		"birth": 1908,
+		"death": 1942,
+		"debut": 1925,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance"
+		],
+		"id": "lombard",
+		"name": "Carole Lombard",
+		"peak": 1937,
+		"peakFame": 87,
+		"talent": 87
+	},
+	{
+		"birth": 1911,
+		"death": 1937,
+		"debut": 1928,
+		"ego": 65,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance",
+			"drama"
+		],
+		"id": "harlow",
+		"name": "Jean Harlow",
+		"peak": 1933,
+		"peakFame": 90,
+		"talent": 75
+	},
+	{
+		"birth": 1893,
+		"death": 1980,
+		"debut": 1932,
+		"ego": 92,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance"
+		],
+		"id": "west",
+		"name": "Mae West",
+		"peak": 1934,
+		"peakFame": 88,
+		"talent": 78
+	},
+	{
+		"birth": 1902,
+		"death": 1983,
+		"debut": 1923,
+		"ego": 75,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "shearer",
+		"name": "Norma Shearer",
+		"peak": 1932,
+		"peakFame": 86,
+		"talent": 83
+	},
+	{
+		"birth": 1917,
+		"death": 1997,
+		"debut": 1943,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"crime",
+			"western",
+			"thriller"
+		],
+		"id": "mitchum",
+		"name": "Robert Mitchum",
+		"peak": 1955,
+		"peakFame": 86,
+		"talent": 86
+	},
+	{
+		"birth": 1916,
+		"death": 2020,
+		"debut": 1946,
+		"ego": 85,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western",
+			"adventure"
+		],
+		"id": "kdouglas",
+		"name": "Kirk Douglas",
+		"peak": 1957,
+		"peakFame": 89,
+		"talent": 88
+	},
+	{
+		"birth": 1913,
+		"death": 1994,
+		"debut": 1946,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"drama",
+			"adventure",
+			"western"
+		],
+		"id": "lancaster",
+		"name": "Burt Lancaster",
+		"peak": 1957,
+		"peakFame": 88,
+		"talent": 88
+	},
+	{
+		"birth": 1916,
+		"death": 2003,
+		"debut": 1944,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western",
+			"thriller"
+		],
+		"id": "peck",
+		"name": "Gregory Peck",
+		"peak": 1953,
+		"peakFame": 90,
+		"talent": 89
+	},
+	{
+		"birth": 1922,
+		"death": 1990,
+		"debut": 1942,
+		"ego": 70,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "gardner",
+		"name": "Ava Gardner",
+		"peak": 1953,
+		"peakFame": 88,
+		"talent": 80
+	},
+	{
+		"birth": 1924,
+		"death": 2014,
+		"debut": 1944,
+		"ego": 70,
+		"g": "f",
+		"genres": [
+			"crime",
+			"drama",
+			"romance"
+		],
+		"id": "bacall",
+		"name": "Lauren Bacall",
+		"peak": 1946,
+		"peakFame": 86,
+		"talent": 85
+	},
+	{
+		"birth": 1922,
+		"death": 2019,
+		"debut": 1948,
+		"ego": 35,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"musical",
+			"romance"
+		],
+		"id": "day",
+		"name": "Doris Day",
+		"peak": 1959,
+		"peakFame": 89,
+		"talent": 80
+	},
+	{
+		"birth": 1925,
+		"death": 2010,
+		"debut": 1949,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"drama",
+			"adventure"
+		],
+		"id": "curtis",
+		"name": "Tony Curtis",
+		"peak": 1959,
+		"peakFame": 86,
+		"talent": 80
+	},
+	{
+		"birth": 1915,
+		"death": 1998,
+		"debut": 1941,
+		"ego": 90,
+		"g": "m",
+		"genres": [
+			"musical",
+			"drama",
+			"crime"
+		],
+		"id": "sinatra",
+		"name": "Frank Sinatra",
+		"peak": 1955,
+		"peakFame": 92,
+		"talent": 83
+	},
+	{
+		"birth": 1917,
+		"death": 1995,
+		"debut": 1949,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"musical",
+			"western"
+		],
+		"id": "martin",
+		"name": "Dean Martin",
+		"peak": 1960,
+		"peakFame": 86,
+		"talent": 76
+	},
+	{
+		"birth": 1921,
+		"death": 2007,
+		"debut": 1941,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "kerr",
+		"name": "Deborah Kerr",
+		"peak": 1956,
+		"peakFame": 85,
+		"talent": 88
+	},
+	{
+		"birth": 1920,
+		"death": 1985,
+		"debut": 1949,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western",
+			"adventure"
+		],
+		"id": "brynner",
+		"name": "Yul Brynner",
+		"peak": 1956,
+		"peakFame": 86,
+		"talent": 80
+	},
+	{
+		"birth": 1915,
+		"death": 2001,
+		"debut": 1936,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"drama",
+			"adventure"
+		],
+		"id": "quinn",
+		"name": "Anthony Quinn",
+		"peak": 1964,
+		"peakFame": 84,
+		"talent": 87
+	},
+	{
+		"birth": 1925,
+		"death": 1984,
+		"debut": 1949,
+		"ego": 85,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "burton",
+		"name": "Richard Burton",
+		"peak": 1966,
+		"peakFame": 88,
+		"talent": 92
+	},
+	{
+		"birth": 1933,
+		"death": null,
+		"debut": 1956,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"thriller"
+		],
+		"id": "caine",
+		"name": "Michael Caine",
+		"peak": 1966,
+		"peakFame": 86,
+		"talent": 88
+	},
+	{
+		"birth": 1932,
+		"death": 1992,
+		"debut": 1953,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"thriller",
+			"horror",
+			"drama"
+		],
+		"id": "perkins",
+		"name": "Anthony Perkins",
+		"peak": 1960,
+		"peakFame": 82,
+		"talent": 85
+	},
+	{
+		"birth": 1938,
+		"death": 1981,
+		"debut": 1946,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance",
+			"musical"
+		],
+		"id": "wood",
+		"name": "Natalie Wood",
+		"peak": 1961,
+		"peakFame": 87,
+		"talent": 83
+	},
+	{
+		"birth": 1933,
+		"death": null,
+		"debut": 1954,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"thriller",
+			"romance",
+			"drama"
+		],
+		"id": "novak",
+		"name": "Kim Novak",
+		"peak": 1958,
+		"peakFame": 85,
+		"talent": 78
+	},
+	{
+		"birth": 1927,
+		"death": 2004,
+		"debut": 1947,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"thriller",
+			"drama",
+			"comedy"
+		],
+		"id": "jleigh",
+		"name": "Janet Leigh",
+		"peak": 1960,
+		"peakFame": 83,
+		"talent": 80
+	},
+	{
+		"birth": 1933,
+		"death": 2016,
+		"debut": 1961,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"musical"
+		],
+		"id": "wilder",
+		"name": "Gene Wilder",
+		"peak": 1974,
+		"peakFame": 84,
+		"talent": 89
+	},
+	{
+		"birth": 1931,
+		"death": null,
+		"debut": 1962,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"western"
+		],
+		"id": "duvall",
+		"name": "Robert Duvall",
+		"peak": 1979,
+		"peakFame": 84,
+		"talent": 93
+	},
+	{
+		"birth": 1943,
+		"death": null,
+		"debut": 1969,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"thriller"
+		],
+		"id": "walken",
+		"name": "Christopher Walken",
+		"peak": 1978,
+		"peakFame": 82,
+		"talent": 89
+	},
+	{
+		"birth": 1949,
+		"death": null,
+		"debut": 1972,
+		"ego": 35,
+		"g": "f",
+		"genres": [
+			"drama",
+			"horror",
+			"musical"
+		],
+		"id": "spacek",
+		"name": "Sissy Spacek",
+		"peak": 1980,
+		"peakFame": 83,
+		"talent": 91
+	},
+	{
+		"birth": 1932,
+		"death": null,
+		"debut": 1964,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"drama",
+			"horror"
+		],
+		"id": "burstyn",
+		"name": "Ellen Burstyn",
+		"peak": 1974,
+		"peakFame": 80,
+		"talent": 92
+	},
+	{
+		"birth": 1947,
+		"death": null,
+		"debut": 1967,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"drama",
+			"comedy",
+			"thriller"
+		],
+		"id": "dreyfuss",
+		"name": "Richard Dreyfuss",
+		"peak": 1977,
+		"peakFame": 84,
+		"talent": 87
+	},
+	{
+		"birth": 1954,
+		"death": null,
+		"debut": 1975,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"drama",
+			"musical",
+			"crime"
+		],
+		"id": "travolta",
+		"name": "John Travolta",
+		"peak": 1978,
+		"peakFame": 91,
+		"talent": 78
+	},
+	{
+		"birth": 1945,
+		"death": null,
+		"debut": 1968,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance"
+		],
+		"id": "hawn",
+		"name": "Goldie Hawn",
+		"peak": 1980,
+		"peakFame": 86,
+		"talent": 82
+	},
+	{
+		"birth": 1951,
+		"death": null,
+		"debut": 1963,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"action",
+			"scifi",
+			"western"
+		],
+		"id": "krussell",
+		"name": "Kurt Russell",
+		"peak": 1986,
+		"peakFame": 84,
+		"talent": 78
+	},
+	{
+		"birth": 1944,
+		"death": null,
+		"debut": 1969,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"thriller",
+			"drama",
+			"crime"
+		],
+		"id": "mdouglas",
+		"name": "Michael Douglas",
+		"peak": 1989,
+		"peakFame": 89,
+		"talent": 85
+	},
+	{
+		"birth": 1947,
+		"death": null,
+		"debut": 1982,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller"
+		],
+		"id": "close",
+		"name": "Glenn Close",
+		"peak": 1988,
+		"peakFame": 85,
+		"talent": 95
+	},
+	{
+		"birth": 1946,
+		"death": null,
+		"debut": 1970,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"drama",
+			"comedy",
+			"thriller"
+		],
+		"id": "sarandon",
+		"name": "Susan Sarandon",
+		"peak": 1992,
+		"peakFame": 85,
+		"talent": 89
+	},
+	{
+		"birth": 1949,
+		"death": null,
+		"debut": 1971,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"drama",
+			"western",
+			"comedy"
+		],
+		"id": "bridges",
+		"name": "Jeff Bridges",
+		"peak": 2009,
+		"peakFame": 85,
+		"talent": 91
+	},
+	{
+		"birth": 1955,
+		"death": null,
+		"debut": 1981,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"western",
+			"drama",
+			"action"
+		],
+		"id": "costner",
+		"name": "Kevin Costner",
+		"peak": 1991,
+		"peakFame": 92,
+		"talent": 80
+	},
+	{
+		"birth": 1956,
+		"death": null,
+		"debut": 1977,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"action",
+			"drama"
+		],
+		"id": "gibson",
+		"name": "Mel Gibson",
+		"peak": 1995,
+		"peakFame": 92,
+		"talent": 80
+	},
+	{
+		"birth": 1955,
+		"death": null,
+		"debut": 1980,
+		"ego": 75,
+		"g": "m",
+		"genres": [
+			"action",
+			"thriller",
+			"comedy"
+		],
+		"id": "willis",
+		"name": "Bruce Willis",
+		"peak": 1995,
+		"peakFame": 93,
+		"talent": 76
+	},
+	{
+		"birth": 1961,
+		"death": null,
+		"debut": 1982,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"action"
+		],
+		"id": "emurphy",
+		"name": "Eddie Murphy",
+		"peak": 1988,
+		"peakFame": 93,
+		"talent": 85
+	},
+	{
+		"birth": 1951,
+		"death": 2014,
+		"debut": 1977,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"comedy",
+			"drama"
+		],
+		"id": "rwilliams",
+		"name": "Robin Williams",
+		"peak": 1993,
+		"peakFame": 92,
+		"talent": 94
+	},
+	{
+		"birth": 1955,
+		"death": null,
+		"debut": 1985,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"drama"
+		],
+		"id": "goldberg",
+		"name": "Whoopi Goldberg",
+		"peak": 1992,
+		"peakFame": 87,
+		"talent": 87
+	},
+	{
+		"birth": 1962,
+		"death": null,
+		"debut": 1981,
+		"ego": 70,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance",
+			"thriller"
+		],
+		"id": "dmoore",
+		"name": "Demi Moore",
+		"peak": 1996,
+		"peakFame": 89,
+		"talent": 76
+	},
+	{
+		"birth": 1958,
+		"death": null,
+		"debut": 1980,
+		"ego": 75,
+		"g": "f",
+		"genres": [
+			"thriller",
+			"drama"
+		],
+		"id": "sstone",
+		"name": "Sharon Stone",
+		"peak": 1994,
+		"peakFame": 88,
+		"talent": 78
+	},
+	{
+		"birth": 1953,
+		"death": null,
+		"debut": 1977,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"drama",
+			"crime",
+			"romance"
+		],
+		"id": "basinger",
+		"name": "Kim Basinger",
+		"peak": 1997,
+		"peakFame": 85,
+		"talent": 77
+	},
+	{
+		"birth": 1960,
+		"death": null,
+		"debut": 1981,
+		"ego": 85,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime"
+		],
+		"id": "spenn",
+		"name": "Sean Penn",
+		"peak": 2003,
+		"peakFame": 85,
+		"talent": 94
+	},
+	{
+		"birth": 1948,
+		"death": null,
+		"debut": 1981,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"crime",
+			"action",
+			"thriller"
+		],
+		"id": "sljackson",
+		"name": "Samuel L. Jackson",
+		"peak": 2000,
+		"peakFame": 91,
+		"talent": 87
+	},
+	{
+		"birth": 1958,
+		"death": null,
+		"debut": 1986,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"thriller"
+		],
+		"id": "oldman",
+		"name": "Gary Oldman",
+		"peak": 2017,
+		"peakFame": 85,
+		"talent": 95
+	},
+	{
+		"birth": 1962,
+		"death": null,
+		"debut": 1992,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"drama",
+			"thriller"
+		],
+		"id": "fiennes",
+		"name": "Ralph Fiennes",
+		"peak": 1996,
+		"peakFame": 85,
+		"talent": 94
+	},
+	{
+		"birth": 1960,
+		"death": null,
+		"debut": 1987,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"romance",
+			"comedy"
+		],
+		"id": "hgrant",
+		"name": "Hugh Grant",
+		"peak": 1999,
+		"peakFame": 88,
+		"talent": 82
+	},
+	{
+		"birth": 1960,
+		"death": null,
+		"debut": 1984,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance",
+			"comedy"
+		],
+		"id": "firth",
+		"name": "Colin Firth",
+		"peak": 2010,
+		"peakFame": 86,
+		"talent": 90
+	},
+	{
+		"birth": 1969,
+		"death": null,
+		"debut": 1992,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance",
+			"drama"
+		],
+		"id": "zellweger",
+		"name": "Renée Zellweger",
+		"peak": 2001,
+		"peakFame": 87,
+		"talent": 86
+	},
+	{
+		"birth": 1972,
+		"death": null,
+		"debut": 1994,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance"
+		],
+		"id": "diaz",
+		"name": "Cameron Diaz",
+		"peak": 2000,
+		"peakFame": 89,
+		"talent": 75
+	},
+	{
+		"birth": 1975,
+		"death": null,
+		"debut": 1980,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance"
+		],
+		"id": "barrymore",
+		"name": "Drew Barrymore",
+		"peak": 2000,
+		"peakFame": 86,
+		"talent": 76
+	},
+	{
+		"birth": 1976,
+		"death": null,
+		"debut": 1991,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance",
+			"drama"
+		],
+		"id": "witherspoon",
+		"name": "Reese Witherspoon",
+		"peak": 2005,
+		"peakFame": 89,
+		"talent": 85
+	},
+	{
+		"birth": 1966,
+		"death": null,
+		"debut": 1991,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"drama",
+			"action",
+			"thriller"
+		],
+		"id": "berry",
+		"name": "Halle Berry",
+		"peak": 2002,
+		"peakFame": 89,
+		"talent": 80
+	},
+	{
+		"birth": 1967,
+		"death": null,
+		"debut": 1992,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"comedy"
+		],
+		"id": "foxx",
+		"name": "Jamie Foxx",
+		"peak": 2004,
+		"peakFame": 87,
+		"talent": 87
+	},
+	{
+		"birth": 1964,
+		"death": null,
+		"debut": 1990,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"drama",
+			"action",
+			"crime"
+		],
+		"id": "crowe",
+		"name": "Russell Crowe",
+		"peak": 2000,
+		"peakFame": 91,
+		"talent": 90
+	},
+	{
+		"birth": 1968,
+		"death": null,
+		"debut": 1999,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"action",
+			"musical",
+			"drama"
+		],
+		"id": "jackman",
+		"name": "Hugh Jackman",
+		"peak": 2013,
+		"peakFame": 90,
+		"talent": 85
+	},
+	{
+		"birth": 1974,
+		"death": null,
+		"debut": 1987,
+		"ego": 70,
+		"g": "m",
+		"genres": [
+			"drama",
+			"action",
+			"crime"
+		],
+		"id": "bale",
+		"name": "Christian Bale",
+		"peak": 2010,
+		"peakFame": 90,
+		"talent": 95
+	},
+	{
+		"birth": 1979,
+		"death": 2008,
+		"debut": 1997,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"drama",
+			"romance",
+			"crime"
+		],
+		"id": "ledger",
+		"name": "Heath Ledger",
+		"peak": 2008,
+		"peakFame": 89,
+		"talent": 92
+	},
+	{
+		"birth": 1961,
+		"death": null,
+		"debut": 1985,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"comedy",
+			"crime"
+		],
+		"id": "clooney",
+		"name": "George Clooney",
+		"peak": 2005,
+		"peakFame": 92,
+		"talent": 85
+	},
+	{
+		"birth": 1970,
+		"death": null,
+		"debut": 1992,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"drama",
+			"action",
+			"thriller"
+		],
+		"id": "damon",
+		"name": "Matt Damon",
+		"peak": 2007,
+		"peakFame": 91,
+		"talent": 88
+	},
+	{
+		"birth": 1972,
+		"death": null,
+		"debut": 1993,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime",
+			"action"
+		],
+		"id": "affleck",
+		"name": "Ben Affleck",
+		"peak": 2012,
+		"peakFame": 88,
+		"talent": 80
+	},
+	{
+		"birth": 1969,
+		"death": null,
+		"debut": 1993,
+		"ego": 55,
+		"g": "f",
+		"genres": [
+			"comedy",
+			"romance"
+		],
+		"id": "aniston",
+		"name": "Jennifer Aniston",
+		"peak": 2003,
+		"peakFame": 90,
+		"talent": 78
+	},
+	{
+		"birth": 1980,
+		"death": null,
+		"debut": 1999,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"drama",
+			"thriller",
+			"action"
+		],
+		"id": "gyllenhaal",
+		"name": "Jake Gyllenhaal",
+		"peak": 2014,
+		"peakFame": 87,
+		"talent": 90
+	},
+	{
+		"birth": 1981,
+		"death": null,
+		"debut": 1994,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller",
+			"scifi"
+		],
+		"id": "portman",
+		"name": "Natalie Portman",
+		"peak": 2010,
+		"peakFame": 89,
+		"talent": 91
+	},
+	{
+		"birth": 1982,
+		"death": null,
+		"debut": 2001,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"drama",
+			"comedy",
+			"romance"
+		],
+		"id": "hathaway",
+		"name": "Anne Hathaway",
+		"peak": 2012,
+		"peakFame": 89,
+		"talent": 88
+	},
+	{
+		"birth": 1974,
+		"death": null,
+		"debut": 1999,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"drama",
+			"comedy",
+			"scifi"
+		],
+		"id": "aadams",
+		"name": "Amy Adams",
+		"peak": 2013,
+		"peakFame": 86,
+		"talent": 92
+	},
+	{
+		"birth": 1977,
+		"death": null,
+		"debut": 2008,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"drama",
+			"thriller",
+			"scifi"
+		],
+		"id": "chastain",
+		"name": "Jessica Chastain",
+		"peak": 2017,
+		"peakFame": 85,
+		"talent": 92
+	},
+	{
+		"birth": 1983,
+		"death": null,
+		"debut": 2009,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"action",
+			"scifi",
+			"comedy"
+		],
+		"id": "hemsworth",
+		"name": "Chris Hemsworth",
+		"peak": 2018,
+		"peakFame": 91,
+		"talent": 72
+	},
+	{
+		"birth": 1981,
+		"death": null,
+		"debut": 2000,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"action",
+			"scifi",
+			"comedy"
+		],
+		"id": "cevans",
+		"name": "Chris Evans",
+		"peak": 2016,
+		"peakFame": 90,
+		"talent": 76
+	},
+	{
+		"birth": 1965,
+		"death": null,
+		"debut": 1984,
+		"ego": 80,
+		"g": "m",
+		"genres": [
+			"action",
+			"comedy",
+			"drama"
+		],
+		"id": "rdj",
+		"name": "Robert Downey Jr.",
+		"peak": 2013,
+		"peakFame": 95,
+		"talent": 92
+	},
+	{
+		"birth": 1979,
+		"death": null,
+		"debut": 2002,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"action",
+			"comedy",
+			"scifi"
+		],
+		"id": "pratt",
+		"name": "Chris Pratt",
+		"peak": 2016,
+		"peakFame": 89,
+		"talent": 72
+	},
+	{
+		"birth": 1983,
+		"death": null,
+		"debut": 2004,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"drama",
+			"action",
+			"scifi"
+		],
+		"id": "eblunt",
+		"name": "Emily Blunt",
+		"peak": 2018,
+		"peakFame": 87,
+		"talent": 89
+	},
+	{
+		"birth": 1968,
+		"death": null,
+		"debut": 1992,
+		"ego": 65,
+		"g": "m",
+		"genres": [
+			"action",
+			"thriller",
+			"crime"
+		],
+		"id": "craig",
+		"name": "Daniel Craig",
+		"peak": 2012,
+		"peakFame": 91,
+		"talent": 86
+	},
+	{
+		"birth": 1972,
+		"death": null,
+		"debut": 1995,
+		"ego": 55,
+		"g": "m",
+		"genres": [
+			"crime",
+			"action",
+			"drama"
+		],
+		"id": "elba",
+		"name": "Idris Elba",
+		"peak": 2015,
+		"peakFame": 86,
+		"talent": 87
+	},
+	{
+		"birth": 1974,
+		"death": null,
+		"debut": 2001,
+		"ego": 35,
+		"g": "m",
+		"genres": [
+			"drama",
+			"crime"
+		],
+		"id": "ali",
+		"name": "Mahershala Ali",
+		"peak": 2018,
+		"peakFame": 83,
+		"talent": 94
+	},
+	{
+		"birth": 1983,
+		"death": null,
+		"debut": 2013,
+		"ego": 40,
+		"g": "f",
+		"genres": [
+			"drama",
+			"horror",
+			"scifi"
+		],
+		"id": "nyongo",
+		"name": "Lupita Nyong'o",
+		"peak": 2019,
+		"peakFame": 84,
+		"talent": 92
+	},
+	{
+		"birth": 1994,
+		"death": null,
+		"debut": 2007,
+		"ego": 35,
+		"g": "f",
+		"genres": [
+			"drama",
+			"romance"
+		],
+		"id": "ronan",
+		"name": "Saoirse Ronan",
+		"peak": 2019,
+		"peakFame": 85,
+		"talent": 94
+	},
+	{
+		"birth": 1983,
+		"death": null,
+		"debut": 2011,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"scifi"
+		],
+		"id": "driver",
+		"name": "Adam Driver",
+		"peak": 2019,
+		"peakFame": 87,
+		"talent": 92
+	},
+	{
+		"birth": 1979,
+		"death": null,
+		"debut": 2002,
+		"ego": 50,
+		"g": "m",
+		"genres": [
+			"drama",
+			"scifi",
+			"crime"
+		],
+		"id": "isaac",
+		"name": "Oscar Isaac",
+		"peak": 2021,
+		"peakFame": 85,
+		"talent": 91
+	},
+	{
+		"birth": 1989,
+		"death": null,
+		"debut": 2010,
+		"ego": 45,
+		"g": "m",
+		"genres": [
+			"drama",
+			"horror",
+			"thriller"
+		],
+		"id": "kaluuya",
+		"name": "Daniel Kaluuya",
+		"peak": 2021,
+		"peakFame": 83,
+		"talent": 92
+	},
+	{
+		"birth": 1992,
+		"death": null,
+		"debut": 2015,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"drama",
+			"thriller",
+			"comedy"
+		],
+		"id": "keoghan",
+		"name": "Barry Keoghan",
+		"peak": 2023,
+		"peakFame": 82,
+		"talent": 90
+	},
+	{
+		"birth": 1976,
+		"death": null,
+		"debut": 1997,
+		"ego": 40,
+		"g": "m",
+		"genres": [
+			"drama",
+			"thriller",
+			"scifi"
+		],
+		"id": "cmurphy",
+		"name": "Cillian Murphy",
+		"peak": 2023,
+		"peakFame": 88,
+		"talent": 93
+	},
+	{
+		"birth": 1989,
+		"death": null,
+		"debut": 2001,
+		"ego": 35,
+		"g": "m",
+		"genres": [
+			"adventure",
+			"comedy",
+			"horror"
+		],
+		"id": "radcliffe",
+		"name": "Daniel Radcliffe",
+		"peak": 2011,
+		"peakFame": 90,
+		"talent": 80
+	},
+	{
+		"birth": 1988,
+		"death": null,
+		"debut": 2006,
+		"ego": 50,
+		"g": "f",
+		"genres": [
+			"thriller",
+			"drama",
+			"action"
+		],
+		"id": "dearmas",
+		"name": "Ana de Armas",
+		"peak": 2022,
+		"peakFame": 86,
+		"talent": 84
+	},
+	{
+		"birth": 1988,
+		"death": null,
+		"debut": 2007,
+		"ego": 60,
+		"g": "m",
+		"genres": [
+			"action",
+			"comedy",
+			"romance"
+		],
+		"id": "powell",
+		"name": "Glen Powell",
+		"peak": 2024,
+		"peakFame": 84,
+		"talent": 80
+	},
+	{
+		"birth": 2002,
+		"death": null,
+		"debut": 2015,
+		"ego": 45,
+		"g": "f",
+		"genres": [
+			"horror",
+			"thriller",
+			"comedy"
+		],
+		"id": "ortega",
+		"name": "Jenna Ortega",
+		"peak": 2024,
+		"peakFame": 87,
+		"talent": 83
+	},
+	{
+		"birth": 2001,
+		"death": null,
+		"debut": 2021,
+		"ego": 60,
+		"g": "f",
+		"genres": [
+			"musical",
+			"drama"
+		],
+		"id": "zegler",
+		"name": "Rachel Zegler",
+		"peak": 2024,
+		"peakFame": 80,
+		"talent": 85
+	}
+]

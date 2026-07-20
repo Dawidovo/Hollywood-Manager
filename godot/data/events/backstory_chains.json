@@ -1,0 +1,255 @@
+[
+	{
+		"id": "junior_alter_chef",
+		"cd": 60,
+		"weight": {"base": 1.3},
+		"conditions": {"backstory": "ex_studio_junior", "requires_studio": true, "min_rep": 10},
+		"title": "Der alte Chef ruft an",
+		"text": "[i]„Na, wen haben wir denn da — mein bester Laufbursche macht jetzt Karrieren?“[/i]\n\nDein früherer Vorgesetzter sitzt heute im Vorstand von {studio}. Er hätte da ein Projekt in Schieflage — inoffiziell, versteht sich.",
+		"choices": [
+			{
+				"label": "Aushelfen — für die alte Zeit",
+				"effects": [
+					{"op": "studio_rel", "amount": 6},
+					{"op": "followup", "event": "junior_gegenleistung", "delay_weeks": 8}
+				],
+				"outcome": "Du löst das Problem lautlos. Er nickt nur — aber in dieser Stadt ist ein Nicken von ganz oben mehr wert als ein Vertrag."
+			},
+			{
+				"label": "Einen Preis nennen",
+				"success_chance": 0.6,
+				"effects": [{"op": "money", "amount": 6000, "inflate": true, "cat": "events", "label": "Diskrete Aushilfe für den alten Chef"}],
+				"effects_fail": [{"op": "studio_rel", "amount": -5}],
+				"outcome": "Er lacht — und zahlt. „Du hast doch was gelernt bei uns.“",
+				"outcome_fail": "„Ich dachte, wir wären Freunde.“ Das Gespräch ist kurz, der Nachgeschmack lang."
+			},
+			{
+				"label": "Die alten Zeiten ruhen lassen",
+				"effects": [],
+				"outcome": "Du legst höflich auf. Manche Türen schließt man besser selbst."
+			}
+		]
+	},
+	{
+		"id": "junior_gegenleistung",
+		"followup_only": true,
+		"title": "Die Gegenleistung",
+		"text": "Der alte Chef vergisst nichts — im Guten wie im Schlechten. Ein Bote bringt einen Umschlag: eine Einladung, dazu eine Notiz. [i]„Für damals. Such dir was aus.“[/i]",
+		"choices": [
+			{
+				"label": "Die Einladung annehmen",
+				"effects": [{"op": "favor_grant", "kind": "galaInvite"}],
+				"outcome": "Eine geschlossene Veranstaltung, handverlesene Gäste — genau die Sorte Abend, auf dem Karrieren gemacht werden."
+			},
+			{
+				"label": "Stattdessen um Drehbuch-Zugang bitten",
+				"effects": [{"op": "favor_grant", "kind": "scriptAccess"}],
+				"outcome": "„Leseratte, wie immer.“ Ab sofort liegen die Skripte einen Tick früher auf deinem Tisch."
+			}
+		]
+	},
+	{
+		"id": "kolumnist_alte_quelle",
+		"cd": 60,
+		"weight": {"base": 1.3},
+		"conditions": {"backstory": "kolumnist", "requires_client": true},
+		"title": "Die alte Quelle",
+		"text": "[i]„Ich hab da was gehört. Früher hättest du mir dafür ein Steak spendiert.“[/i]\n\nDeine beste Quelle aus Kolumnistenzeiten sitzt im Diner und schiebt dir eine Serviette mit drei Sätzen über {client} zu — brisant, unbestätigt, druckreif.",
+		"choices": [
+			{
+				"label": "Das Steak spendieren ({money_fmt:500})",
+				"requirements": {"min_cash": 500},
+				"effects": [
+					{"op": "money", "amount": -500, "inflate": true, "cat": "events", "label": "Ein Steak für die alte Quelle"},
+					{"op": "followup", "event": "kolumnist_quelle_folge", "delay_weeks": 6}
+				],
+				"outcome": "Sie erzählt dir alles — und verspricht, sich zu melden, wenn mehr auftaucht. Alte Netzwerke rosten nicht."
+			},
+			{
+				"label": "Die Serviette verschwinden lassen",
+				"effects": [{"op": "trust", "amount": 6}],
+				"outcome": "Du verbrennst die Notiz im Aschenbecher. {client} erfährt davon — und vergisst es nie."
+			},
+			{
+				"label": "Höflich ablehnen — du schreibst nicht mehr",
+				"effects": [],
+				"outcome": "„Schade. Du warst der Beste.“ Sie zahlt ihr Kaffee selbst und geht."
+			}
+		]
+	},
+	{
+		"id": "kolumnist_quelle_folge",
+		"followup_only": true,
+		"title": "Die Quelle liefert",
+		"text": "Der Anruf kommt nachts: Deine alte Quelle hat Material über einen Konkurrenten — hart genug, um eine Karriere zu beschädigen. [i]„Was machen wir damit, Chef?“[/i]",
+		"choices": [
+			{
+				"label": "Als Druckmittel zurücklegen",
+				"effects": [{"op": "favor_grant", "kind": "suppressStory"}],
+				"outcome": "Wissen ist die einzige Währung, die nie an Wert verliert. Du legst die Mappe in den Safe."
+			},
+			{
+				"label": "An die Presse durchstechen",
+				"effects": [{"op": "rep", "amount": 2}, {"op": "instinct", "amount": 2}],
+				"outcome": "Die Schlagzeile schlägt ein. Niemand kann sie zu dir zurückverfolgen — aber die Stadt weiß wieder, dass man dich nicht unterschätzt."
+			},
+			{
+				"label": "Das Material vernichten",
+				"effects": [{"op": "rep", "amount": 1}],
+				"outcome": "Manche Geschäfte macht man nicht. Deine Quelle versteht es nicht — dein Spiegelbild schon."
+			}
+		]
+	},
+	{
+		"id": "anwalt_alte_akte",
+		"cd": 60,
+		"weight": {"base": 1.3},
+		"conditions": {"backstory": "anwalt", "requires_client": true, "requires_studio": true},
+		"title": "Die alte Akte",
+		"text": "[i]„Sie haben damals den Vertrag aufgesetzt. Sie wissen, was in Paragraf 12 steht.“[/i]\n\nEin Anwalt von {studio} taucht mit einer Akte auf, die deine Handschrift trägt — und die dem Studio gegen {client} nützen würde. Man bittet um deine „Auslegung“.",
+		"choices": [
+			{
+				"label": "Die Lücke aufzeigen, die du damals eingebaut hast",
+				"effects": [{"op": "trust", "amount": 8}, {"op": "studio_rel", "amount": -4}],
+				"outcome": "Du hast schon damals für alle Fälle vorgesorgt. Paragraf 12 hat einen Absatz b — und der gehört deinem Klienten. {studio} zieht mit zusammengebissenen Zähnen zurück."
+			},
+			{
+				"label": "Dem Studio zuarbeiten — diskret",
+				"success_chance": 0.55,
+				"effects": [
+					{"op": "studio_rel", "amount": 8},
+					{"op": "favor_grant", "kind": "scriptAccess", "from": "studio"}
+				],
+				"effects_fail": [
+					{"op": "trust", "amount": -10},
+					{"op": "rumor", "text": "{client} soll vom eigenen Agenten hintergangen worden sein.", "truth": true, "topic": "skandal", "belief": 35},
+					{"op": "followup", "event": "anwalt_akte_folgen", "delay_weeks": 5}
+				],
+				"outcome": "Das Studio bekommt seine Auslegung, du bekommst offene Türen. Niemand muss davon wissen.",
+				"outcome_fail": "Jemand redet. In dieser Stadt redet immer jemand."
+			},
+			{
+				"label": "Befangenheit erklären und schweigen",
+				"effects": [{"op": "rep", "amount": 1}],
+				"outcome": "„Ich vertrete heute die andere Seite.“ Sauber, korrekt, langweilig — und genau richtig."
+			}
+		]
+	},
+	{
+		"id": "anwalt_akte_folgen",
+		"followup_only": true,
+		"title": "Die Akte spricht",
+		"text": "Die Geschichte vom Agenten, der gegen den eigenen Klienten gearbeitet haben soll, hält sich hartnäckig. Dein Telefon klingelt seltener.",
+		"choices": [
+			{
+				"label": "Mit einer Verleumdungsklage drohen",
+				"success_chance": 0.6,
+				"effects": [{"op": "rep", "amount": 1}],
+				"effects_fail": [{"op": "rep", "amount": -2}],
+				"outcome": "Nichts bringt eine Redaktion schneller zum Schweigen als ein Anwalt, der den Streitwert kennt.",
+				"outcome_fail": "Die Drohung wirkt dünnhäutig — und macht die Geschichte erst recht interessant."
+			},
+			{
+				"label": "Aussitzen",
+				"effects": [],
+				"outcome": "Du lässt die Sache verebben. Es dauert — aber Hollywood hat ein kurzes Gedächtnis."
+			}
+		]
+	},
+	{
+		"id": "gescheitert_alte_rolle",
+		"cd": 60,
+		"weight": {"base": 1.3},
+		"conditions": {"backstory": "gescheitert", "requires_client": {"free": true}, "requires_studio": true},
+		"title": "Die Rolle, die dir gehörte",
+		"text": "[i]„Wir besetzen den Stoff neu. Sie kennen ihn ja — Sie waren damals in der engeren Auswahl.“[/i]\n\n{studio} verfilmt ausgerechnet das Projekt, an dem deine eigene Schauspielkarriere zerbrach. Der Regisseur fragt, ob {client} Interesse hätte.",
+		"choices": [
+			{
+				"label": "{client} mit allem vorbereiten, was du damals gelernt hast",
+				"effects": [
+					{"op": "flag_set", "key": "prepFit", "value": 12},
+					{"op": "trust", "amount": 5},
+					{"op": "followup", "event": "gescheitert_premiere", "delay_weeks": 10}
+				],
+				"outcome": "Du kennst jede Zeile, jede Falle, jeden Regieeinfall dieses Stoffs. {client} bekommt die beste Vorbereitung, die es für Geld nicht zu kaufen gibt."
+			},
+			{
+				"label": "Das Projekt meiden — zu viele Geister",
+				"effects": [{"op": "mood", "amount": -2}],
+				"outcome": "Manche Wunden näht man besser nicht wieder auf. {client} versteht es nicht ganz — du schon."
+			}
+		]
+	},
+	{
+		"id": "gescheitert_premiere",
+		"followup_only": true,
+		"title": "Premiere mit Geistern",
+		"text": "Der Film ist abgedreht, die Premiere steht an. Auf der Gästeliste: alle, die damals zugesehen haben, wie du gescheitert bist.",
+		"choices": [
+			{
+				"label": "Hingehen — erhobenen Hauptes",
+				"effects": [{"op": "rep", "amount": 2}, {"op": "instinct", "amount": 2}],
+				"outcome": "Du sitzt in Reihe drei, wo damals dein Name auf dem Stuhl klebte. Als das Licht angeht, applaudieren sie deinem Klienten — und ein paar nicken dir zu. Das reicht."
+			},
+			{
+				"label": "Fernbleiben und arbeiten",
+				"effects": [{"op": "money", "amount": 1500, "inflate": true, "cat": "provision", "label": "Nachtschicht statt Premiere"}],
+				"outcome": "Während die Stadt feiert, telefonierst du zwei neue Deals fest. Rache kann auch ein Kontoauszug sein."
+			}
+		]
+	},
+	{
+		"id": "aufsteiger_alte_schulden",
+		"cd": 60,
+		"weight": {"base": 1.3},
+		"conditions": {"backstory": "aufsteiger", "min_year": 1900},
+		"title": "Ein Gläubiger von früher",
+		"text": "[i]„Ohne mich würdest du noch Zeitungen austragen. Zeit, dass sich das auszahlt.“[/i]\n\nDer Mann, der dir vor Jahren das erste Geld lieh, steht im Büro — mit einem Lächeln, das keins ist.",
+		"choices": [
+			{
+				"label": "Auszahlen — mit Zinsen ({money_fmt:12000})",
+				"requirements": {"min_cash": 12000},
+				"effects": [{"op": "money", "amount": -12000, "inflate": true, "cat": "sonstiges", "label": "Alte Schulden beglichen"}],
+				"outcome": "Du zählst die Scheine auf den Tisch, ohne die Miene zu verziehen. „Wir sind quitt.“ Und diesmal stimmt es."
+			},
+			{
+				"label": "Ihm etwas Besseres anbieten: Zugang",
+				"effects": [
+					{"op": "favor_owe", "kind": "galaInvite"},
+					{"op": "followup", "event": "aufsteiger_glaeubiger_kommt", "delay_weeks": 12}
+				],
+				"outcome": "„Geld hab ich genug. Aber auf so eine Premiere hat mich noch nie jemand mitgenommen …“ Du schuldest ihm jetzt einen Abend in der ersten Reihe."
+			},
+			{
+				"label": "Hinauswerfen lassen",
+				"effects": [
+					{"op": "rumor", "text": "Der Aufstieg von {agency} soll auf geliehenem Geld gebaut sein.", "truth": true, "topic": "skandal", "belief": 30},
+					{"op": "followup", "event": "aufsteiger_glaeubiger_kommt", "delay_weeks": 6}
+				],
+				"outcome": "Er geht ohne Widerstand. An der Tür dreht er sich um: „Du weißt, dass ich Geschichten kenne, oder?“"
+			}
+		]
+	},
+	{
+		"id": "aufsteiger_glaeubiger_kommt",
+		"followup_only": true,
+		"title": "Der Gläubiger meldet sich wieder",
+		"text": "Er hat Geduld — das war schon immer seine gefährlichste Eigenschaft. Jetzt will er eine Antwort.",
+		"choices": [
+			{
+				"label": "Endgültig auszahlen ({money_fmt:15000})",
+				"requirements": {"min_cash": 15000},
+				"effects": [{"op": "money", "amount": -15000, "inflate": true, "cat": "sonstiges", "label": "Alte Schulden — Schlussstrich"}],
+				"outcome": "Diesmal mit Quittung, Zeugen und Handschlag. Das Kapitel ist geschlossen."
+			},
+			{
+				"label": "Ihn ins Geschäft holen — stiller Teilhaber",
+				"effects": [
+					{"op": "money", "amount": 20000, "inflate": true, "cat": "investition", "label": "Einlage eines stillen Teilhabers"},
+					{"op": "rep", "amount": -2}
+				],
+				"outcome": "Frisches Kapital, keine Fragen — und ein Schatten mehr im Rücken. Die feine Gesellschaft rümpft die Nase."
+			}
+		]
+	}
+]

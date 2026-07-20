@@ -1,0 +1,26 @@
+[
+	{
+		"desc": "Hollywood ist jung, die Bilder sind stumm, die Stars sind Götter. Aber der Tonfilm wirft seine Schatten voraus …",
+		"name": "Die Stummfilm-Ära",
+		"title": "1925",
+		"year": 1925
+	},
+	{
+		"desc": "Das Studiosystem auf dem Höhepunkt — doch das Fernsehen lauert, und eine neue Generation Method-Actors klopft an.",
+		"name": "Das Goldene Zeitalter",
+		"title": "1950",
+		"year": 1950
+	},
+	{
+		"desc": "Nach New Hollywood kommt das große Geld: Sommerkino, Sequels und Gagen, von denen man 1925 nicht mal träumte.",
+		"name": "Blockbuster-Hollywood",
+		"title": "1980",
+		"year": 1980
+	},
+	{
+		"desc": "Superhelden dominieren, Streamer drängen auf den Markt, und Ruhm wird in Followern gemessen.",
+		"name": "Franchise & Streaming",
+		"title": "2010",
+		"year": 2010
+	}
+]

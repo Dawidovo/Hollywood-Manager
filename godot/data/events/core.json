@@ -1,0 +1,120 @@
+[
+	{
+		"id": "favor",
+		"cd": 8,
+		"weight": {"base": 0.7},
+		"conditions": {"requires_studio": true},
+		"title": "Ein Gefallen",
+		"text": "{studio} bittet um einen Gefallen: ein Klient soll unbezahlt bei einer Galapremiere auftreten.",
+		"choices": [
+			{
+				"label": "Einwilligen",
+				"effects": [
+					{"op": "studio_rel", "amount": 8},
+					{"op": "favor_grant", "kind": "extraAudition|billing|scriptAccess", "from": "studio"}
+				],
+				"outcome": "{studio} wird sich erinnern — und steht jetzt offiziell in deiner Schuld. Beziehungen sind die harte Währung dieser Stadt."
+			},
+			{
+				"label": "Ablehnen",
+				"effects": [{"op": "studio_rel", "amount": -3}],
+				"outcome": "Man verzichtet höflich. Das Studio nimmt es zur Kenntnis."
+			}
+		]
+	},
+	{
+		"id": "press",
+		"cd": 8,
+		"weight": {"base": 0.7},
+		"conditions": {"requires_client": true},
+		"title": "Presse-Coup",
+		"text": "Ein großes Magazin bietet eine Titelgeschichte über {client} an — gegen exklusiven Zugang.",
+		"choices": [
+			{
+				"label": "Zusagen",
+				"effects": [
+					{"op": "heat", "amount": 4},
+					{"op": "fame", "amount": 2},
+					{"op": "dna", "key": "popular", "amount": 3}
+				],
+				"outcome": "Die Ausgabe verkauft sich glänzend. {client} ist heißer denn je."
+			},
+			{
+				"label": "Ablehnen",
+				"effects": [],
+				"outcome": "Man verzichtet. Privatsphäre ist auch etwas wert."
+			}
+		]
+	},
+	{
+		"id": "steuerpruefung",
+		"cd": 20,
+		"weight": {
+			"base": 0.8,
+			"mods": [{"if": {"min_year": 1935}, "add": 0.3}]
+		},
+		"conditions": {"min_year": 1929, "min_rep": 15, "requires_client": {"min_fame": 30}, "requires_studio": true},
+		"title": "Post vom Finanzamt",
+		"text": "[i]„Wir hätten da ein paar Fragen zu den Spesenabrechnungen …“[/i]\n\nEin Prüfer interessiert sich für die Ausgaben rund um {client}. {studio} wird nervös — niemand mag Beamte am Set.",
+		"choices": [
+			{
+				"label": "Anwälte einschalten ({money_fmt:8000})",
+				"requirements": {"min_cash": 8000},
+				"success_chance": 0.7,
+				"effects": [
+					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Steuerkanzlei"},
+					{"op": "rep", "amount": 1}
+				],
+				"effects_fail": [
+					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Steuerkanzlei"},
+					{"op": "followup", "event": "steuer_nachspiel", "delay_weeks": 6}
+				],
+				"outcome": "Die Kanzlei erledigt das diskret. Ein Aktenordner wechselt den Schrank, und der Prüfer findet: nichts.",
+				"outcome_fail": "Die Kanzlei kassiert — doch der Prüfer beißt sich fest. Das war noch nicht das Ende."
+			},
+			{
+				"label": "Gefallen einlösen: Ein Anruf genügt",
+				"requirements": {"has_favor": "suppressStory"},
+				"effects": [{"op": "favor_consume", "kind": "suppressStory"}],
+				"outcome": "Der Prüfer wird versetzt — nach Sacramento, heißt es. Hollywood bleibt Hollywood."
+			},
+			{
+				"label": "Aussitzen",
+				"effects": [
+					{"op": "trust", "amount": -4},
+					{"op": "rumor", "text": "{client} soll Ärger mit dem Finanzamt haben.", "truth": true, "topic": "skandal", "belief": 25}
+				],
+				"outcome": "Du tust nichts — und genau das spricht sich herum. {client} findet, du hättest anrufen können."
+			}
+		]
+	},
+	{
+		"id": "steuer_nachspiel",
+		"followup_only": true,
+		"title": "Die Prüfung zieht Kreise",
+		"text": "Der Fall {client} liegt jetzt bei der Bezirksstaatsanwaltschaft. Ein Vergleich ist möglich — oder ein öffentliches Verfahren.",
+		"choices": [
+			{
+				"label": "Vergleich zahlen ({money_fmt:15000})",
+				"requirements": {"min_cash": 15000},
+				"effects": [
+					{"op": "money", "amount": -15000, "inflate": true, "cat": "pr_recht", "label": "Steuervergleich"},
+					{"op": "mood", "amount": 4}
+				],
+				"outcome": "Teuer, leise, endgültig. {client} schickt eine Kiste Zigarren als Dank."
+			},
+			{
+				"label": "Auf ein Verfahren ankommen lassen",
+				"success_chance": 0.5,
+				"effects": [{"op": "rep", "amount": 2}, {"op": "trust", "amount": 3}],
+				"effects_fail": [
+					{"op": "rep", "amount": -3},
+					{"op": "fame", "amount": -4},
+					{"op": "rumor", "text": "Das Steuerverfahren gegen {client} füllt die Spalten.", "truth": true, "topic": "skandal", "belief": 45}
+				],
+				"outcome": "Freispruch! Die Zeitungen feiern {client} als Opfer übereifriger Beamter — und dich als die Agentur mit den Nerven aus Stahl.",
+				"outcome_fail": "Die Verhandlung wird zum Spießrutenlauf. Die Schlagzeilen bleiben kleben."
+			}
+		]
+	}
+]

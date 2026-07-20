@@ -448,16 +448,19 @@ func _ready() -> void:
 	var pl_client: Dictionary = Game.state.clients[0]
 	pl_client.exhaustion = 80.0
 	pl_client.busyUntil = 0
-	for w in 4:
-		Game.planner_slot_set("client", int(pl_client.id), w, "erholung")
+	# Volle 21-Slot-Erholungswoche (7 Tage × 3 Abschnitte)
+	Game.planner_fill("client", int(pl_client.id), "erholung", null, false)
 	var dinner_studio: Dictionary = Game.active_studios()[0]
 	var rel_before := int(Game.state.studioRel[dinner_studio.id])
-	Game.planner_slot_set("player", 0, 0, "dinner", dinner_studio.id)
+	for d in 5:
+		Game.planner_slot_set("player", 0, d, 0, "dinner", dinner_studio.id)
 	Game._apply_planner([])
-	check(float(pl_client.exhaustion) <= 32.01, "Erholung senkt Erschöpfung (80 → %0.0f)" % pl_client.exhaustion)
-	check(int(Game.state.studioRel[dinner_studio.id]) == rel_before + 4, "Studio-Dinner: Beziehung +4")
+	check(float(pl_client.exhaustion) <= 68.01, "Volle Erholungswoche senkt Erschöpfung (80 → %0.1f)" % pl_client.exhaustion)
+	check(int(Game.state.studioRel[dinner_studio.id]) == rel_before + 1, "Studio-Dinner: 5 Abende ⇒ Beziehung +1")
+	check(Game.state.planner.player[0] == null, "Planer beginnt die neue Woche leer")
 
 	# 32. Save/Load-Roundtrip aller Simulations-Felder
+	Game.planner_slot_set("player", 0, 2, 1, "scouting")
 	Game.state.instinct = 42
 	Game.state.history_pairs["t1|t2"] = {"n": 2, "p": 3}
 	Game.save_game()
@@ -465,7 +468,7 @@ func _ready() -> void:
 	check(Game.load_game(), "Simulations-Spielstand geladen")
 	check(int(Game.state.instinct) == 42, "Instinkt überlebt Save/Load")
 	check(Game.state.has("predictions") and Game.state.has("planner") and Game.state.planner.has("player"), "Prognosen & Planer überleben Save/Load")
-	check(str(Game.state.planner.player[0].get("a", "")) == "dinner", "Planer-Slots überleben Save/Load")
+	check(str(Game.state.planner.player[7].get("a", "")) == "scouting", "Planer-Slots (Tag/Abschnitt) überleben Save/Load")
 	check(int(Game.state.history_pairs.get("t1|t2", {}).get("p", 0)) == 3, "Chemie-Historie überlebt Save/Load")
 	check(Game.state.clients[0].has("clauses") and Game.state.clients[0].has("exclusiveStudio"), "Klausel- & Exklusiv-Felder migriert")
 
@@ -720,6 +723,152 @@ func _ready() -> void:
 	var own_filled: int = worst_casting.roles.slice(0, 2).filter(func(r): return r.filled != null and r.filled.get("clientId") != null).size()
 	check(str(worst_result.outcome) == "worst" and bool(worst_result.ownRetained) and own_filled >= 1, "Fremdbesetzungs-Pfad lässt mindestens einen eigenen Klienten in der Rolle")
 	check(Game.state.history_pairs.size() >= 1, "Chemistry-Read-Ergebnis schreibt die Paarhistorie fort")
+
+	# =====================================================================
+	# Wochenrhythmus: 4 Wochen = 1 Monat, Fixkosten nur beim Monatsabschluss
+	# =====================================================================
+	Game.new_game("Wochen-Test", 1950)
+	Jukebox._current_key = Jukebox.key_for_year(1950)
+	var wt_month := int(Game.state.month)
+	var wt_cash: float = Game.state.agency.cash
+	Game.end_week()
+	check(int(Game.state.week) == 2 and int(Game.state.month) == wt_month, "Woche 1 → 2, Monat unverändert")
+	Game.end_week()
+	Game.end_week()
+	check(Game.state.agency.cash == wt_cash, "Wochen 1–3 buchen keine Fixkosten")
+	Game.end_week()
+	check(int(Game.state.month) == wt_month + 1 and int(Game.state.week) == 1, "Nach 4 Wochen: Monatswechsel")
+	check(Game.state.agency.cash < wt_cash, "Monatsabschluss bucht Bürokosten")
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	var wt_c: Dictionary = Game.state.clients[0]
+	Game.quick_production(wt_c, {"genre": "drama", "prestige": 1})
+	var wt_prod: Dictionary = Game.state.productions[-1]
+	wt_prod.weeksLeft = 2
+	Game.end_week()
+	check(int(wt_prod.weeksLeft) == 1, "Produktion zählt in Wochen herunter")
+	var wt_rel: int = Game.state.released.size()
+	Game.end_week()
+	check(Game.state.released.size() == wt_rel + 1, "Release nach Ablauf der Wochen")
+
+	# =====================================================================
+	# Save-Migration v1 → v2 (Monats- auf Wochenrhythmus)
+	# =====================================================================
+	Game.new_game("Migrationstest", 1950)
+	Game.state.erase("saveVersion")
+	Game.state.erase("week")
+	Game.state.planner = {"player": [null, {"a": "scouting"}, null, null], "clients": {}}
+	Game.state.productions.append({"id": 999, "studioId": "mgm", "title": "Altfilm", "genre": "drama",
+		"prestige": 1, "budget": 1000, "monthsLeft": 3, "qualityMod": 0.0, "roles": []})
+	Game.state.castings[0]["deadline"] = 2
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "v1-Spielstand geladen")
+	check(int(Game.state.saveVersion) == 2 and int(Game.state.week) == 1, "Migration setzt saveVersion 2 + Woche 1")
+	var mig_prod: Dictionary = Game.state.productions[-1]
+	check(int(mig_prod.get("weeksLeft", -1)) == 12 and not mig_prod.has("monthsLeft"), "Produktion: monthsLeft 3 → weeksLeft 12")
+	check(int(Game.state.castings[0].deadline) == 8, "Casting-Deadline auf Wochen umgestellt (2 → 8)")
+	Game.ensure_planner()
+	check(Game.state.planner.player.size() == 21, "Planer auf 21 Slots erweitert")
+
+	# =====================================================================
+	# DataLoader: Merge/Override/Anreicherung, Overlay unter user://data
+	# =====================================================================
+	DirAccess.make_dir_recursive_absolute("user://data/actors")
+	var dl_f1 := FileAccess.open("user://data/actors/zz_test_a.json", FileAccess.WRITE)
+	dl_f1.store_string(JSON.stringify([
+		{"id": "testling", "name": "Testa Testling", "birth": 1900, "g": "f", "debut": 1920, "talent": 50, "peak": 1930, "peakFame": 60},
+		{"id": "kaputt"}
+	]))
+	dl_f1.close()
+	var dl_f2 := FileAccess.open("user://data/actors/zz_test_b.json", FileAccess.WRITE)
+	dl_f2.store_string(JSON.stringify([{"id": "testling", "talent": 77, "films": [{"title": "Testfilm", "year": 1925}]}]))
+	dl_f2.close()
+	var dl_loaded := DataLoader.load_entries("actors", ["id"],
+		{"death": null, "films": [], "ethnicity": "white", "genres": [], "ego": 50},
+		["id", "name", "birth", "g", "debut", "talent", "peak", "peakFame"])
+	var dl_testling = null
+	for dl_a in dl_loaded:
+		if str(dl_a.id) == "testling":
+			dl_testling = dl_a
+	check(dl_testling != null, "DataLoader: Overlay-Eintrag aus user://data geladen")
+	check(dl_testling != null and int(dl_testling.talent) == 77, "DataLoader: spätere Datei überschreibt Felder (talent 50→77)")
+	check(dl_testling != null and dl_testling.films.size() == 1, "DataLoader: Anreicherung ergänzt Felder (films)")
+	check(dl_testling != null and str(dl_testling.ethnicity) == "white" and dl_testling.death == null, "DataLoader: Schema-Defaults gesetzt")
+	check(not dl_loaded.any(func(dl_x): return str(dl_x.get("id", "")) == "kaputt"), "DataLoader: Eintrag ohne Pflichtfelder übersprungen")
+	check(dl_loaded.any(func(dl_x): return str(dl_x.id) == "bogart" and dl_x.films.size() >= 3), "DataLoader: Filmografie-Paket an Bogart gemergt")
+	check(dl_loaded.any(func(dl_x): return str(dl_x.id) == "poitier" and str(dl_x.ethnicity) == "black"), "DataLoader: Ethnie-Paket gemergt")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://data/actors/zz_test_a.json"))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://data/actors/zz_test_b.json"))
+
+	# =====================================================================
+	# EventEngine: Bedingungen, Platzhalter, Effekte, Kette
+	# =====================================================================
+	Game.new_game("Event-Test", 1950)
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	var ee_c = Game.state.clients[0]
+	check(EvEngine.all_events().size() >= 3, "EvEngine: JSON-Events geladen (%d, ohne followup_only)" % EvEngine.all_events().size())
+	check(not EvEngine.all_events().any(func(ee_x): return str(ee_x.id) == "steuer_nachspiel"), "EvEngine: Kettenglied bleibt aus dem Zufallspool")
+	check(EvEngine.check_conditions({"min_year": 1940, "max_year": 1960, "min_rep": 50}), "EvEngine: Jahresfenster + min_rep erfüllt")
+	check(not EvEngine.check_conditions({"min_year": 1980}), "EvEngine: min_year sperrt")
+	check(not EvEngine.check_conditions({"backstory": "anwalt"}), "EvEngine: Backstory-Bedingung sperrt ohne Backstory")
+	var ee_built = EvEngine.build_event(EvEngine.def_by_id("press"))
+	check(ee_built != null and str(ee_built.text).contains(Game.client_name(ee_c)), "EvEngine: {client}-Platzhalter ersetzt")
+	var ee_cash: float = Game.state.agency.cash
+	EvEngine.apply_effects([
+		{"op": "money", "amount": -1000, "cat": "pr_recht", "label": "Test"},
+		{"op": "rep", "amount": -5},
+		{"op": "fame", "amount": 3}
+	], {"cid": int(ee_c.id)})
+	check(Game.state.agency.cash == ee_cash - 1000, "EvEngine: money-Effekt bucht ins Ledger")
+	check(int(Game.state.agency.rep) == 95, "EvEngine: rep-Effekt angewendet")
+	EvEngine.apply_effects([
+		{"op": "favor_grant", "kind": "suppressStory"},
+		{"op": "followup", "event": "steuer_nachspiel", "delay_weeks": 4}
+	], {"cid": int(ee_c.id)})
+	check(Game.has_favor("suppressStory"), "EvEngine: favor_grant delegiert an Game")
+	var ee_fu: Dictionary = Game.state.followups[-1]
+	check(str(ee_fu.type) == "json" and int(ee_fu.due) == Game.mi() + 1, "EvEngine: Kette terminiert (4 Wochen ⇒ +1 Monat)")
+	var ee_chain = EvEngine.build_by_id(str(ee_fu.event), ee_fu.ctx)
+	check(ee_chain != null and str(ee_chain.title) == "Die Prüfung zieht Kreise", "EvEngine: Kettenglied per id+ctx gebaut")
+	var ee_fail := {"success_chance": 0.0, "effects": [{"op": "rep", "amount": 5}],
+		"effects_fail": [{"op": "rep", "amount": -1}], "outcome": "gut", "outcome_fail": "schlecht"}
+	var ee_out: String = EvEngine._choice_fn(ee_fail, {}).call()
+	check(ee_out == "schlecht" and int(Game.state.agency.rep) == 94, "EvEngine: success_chance 0 nimmt den Fail-Pfad")
+
+	# =====================================================================
+	# Backstories: Startmodifikatoren, Hooks, exklusive Eventketten
+	# =====================================================================
+	Game.new_game("Neutral", 1950)
+	var bs_rr_base := Game.required_rep(80.0)
+	var bs_cash_base: float = Game.state.agency.cash
+	var bs_ev := EvEngine.def_by_id("aufsteiger_alte_schulden")
+	check(not bs_ev.is_empty(), "Backstory-Kette in data/events geladen")
+	check(EvEngine.eval_weight(bs_ev) == 0.0, "Backstory-Event bleibt ohne Vorgeschichte gesperrt")
+	Game.new_game("Aufstieg GmbH", 1950, "aufsteiger")
+	check(Game.has_backstory("aufsteiger"), "Backstory gesetzt")
+	check(int(Game.state.agency.rep) == 8, "Aufsteiger: Ruf-Start 15 − 7 = 8")
+	check(Game.state.agency.cash > bs_cash_base, "Aufsteiger: Startkapital erhöht")
+	check(Game.backstory_mod("office_cost_mult", 1.0) == 0.9, "Aufsteiger: Bürokosten-Trait aktiv")
+	check(Game.required_rep(80.0) == bs_rr_base + 5, "Aufsteiger: A-Lister verlangen +5 Ruf")
+	check(EvEngine.eval_weight(bs_ev) > 0.0, "Backstory-Event feuert mit passender Vorgeschichte")
+	Game.new_game("Kanzlei & Partner", 1950, "anwalt")
+	check(int(Game.state.instinct) == 12, "Anwalt: Instinkt-Start 20 − 8")
+	check(Game.client_capacity() == 7, "Anwalt: Klienten-Kapazität +1 (dokumentiert, noch kein Limit)")
+	Game.new_game("Zweite Chance", 1950, "gescheitert")
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	var bs_c: Dictionary = Game.state.clients[0]
+	var bs_t0: float = bs_c.trust
+	Game.change_trust(bs_c, 4.0)
+	check(absf(float(bs_c.trust) - (bs_t0 + 5.0)) < 0.01, "Gescheitert: Vertrauensgewinn ×1,25")
+	Game.new_game("Federkiel", 1950, "kolumnist")
+	var bs_rumor := Game.add_rumor("agency", "Testgerücht aus dem Hinterzimmer.", false, "skandal")
+	check(bool(bs_rumor.knownToPlayer), "Kolumnist: Neues Gerücht ist sofort bekannt")
 
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.

@@ -1,0 +1,57 @@
+[
+	{
+		"id": "ex_studio_junior",
+		"name": "Ex-Studio-Junior",
+		"icon": "🎬",
+		"desc": "Zehn Jahre hast du in der Poststelle, im Vorzimmer und am Set eines großen Studios gedient. Du kennst die Flure, die Namen — und die Abkürzungen.",
+		"start": {"cash_add": 0, "rep_add": 2, "favors": ["billing"], "studio_rel_style": {"prestige": 8, "commercial": 8, "indie": -5}},
+		"trait": {"de": "Stallgeruch: Studio-Dinner wirken anderthalbfach.", "effects": {"dinner_mult": 1.5}},
+		"weakness": {"de": "Die Indie-Szene hält dich für einen Konzernmenschen.", "effects": {}},
+		"client_capacity_mod": 0,
+		"chains": ["junior_alter_chef"]
+	},
+	{
+		"id": "kolumnist",
+		"name": "Klatschkolumnist:in",
+		"icon": "🖋",
+		"desc": "Jahrelang hast du für die Klatschspalten geschrieben. Du kennst jeden Portier, jede Garderobiere — und jede Leiche im Keller dieser Stadt.",
+		"start": {"cash_add": -15000, "instinct_add": 10, "favors": ["suppressStory"]},
+		"trait": {"de": "Ohr an der Stadt: Neue Gerüchte sind dir sofort bekannt, Pressearbeit greift schon ab 1 Slot.", "effects": {"rumor_auto_known": 1.0, "presse_slot_bonus": 1}},
+		"weakness": {"de": "Die Studios trauen dir nicht ganz über den Weg.", "effects": {}},
+		"client_capacity_mod": 0,
+		"chains": ["kolumnist_alte_quelle"]
+	},
+	{
+		"id": "anwalt",
+		"name": "Anwalt/Anwältin",
+		"icon": "⚖",
+		"desc": "Du hast Verträge aufgesetzt, zerpflückt und gerettet. Jetzt sitzt du auf der anderen Seite des Tisches — mit Rücklagen und einem Ruf für wasserdichte Klauseln.",
+		"start": {"cash_add": 25000, "instinct_add": -8},
+		"trait": {"de": "Wasserdicht: Deine Vertragsangebote wirken deutlich überzeugender.", "effects": {"nego_bonus": 6}},
+		"weakness": {"de": "Paragrafen statt Bauchgefühl: Dein Instinkt startet niedriger.", "effects": {}},
+		"client_capacity_mod": 1,
+		"chains": ["anwalt_alte_akte"]
+	},
+	{
+		"id": "gescheitert",
+		"name": "Gescheiterte:r Schauspieler:in",
+		"icon": "🎭",
+		"desc": "Drei Vorsprechen vor dem Durchbruch, der nie kam. Du weißt, wie sich die Träume deiner Klienten anfühlen — du hattest dieselben.",
+		"start": {"cash_add": -10000, "rep_add": -4, "instinct_add": 5},
+		"trait": {"de": "Empathie: Du liest Talent genauer (engere Wertspannen) und gewinnst Vertrauen schneller (×1,25).", "effects": {"grade_spread_add": -3, "trust_gain_mult": 1.25}},
+		"weakness": {"de": "Man erinnert sich an deine Flops — dein Ruf startet niedriger.", "effects": {}},
+		"client_capacity_mod": 0,
+		"chains": ["gescheitert_alte_rolle"]
+	},
+	{
+		"id": "aufsteiger",
+		"name": "Selfmade-Aufsteiger:in",
+		"icon": "💼",
+		"desc": "Vom Zeitungsjungen zum Geschäftsmann — niemand hat dir etwas geschenkt. Dein Kapital ist echt, dein Name sagt in Bel Air nur noch niemandem etwas.",
+		"start": {"cash_add": 45000, "rep_add": -7},
+		"trait": {"de": "Jeder Dollar zählt: Bürokosten dauerhaft −10 %.", "effects": {"office_cost_mult": 0.9}},
+		"weakness": {"de": "A-Lister verlangen von Emporkömmlingen zusätzlichen Ruf (+5).", "effects": {"required_rep_add": 5}},
+		"client_capacity_mod": 0,
+		"chains": ["aufsteiger_alte_schulden"]
+	}
+]

@@ -1,0 +1,1615 @@
+[
+	{
+		"g": [
+			"romance",
+			"drama"
+		],
+		"t": "Der Scheich",
+		"y": 1921
+	},
+	{
+		"g": [
+			"comedy",
+			"adventure"
+		],
+		"t": "Goldrausch",
+		"y": 1925
+	},
+	{
+		"g": [
+			"adventure",
+			"drama"
+		],
+		"t": "Ben Hur",
+		"y": 1925
+	},
+	{
+		"g": [
+			"comedy",
+			"action"
+		],
+		"t": "Der General",
+		"y": 1926
+	},
+	{
+		"g": [
+			"comedy",
+			"drama"
+		],
+		"t": "Es tut sich was in Hollywood",
+		"y": 1928
+	},
+	{
+		"g": [
+			"action",
+			"drama",
+			"romance"
+		],
+		"t": "Flügel aus Stahl",
+		"y": 1927
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "Sonnenaufgang",
+		"y": 1927
+	},
+	{
+		"g": [
+			"horror",
+			"thriller"
+		],
+		"t": "Das Phantom der Oper",
+		"y": 1925
+	},
+	{
+		"g": [
+			"musical",
+			"drama"
+		],
+		"t": "Der Jazzsänger",
+		"y": 1927
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Die Büchse der Pandora",
+		"y": 1929
+	},
+	{
+		"g": [
+			"comedy",
+			"romance"
+		],
+		"t": "Lichter der Großstadt",
+		"y": 1931
+	},
+	{
+		"g": [
+			"crime",
+			"drama"
+		],
+		"t": "Scarface",
+		"y": 1932
+	},
+	{
+		"g": [
+			"horror"
+		],
+		"t": "Frankenstein",
+		"y": 1931
+	},
+	{
+		"g": [
+			"horror"
+		],
+		"t": "Dracula",
+		"y": 1931
+	},
+	{
+		"g": [
+			"adventure",
+			"horror"
+		],
+		"t": "King Kong und die weiße Frau",
+		"y": 1933
+	},
+	{
+		"g": [
+			"comedy",
+			"romance"
+		],
+		"t": "Es geschah in einer Nacht",
+		"y": 1934
+	},
+	{
+		"g": [
+			"crime",
+			"comedy"
+		],
+		"t": "Der dünne Mann",
+		"y": 1934
+	},
+	{
+		"g": [
+			"adventure",
+			"drama"
+		],
+		"t": "Meuterei auf der Bounty",
+		"y": 1935
+	},
+	{
+		"g": [
+			"musical",
+			"comedy",
+			"romance"
+		],
+		"t": "Ich tanz mich in dein Herz hinein",
+		"y": 1935
+	},
+	{
+		"g": [
+			"comedy",
+			"drama"
+		],
+		"t": "Moderne Zeiten",
+		"y": 1936
+	},
+	{
+		"g": [
+			"western"
+		],
+		"t": "Ringo",
+		"y": 1939
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "Vom Winde verweht",
+		"y": 1939
+	},
+	{
+		"g": [
+			"musical",
+			"adventure"
+		],
+		"t": "Der Zauberer von Oz",
+		"y": 1939
+	},
+	{
+		"g": [
+			"drama",
+			"comedy"
+		],
+		"t": "Mr. Smith geht nach Washington",
+		"y": 1939
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Citizen Kane",
+		"y": 1941
+	},
+	{
+		"g": [
+			"crime",
+			"thriller"
+		],
+		"t": "Die Spur des Falken",
+		"y": 1941
+	},
+	{
+		"g": [
+			"romance",
+			"drama"
+		],
+		"t": "Casablanca",
+		"y": 1942
+	},
+	{
+		"g": [
+			"thriller",
+			"crime"
+		],
+		"t": "Frau ohne Gewissen",
+		"y": 1944
+	},
+	{
+		"g": [
+			"thriller",
+			"drama"
+		],
+		"t": "Das Haus der Lady Alquist",
+		"y": 1944
+	},
+	{
+		"g": [
+			"drama",
+			"comedy"
+		],
+		"t": "Ist das Leben nicht schön?",
+		"y": 1946
+	},
+	{
+		"g": [
+			"crime",
+			"thriller"
+		],
+		"t": "Tote schlafen fest",
+		"y": 1946
+	},
+	{
+		"g": [
+			"western"
+		],
+		"t": "Faustrecht der Prärie",
+		"y": 1946
+	},
+	{
+		"g": [
+			"romance",
+			"crime",
+			"drama"
+		],
+		"t": "Gilda",
+		"y": 1946
+	},
+	{
+		"g": [
+			"western"
+		],
+		"t": "Red River",
+		"y": 1948
+	},
+	{
+		"g": [
+			"thriller",
+			"crime"
+		],
+		"t": "Der dritte Mann",
+		"y": 1949
+	},
+	{
+		"g": [
+			"drama",
+			"thriller"
+		],
+		"t": "Boulevard der Dämmerung",
+		"y": 1950
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Alles über Eva",
+		"y": 1950
+	},
+	{
+		"g": [
+			"musical",
+			"romance"
+		],
+		"t": "Ein Amerikaner in Paris",
+		"y": 1951
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Endstation Sehnsucht",
+		"y": 1951
+	},
+	{
+		"g": [
+			"western",
+			"thriller"
+		],
+		"t": "Zwölf Uhr mittags",
+		"y": 1952
+	},
+	{
+		"g": [
+			"musical",
+			"comedy",
+			"romance"
+		],
+		"t": "Du sollst mein Glücksstern sein",
+		"y": 1952
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "Verdammt in alle Ewigkeit",
+		"y": 1953
+	},
+	{
+		"g": [
+			"thriller"
+		],
+		"t": "Das Fenster zum Hof",
+		"y": 1954
+	},
+	{
+		"g": [
+			"drama",
+			"crime"
+		],
+		"t": "Die Faust im Nacken",
+		"y": 1954
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Jenseits von Eden",
+		"y": 1955
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "…denn sie wissen nicht, was sie tun",
+		"y": 1955
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "In den Wind geschrieben",
+		"y": 1956
+	},
+	{
+		"g": [
+			"drama",
+			"crime"
+		],
+		"t": "Die zwölf Geschworenen",
+		"y": 1957
+	},
+	{
+		"g": [
+			"adventure",
+			"drama",
+			"action"
+		],
+		"t": "Die Brücke am Kwai",
+		"y": 1957
+	},
+	{
+		"g": [
+			"thriller",
+			"romance"
+		],
+		"t": "Vertigo – Aus dem Reich der Toten",
+		"y": 1958
+	},
+	{
+		"g": [
+			"comedy",
+			"romance",
+			"musical"
+		],
+		"t": "Manche mögen's heiß",
+		"y": 1959
+	},
+	{
+		"g": [
+			"thriller",
+			"action"
+		],
+		"t": "Der unsichtbare Dritte",
+		"y": 1959
+	},
+	{
+		"g": [
+			"horror",
+			"thriller"
+		],
+		"t": "Psycho",
+		"y": 1960
+	},
+	{
+		"g": [
+			"comedy",
+			"romance",
+			"drama"
+		],
+		"t": "Das Appartement",
+		"y": 1960
+	},
+	{
+		"g": [
+			"western",
+			"action"
+		],
+		"t": "Die glorreichen Sieben",
+		"y": 1960
+	},
+	{
+		"g": [
+			"romance",
+			"comedy"
+		],
+		"t": "Frühstück bei Tiffany",
+		"y": 1961
+	},
+	{
+		"g": [
+			"musical",
+			"romance",
+			"drama"
+		],
+		"t": "West Side Story",
+		"y": 1961
+	},
+	{
+		"g": [
+			"adventure",
+			"drama"
+		],
+		"t": "Lawrence von Arabien",
+		"y": 1962
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Wer die Nachtigall stört",
+		"y": 1962
+	},
+	{
+		"g": [
+			"action",
+			"adventure",
+			"thriller"
+		],
+		"t": "James Bond jagt Dr. No",
+		"y": 1962
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "Cleopatra",
+		"y": 1963
+	},
+	{
+		"g": [
+			"action",
+			"thriller"
+		],
+		"t": "Goldfinger",
+		"y": 1964
+	},
+	{
+		"g": [
+			"musical",
+			"romance",
+			"comedy"
+		],
+		"t": "My Fair Lady",
+		"y": 1964
+	},
+	{
+		"g": [
+			"romance",
+			"drama"
+		],
+		"t": "Doktor Schiwago",
+		"y": 1965
+	},
+	{
+		"g": [
+			"musical",
+			"drama"
+		],
+		"t": "Meine Lieder – meine Träume",
+		"y": 1965
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Wer hat Angst vor Virginia Woolf?",
+		"y": 1966
+	},
+	{
+		"g": [
+			"crime",
+			"drama"
+		],
+		"t": "Bonnie und Clyde",
+		"y": 1967
+	},
+	{
+		"g": [
+			"comedy",
+			"drama",
+			"romance"
+		],
+		"t": "Die Reifeprüfung",
+		"y": 1967
+	},
+	{
+		"g": [
+			"scifi"
+		],
+		"t": "2001: Odyssee im Weltraum",
+		"y": 1968
+	},
+	{
+		"g": [
+			"western"
+		],
+		"t": "Spiel mir das Lied vom Tod",
+		"y": 1968
+	},
+	{
+		"g": [
+			"horror",
+			"thriller"
+		],
+		"t": "Rosemaries Baby",
+		"y": 1968
+	},
+	{
+		"g": [
+			"drama",
+			"adventure"
+		],
+		"t": "Easy Rider",
+		"y": 1969
+	},
+	{
+		"g": [
+			"comedy"
+		],
+		"t": "MASH",
+		"y": 1970
+	},
+	{
+		"g": [
+			"crime",
+			"drama"
+		],
+		"t": "Der Pate",
+		"y": 1972
+	},
+	{
+		"g": [
+			"horror",
+			"thriller"
+		],
+		"t": "Der Exorzist",
+		"y": 1973
+	},
+	{
+		"g": [
+			"comedy",
+			"crime"
+		],
+		"t": "Der Clou",
+		"y": 1973
+	},
+	{
+		"g": [
+			"crime",
+			"thriller",
+			"drama"
+		],
+		"t": "Chinatown",
+		"y": 1974
+	},
+	{
+		"g": [
+			"thriller",
+			"horror",
+			"adventure"
+		],
+		"t": "Der weiße Hai",
+		"y": 1975
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Einer flog über das Kuckucksnest",
+		"y": 1975
+	},
+	{
+		"g": [
+			"crime",
+			"drama",
+			"thriller"
+		],
+		"t": "Taxi Driver",
+		"y": 1976
+	},
+	{
+		"g": [
+			"drama",
+			"action"
+		],
+		"t": "Rocky",
+		"y": 1976
+	},
+	{
+		"g": [
+			"comedy",
+			"romance"
+		],
+		"t": "Der Stadtneurotiker",
+		"y": 1977
+	},
+	{
+		"g": [
+			"scifi",
+			"adventure",
+			"action"
+		],
+		"t": "Krieg der Sterne",
+		"y": 1977
+	},
+	{
+		"g": [
+			"musical",
+			"drama"
+		],
+		"t": "Nur Samstag Nacht",
+		"y": 1977
+	},
+	{
+		"g": [
+			"scifi",
+			"horror",
+			"thriller"
+		],
+		"t": "Alien",
+		"y": 1979
+	},
+	{
+		"g": [
+			"drama",
+			"action"
+		],
+		"t": "Apocalypse Now",
+		"y": 1979
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Kramer gegen Kramer",
+		"y": 1979
+	},
+	{
+		"g": [
+			"horror",
+			"thriller"
+		],
+		"t": "Shining",
+		"y": 1980
+	},
+	{
+		"g": [
+			"scifi",
+			"adventure",
+			"action"
+		],
+		"t": "Das Imperium schlägt zurück",
+		"y": 1980
+	},
+	{
+		"g": [
+			"adventure",
+			"action"
+		],
+		"t": "Jäger des verlorenen Schatzes",
+		"y": 1981
+	},
+	{
+		"g": [
+			"scifi",
+			"thriller"
+		],
+		"t": "Blade Runner",
+		"y": 1982
+	},
+	{
+		"g": [
+			"scifi",
+			"drama",
+			"adventure"
+		],
+		"t": "E.T. – Der Außerirdische",
+		"y": 1982
+	},
+	{
+		"g": [
+			"comedy",
+			"romance"
+		],
+		"t": "Tootsie",
+		"y": 1982
+	},
+	{
+		"g": [
+			"drama",
+			"comedy",
+			"romance"
+		],
+		"t": "Zeit der Zärtlichkeit",
+		"y": 1983
+	},
+	{
+		"g": [
+			"comedy",
+			"scifi"
+		],
+		"t": "Ghostbusters",
+		"y": 1984
+	},
+	{
+		"g": [
+			"scifi",
+			"action",
+			"thriller"
+		],
+		"t": "Terminator",
+		"y": 1984
+	},
+	{
+		"g": [
+			"drama",
+			"musical"
+		],
+		"t": "Amadeus",
+		"y": 1984
+	},
+	{
+		"g": [
+			"scifi",
+			"comedy",
+			"adventure"
+		],
+		"t": "Zurück in die Zukunft",
+		"y": 1985
+	},
+	{
+		"g": [
+			"romance",
+			"drama"
+		],
+		"t": "Jenseits von Afrika",
+		"y": 1985
+	},
+	{
+		"g": [
+			"action",
+			"romance",
+			"drama"
+		],
+		"t": "Top Gun",
+		"y": 1986
+	},
+	{
+		"g": [
+			"action",
+			"drama"
+		],
+		"t": "Platoon",
+		"y": 1986
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Der letzte Kaiser",
+		"y": 1987
+	},
+	{
+		"g": [
+			"drama",
+			"crime"
+		],
+		"t": "Wall Street",
+		"y": 1987
+	},
+	{
+		"g": [
+			"action",
+			"thriller"
+		],
+		"t": "Stirb langsam",
+		"y": 1988
+	},
+	{
+		"g": [
+			"drama",
+			"comedy"
+		],
+		"t": "Rain Man",
+		"y": 1988
+	},
+	{
+		"g": [
+			"romance",
+			"comedy"
+		],
+		"t": "Harry und Sally",
+		"y": 1989
+	},
+	{
+		"g": [
+			"adventure",
+			"action"
+		],
+		"t": "Indiana Jones und der letzte Kreuzzug",
+		"y": 1989
+	},
+	{
+		"g": [
+			"western",
+			"drama",
+			"adventure"
+		],
+		"t": "Der mit dem Wolf tanzt",
+		"y": 1990
+	},
+	{
+		"g": [
+			"romance",
+			"comedy"
+		],
+		"t": "Pretty Woman",
+		"y": 1990
+	},
+	{
+		"g": [
+			"crime",
+			"drama"
+		],
+		"t": "GoodFellas",
+		"y": 1990
+	},
+	{
+		"g": [
+			"thriller",
+			"horror",
+			"crime"
+		],
+		"t": "Das Schweigen der Lämmer",
+		"y": 1991
+	},
+	{
+		"g": [
+			"action",
+			"scifi",
+			"thriller"
+		],
+		"t": "Terminator 2 – Tag der Abrechnung",
+		"y": 1991
+	},
+	{
+		"g": [
+			"western",
+			"drama"
+		],
+		"t": "Erbarmungslos",
+		"y": 1992
+	},
+	{
+		"g": [
+			"thriller",
+			"crime"
+		],
+		"t": "Basic Instinct",
+		"y": 1992
+	},
+	{
+		"g": [
+			"scifi",
+			"adventure",
+			"thriller"
+		],
+		"t": "Jurassic Park",
+		"y": 1993
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Schindlers Liste",
+		"y": 1993
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Philadelphia",
+		"y": 1993
+	},
+	{
+		"g": [
+			"drama",
+			"comedy",
+			"romance"
+		],
+		"t": "Forrest Gump",
+		"y": 1994
+	},
+	{
+		"g": [
+			"crime",
+			"comedy",
+			"thriller"
+		],
+		"t": "Pulp Fiction",
+		"y": 1994
+	},
+	{
+		"g": [
+			"drama",
+			"crime"
+		],
+		"t": "Die Verurteilten",
+		"y": 1994
+	},
+	{
+		"g": [
+			"action",
+			"thriller"
+		],
+		"t": "Speed",
+		"y": 1994
+	},
+	{
+		"g": [
+			"action",
+			"drama",
+			"adventure"
+		],
+		"t": "Braveheart",
+		"y": 1995
+	},
+	{
+		"g": [
+			"thriller",
+			"crime",
+			"horror"
+		],
+		"t": "Sieben",
+		"y": 1995
+	},
+	{
+		"g": [
+			"crime",
+			"action",
+			"thriller"
+		],
+		"t": "Heat",
+		"y": 1995
+	},
+	{
+		"g": [
+			"action",
+			"adventure",
+			"thriller"
+		],
+		"t": "Twister",
+		"y": 1996
+	},
+	{
+		"g": [
+			"action",
+			"thriller"
+		],
+		"t": "Mission: Impossible",
+		"y": 1996
+	},
+	{
+		"g": [
+			"romance",
+			"drama"
+		],
+		"t": "Titanic",
+		"y": 1997
+	},
+	{
+		"g": [
+			"crime",
+			"thriller",
+			"drama"
+		],
+		"t": "L.A. Confidential",
+		"y": 1997
+	},
+	{
+		"g": [
+			"action",
+			"drama"
+		],
+		"t": "Der Soldat James Ryan",
+		"y": 1998
+	},
+	{
+		"g": [
+			"comedy",
+			"drama",
+			"scifi"
+		],
+		"t": "Die Truman Show",
+		"y": 1998
+	},
+	{
+		"g": [
+			"scifi",
+			"action",
+			"thriller"
+		],
+		"t": "Matrix",
+		"y": 1999
+	},
+	{
+		"g": [
+			"drama",
+			"comedy"
+		],
+		"t": "American Beauty",
+		"y": 1999
+	},
+	{
+		"g": [
+			"thriller",
+			"horror",
+			"drama"
+		],
+		"t": "The Sixth Sense",
+		"y": 1999
+	},
+	{
+		"g": [
+			"romance",
+			"comedy"
+		],
+		"t": "Notting Hill",
+		"y": 1999
+	},
+	{
+		"g": [
+			"action",
+			"adventure",
+			"drama"
+		],
+		"t": "Gladiator",
+		"y": 2000
+	},
+	{
+		"g": [
+			"drama",
+			"adventure"
+		],
+		"t": "Cast Away – Verschollen",
+		"y": 2000
+	},
+	{
+		"g": [
+			"adventure",
+			"action"
+		],
+		"t": "Der Herr der Ringe: Die Gefährten",
+		"y": 2001
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "A Beautiful Mind",
+		"y": 2001
+	},
+	{
+		"g": [
+			"crime",
+			"comedy",
+			"thriller"
+		],
+		"t": "Ocean's Eleven",
+		"y": 2001
+	},
+	{
+		"g": [
+			"musical",
+			"comedy",
+			"crime"
+		],
+		"t": "Chicago",
+		"y": 2002
+	},
+	{
+		"g": [
+			"crime",
+			"comedy",
+			"drama"
+		],
+		"t": "Catch Me If You Can",
+		"y": 2002
+	},
+	{
+		"g": [
+			"adventure",
+			"action",
+			"comedy"
+		],
+		"t": "Fluch der Karibik",
+		"y": 2003
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Million Dollar Baby",
+		"y": 2004
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Aviator",
+		"y": 2004
+	},
+	{
+		"g": [
+			"action",
+			"crime",
+			"thriller"
+		],
+		"t": "Batman Begins",
+		"y": 2005
+	},
+	{
+		"g": [
+			"romance",
+			"drama",
+			"western"
+		],
+		"t": "Brokeback Mountain",
+		"y": 2005
+	},
+	{
+		"g": [
+			"crime",
+			"thriller",
+			"drama"
+		],
+		"t": "Departed – Unter Feinden",
+		"y": 2006
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Das Streben nach Glück",
+		"y": 2006
+	},
+	{
+		"g": [
+			"thriller",
+			"crime",
+			"western"
+		],
+		"t": "No Country for Old Men",
+		"y": 2007
+	},
+	{
+		"g": [
+			"drama",
+			"western"
+		],
+		"t": "There Will Be Blood",
+		"y": 2007
+	},
+	{
+		"g": [
+			"action",
+			"crime",
+			"thriller"
+		],
+		"t": "The Dark Knight",
+		"y": 2008
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "Slumdog Millionär",
+		"y": 2008
+	},
+	{
+		"g": [
+			"scifi",
+			"adventure",
+			"action"
+		],
+		"t": "Avatar – Aufbruch nach Pandora",
+		"y": 2009
+	},
+	{
+		"g": [
+			"action",
+			"drama",
+			"thriller"
+		],
+		"t": "Inglourious Basterds",
+		"y": 2009
+	},
+	{
+		"g": [
+			"scifi",
+			"thriller",
+			"action"
+		],
+		"t": "Inception",
+		"y": 2010
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "The King's Speech",
+		"y": 2010
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "The Social Network",
+		"y": 2010
+	},
+	{
+		"g": [
+			"crime",
+			"thriller",
+			"action"
+		],
+		"t": "Drive",
+		"y": 2011
+	},
+	{
+		"g": [
+			"drama",
+			"romance",
+			"comedy"
+		],
+		"t": "The Artist",
+		"y": 2011
+	},
+	{
+		"g": [
+			"western",
+			"action",
+			"drama"
+		],
+		"t": "Django Unchained",
+		"y": 2012
+	},
+	{
+		"g": [
+			"thriller",
+			"drama"
+		],
+		"t": "Argo",
+		"y": 2012
+	},
+	{
+		"g": [
+			"scifi",
+			"thriller",
+			"drama"
+		],
+		"t": "Gravity",
+		"y": 2013
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "12 Years a Slave",
+		"y": 2013
+	},
+	{
+		"g": [
+			"comedy",
+			"crime",
+			"drama"
+		],
+		"t": "The Wolf of Wall Street",
+		"y": 2013
+	},
+	{
+		"g": [
+			"comedy",
+			"adventure",
+			"crime"
+		],
+		"t": "Grand Budapest Hotel",
+		"y": 2014
+	},
+	{
+		"g": [
+			"scifi",
+			"drama",
+			"adventure"
+		],
+		"t": "Interstellar",
+		"y": 2014
+	},
+	{
+		"g": [
+			"drama",
+			"musical"
+		],
+		"t": "Whiplash",
+		"y": 2014
+	},
+	{
+		"g": [
+			"comedy",
+			"drama"
+		],
+		"t": "Birdman",
+		"y": 2014
+	},
+	{
+		"g": [
+			"action",
+			"scifi",
+			"adventure"
+		],
+		"t": "Mad Max: Fury Road",
+		"y": 2015
+	},
+	{
+		"g": [
+			"adventure",
+			"drama",
+			"western"
+		],
+		"t": "The Revenant – Der Rückkehrer",
+		"y": 2015
+	},
+	{
+		"g": [
+			"musical",
+			"romance",
+			"comedy"
+		],
+		"t": "La La Land",
+		"y": 2016
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Moonlight",
+		"y": 2016
+	},
+	{
+		"g": [
+			"scifi",
+			"drama",
+			"thriller"
+		],
+		"t": "Arrival",
+		"y": 2016
+	},
+	{
+		"g": [
+			"horror",
+			"thriller",
+			"comedy"
+		],
+		"t": "Get Out",
+		"y": 2017
+	},
+	{
+		"g": [
+			"action",
+			"drama",
+			"thriller"
+		],
+		"t": "Dunkirk",
+		"y": 2017
+	},
+	{
+		"g": [
+			"romance",
+			"scifi",
+			"drama"
+		],
+		"t": "Shape of Water",
+		"y": 2017
+	},
+	{
+		"g": [
+			"musical",
+			"romance",
+			"drama"
+		],
+		"t": "A Star Is Born",
+		"y": 2018
+	},
+	{
+		"g": [
+			"musical",
+			"drama"
+		],
+		"t": "Bohemian Rhapsody",
+		"y": 2018
+	},
+	{
+		"g": [
+			"comedy",
+			"drama"
+		],
+		"t": "Green Book",
+		"y": 2018
+	},
+	{
+		"g": [
+			"crime",
+			"drama",
+			"thriller"
+		],
+		"t": "Joker",
+		"y": 2019
+	},
+	{
+		"g": [
+			"thriller",
+			"drama",
+			"comedy"
+		],
+		"t": "Parasite",
+		"y": 2019
+	},
+	{
+		"g": [
+			"comedy",
+			"drama"
+		],
+		"t": "Once Upon a Time in Hollywood",
+		"y": 2019
+	},
+	{
+		"g": [
+			"scifi",
+			"action",
+			"thriller"
+		],
+		"t": "Tenet",
+		"y": 2020
+	},
+	{
+		"g": [
+			"drama"
+		],
+		"t": "Nomadland",
+		"y": 2020
+	},
+	{
+		"g": [
+			"scifi",
+			"adventure",
+			"drama"
+		],
+		"t": "Dune",
+		"y": 2021
+	},
+	{
+		"g": [
+			"action",
+			"crime",
+			"thriller"
+		],
+		"t": "The Batman",
+		"y": 2022
+	},
+	{
+		"g": [
+			"scifi",
+			"comedy",
+			"action"
+		],
+		"t": "Everything Everywhere All at Once",
+		"y": 2022
+	},
+	{
+		"g": [
+			"action",
+			"drama"
+		],
+		"t": "Top Gun: Maverick",
+		"y": 2022
+	},
+	{
+		"g": [
+			"drama",
+			"thriller"
+		],
+		"t": "Oppenheimer",
+		"y": 2023
+	},
+	{
+		"g": [
+			"comedy",
+			"adventure"
+		],
+		"t": "Barbie",
+		"y": 2023
+	},
+	{
+		"g": [
+			"crime",
+			"western",
+			"drama"
+		],
+		"t": "Killers of the Flower Moon",
+		"y": 2023
+	},
+	{
+		"g": [
+			"comedy",
+			"scifi",
+			"romance"
+		],
+		"t": "Poor Things",
+		"y": 2023
+	},
+	{
+		"g": [
+			"scifi",
+			"adventure",
+			"action"
+		],
+		"t": "Dune: Part Two",
+		"y": 2024
+	},
+	{
+		"g": [
+			"drama",
+			"romance"
+		],
+		"t": "Challengers – Rivalen",
+		"y": 2024
+	},
+	{
+		"g": [
+			"comedy",
+			"drama",
+			"romance"
+		],
+		"t": "Anora",
+		"y": 2024
+	},
+	{
+		"g": [
+			"action",
+			"adventure",
+			"drama"
+		],
+		"t": "Gladiator II",
+		"y": 2024
+	}
+]

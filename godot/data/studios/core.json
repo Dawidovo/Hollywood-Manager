@@ -1,0 +1,107 @@
+[
+	{
+		"from": 1924,
+		"id": "mgm",
+		"name": "Metro-Goldwyn-Mayer",
+		"style": "prestige",
+		"to": 9999
+	},
+	{
+		"from": 1912,
+		"id": "paramount",
+		"name": "Paramount Pictures",
+		"style": "commercial",
+		"to": 9999
+	},
+	{
+		"from": 1923,
+		"id": "warner",
+		"name": "Warner Bros.",
+		"style": "commercial",
+		"to": 9999
+	},
+	{
+		"from": 1912,
+		"id": "universal",
+		"name": "Universal Pictures",
+		"style": "commercial",
+		"to": 9999
+	},
+	{
+		"from": 1935,
+		"id": "fox",
+		"name": "20th Century Fox",
+		"style": "commercial",
+		"to": 9999
+	},
+	{
+		"from": 1915,
+		"id": "foxfilm",
+		"name": "Fox Film Corporation",
+		"style": "commercial",
+		"to": 1934
+	},
+	{
+		"from": 1924,
+		"id": "columbia",
+		"name": "Columbia Pictures",
+		"style": "commercial",
+		"to": 9999
+	},
+	{
+		"from": 1928,
+		"id": "rko",
+		"name": "RKO Pictures",
+		"style": "prestige",
+		"to": 1959
+	},
+	{
+		"from": 1919,
+		"id": "ua",
+		"name": "United Artists",
+		"style": "prestige",
+		"to": 1981
+	},
+	{
+		"from": 1937,
+		"id": "disney",
+		"name": "Walt Disney Studios",
+		"style": "commercial",
+		"to": 9999
+	},
+	{
+		"from": 1979,
+		"id": "miramax",
+		"name": "Miramax",
+		"style": "indie",
+		"to": 2010
+	},
+	{
+		"from": 1967,
+		"id": "newline",
+		"name": "New Line Cinema",
+		"style": "indie",
+		"to": 9999
+	},
+	{
+		"from": 2012,
+		"id": "a24",
+		"name": "A24",
+		"style": "indie",
+		"to": 9999
+	},
+	{
+		"from": 2015,
+		"id": "netflix",
+		"name": "Netflix Studios",
+		"style": "commercial",
+		"to": 9999
+	},
+	{
+		"from": 1997,
+		"id": "lionsgate",
+		"name": "Lionsgate",
+		"style": "indie",
+		"to": 9999
+	}
+]

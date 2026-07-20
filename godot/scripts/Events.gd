@@ -28,8 +28,7 @@ func all_events() -> Array:
 		{"id":"censor",       "cd":12, "weight": _w_censor,       "build": _b_censor},
 		{"id":"blacklist",    "cd":20, "weight": _w_blacklist,    "build": _b_blacklist},
 		{"id":"television",   "cd":14, "weight": _w_tv,           "build": _b_tv},
-		{"id":"favor",        "cd":8,  "weight": _w_favor,        "build": _b_favor},
-		{"id":"press",        "cd":8,  "weight": _w_press,        "build": _b_press},
+		# "favor" und "press" sind als JSON-Events nach data/events/core.json migriert
 		{"id":"powerFigure",  "cd":24, "weight": _w_power_figure, "build": _b_power_figure},
 		{"id":"favorCalled",  "cd":10, "weight": _w_favor_called, "build": _b_favor_called},
 		{"id":"gala",         "cd":8,  "weight": _w_gala,         "build": _b_gala},
@@ -329,7 +328,7 @@ func _b_cutrole() -> Dictionary:
 				var p = clampf(c.fame / 120.0 + int(c.get("awards", 0)) * 0.1 + Game.state.studioRel[prod.studioId] / 250.0, 0.15, 0.85)
 				if Game.chance(p):
 					prod.qualityMod = prod.get("qualityMod", 0.0) + 4.0
-					prod.monthsLeft = int(prod.monthsLeft) + 1
+					prod.weeksLeft = int(prod.weeksLeft) + 4
 					return "Das Studio knickt ein: Nachdrehs werden angesetzt. Die Rolle bleibt — der Film wird sogar besser."
 				c.mood = clampf(c.mood - 5.0, 0.0, 100.0)
 				return "„Der Schnitt steht.“ Immerhin hast du es versucht — %s weiß das." % _nm(c)},
@@ -366,7 +365,7 @@ func _b_stunt() -> Dictionary:
 					prod.qualityMod = prod.get("qualityMod", 0.0) + 2.0
 					return "Der Stunt sitzt beim ersten Take. Die Set-Fotos gehen um die Welt."
 				c.exhaustion = clampf(c.exhaustion + 25.0, 0.0, 100.0)
-				prod.monthsLeft = int(prod.monthsLeft) + 1
+				prod.weeksLeft = int(prod.weeksLeft) + 4
 				return "Der Sprung geht schief — Prellungen, Drehpause, Schrecken. %s erholt sich, aber der Plan wackelt." % _nm(c)},
 			{"label": "Stuntdouble verlangen", "fn": func():
 				_rel(prod.studioId, -2)
@@ -625,7 +624,7 @@ func _b_breakdown() -> Dictionary:
 		"text": "[i]„%s ist heute nicht am Set erschienen. Das Hotel sagt, die Tür bleibt zu.“[/i]\n\nDein Klient ist am Ende der Kräfte (Erschöpfung %d/100). Die Produktion von „%s“ steht still." % [_nm(c), roundi(c.exhaustion), prod.title],
 		"choices": [
 			{"label": "Produktion unterbrechen lassen", "fn": func():
-				prod.monthsLeft = int(prod.monthsLeft) + 1
+				prod.weeksLeft = int(prod.weeksLeft) + 4
 				_rel(prod.studioId, -4)
 				c.exhaustion = clampf(c.exhaustion - 35.0, 0.0, 100.0)
 				c.loyalty = clampf(c.loyalty + 10.0, 0.0, 100.0)
@@ -643,7 +642,7 @@ func _b_breakdown() -> Dictionary:
 				c.loyalty = clampf(c.loyalty - 12.0, 0.0, 100.0)
 				_dna(c, "verlass", -8.0)
 				if Game.chance(0.35):
-					prod.monthsLeft = int(prod.monthsLeft) + 2
+					prod.weeksLeft = int(prod.weeksLeft) + 8
 					return "%s schleppt sich ans Set — und bricht dort erst recht zusammen. Jetzt steht alles still, und du bist schuld." % _nm(c)
 				return "Die Show geht weiter. Der Zeitplan hält — aber %s wird dir diesen Anruf lange übelnehmen." % _nm(c)},
 		]}
@@ -826,43 +825,6 @@ func _b_tv() -> Dictionary:
 				c.loyalty = clampf(c.loyalty + 3.0, 0.0, 100.0)
 				_dna(c, "unikat", 2.0)
 				return "„Mein Klient ist ein Filmstar.“ Das klassische Image bleibt makellos — ob das in zehn Jahren noch klug aussieht, weiß niemand."},
-		]}
-
-# ---------- Bonus: Ein Gefallen ----------
-func _w_favor() -> float:
-	return 0.7
-
-func _b_favor() -> Dictionary:
-	var studio = Game.pick(Game.active_studios())
-	return {"title": "Ein Gefallen",
-		"text": "%s bittet um einen Gefallen: ein Klient soll unbezahlt bei einer Galapremiere auftreten." % studio.name,
-		"choices": [
-			{"label": "Einwilligen", "fn": func():
-				_rel(studio.id, 8)
-				var kind_s: String = Game.pick(["extraAudition", "billing", "scriptAccess"])
-				Game.grant_favor(kind_s, {"type": "studio", "name": str(studio.name), "studioId": str(studio.id)})
-				return "%s wird sich erinnern — und steht jetzt offiziell in deiner Schuld. Beziehungen sind die harte Währung dieser Stadt." % studio.name},
-			{"label": "Ablehnen", "fn": func():
-				_rel(studio.id, -3)
-				return "Man verzichtet höflich. Das Studio nimmt es zur Kenntnis."},
-		]}
-
-# ---------- Bonus: Presse-Coup ----------
-func _w_press() -> float:
-	return 0.7 if Game.state.clients.size() else 0.0
-
-func _b_press() -> Dictionary:
-	var c = Game.random_client()
-	return {"title": "Presse-Coup",
-		"text": "Ein großes Magazin bietet eine Titelgeschichte über %s an — gegen exklusiven Zugang." % _nm(c),
-		"choices": [
-			{"label": "Zusagen", "fn": func():
-				c.heat = clampf(c.heat + 4.0, -10.0, 10.0)
-				c.fame = clampf(c.fame + 2.0, 5.0, 100.0)
-				_dna(c, "popular", 3.0)
-				return "Die Ausgabe verkauft sich glänzend. %s ist heißer denn je." % _nm(c)},
-			{"label": "Ablehnen", "fn": func():
-				return "Man verzichtet. Privatsphäre ist auch etwas wert."},
 		]}
 
 # ---------- Folge-Ereignisse ----------

@@ -130,6 +130,13 @@ func _ready() -> void:
 		_close_modal()
 		_switch_tab("castings")
 		await _take_shot("deal")
+	elif args.has("--shot-backstory"):
+		_show_backstory_picker(1925)
+		await _take_shot("backstory")
+	elif args.has("--shot-pool"):
+		_on_era_selected(1925)
+		_switch_tab("pool")
+		await _take_shot("pool")
 	elif args.has("--shot-rumors"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
@@ -195,10 +202,10 @@ func _ready() -> void:
 		Game.start_negotiation("brando")
 		Game.sign_client({"commission": 12, "bonus": 0, "years": 3, "perks": [], "promise": null})
 		Game.ensure_planner()
-		Game.planner_slot_set("player", 0, 0, "scouting")
-		Game.planner_slot_set("player", 0, 1, "dinner", Game.active_studios()[0].id)
-		Game.planner_slot_set("client", int(Game.state.clients[0].id), 0, "pr")
-		Game.planner_slot_set("client", int(Game.state.clients[1].id), 1, "training")
+		Game.planner_slot_set("player", 0, 0, 0, "scouting")
+		Game.planner_slot_set("player", 0, 1, 1, "dinner", Game.active_studios()[0].id)
+		Game.planner_slot_set("client", int(Game.state.clients[0].id), 0, 0, "pr")
+		Game.planner_slot_set("client", int(Game.state.clients[1].id), 1, 2, "gala")
 		_switch_tab("planer")
 		await _take_shot("planer")
 	elif args.has("--shot-verhandlung"):
@@ -349,6 +356,13 @@ func _lbl(text: String, size: int = 15, color: Color = TEXT_C) -> Label:
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return l
 
+# Wie _lbl, aber für den Einsatz direkt in HBox-/HFlow-Containern:
+# ohne EXPAND_FILL kollabiert ein autowrappendes Label dort auf ~1 Zeichen Breite.
+func _lbl_fill(text: String, size: int = 15, color: Color = TEXT_C) -> Label:
+	var l := _lbl(text, size, color)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return l
+
 func _rich(bbcode: String, size: int = 15) -> RichTextLabel:
 	var r := RichTextLabel.new()
 	r.bbcode_enabled = true
@@ -438,6 +452,40 @@ func _chip(text: String, color: Color) -> PanelContainer:
 	p.add_child(l)
 	p.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	return p
+
+func _gender_symbol(a: Dictionary) -> String:
+	return "♀" if str(a.get("g", "")) == "f" else "♂"
+
+func _ethnicity_de(a: Dictionary) -> String:
+	var eth := str(a.get("ethnicity", ""))
+	if eth == "":
+		return ""
+	var map = Data.get("ETHNICITIES")
+	if map is Dictionary:
+		return str(map.get(eth, ""))
+	return ""
+
+# Meta-Zeile eines Schauspielers: Geschlecht · Alter · Geburtsjahr [· Ethnie] · Genres
+# Bewusst OHNE Todesjahr — reale Todesdaten werden dem Spieler nicht gespoilert.
+func _actor_meta(a: Dictionary, year: int) -> String:
+	var parts: Array = [_gender_symbol(a), "%d J." % Game.age_of(a, year), "*%d" % int(a.birth)]
+	var eth_s := _ethnicity_de(a)
+	if eth_s != "":
+		parts.append(eth_s)
+	parts.append(" · ".join(a.genres.map(_genre_de)))
+	return " · ".join(parts)
+
+# "Bekannt aus: „Titel“ (Jahr) · …" — reale Filmografie bis zum aktuellen Spieljahr
+func _filmography_line(a: Dictionary, year: int) -> String:
+	var films: Array = a.get("films", [])
+	var known: Array = films.filter(func(f): return int(f.get("year", 9999)) <= year)
+	if known.is_empty():
+		return ""
+	known.sort_custom(func(x, y): return int(x.get("year", 0)) > int(y.get("year", 0)))
+	var parts: Array = []
+	for f in known.slice(0, 4):
+		parts.append("„%s“ (%d)" % [str(f.get("title", "?")), int(f.get("year", 0))])
+	return "🎞 Bekannt aus: " + " · ".join(parts)
 
 func _chip_row(chips: Array) -> HBoxContainer:
 	var h := HBoxContainer.new()
@@ -531,15 +579,41 @@ func _build_start_screen() -> void:
 		card.custom_minimum_size = Vector2(290, 180)
 		box.add_child(_lbl(era.name, 15, theme.accent))
 		box.add_child(_lbl(era.desc, 12, DIM))
-		box.add_child(_btn("In %d starten" % int(era.year), _on_era_selected.bind(int(era.year)), true))
+		box.add_child(_btn("In %d starten" % int(era.year), _show_backstory_picker.bind(int(era.year)), true))
 		grid.add_child(card)
 	if Game.has_save():
 		v.add_child(_btn("Gespeichertes Spiel fortsetzen", _on_load_save, true))
 
-func _on_era_selected(year: int) -> void:
-	Game.new_game(name_edit.text.strip_edges() if name_edit.text.strip_edges() != "" else "Meine Agentur", year)
+# Nach der Ära wählt der Spieler die Vorgeschichte seiner Figur
+func _show_backstory_picker(year: int) -> void:
+	_open_modal()
+	modal_box.add_child(_lbl("Wer bist du? — Wähle deine Vorgeschichte", 24, ACC))
+	modal_box.add_child(_lbl("Deine Vergangenheit prägt Startkapital, Kontakte und besondere Ereignisse — und irgendwann klopft sie wieder an.", 13, DIM))
+	var grid := _grid(420.0)
+	modal_box.add_child(grid)
+	for b in Data.BACKSTORIES:
+		var cv = _card("%s %s" % [str(b.get("icon", "🎬")), str(b.name)])
+		grid.add_child(cv[0])
+		cv[1].add_child(_lbl(str(b.get("desc", "")), 12, DIM))
+		var trait_de := str(b.get("trait", {}).get("de", ""))
+		if trait_de != "":
+			cv[1].add_child(_lbl("✔ " + trait_de, 12, GREEN))
+		var weak_de := str(b.get("weakness", {}).get("de", ""))
+		if weak_de != "":
+			cv[1].add_child(_lbl("✖ " + weak_de, 12, RED))
+		cv[1].add_child(_btn("So beginnen", _start_with_backstory.bind(year, str(b.id)), true))
+	modal_box.add_child(_btn("Ohne besondere Vorgeschichte starten (Quereinsteiger:in)", _start_with_backstory.bind(year, "")))
+	modal_box.add_child(_btn("Zurück", _close_modal))
+
+func _start_with_backstory(year: int, bs_id: String) -> void:
+	_close_modal()
+	Game.new_game(name_edit.text.strip_edges() if name_edit.text.strip_edges() != "" else "Meine Agentur", year, bs_id)
 	Jukebox.start(year)
 	_enter_game()
+
+# Kompatibilität für CLI-Screenshot-Hooks: direkter Start ohne Vorgeschichte
+func _on_era_selected(year: int) -> void:
+	_start_with_backstory(year, "")
 
 func _on_load_save() -> void:
 	if Game.load_game():
@@ -605,7 +679,7 @@ func _build_game_ui() -> void:
 	vol.value_changed.connect(func(v): Jukebox.set_volume(v / 100.0))
 	hb.add_child(vol)
 	hb.add_child(_btn("💾 Speichern", func(): Game.save_game()))
-	var next_btn := _btn("Monat beenden ▸", _on_end_month, true)
+	var next_btn := _btn("Woche beenden ▸", _on_end_week, true)
 	header_stats["next"] = next_btn
 	hb.add_child(next_btn)
 
@@ -715,8 +789,8 @@ func _switch_tab(t: String) -> void:
 	current_tab = t
 	render()
 
-func _on_end_month() -> void:
-	var events: Array = Game.end_month()
+func _on_end_week() -> void:
+	var events: Array = Game.end_week()
 	render()
 	if events.size():
 		modal_queue.append_array(events)
@@ -736,10 +810,11 @@ func _render_sidebar() -> void:
 		for r in cs.roles:
 			if r.filled == null:
 				open += 1
-		cv[1].add_child(_lbl("%s „%s“ — Casting: noch %d Mon., %d Rolle(n) offen" % [GENRE_ICONS.get(cs.genre, "🎬"), cs.title, int(cs.deadline), open], 12, AMBER if open > 0 else DIM))
+		cv[1].add_child(_lbl("%s „%s“ — Casting: noch %d Wo., %d Rolle(n) offen" % [GENRE_ICONS.get(cs.genre, "🎬"), cs.title, int(cs.deadline), open], 12, AMBER if open > 0 else DIM))
 		any = true
 	for p in st.productions:
-		cv[1].add_child(_lbl("🎥 „%s“ — Premiere in ~%d Mon." % [p.title, int(p.monthsLeft)], 12, BLUE))
+		Game.ensure_prod_fields(p)
+		cv[1].add_child(_lbl("🎥 „%s“ — Premiere in ~%d Wo." % [p.title, int(p.weeksLeft)], 12, BLUE))
 		any = true
 	if not any:
 		cv[1].add_child(_lbl("Nichts in Arbeit. Zeit für Akquise.", 12, DIM))
@@ -789,6 +864,15 @@ func _render_buero() -> void:
 	c1[1].add_child(_lbl("⭐ Ruf: %d/100 — bestimmt, welche Stars mit dir reden" % int(st.agency.rep), 14))
 	c1[1].add_child(_bar(st.agency.rep, ACC))
 	c1[1].add_child(_lbl("Bürokosten/Monat: %s (davon Perks: %s)" % [Game.fmt_money(Game.overhead()), Game.fmt_money(Game.perk_costs())], 13, DIM))
+	var bs_def := Game.backstory_def()
+	if not bs_def.is_empty():
+		c1[1].add_child(_lbl("%s Vorgeschichte: %s" % [str(bs_def.get("icon", "🎬")), str(bs_def.name)], 13, ACC))
+		var bs_trait := str(bs_def.get("trait", {}).get("de", ""))
+		if bs_trait != "":
+			c1[1].add_child(_lbl("✔ " + bs_trait, 12, GREEN))
+		var bs_weak := str(bs_def.get("weakness", {}).get("de", ""))
+		if bs_weak != "":
+			c1[1].add_child(_lbl("✖ " + bs_weak, 12, RED))
 
 	# Konkrete Gefallen & Schulden statt eines abstrakten Netzwerk-Werts
 	var cg = _card("Gefallen & Schulden", "🤝")
@@ -1102,7 +1186,7 @@ func _render_klienten() -> void:
 			chips.append(_chip("🎬 Machtfigur: %s" % ("Regie" if str(c.flags.powerFigure) == "director" else "Produktion"), GOLD))
 		chips.append(_chip("📈 Aufsteigend", GREEN) if st.year < a.peak else _chip("📉 Nach dem Zenit", DIM))
 		box.add_child(_chip_row(chips))
-		box.add_child(_lbl("%d J. · %s" % [Game.age_of(a, st.year), " · ".join(a.genres.map(_genre_de))], 12, DIM))
+		box.add_child(_lbl(_actor_meta(a, st.year), 12, DIM))
 		box.add_child(_lbl("Talent %s · Charisma %s · Disziplin %s · Präsenz %s" % [
 			Game.grade_range(Game.eff_talent(c), 4, str(a.id) + "tal"), Game.grade_range(Game.attrs(a).charisma, 4, str(a.id) + "cha"),
 			Game.grade_range(Game.attrs(a).discipline, 4, str(a.id) + "dis"), Game.grade_range(Game.attrs(a).presence, 4, str(a.id) + "pre")], 12, DIM))
@@ -1338,7 +1422,7 @@ func _render_pool() -> void:
 	fe.custom_minimum_size = Vector2(240, 32)
 	fe.text_changed.connect(func(t): pool_filter = t; _refresh_pool_list())
 	filter_row.add_child(fe)
-	filter_row.add_child(_lbl("  Große Namen verhandeln nur mit Agenturen von Rang. Werte = Brancheneinschätzung (Spannweite).", 12, DIM))
+	filter_row.add_child(_lbl_fill("  Große Namen verhandeln nur mit Agenturen von Rang. Werte = Brancheneinschätzung (Spannweite).", 12, DIM))
 	var list := VBoxContainer.new()
 	list.name = "PoolList"
 	list.add_theme_constant_override("separation", 8)
@@ -1378,8 +1462,10 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 			chips.append(_chip("⚔ Bei %s unter Vertrag" % owner.name, AMBER))
 		if chips.size():
 			box.add_child(_chip_row(chips))
-		var death_s: String = (" †%d" % int(a.death)) if a.death != null else ""
-		box.add_child(_lbl("%d J. · *%d%s · %s" % [Game.age_of(a, st.year), int(a.birth), death_s, " · ".join(a.genres.map(_genre_de))], 12, DIM))
+		box.add_child(_lbl(_actor_meta(a, st.year), 12, DIM))
+		var known_s := _filmography_line(a, st.year)
+		if known_s != "":
+			box.add_child(_lbl(known_s, 12, DIM))
 		box.add_child(_lbl("⭐ Ruhm %d/100" % fame, 12, DIM))
 		box.add_child(_bar(fame, ACC))
 		box.add_child(_lbl("Talent %s · Charisma %s · Disziplin %s · Präsenz %s" % [
@@ -1408,7 +1494,10 @@ func _render_negotiation(hint: String) -> void:
 	var a: Dictionary = n.actor
 	_open_modal()
 	modal_box.add_child(_lbl("🤝 Verhandlung: %s" % a.name, 22, ACC))
-	modal_box.add_child(_lbl("Runde %d/%d · ⭐ Ruhm %d · Talent %s · %d Jahre · 💰 Gagen-Niveau %s" % [int(n.round), int(n.maxRounds), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Game.age_of(a, Game.state.year), Game.fmt_money(n.ask)], 12, DIM))
+	modal_box.add_child(_lbl("Runde %d/%d · %s · ⭐ Ruhm %d · Talent %s · %d Jahre · 💰 Gagen-Niveau %s" % [int(n.round), int(n.maxRounds), _gender_symbol(a), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Game.age_of(a, Game.state.year), Game.fmt_money(n.ask)], 12, DIM))
+	var nego_known := _filmography_line(a, Game.state.year)
+	if nego_known != "":
+		modal_box.add_child(_lbl(nego_known, 12, DIM))
 	if hint != "":
 		modal_box.add_child(_rich("[i]%s[/i]" % hint, 14))
 	var cols := HBoxContainer.new()
@@ -1579,7 +1668,7 @@ func _render_castings() -> void:
 		box.add_child(_chip_row([
 			_chip(_genre_de(cs.genre), BLUE),
 			_chip("★".repeat(int(cs.prestige)) + "☆".repeat(3 - int(cs.prestige)), ACC),
-			_chip("⏳ %d Mon." % int(cs.deadline), RED if int(cs.deadline) <= 1 else DIM),
+			_chip("⏳ %d Wo." % int(cs.deadline), RED if int(cs.deadline) <= 4 else DIM),
 			_chip("🏛 Beziehung %d" % int(rel), GREEN if rel >= 60 else (RED if rel < 30 else DIM)),
 		]))
 		box.add_child(_lbl("%s · Budget %s" % [studio.name, Game.fmt_money(cs.budget)], 12, DIM))
@@ -2020,9 +2109,9 @@ func _render_filme() -> void:
 						names.append(r.filled.get("name", "?"))
 			cv[1].add_child(_lbl("%s · %s · Budget %s" % [Game._studio(p.studioId).name, _genre_de(p.genre), Game.fmt_money(p.budget)], 12, DIM))
 			cv[1].add_child(_lbl("Besetzung: " + ", ".join(names), 12, DIM))
-			cv[1].add_child(_chip_row([_chip("🎬 Kinostart in ~%d Mon." % int(p.monthsLeft), BLUE)]))
-			# Produktions-Signale (Feature 13): Set-Gerede statt Fakten
 			Game.ensure_prod_fields(p)
+			cv[1].add_child(_chip_row([_chip("🎬 Kinostart in ~%d Wo." % int(p.weeksLeft), BLUE)]))
+			# Produktions-Signale (Feature 13): Set-Gerede statt Fakten
 			if p.signals.size():
 				var srow := HFlowContainer.new()
 				srow.add_theme_constant_override("h_separation", 6)
@@ -2203,7 +2292,9 @@ func _show_next_modal() -> void:
 	modal_box.add_child(actions)
 	for i in ev.choices.size():
 		var ch: Dictionary = ev.choices[i]
-		actions.add_child(_btn(ch.label, _resolve_choice.bind(ev, i), i == 0))
+		var b := _btn(ch.label, _resolve_choice.bind(ev, i), i == 0)
+		b.disabled = bool(ch.get("disabled", false))
+		actions.add_child(b)
 
 func _resolve_choice(ev: Dictionary, idx: int) -> void:
 	var ch: Dictionary = ev.choices[idx]
@@ -2352,54 +2443,19 @@ func _render_planer() -> void:
 	Game.ensure_planner()
 	var hv = _card("Wochenplaner — %s" % Game.date_str(), "🗓")
 	content_box.add_child(hv[0])
-	hv[1].add_child(_lbl("Vier Wochen-Slots pro Monat — für dich und jeden freien Klienten. Dreh-Wochen sind automatisch belegt. Was leer bleibt, übernimmt die Automatik: Erholung bei Erschöpfung über 50, sonst PR.", 12, DIM))
-	var grid := GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
-	hv[1].add_child(grid)
-	grid.add_child(_lbl("", 12, DIM))
-	for w in 4:
-		var hw := _lbl("Woche %d" % (w + 1), 13, ACC)
-		hw.autowrap_mode = TextServer.AUTOWRAP_OFF
-		grid.add_child(hw)
-	# Zeile: Spieler
-	var pl := _lbl("🕴 Du (Agentur)", 13)
-	pl.autowrap_mode = TextServer.AUTOWRAP_OFF
-	grid.add_child(pl)
-	for w in 4:
-		var slot = st.planner.player[w]
-		var txt := "· frei ·"
-		if slot != null:
-			var info: Dictionary = Game.PLANNER_PLAYER.get(str(slot.get("a", "")), {})
-			txt = "%s %s" % [str(info.get("icon", "•")), str(info.get("de", str(slot.get("a", ""))))]
-			var tn := _planner_target_name(slot)
-			if tn != "":
-				txt += " → " + tn
-		var b := _btn(txt, _open_planner_picker.bind("player", 0, w))
-		b.custom_minimum_size = Vector2(160 * font_scale, 0)
-		grid.add_child(b)
-	# Zeilen: Klienten
+	hv[1].add_child(_lbl("Die kommende Woche im Detail: 7 Tage mit Vormittag, Nachmittag und Abend — für dich und jeden freien Klienten. Dreh-Wochen sind automatisch belegt. Leere Slots übernimmt die Automatik: Erholung bei Erschöpfung über 50, sonst PR. Galas finden abends statt.", 12, DIM))
+	var pcard = _card("🕴 Du (Agentur)", "")
+	content_box.add_child(pcard[0])
+	_planner_grid(pcard[1], "player", 0, st.planner.player)
+	_planner_fill_row(pcard[1], "player", 0, Game.PLANNER_PLAYER)
 	for c in st.clients:
-		var nm := _lbl("⭐ %s" % Game.client_name(c), 13)
-		nm.autowrap_mode = TextServer.AUTOWRAP_OFF
-		grid.add_child(nm)
-		var busy := not Game.is_free(c)
-		var slots: Array = st.planner.clients.get(str(int(c.id)), [null, null, null, null])
-		for w in 4:
-			if busy:
-				var bl := _lbl("🎬 Dreh", 12, DIM)
-				bl.autowrap_mode = TextServer.AUTOWRAP_OFF
-				grid.add_child(bl)
-			else:
-				var slot = slots[w] if w < slots.size() else null
-				var txt := "· auto ·"
-				if slot != null:
-					var info2: Dictionary = Game.PLANNER_CLIENT.get(str(slot.get("a", "")), {})
-					txt = "%s %s" % [str(info2.get("icon", "•")), str(info2.get("de", "?"))]
-				var b2 := _btn(txt, _open_planner_picker.bind("client", int(c.id), w))
-				b2.custom_minimum_size = Vector2(160 * font_scale, 0)
-				grid.add_child(b2)
+		var ccard = _card("⭐ %s" % Game.client_name(c), "")
+		content_box.add_child(ccard[0])
+		if not Game.is_free(c):
+			ccard[1].add_child(_lbl("🎬 Dreht diese Woche — der Kalender gehört dem Studio.", 12, DIM))
+			continue
+		_planner_grid(ccard[1], "client", int(c.id), st.planner.clients.get(str(int(c.id)), []))
+		_planner_fill_row(ccard[1], "client", int(c.id), Game.PLANNER_CLIENT)
 	# Legende
 	var leg = _card("Was die Aktionen bringen", "ℹ")
 	content_box.add_child(leg[0])
@@ -2412,6 +2468,59 @@ func _render_planer() -> void:
 		var i2: Dictionary = Game.PLANNER_CLIENT[k2]
 		lt += "%s %s (%s) · " % [i2.icon, i2.de, i2.desc]
 	leg[1].add_child(_rich(lt.trim_suffix(" · "), 12))
+
+# 8-Spalten-Raster: Zeilenlabel (Tagesabschnitt) + Mo…So, Zellen als Icon-Buttons
+func _planner_grid(parent: VBoxContainer, who: String, cid: int, slots: Array) -> void:
+	var acts: Dictionary = Game.PLANNER_PLAYER if who == "player" else Game.PLANNER_CLIENT
+	var grid := GridContainer.new()
+	grid.columns = 8
+	grid.add_theme_constant_override("h_separation", 4)
+	grid.add_theme_constant_override("v_separation", 4)
+	parent.add_child(grid)
+	grid.add_child(_lbl("", 11, DIM))
+	for d in 7:
+		var hd := _lbl(Game.PLANNER_DAYS[d], 12, ACC)
+		hd.autowrap_mode = TextServer.AUTOWRAP_OFF
+		hd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		grid.add_child(hd)
+	for part in 3:
+		var pl := _lbl(Game.PLANNER_PARTS[part], 11, DIM)
+		pl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		grid.add_child(pl)
+		for d in 7:
+			var idx := d * 3 + part
+			var slot = slots[idx] if idx < slots.size() else null
+			var txt := "·"
+			var tip := "frei — die Automatik übernimmt"
+			if slot != null:
+				var info: Dictionary = acts.get(str(slot.get("a", "")), {})
+				txt = str(info.get("icon", "•"))
+				var tn := _planner_target_name(slot)
+				tip = str(info.get("de", "?")) + ((" → " + tn) if tn != "" else "")
+			var b := _btn(txt, _open_planner_picker.bind(who, cid, d, part))
+			b.tooltip_text = "%s %s: %s" % [Game.PLANNER_DAYS[d], Game.PLANNER_PARTS[part], tip]
+			b.custom_minimum_size = Vector2(40 * font_scale, 0)
+			grid.add_child(b)
+
+# Komfortzeile: leere Slots eines Tracks mit einer Aktion füllen / Woche leeren
+func _planner_fill_row(parent: VBoxContainer, who: String, cid: int, acts: Dictionary) -> void:
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	parent.add_child(row)
+	var lbl := _lbl("Leere Slots füllen:", 11, DIM)
+	lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	row.add_child(lbl)
+	for k in acts:
+		if who == "player" and (k == "dinner" or k == "pflege"):
+			continue  # brauchen ein Ziel — über den Slot-Dialog planen
+		var info: Dictionary = acts[k]
+		var action := str(k)
+		row.add_child(_btn("%s %s" % [info.icon, info.de], func():
+			Game.planner_fill(who, cid, action)
+			render()))
+	row.add_child(_btn("✕ Woche leeren", func():
+		Game.planner_fill(who, cid, null, null, false)
+		render()))
 
 func _planner_target_name(slot: Dictionary) -> String:
 	var t := str(slot.get("t", ""))
@@ -2427,16 +2536,18 @@ func _planner_target_name(slot: Dictionary) -> String:
 				return Game.client_name(c)
 	return ""
 
-func _open_planner_picker(who: String, cid: int, week: int) -> void:
+func _open_planner_picker(who: String, cid: int, day: int, part: int) -> void:
 	_open_modal()
 	var title_s := "Du (Agentur)"
 	if who == "client":
 		var c = Game.client(cid)
 		title_s = Game.client_name(c) if c != null else "?"
-	modal_box.add_child(_lbl("🗓 Woche %d planen: %s" % [week + 1, title_s], 20, ACC))
+	modal_box.add_child(_lbl("🗓 %s %s planen: %s" % [Game.PLANNER_DAYS[day], Game.PLANNER_PARTS[part], title_s], 20, ACC))
 	var acts: Dictionary = Game.PLANNER_PLAYER if who == "player" else Game.PLANNER_CLIENT
 	for k in acts:
 		var info: Dictionary = acts[k]
+		if who == "client" and k == "gala" and part != 2:
+			continue  # Galas finden abends statt
 		if who == "player" and k == "dinner":
 			modal_box.add_child(_lbl("%s %s — %s:" % [info.icon, info.de, info.desc], 13))
 			var trow := HFlowContainer.new()
@@ -2444,7 +2555,7 @@ func _open_planner_picker(who: String, cid: int, week: int) -> void:
 			modal_box.add_child(trow)
 			for s in Game.active_studios():
 				trow.add_child(_btn(str(s.name), func():
-					Game.planner_slot_set("player", 0, week, "dinner", s.id)
+					Game.planner_slot_set("player", 0, day, part, "dinner", s.id)
 					_close_modal()))
 		elif who == "player" and k == "pflege":
 			modal_box.add_child(_lbl("%s %s — %s:" % [info.icon, info.de, info.desc], 13))
@@ -2453,13 +2564,13 @@ func _open_planner_picker(who: String, cid: int, week: int) -> void:
 			modal_box.add_child(trow2)
 			for c2 in Game.state.clients:
 				trow2.add_child(_btn(Game.client_name(c2), func():
-					Game.planner_slot_set("player", 0, week, "pflege", int(c2.id))
+					Game.planner_slot_set("player", 0, day, part, "pflege", int(c2.id))
 					_close_modal()))
 		else:
 			modal_box.add_child(_btn("%s %s — %s" % [info.icon, info.de, info.desc], func():
-				Game.planner_slot_set(who, cid, week, k)
+				Game.planner_slot_set(who, cid, day, part, k)
 				_close_modal()))
 	modal_box.add_child(_btn("Slot leeren", func():
-		Game.planner_slot_set(who, cid, week, null)
+		Game.planner_slot_set(who, cid, day, part, null)
 		_close_modal()))
 	modal_box.add_child(_btn("Abbrechen", _close_modal))

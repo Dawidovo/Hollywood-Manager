@@ -1,0 +1,93 @@
+[
+	{
+		"effect": "talkies",
+		"market": 1.15,
+		"month": 10,
+		"text": "„Der Jazzsänger“ läuft an — der Tonfilm ist da! Das Publikum strömt in die Kinos. Stummfilm-Veteranen bangen um ihre Stimmen.",
+		"year": 1927
+	},
+	{
+		"market": 0.7,
+		"month": 10,
+		"text": "Börsencrash an der Wall Street. Die Budgets der Studios brechen ein, Gagen stehen unter Druck.",
+		"year": 1929
+	},
+	{
+		"market": 0.95,
+		"month": 7,
+		"text": "Der Hays Code wird durchgesetzt. Skandale sind jetzt gefährlicher denn je.",
+		"year": 1934
+	},
+	{
+		"market": 0.9,
+		"month": 9,
+		"text": "Krieg in Europa. Die Auslandsmärkte brechen weg.",
+		"year": 1939
+	},
+	{
+		"market": 1.25,
+		"month": 1,
+		"text": "Nachkriegsboom! Nie zuvor gingen so viele Amerikaner ins Kino.",
+		"year": 1946
+	},
+	{
+		"market": 0.85,
+		"month": 5,
+		"text": "Das Paramount-Urteil zerschlägt das Studiosystem — und das Fernsehen erobert die Wohnzimmer.",
+		"year": 1948
+	},
+	{
+		"market": 1.1,
+		"month": 9,
+		"text": "CinemaScope! Breitbild soll das Publikum vom Fernseher zurückholen.",
+		"year": 1953
+	},
+	{
+		"market": 1.05,
+		"month": 8,
+		"text": "„Bonnie und Clyde“ schockiert und begeistert: New Hollywood beginnt. Junge Charakterköpfe sind gefragt.",
+		"year": 1967
+	},
+	{
+		"market": 1.2,
+		"month": 6,
+		"text": "„Der weiße Hai“ erfindet den Blockbuster. Der Sommer gehört jetzt dem Kino.",
+		"year": 1975
+	},
+	{
+		"market": 1.15,
+		"month": 5,
+		"text": "„Krieg der Sterne“ sprengt alle Rekorde. Franchise-Potenzial wird zur Währung.",
+		"year": 1977
+	},
+	{
+		"market": 1.1,
+		"month": 3,
+		"text": "„Matrix“ und das DVD-Geschäft: Hollywood schwimmt im Geld.",
+		"year": 1999
+	},
+	{
+		"market": 0.85,
+		"month": 11,
+		"text": "Autorenstreik legt Hollywood lahm — und ein Versandhändler namens Netflix beginnt zu streamen.",
+		"year": 2007
+	},
+	{
+		"market": 1.1,
+		"month": 1,
+		"text": "Streaming-Boom und Superhelden-Ära: Content ist König.",
+		"year": 2012
+	},
+	{
+		"market": 0.45,
+		"month": 3,
+		"text": "Pandemie. Die Kinos schließen weltweit. Produktionen liegen auf Eis.",
+		"year": 2020
+	},
+	{
+		"market": 0.9,
+		"month": 6,
+		"text": "Die Kinos öffnen wieder — aber das Publikum kommt nur zögerlich zurück.",
+		"year": 2021
+	}
+]
