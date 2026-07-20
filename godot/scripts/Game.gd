@@ -389,7 +389,9 @@ func new_game(agency_name: String, start_year: int) -> void:
 		"ledger": [], "ledgerMonthly": [],
 		"clients": [], "castings": [], "productions": [], "released": [], "log": [],
 		"rumors": [], "newspaper": [], "pressFeed": [],
-		"rivals": [], "identity": {}, "identityLastTop": [],
+		"rivals": [], "powerFigures": [], "identity": {}, "identityLastTop": [],
+		"instinct": 20, "predictions": [], "history_pairs": {},
+		"planner": {"player": [null, null, null, null], "clients": {}}, "scoutBonus": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [],
 		"strikeMonths": 0, "strikeExempt": false,
@@ -630,6 +632,61 @@ func rival_casting_block(studio_id: String) -> float:
 		if str(rival.style) == "studiotreu" and str(rival.get("studioId", "")) == studio_id and rival.clients.size():
 			return clampf(8.0 + float(rival.grudge) / 12.0 - maxf(0.0, float(rival.rel)) / 20.0, 4.0, 16.0)
 	return 0.0
+
+func power_figure_for_aid(actor_id: String) -> Variant:
+	for figure in state.get("powerFigures", []):
+		if str(figure.aid) == actor_id:
+			return figure
+	return null
+
+func power_figure_candidates() -> Array:
+	return state.clients.filter(func(c):
+		var actor: Dictionary = actor_by_id[c.aid]
+		return age_of(actor, state.year) >= 45 and (int(c.get("awards", 0)) >= 1 or float(c.fame) >= 80.0) and power_figure_for_aid(str(c.aid)) == null)
+
+func become_power_figure(cid: int, role_s: String, keep_close: bool = false, force_independent: bool = false) -> String:
+	var c = client(cid)
+	if c == null or role_s not in ["director", "producer"]:
+		return "Die Gelegenheit ist bereits weitergezogen."
+	if power_figure_for_aid(str(c.aid)) != null:
+		return "%s hat diesen Schritt bereits gemacht." % client_name(c)
+	var actor_name := client_name(c)
+	var fractured := force_independent or (not keep_close and (float(c.loyalty) < 30.0 or float(c.trust) < 30.0))
+	var figure := {"id":next_id(), "aid":str(c.aid), "name":actor_name, "role":role_s, "startedMi":mi(), "agencyFriendly":not fractured, "rivalId":"", "credits":0}
+	state.powerFigures.append(figure)
+	c.flags["powerFigure"] = role_s
+	var role_label := "Regie" if role_s == "director" else "Produktion"
+	if fractured:
+		var rival_id := "power_%s_%d" % [str(c.aid), int(figure.id)]
+		var studio_id := str(active_studios()[0].id) if active_studios().size() else ""
+		var new_rival := {"id":rival_id, "name":"%s %s" % [actor_name, "Pictures" if role_s == "producer" else "Artists"], "style":"prestige", "clients":[], "grudge":65.0, "rel":-40.0, "studioId":studio_id, "foundedBy":str(c.aid)}
+		state.rivals.append(new_rival)
+		figure.rivalId = rival_id
+		state.clients.erase(c)
+		press_event("Titelstory", "%s tauscht die Leinwand gegen %s — und gründet %s" % [actor_name, role_label, new_rival.name])
+		log_msg("Aus Klient wird Konkurrent: %s gründet %s." % [actor_name, new_rival.name], "history")
+		return "%s übernimmt die %s und eröffnet ein eigenes Haus. Aus einer zerrütteten Beziehung ist ein neuer Rivale geworden." % [actor_name, role_label]
+	change_trust(c, 8.0)
+	c.loyalty = clampf(float(c.loyalty) + 8.0, 0.0, 100.0)
+	press_event("Titelstory", "%s übernimmt die %s — %s begleitet den Machtwechsel" % [actor_name, role_label, state.agency.name])
+	log_msg("Machtwechsel: %s arbeitet künftig in der %s und bleibt dem Haus verbunden." % [actor_name, role_label], "history")
+	return "%s wechselt in die %s. Bei künftigen Castings bleibt deine Agentur die erste Adresse." % [actor_name, role_label]
+
+func assign_power_figure_to_casting(casting: Dictionary, force: bool = false) -> void:
+	if state.get("powerFigures", []).is_empty() or (not force and not chance(0.35)):
+		return
+	var available: Array = state.powerFigures.filter(func(p):
+		var actor: Dictionary = actor_by_id.get(str(p.aid), {})
+		return not actor.is_empty() and (actor.death == null or float(actor.death) > float(state.year)))
+	if available.is_empty():
+		return
+	var figure: Dictionary = pick(available)
+	var key := "director" if str(figure.role) == "director" else "producer"
+	casting[key] = {"figureId":int(figure.id), "aid":str(figure.aid), "name":str(figure.name), "agencyFriendly":bool(figure.agencyFriendly), "rivalId":str(figure.rivalId)}
+	if bool(figure.agencyFriendly):
+		casting["agencyBoost"] = float(casting.get("agencyBoost", 0.0)) + 8.0
+	elif str(figure.rivalId) != "":
+		casting["powerRivalBlock"] = 8.0
 
 func random_client(filter: Callable = Callable()) -> Variant:
 	var list = state.clients if not filter.is_valid() else state.clients.filter(filter)
@@ -1195,9 +1252,13 @@ func use_extra_audition(role: Dictionary, client_id) -> bool:
 	return true
 
 # scriptAccess: deterministische Schätzung der versteckten Qualitätsbasis
-# (Prestige + Script-Roll, wie in release_film).
+# (Prestige + Script-Roll, wie in release_film). Instinkt reduziert das
+# Rauschen der Einschätzung — geübte Agenten lesen Drehbücher genauer.
 func script_insight(casting: Dictionary) -> int:
-	return 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
+	var base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
+	var noise := (hashs(str(casting.id) + "noi") % 13) - 6
+	var err := roundi(float(noise) * (1.0 - float(state.get("instinct", 20)) / 100.0))
+	return clampi(base + err, 5, 100)
 
 # Verfall: abgelaufene Gefallen im Monatstakt entfernen.
 func _expire_favors() -> void:
@@ -1292,7 +1353,19 @@ func evaluate_offer(offer: Dictionary) -> float:
 		perks_score += 13.0 if d.perks.has(pk) else 4.0
 	var years_score: float = -absf(offer.years - d.years) * 2.5
 	var standing: float = (rep - nego.fame * 0.55) * 0.9
-	return money_raw * p.money * 2.6 + promise_raw * trust + perks_score + years_score + standing + identity_offer_modifier(nego.actor) - (nego.round - 1) * 3.0
+	# Klauseln wirken je nach Star-Profil: Künstler wollen Kreativ-Veto,
+	# Sicherheitsorientierte Eskalatoren, Kommerzielle Gewinnbeteiligung.
+	var clause_score := 0.0
+	for cl in offer.get("clauses", []):
+		match str(cl):
+			"creativeApproval": clause_score += 9.0 * p.prestige * 3.0 - (4.0 if p.top == "money" else 0.0)
+			"escalator": clause_score += 8.0 * p.security * 2.5
+			"profitShare": clause_score += 7.0 * p.money * 2.0 - (6.0 if p.top == "security" else 0.0)
+			"endorsement": clause_score += 5.0 * p.money * 2.0
+			"likenessRights": clause_score += 4.0
+			"sequelOption": clause_score -= 8.0 * p.prestige * 2.0
+			"moralClause": clause_score -= 7.0
+	return money_raw * p.money * 2.6 + promise_raw * trust + perks_score + years_score + standing + clause_score + identity_offer_modifier(nego.actor) - (nego.round - 1) * 3.0
 
 func mood_label(score: float) -> Array:
 	if score >= 65.0: return ["begeistert", "pos"]
@@ -1354,12 +1427,20 @@ func sign_client(terms: Dictionary) -> Dictionary:
 		"signedAt": mi(),
 		"trust": float(rndi(28, 34)), "trustCap": 100.0, "secrets": [], "secretThresholds": [],
 		"narrative": {}, "fameHistory": [], "dnaHistory": [],
+		"clauses": [], "exclusiveStudio": "",
 	}
 	c.fameHistory.append({"mi":mi(), "v":float(c.fame)})
 	c.dnaHistory.append({"mi":mi(), "romantik":float(c.dna.romantik), "popular":float(c.dna.popular), "verlass":float(c.dna.verlass), "unikat":float(c.dna.unikat), "familie":float(c.dna.familie)})
 	if terms.get("promise") != null:
 		c.promises.append({"type": terms.promise, "label": PROMISES[terms.promise].label, "due": mi() + int(PROMISES[terms.promise].months), "fulfilled": false, "broken": false})
+	# Vertragsklauseln (Feature 8): era-verfügbar gefiltert auf den Klienten übernehmen
+	for cl in terms.get("clauses", []):
+		if clause_available(str(cl)) and not c.clauses.has(str(cl)):
+			c.clauses.append(str(cl))
 	state.clients.append(c)
+	# Instinkt-Prognose (Feature 6b): Signing eines Noch-nicht-Stars anbieten
+	if int(nego.fame) < 40:
+		state["pendingStarPrediction"] = int(c.id)
 	var rival_id := str(nego.get("rivalId", ""))
 	if rival_id != "":
 		for rival in state.rivals:
@@ -1451,12 +1532,14 @@ func spawn_castings(count: int) -> void:
 		var fee_sum := 0.0
 		for r in roles:
 			fee_sum += r.fee
-		state.castings.append({
+		var casting := {
 			"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
 			"prestige": prestige,
 			"budget": roundi(fee_sum * rndf(3.0, 4.5) + 400000.0 * infl(y) * rndf(0.6, 1.4) * (1.0 + prestige * 0.3)),
 			"deadline": rndi(2, 3), "roles": roles, "qualityMod": 0.0,
-		})
+		}
+		assign_power_figure_to_casting(casting)
+		state.castings.append(casting)
 
 func _mk_role(type: String, gender: String, prestige: int, y: float) -> Dictionary:
 	var min_fame := rndi(25, 55 + prestige * 10) if type == "lead" else rndi(10, 35)
@@ -1479,6 +1562,8 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	fit += clampf((c.fame - role.minFame) * 0.7, -25.0, 18.0)
 	fit += c.heat * 2.0
 	fit += float(state.studioRel[casting.studioId]) / 6.0
+	fit += float(casting.get("agencyBoost", 0.0))
+	fit -= float(casting.get("powerRivalBlock", 0.0))
 	fit -= maxf(0.0, (c.exhaustion - 50.0) / 2.5)
 	# Karriere-DNA: passt das öffentliche Bild zur Rolle?
 	fit += dna_fit(c, casting.genre, studio_style(casting.studioId))
@@ -1489,6 +1574,15 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 		fit += (identity_strength("studiotreu") + identity_strength("kommerziell")) * 3.5
 	fit -= rival_casting_block(str(casting.studioId))
 	fit -= rumor_fit_penalty(c)
+	# Weekly Planner: „Vorbereitung“ gibt dem nächsten Pitch einen einmaligen Bonus
+	if float(c.flags.get("prepFit", 0.0)) > 0.0:
+		fit += float(c.flags.prepFit)
+	# Fernseh-Ära: TV-Gesichter verlieren bei Prestige-Kino an Standing (Feature 14)
+	if int(state.year) >= 1948 and int(state.year) <= 1965 and c.flags.get("tvIncome") != null and int(c.flags.tvIncome.months) > 0 and int(casting.prestige) >= 2:
+		fit -= 5.0
+	# Studiosystem-Ära: Exklusivklienten sind beim eigenen Studio stärker (Feature 14)
+	if str(c.get("exclusiveStudio", "")) != "" and str(c.exclusiveStudio) == str(casting.studioId):
+		fit += 6.0
 	if age < role.ageMin:
 		fit -= (role.ageMin - age) * 2.5
 	if age > role.ageMax:
@@ -1501,6 +1595,9 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 		var a: Dictionary = actor_by_id[c.aid]
 		if a.g != role.gender or not is_free(c):
 			continue
+		# Studiosystem: Exklusivklienten dürfen nur für ihr Studio arbeiten
+		if str(c.get("exclusiveStudio", "")) != "" and str(c.exclusiveStudio) != str(casting.studioId):
+			continue
 		var taken := false
 		for r in casting.roles:
 			if r.filled != null and r.filled.get("clientId") != null and int(r.filled.clientId) == int(c.id):
@@ -1508,7 +1605,8 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 		if taken:
 			continue
 		var fit := fit_score(casting, role, c)
-		if c.perks.has("script") and fit < 35:
+		# Drehbuch-Mitsprache (Perk) und Kreativ-Veto (Klausel) lehnen schlechte Rollen ab
+		if (c.perks.has("script") or c.get("clauses", []).has("creativeApproval")) and fit < 35:
 			continue
 		out.append({"c": c, "fit": fit, "estFee": role_fee_for(casting, role, c),
 			"dna": roundi(dna_fit(c, casting.genre, studio_style(casting.studioId)))})
@@ -1517,6 +1615,9 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 
 func role_fee_for(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	var ask: float = ask_fee(c.fame, state.year) * (1.0 if role.type == "lead" else 0.35) * (1.0 + int(c.get("awards", 0)) * 0.08)
+	# Gagen-Eskalator-Klausel: jede weitere Zusammenarbeit wird teurer
+	if c.get("clauses", []).has("escalator"):
+		ask *= 1.15
 	return roundi(clampf(ask, role.fee * 0.6, role.fee * 2.2))
 
 func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
@@ -1525,8 +1626,22 @@ func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
 	var c = client(client_id)
 	var fit := fit_score(casting, role, c)
 	var p: float = clampf(fit / 100.0 + 0.08, 0.05, 0.95)
+	# Gagen-Eskalator: Studios zögern bei teuren Wiederbesetzungen
+	if c.get("clauses", []).has("escalator"):
+		p = clampf(p - 0.06, 0.05, 0.95)
+	# Planner-„Vorbereitung“ ist einmalig — jetzt wird sie verbraucht
+	if c.flags.has("prepFit"):
+		c.flags.erase("prepFit")
 	if chance(p):
 		pitch_ctx = {"casting": casting, "roleIdx": role_idx, "role": role, "client": c, "fee": role_fee_for(casting, role, c), "haggled": false}
+		# Alternativen für die Instinkt-Prognose „Wer passt besser?“ merken (Feature 6c)
+		var alts: Array = []
+		for e in eligible_clients(casting, role):
+			if int(e.c.id) != int(client_id):
+				alts.append(int(e.c.id))
+		pitch_ctx["alts"] = alts.slice(0, 2)
+		if needs_table(casting, role):
+			pitch_ctx["table"] = true
 		return {"success": true, "fee": pitch_ctx.fee}
 	role.rejected.append(int(client_id))
 	state.studioRel[casting.studioId] = clampi(int(state.studioRel[casting.studioId]) - 1, 0, 100)
@@ -1538,12 +1653,21 @@ func _casting(cid) -> Variant:
 			return cs
 	return null
 
-func close_deal(fee: float, extra_log: String = "") -> void:
+func close_deal(fee: float, extra_log: String = "", clauses: Array = [], billing: int = 1) -> void:
 	var casting: Dictionary = pitch_ctx.casting
 	var role: Dictionary = pitch_ctx.role
 	var c: Dictionary = pitch_ctx.client
-	role.filled = {"clientId": int(c.id), "fee": roundi(fee)}
+	# Gewinnbeteiligung drückt die Fixgage (Feature 8)
+	if clauses.has("profitShare"):
+		fee = roundi(fee * 0.8)
+	role.filled = {"clientId": int(c.id), "fee": roundi(fee), "billing": billing}
+	if clauses.size():
+		role.filled["clauses"] = clauses.duplicate()
 	c.busyUntil = mi() + int(casting.deadline)
+	# Studiosystem-Ära: erste Zusammenarbeit bindet den Klienten exklusiv (Feature 14)
+	if int(state.year) < 1948 and str(c.get("exclusiveStudio", "")) == "":
+		c["exclusiveStudio"] = str(casting.studioId)
+		log_msg("%s ist ab sofort exklusiv an %s gebunden — bessere Gagen dort, keine Castings anderswo." % [client_name(c), _studio(str(casting.studioId)).name], "history")
 	log_msg("Deal: %s spielt %s in „%s“ für %s. Provision: %s.%s" % [client_name(c),
 		"die Hauptrolle" if role.type == "lead" else "eine Nebenrolle", casting.title,
 		fmt_money(fee), fmt_money(fee * c.commission / 100.0), extra_log], "deal")
@@ -1560,7 +1684,7 @@ func close_deal(fee: float, extra_log: String = "") -> void:
 	pitch_ctx = null
 
 func accept_offer() -> void:
-	close_deal(pitch_ctx.fee)
+	close_deal(pitch_ctx.fee, "", pitch_ctx.get("offerClauses", []))
 
 func haggle() -> Dictionary:
 	var rel: float = state.studioRel[pitch_ctx.casting.studioId]
@@ -1643,18 +1767,24 @@ func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	var studio: Dictionary = opts.get("studio", pick(active_studios()))
 	var role_type: String = opts.get("roleType", "lead")
 	var fee := roundi(ask_fee(c.fame, state.year) * (1.0 if role_type == "lead" else 0.35) * opts.get("feeMult", 1.0))
-	var months := rndi(4, 6)
+	# Streaming-Ära (2015+): kürzere Produktionszeiten (Feature 14)
+	var months := rndi(3, 5) if int(state.year) >= 2015 else rndi(4, 6)
 	var prod := {
 		"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
 		"prestige": opts.get("prestige", rndi(1, 2)),
 		"budget": roundi(fee * rndf(3.0, 4.5) + 300000.0 * infl(state.year)),
 		"monthsLeft": months, "qualityMod": opts.get("qualityMod", 0.0),
-		"roles": [{"type": role_type, "gender": actor.g, "minFame": 30, "ageMin": 18, "ageMax": 99, "fee": fee, "filled": {"clientId": int(c.id), "fee": fee}, "rejected": []}],
+		"roles": [{"type": role_type, "gender": actor.g, "minFame": 30, "ageMin": 18, "ageMax": 99, "fee": fee, "filled": {"clientId": int(c.id), "fee": fee, "billing": 1}, "rejected": []}],
 	}
+	_init_production_uncertainty(prod)
 	state.productions.append(prod)
 	var income := roundi(fee * c.commission / 100.0)
 	book(float(income), "provision", "Provision Sofort-Deal: %s („%s“)" % [client_name(c), prod.title])
 	c.busyUntil = mi() + months
+	# Studiosystem-Ära: Exklusivbindung auch bei Sofort-Deals (Feature 14)
+	if int(state.year) < 1948 and str(c.get("exclusiveStudio", "")) == "":
+		c["exclusiveStudio"] = str(studio.id)
+		log_msg("%s ist ab sofort exklusiv an %s gebunden — bessere Gagen dort, keine Castings anderswo." % [client_name(c), studio.name], "history")
 	change_trust(c, 1.5)
 	# Auch Sofort-Deals zählen unmittelbar für Versprechen (Hauptrolle/Prestige)
 	check_promises_on_deal(c, prod, prod.roles[0])
@@ -1675,7 +1805,10 @@ func end_month() -> Array:
 	var events: Array = []
 	# Fixkosten des abgelaufenen Monats buchen und die Buchhaltung
 	# des Monats abschließen (Aggregat in ledgerMonthly).
+	# Weekly Planner: „Bücher prüfen“ senkt die Bürokosten des Monats um 10 %
 	var base_cost := roundi((2200.0 + state.clients.size() * 600.0) * infl(state.year))
+	if _planner_has("buecher"):
+		base_cost = roundi(base_cost * 0.9)
 	var perk_cost := roundi(perk_costs())
 	book(-float(base_cost), "buero", "Büro, Personal & Fixkosten")
 	if perk_cost > 0:
@@ -1701,6 +1834,16 @@ func end_month() -> Array:
 						c.fame = clampf(c.fame - 12.0, 5.0, 100.0)
 						c.mood -= 15.0
 						log_msg("%s kämpft mit dem Tonfilm — der Ruhm bröckelt." % client_name(c), "bad")
+			# Paramount-Urteil (Mai 1948): Exklusivverträge der Studiosystem-Ära enden (Feature 14)
+			if int(h.year) == 1948 and int(h.month) == 5:
+				var freed := 0
+				for c in state.clients:
+					if str(c.get("exclusiveStudio", "")) != "":
+						c["exclusiveStudio"] = ""
+						c.loyalty = clampf(c.loyalty + 4.0, 0.0, 100.0)
+						freed += 1
+				if freed > 0:
+					log_msg("Das Paramount-Urteil löst %d Exklusivverträge — eine Neuverhandlungswelle rollt durch Hollywood." % freed, "history")
 	state.market += (1.0 - state.market) * 0.06
 	state.marketHistory.append(roundi(state.market * 100.0))
 	if state.marketHistory.size() > 24:
@@ -1720,25 +1863,31 @@ func end_month() -> Array:
 		for casting in state.castings.duplicate():
 			casting.deadline = int(casting.deadline) - 1
 			if int(casting.deadline) <= 0:
-				start_production(casting)
+				start_production(casting, events)
 				state.castings.erase(casting)
 
-	# Produktionen → Release
+	# Produktionen → Release (+ monatliche Set-Signale, Feature 13)
 	if not strike or state.strikeExempt:
 		for prod in state.productions.duplicate():
 			prod.monthsLeft = int(prod.monthsLeft) - 1
 			if int(prod.monthsLeft) <= 0:
 				events.append(release_film(prod))
 				state.productions.erase(prod)
+	if not strike:
+		_tick_signals(events)
 
 	if not strike:
 		spawn_castings(rndi(1, 2) + (1 if state.agency.rep >= 50 else 0))
 		while state.castings.size() > 10:
 			state.castings.pop_front()
 
+	# Weekly Planner: geplante Wochen-Aktivitäten wirken VOR den Ereignissen
+	_apply_planner(events)
 	tick_clients(events)
 	tick_rumors(events)
 	tick_rivals(events)
+	# Instinkt-Prognosen (Feature 6): fällige Wetten auflösen
+	tick_predictions(events)
 
 	# Follow-ups
 	for fu in state.followups.duplicate():
@@ -1830,6 +1979,16 @@ func tick_clients(events: Array) -> void:
 			book(float(tv.monthly), "tv", "TV-Vertrag: %s" % client_name(c))
 			tv.months = int(tv.months) - 1
 			c.fame = clampf(c.fame - 0.3, 5.0, 100.0)
+			# Fernseh-Ära: TV wertet das Kino-Image ab (Feature 14)
+			if int(state.year) >= 1948 and int(state.year) <= 1965:
+				c.dna.popular = clampf(c.dna.popular + 0.4, -100.0, 100.0)
+				c.dna.unikat = clampf(c.dna.unikat - 0.4, -100.0, 100.0)
+		# Werbevertrag-Klausel (Feature 8): regelmäßiges Einkommen, Image +, Laune −
+		if c.get("clauses", []).has("endorsement"):
+			var ad_income := roundi((900.0 + float(c.fame) * 30.0) * infl(state.year) * float(c.commission) / 100.0)
+			book(float(ad_income), "sonstiges", "Werbevertrag: %s" % client_name(c))
+			c.mood = clampf(c.mood - 1.0, 0.0, 100.0)
+			c.dna.familie = clampf(c.dna.familie + 0.4, -100.0, 100.0)
 		# Karriere-DNA verblasst langsam Richtung Neutral, wenn nichts nachkommt
 		if not busy:
 			for ax in DNA_AXES:
@@ -1898,7 +2057,7 @@ func tick_clients(events: Array) -> void:
 			log_msg("%s zieht sich mit %d Jahren aus dem Geschäft zurück." % [actor.name, age_of(actor, state.year)], "info")
 
 # ---------- Produktion & Box-Office ----------
-func start_production(casting: Dictionary) -> void:
+func start_production(casting: Dictionary, events: Array = []) -> void:
 	var y = state.year
 	for role in casting.roles:
 		if role.filled != null:
@@ -1923,7 +2082,8 @@ func start_production(casting: Dictionary) -> void:
 		else:
 			var first = pick(Data.NPC_FIRST_M) if role.gender == "m" else pick(Data.NPC_FIRST_F)
 			role.filled = {"npc": true, "name": "%s %s" % [first, pick(Data.NPC_LAST)], "talent": rndi(35, 70), "fame": rndi(10, maxi(12, int(role.minFame)))}
-	var months := rndi(4, 7)
+	# Streaming-Ära (2015+): kürzere Produktionszeiten (Feature 14)
+	var months := rndi(3, 5) if int(state.year) >= 2015 else rndi(4, 7)
 	var income := 0.0
 	for role in casting.roles:
 		if role.filled.get("clientId") != null:
@@ -1938,10 +2098,23 @@ func start_production(casting: Dictionary) -> void:
 	var prod = casting.duplicate(true)
 	# WICHTIG: Rollen-Referenzen behalten? Produktion arbeitet auf Kopie — Klienten-IDs bleiben gültig.
 	prod["monthsLeft"] = months
+	_init_production_uncertainty(prod)
 	state.productions.append(prod)
+	# Instinkt-Prognose (Feature 6a): „Wird das ein Hit?“ beim Drehbeginn anbieten
+	for role in casting.roles:
+		if role.filled.get("clientId") != null:
+			var c2 = client(role.filled.clientId)
+			if c2 != null:
+				events.append(hit_prediction_event(prod, c2))
+				break
 
 func release_film(prod: Dictionary) -> Dictionary:
-	var script: float = 35.0 + int(prod.prestige) * 8.0 + rndf(0.0, 20.0)
+	# Skript-Basis deterministisch (wie script_insight): 35 + Prestige*8 + Roll 0..20
+	var script: float = 35.0 + int(prod.prestige) * 8.0 + float(hashs(str(prod.id) + "scr") % 21)
+	if prod.has("director"):
+		script += 4.0
+	if prod.has("producer"):
+		script += 2.0
 	var talents: Array = []
 	var fit_bonus := 0.0
 	for r in prod.roles:
@@ -1953,7 +2126,9 @@ func release_film(prod: Dictionary) -> Dictionary:
 	for t in talents:
 		cast_q += t
 	cast_q /= talents.size()
-	var quality := clampi(roundi(script * 0.45 + cast_q * 0.5 + fit_bonus + prod.get("qualityMod", 0.0) + rndf(-5.0, 5.0)), 5, 100)
+	# Beziehungschemie (Feature 12): Leinwandchemie der Leads ±8, Regie-Chemie ±3
+	var chem_q := lead_chem_quality(prod) + director_chem_quality(prod)
+	var quality := clampi(roundi(script * 0.45 + cast_q * 0.5 + fit_bonus + prod.get("qualityMod", 0.0) + chem_q + rndf(-5.0, 5.0)), 5, 100)
 	var star_power := 0.0
 	var lead_n := 0
 	for r in prod.roles:
@@ -1967,6 +2142,7 @@ func release_film(prod: Dictionary) -> Dictionary:
 	var ratio: float = float(revenue) / prod.budget
 	var verdict := "Flop" if ratio < 1.0 else ("Achtbarer Erfolg" if ratio < 2.0 else ("Hit" if ratio < 3.2 else "Blockbuster"))
 	var affected: Array = []
+	var fame_deltas := {}
 	for r in prod.roles:
 		var c = client(r.filled.get("clientId")) if r.filled.get("clientId") != null else null
 		if c == null:
@@ -1975,6 +2151,14 @@ func release_film(prod: Dictionary) -> Dictionary:
 		var narrative_mult := narrative_multiplier(c, prod, r)
 		var delta: float = clampf(((quality - 55.0) / 8.0 + (ratio - 1.6) * 2.5) * mult, -8.0, 10.0)
 		delta = clampf(delta * narrative_mult, -12.0, 18.0)
+		# Billing aus der Mehrparteien-Verhandlung (Feature 9): erste Nennung zählt
+		var billing := int(r.filled.get("billing", 1))
+		if billing >= 2:
+			delta = clampf(delta * 0.8, -12.0, 18.0)
+			c.mood = clampf(c.mood - 4.0, 0.0, 100.0)
+		else:
+			delta = clampf(delta * 1.05, -12.0, 18.0)
+		fame_deltas[int(c.id)] = delta
 		# Gefallen "billing": prominente Platzierung im Vorspann bringt Extra-Ruhm.
 		if c.flags.get("billingBoost", false):
 			c.flags.erase("billingBoost")
@@ -1993,11 +2177,58 @@ func release_film(prod: Dictionary) -> Dictionary:
 			press_event("Neue Stars", "%s springt mit „%s“ um %d Ruhmpunkte nach vorn" % [client_name(c), prod.title, roundi(delta)])
 		snapshot_client(c)
 		affected.append("%s (%s%d Ruhm)" % [client_name(c), "+" if delta >= 0 else "", roundi(delta)])
+	# Gewinnbeteiligung (Feature 8): Anteil am Überschuss ab ratio 2 — über book()
+	for r in prod.roles:
+		if r.filled == null or r.filled.get("clientId") == null:
+			continue
+		var c3 = client(r.filled.clientId)
+		if c3 == null:
+			continue
+		var rclauses: Array = r.filled.get("clauses", [])
+		if rclauses.has("profitShare") and ratio > 2.0:
+			var share := roundi(float(prod.budget) * (ratio - 2.0) * 0.08 * float(c3.commission) / 100.0)
+			if share > 0:
+				book(float(share), "provision", "Gewinnbeteiligung: %s („%s“)" % [client_name(c3), prod.title])
+		# Sequel-Option (Feature 8): Blockbuster aktiviert die Alt-Gagen-Falle
+		if rclauses.has("sequelOption") and ratio >= 3.0:
+			c3.flags["sequelDue"] = {"title": prod.title, "fee": int(r.filled.get("fee", 0)), "studioId": str(prod.studioId)}
+	# Gemeinsame Historie der Beteiligten pflegt die persönliche Chemie (Feature 12)
+	var lead_keys := _prod_people_keys(prod, true)
+	for i in lead_keys.size():
+		for j in range(i + 1, lead_keys.size()):
+			note_pair_history(lead_keys[i], lead_keys[j], 2 if ratio >= 2.0 else -1)
+	# Instinkt-Prognosen auflösen (Feature 6): Hit-Wette & „Wer passt besser?“
+	_resolve_release_predictions(prod, ratio, fame_deltas)
+	# Produktions-Signale im Rückblick (Feature 13): Haben die Meldungen gestimmt?
+	var sigs: Array = prod.get("signals", [])
+	if sigs.size():
+		var pos_n := 0
+		for sg in sigs:
+			if bool(sg.get("pos", false)):
+				pos_n += 1
+		var predicted_good := pos_n * 2 >= sigs.size()
+		var actually_good := ratio >= 1.6
+		if predicted_good == actually_good:
+			log_msg("Rückblick: Die Set-Signale aus „%s“ haben die Wahrheit gesagt." % prod.title, "info")
+		else:
+			log_msg("Rückblick: Die Set-Signale aus „%s“ haben getäuscht — Set-Gerede bleibt Set-Gerede." % prod.title, "info")
+	# Heimvideo (Feature 14, 1980+): Flops können nachträglich Geld einspielen
+	if int(state.year) >= 1980 and ratio < 1.0 and fame_deltas.size():
+		state.followups.append({"type": "homevideo", "title": prod.title, "studioId": str(prod.studioId), "budget": int(prod.budget), "due": mi() + rndi(6, 18)})
 	if affected.size():
 		state.agency.rep = clampi(int(state.agency.rep) + (2 if ratio >= 2.0 else (-1 if ratio < 1.0 else 0)), 0, 100)
 	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) + (5 if ratio >= 2.0 else (-3 if ratio < 1.0 else 1)), 0, 100)
 	state.released.push_front({"title": prod.title, "genre": prod.genre, "year": int(state.year), "releaseMi":mi(), "studioId": prod.studioId, "quality": quality, "revenue": revenue, "budget": prod.budget, "ratio": ratio, "verdict": verdict, "prestige": int(prod.prestige), "roles": prod.roles})
 	var studio_name: String = _studio(prod.studioId).name
+	for key in ["director", "producer"]:
+		if prod.has(key):
+			var figure = null
+			for candidate in state.get("powerFigures", []):
+				if int(candidate.id) == int(prod[key].figureId):
+					figure = candidate
+					break
+			if figure != null:
+				figure.credits = int(figure.credits) + 1
 	log_msg("Premiere „%s“ (%s): %s — %s Einspielergebnis bei Qualität %d." % [prod.title, studio_name, verdict, fmt_money(revenue), quality], "bad" if ratio < 1.0 else "deal")
 	return {"title": "Premiere: „%s“" % prod.title,
 		"text": "%s · %s · Qualität %d/100\n\nEinspielergebnis: %s (Budget %s) — %s%s" % [studio_name, Data.GENRES[prod.genre].de, quality, fmt_money(revenue), fmt_money(prod.budget), verdict, ("\n\nDeine Klienten: " + ", ".join(affected)) if affected.size() else ""],
@@ -2102,6 +2333,23 @@ func load_game() -> bool:
 			state.identity[identity_key] = 0.0
 	if not state.has("identityLastTop"):
 		state["identityLastTop"] = []
+	if not state.has("powerFigures"):
+		state["powerFigures"] = []
+	# Migration Simulations- & Verhandlungs-Cluster
+	if not state.has("instinct"):
+		state["instinct"] = 20
+	if not state.has("predictions"):
+		state["predictions"] = []
+	if not state.has("history_pairs"):
+		state["history_pairs"] = {}
+	if not state.has("scoutBonus"):
+		state["scoutBonus"] = 0
+	if not state.has("planner"):
+		state["planner"] = {"player": [null, null, null, null], "clients": {}}
+	if not state.planner.has("player"):
+		state.planner["player"] = [null, null, null, null]
+	if not state.planner.has("clients"):
+		state.planner["clients"] = {}
 	# Migration: alter Netzwerk-Wert wird in konkrete Gefallen umgewandelt
 	# (pro 15 Punkte ein Gefallen), das Feld danach entfernt.
 	if state.has("network"):
@@ -2116,6 +2364,10 @@ func load_game() -> bool:
 	for c in state.clients:
 		if not c.has("dna"):
 			c["dna"] = initial_dna(actor_by_id[c.aid])
+		if not c.has("clauses"):
+			c["clauses"] = []
+		if not c.has("exclusiveStudio"):
+			c["exclusiveStudio"] = ""
 		if not c.has("trust"):
 			c["trust"] = 30.0
 		if not c.has("trustCap"):
@@ -2149,4 +2401,654 @@ func load_game() -> bool:
 		if not rival.has("studioId"):
 			var studios := active_studios()
 			rival["studioId"] = str(studios[0].id) if studios.size() else ""
+	for figure in state.powerFigures:
+		if not figure.has("agencyFriendly"):
+			figure["agencyFriendly"] = true
+		if not figure.has("rivalId"):
+			figure["rivalId"] = ""
+		if not figure.has("credits"):
+			figure["credits"] = 0
 	return true
+
+
+# =====================================================================
+# Simulations- & Verhandlungs-Cluster
+# (Instinkt-Prognosen · Vertragsklauseln · Mehrparteien-Verhandlung ·
+#  Beziehungschemie · Produktionssignale · Weekly Planner · Epochen-Regeln)
+# =====================================================================
+
+var table = null
+
+# ---------- Feature 8: Vertragsklauseln ----------
+# Klauseln erzeugen keine Zahlenboni, sondern zukünftige Ereignisse.
+const CLAUSES = {
+	"sequelOption": {"de": "Sequel-Option", "desc": "Studio darf Fortsetzungen zur Alt-Gage verlangen — riskant bei einem Hit"},
+	"escalator": {"de": "Gagen-Eskalator", "desc": "+15 % Gage bei jeder neuen Rolle — Studios zögern bei Wiederbesetzung"},
+	"creativeApproval": {"de": "Kreativ-Veto", "desc": "Klient lehnt Rollen mit Passung < 35 ab (wie Drehbuch-Mitsprache)"},
+	"moralClause": {"de": "Moral-Klausel", "desc": "Bei einem Skandal (Gerücht ab 60 Glaubwürdigkeit) darf das Studio straffrei kündigen"},
+	"profitShare": {"de": "Gewinnbeteiligung", "desc": "Fixgage −20 %, dafür Anteil am Überschuss ab dem doppelten Budget"},
+	"likenessRights": {"de": "Abbild-Rechte", "desc": "Digitales Abbild des Klienten — ab 2015 ein Konfliktfeld"},
+	"endorsement": {"de": "Werbevertrag", "desc": "Monatliches Zusatzeinkommen, Familien-Image +, Laune −"},
+}
+
+func clause_available(clause_id: String) -> bool:
+	if clause_id == "likenessRights":
+		return state != null and int(state.year) >= 1995
+	return CLAUSES.has(clause_id)
+
+func clause_label(clause_id: String) -> String:
+	return str(CLAUSES.get(clause_id, {}).get("de", clause_id))
+
+# ---------- Feature 6: Instinkt & Prognosen ----------
+# state.instinct wächst NUR durch richtige Spieler-Prognosen.
+func add_prediction(type_s: String, subject, guess, due_mi: int, note_s: String = "") -> Dictionary:
+	var pr := {"id": next_id(), "type": type_s, "subject": subject, "guess": guess,
+		"dueMi": due_mi, "resolved": false, "correct": false, "note": note_s, "madeMi": mi()}
+	state.predictions.append(pr)
+	log_msg("Prognose notiert: %s" % note_s, "info")
+	return pr
+
+# (a) Drehbeginn: „Wird das ein Hit (ratio ≥ 2)?“
+func hit_prediction_event(prod: Dictionary, c: Dictionary) -> Dictionary:
+	var pid := int(prod.id)
+	var title_s := str(prod.title)
+	var name_s := client_name(c)
+	return {"title": "Bauchgefühl gefragt: „%s“" % title_s,
+		"text": "[i]„Am ersten Drehtag tun alle so, als wüssten sie, was da entsteht. Niemand weiß es.“[/i]\n\n„%s“ mit %s geht in Produktion. Deine Einschätzung: Wird der Film ein Hit (Einspiel ≥ 2× Budget)?\n\nRichtige Prognosen schärfen dein Instinkt (%d/100). Schweigen kostet nichts." % [title_s, name_s, int(state.get("instinct", 20))],
+		"choices": [
+			{"label": "Ja, das wird ein Hit", "fn": func():
+				add_prediction("hit", pid, true, mi() + 30, "„%s“ wird ein Hit" % title_s)
+				return "Notiert. Beim Kinostart sehen wir, ob dein Bauch recht hatte."},
+			{"label": "Nein, eher Flop", "fn": func():
+				add_prediction("hit", pid, false, mi() + 30, "„%s“ wird kein Hit" % title_s)
+				return "Notiert. Beim Kinostart sehen wir, ob dein Bauch recht hatte."},
+			{"label": "Keine Angabe", "fn": func(): return "Du hältst dich bedeckt — nicht jede Premiere braucht eine Wette."},
+		]}
+
+# (b) Signing unter Ruhm 40: „Zukünftiger Star (Ruhm 70 in 8 Jahren)?“
+func star_prediction_event(c: Dictionary) -> Dictionary:
+	var cid := int(c.id)
+	var name_s := client_name(c)
+	return {"title": "Bauchgefühl gefragt: %s" % name_s,
+		"text": "[i]„Aus dem kann mal was werden — oder auch nicht.“[/i]\n\nDu hast %s bei Ruhm %d unter Vertrag genommen. Deine Einschätzung: Erreicht %s innerhalb von 8 Jahren Ruhm 70?\n\nRichtige Prognosen schärfen dein Instinkt (%d/100). Schweigen kostet nichts." % [name_s, roundi(c.fame), name_s, int(state.get("instinct", 20))],
+		"choices": [
+			{"label": "Ja, ein künftiger Star", "fn": func():
+				add_prediction("star", cid, true, mi() + 96, "%s erreicht Ruhm 70" % name_s)
+				return "Notiert. In spätestens acht Jahren wissen wir mehr."},
+			{"label": "Nein, eher nicht", "fn": func():
+				add_prediction("star", cid, false, mi() + 96, "%s bleibt unter Ruhm 70" % name_s)
+				return "Notiert. In spätestens acht Jahren wissen wir mehr."},
+			{"label": "Keine Angabe", "fn": func(): return "Du hältst dich bedeckt."},
+		]}
+
+func pop_pending_star_prediction() -> Variant:
+	if not state.has("pendingStarPrediction"):
+		return null
+	var cid = state.pendingStarPrediction
+	state.erase("pendingStarPrediction")
+	var c = client(cid)
+	return star_prediction_event(c) if c != null else null
+
+# (c) Casting mit 2+ passenden Klienten: „Wer passt besser?“
+func note_betterfit_prediction(chosen_c: Dictionary, alt_c: Dictionary, casting_id: int) -> void:
+	add_prediction("betterfit",
+		{"prodId": casting_id, "chosen": int(chosen_c.id), "other": int(alt_c.id), "otherFame": float(alt_c.fame)},
+		true, mi() + 30, "%s passt besser als %s" % [client_name(chosen_c), client_name(alt_c)])
+
+func _resolve_prediction(pr: Dictionary, correct: bool, label: String) -> void:
+	pr["resolved"] = true
+	pr["correct"] = correct
+	if correct:
+		state.instinct = clampi(int(state.instinct) + 3, 0, 100)
+		state.agency.rep = clampi(int(state.agency.rep) + 1, 0, 100)
+		log_msg("Prognose bewahrheitet: %s — Instinkt +3, Ruf +1." % label, "deal")
+	else:
+		state.instinct = maxi(5, int(state.instinct) - 1)
+		log_msg("Prognose daneben: %s — Instinkt −1." % label, "info")
+
+# Auflösung beim Release (Hit-Wette & „Wer passt besser?“)
+func _resolve_release_predictions(prod: Dictionary, ratio: float, fame_deltas: Dictionary) -> void:
+	for pr in state.get("predictions", []):
+		if pr.get("resolved", false):
+			continue
+		if str(pr.type) == "hit" and int(pr.subject) == int(prod.id):
+			_resolve_prediction(pr, (ratio >= 2.0) == bool(pr.guess), "„%s“ (%s)" % [prod.title, "Hit" if ratio >= 2.0 else "kein Hit"])
+		elif str(pr.type) == "betterfit" and int(pr.subject.get("prodId", -1)) == int(prod.id):
+			var chosen_delta := float(fame_deltas.get(int(pr.subject.get("chosen", -1)), 0.0))
+			var other_c = client(pr.subject.get("other", -1))
+			var other_delta := (float(other_c.fame) - float(pr.subject.get("otherFame", 0.0))) if other_c != null else -99.0
+			_resolve_prediction(pr, (chosen_delta >= other_delta) == bool(pr.guess), str(pr.get("note", "Besetzungs-Prognose")))
+
+# Monatstakt: Star-Prognosen verfallen nach 8 Jahren; Sicherheits-Verfall ohne Strafe
+func tick_predictions(_events: Array) -> void:
+	for pr in state.get("predictions", []):
+		if pr.get("resolved", false):
+			continue
+		match str(pr.type):
+			"star":
+				if mi() >= int(pr.dueMi):
+					var c = client(pr.subject)
+					var fame_now := float(c.fame) if c != null else 0.0
+					_resolve_prediction(pr, (fame_now >= 70.0) == bool(pr.guess), str(pr.get("note", "Star-Prognose")))
+			"hit", "betterfit":
+				if mi() >= int(pr.dueMi) + 12:
+					pr["resolved"] = true
+
+# Instinkt-Wirkung: engere Noten-Spannweite im Talentpool (9 → bis 4)
+func pool_spread() -> float:
+	var base := 9.0 - float(state.get("instinct", 20)) / 100.0 * 5.0
+	base -= float(state.get("scoutBonus", 0))
+	return clampf(base, 2.0, 9.0)
+
+# Bauchgefühl-Hinweis bei hohem Instinkt (ab 55)
+func gut_feeling(casting: Dictionary) -> String:
+	if int(state.get("instinct", 20)) < 55:
+		return ""
+	var base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
+	if base >= 62:
+		return "🧠 Dein Bauchgefühl: eher Hit-Material."
+	if base <= 48:
+		return "🧠 Dein Bauchgefühl: eher Flop-Verdacht."
+	return "🧠 Dein Bauchgefühl: unentschieden."
+
+# ---------- Feature 12: Beziehungschemie ----------
+# Paarweise, deterministisch aus hashs() + gespeicherte gemeinsame Historie.
+func pair_key(a_key: String, b_key: String) -> String:
+	return "%s|%s" % [a_key, b_key] if a_key < b_key else "%s|%s" % [b_key, a_key]
+
+func chemistry(a_key: String, b_key: String) -> Dictionary:
+	var k := pair_key(a_key, b_key)
+	var screen := (hashs(k + "scr") % 21) - 10
+	var personal := (hashs(k + "per") % 21) - 10
+	var hist: Dictionary = state.get("history_pairs", {}).get(k, {})
+	personal = clampi(personal + int(hist.get("p", 0)), -10, 10)
+	return {"screen": screen, "personal": personal}
+
+func note_pair_history(a_key: String, b_key: String, personal_delta: int) -> void:
+	var k := pair_key(a_key, b_key)
+	var hist: Dictionary = state.history_pairs.get(k, {"n": 0, "p": 0})
+	hist["n"] = int(hist.get("n", 0)) + 1
+	hist["p"] = clampi(int(hist.get("p", 0)) + personal_delta, -8, 8)
+	state.history_pairs[k] = hist
+	while state.history_pairs.size() > 120:
+		state.history_pairs.erase(state.history_pairs.keys()[0])
+
+func _person_key_for_role(r: Dictionary) -> String:
+	if r.filled == null:
+		return ""
+	if r.filled.get("clientId") != null:
+		var c = client(r.filled.clientId)
+		return str(c.aid) if c != null else ""
+	return "npc:" + str(r.filled.get("name", "?"))
+
+func _director_key(prod_or_casting: Dictionary) -> String:
+	if prod_or_casting.has("director"):
+		var d = prod_or_casting.director
+		if d is Dictionary:
+			return "dir:" + str(d.get("name", "?"))
+		return "dir:" + str(d)
+	return "dir:" + str(FAVOR_CONTACTS.regisseur[hashs(str(prod_or_casting.get("id", 0))) % FAVOR_CONTACTS.regisseur.size()])
+
+func _director_name_for(casting: Dictionary) -> String:
+	var k := _director_key(casting)
+	return k.substr(4)
+
+func _prod_people_keys(prod: Dictionary, leads_only: bool) -> Array:
+	var keys: Array = []
+	for r in prod.roles:
+		if leads_only and str(r.type) != "lead":
+			continue
+		var k := _person_key_for_role(r)
+		if k != "" and not keys.has(k):
+			keys.append(k)
+	var dir_key := _director_key(prod)
+	if dir_key != "" and not keys.has(dir_key):
+		keys.append(dir_key)
+	return keys
+
+# Leinwandchemie der Leads fließt in die Qualität (±8)
+func lead_chem_quality(prod: Dictionary) -> float:
+	var keys := _prod_people_keys(prod, true).filter(func(k): return not str(k).begins_with("dir:"))
+	var sum := 0.0
+	var n := 0
+	for i in keys.size():
+		for j in range(i + 1, keys.size()):
+			sum += float(chemistry(str(keys[i]), str(keys[j])).screen)
+			n += 1
+	if n == 0:
+		return 0.0
+	return (sum / n) * 0.8
+
+# Regisseur-Klient-Chemie (persönlich) wirkt auf die Qualität (±3)
+func director_chem_quality(prod: Dictionary) -> float:
+	var dk := _director_key(prod)
+	var sum := 0.0
+	var n := 0
+	for r in prod.roles:
+		var k := _person_key_for_role(r)
+		if k == "" or k.begins_with("npc:"):
+			continue
+		sum += float(chemistry(dk, k).personal)
+		n += 1
+	if n == 0:
+		return 0.0
+	return (sum / n) * 0.3
+
+# ---------- Feature 9: Mehrparteien-Verhandlung ----------
+# Bei großen Hauptrollen sitzen Studio, Regisseur, Klient und ggf. ein
+# zweiter Star am Tisch. Zufriedenheits-Scores, Vetos, begrenzte Punkte.
+func needs_table(casting: Dictionary, role: Dictionary) -> bool:
+	return str(role.type) == "lead" and (int(casting.prestige) >= 2 or float(casting.budget) >= float(role.fee) * 10.0)
+
+func start_table() -> Dictionary:
+	var casting: Dictionary = pitch_ctx.casting
+	var role: Dictionary = pitch_ctx.role
+	var c: Dictionary = pitch_ctx.client
+	var dir_name := _director_name_for(casting)
+	var chem_dir := chemistry("dir:" + dir_name, str(c.aid))
+	var dna_v := dna_fit(c, casting.genre, studio_style(str(casting.studioId)))
+	table = {
+		"castingId": int(casting.id), "roleIdx": int(pitch_ctx.roleIdx), "clientId": int(c.id),
+		"fee": int(pitch_ctx.fee), "billing": 1, "clauses": [], "points": 3,
+		"favorUsed": false, "chemUsed": false, "done": false,
+		"parties": {
+			"studio": {"name": _studio(str(casting.studioId)).name, "sat": 55.0, "veto": 20.0, "demand": "will die Gage drücken"},
+			"director": {"name": dir_name, "sat": clampf(45.0 + float(chem_dir.personal) * 2.0 + dna_v, 5.0, 90.0), "veto": 25.0, "demand": "hat eine eigene Besetzungsidee"},
+			"client": {"name": client_name(c), "sat": clampf(48.0 + float(actor_by_id[c.aid].ego) * 0.1, 5.0, 90.0), "veto": 20.0, "demand": "will erste Nennung & Klauseln"},
+		},
+	}
+	# Bereits besetzter anderer Star will die erste Nennung
+	for r in casting.roles:
+		if str(r.type) == "lead" and r != role and r.filled != null:
+			var sname := ""
+			if r.filled.get("clientId") != null:
+				var oc = client(r.filled.clientId)
+				if oc != null:
+					sname = client_name(oc)
+			else:
+				sname = str(r.filled.get("name", ""))
+			if sname != "":
+				table.parties["star"] = {"name": sname, "sat": 42.0, "veto": 25.0, "demand": "will die erste Nennung im Vorspann"}
+	return table
+
+func _sat(party: String, delta: float) -> void:
+	if not table.parties.has(party):
+		return
+	table.parties[party]["sat"] = clampf(float(table.parties[party].sat) + delta, 0.0, 100.0)
+
+func table_concede(action: String, target: String = "") -> Dictionary:
+	if table == null or table.get("done", false):
+		return {"ok": false, "msg": "Kein Verhandlungstisch."}
+	if action == "use_favor":
+		if bool(table.favorUsed):
+			return {"ok": false, "msg": "Der Gefallen ist bereits eingesetzt."}
+		if state.favors.is_empty():
+			return {"ok": false, "msg": "Kein Gefallen verfügbar."}
+	elif action == "chem_argument":
+		if bool(table.chemUsed):
+			return {"ok": false, "msg": "Das Argument ist verbraucht."}
+	elif int(table.points) < 1:
+		return {"ok": false, "msg": "Keine Zugeständnisse mehr übrig."}
+	match action:
+		"fee_down":
+			table.fee = roundi(float(table.fee) * 0.9)
+			_sat("studio", 18.0)
+			_sat("client", -12.0)
+		"fee_up":
+			table.fee = roundi(float(table.fee) * 1.1)
+			_sat("client", 15.0)
+			_sat("studio", -15.0)
+		"billing_first":
+			table.billing = 1
+			_sat("client", 12.0)
+			_sat("star", -22.0)
+		"billing_second":
+			table.billing = 2
+			_sat("star", 20.0)
+			_sat("client", -10.0)
+		"clause":
+			if target == "" or table.clauses.has(target):
+				return {"ok": false, "msg": "Diese Klausel liegt bereits am Tisch."}
+			table.clauses.append(target)
+			_sat("client", 10.0)
+			_sat("studio", -8.0)
+		"use_favor":
+			consume_any_favor()
+			table["favorUsed"] = true
+			_sat(target, 20.0)
+		"chem_argument":
+			table["chemUsed"] = true
+			var c = client(table.clientId)
+			var casting = _casting(table.castingId)
+			if c != null and casting != null:
+				var ch := chemistry("dir:" + str(table.parties.director.name), str(c.aid))
+				var dv := dna_fit(c, casting.genre, studio_style(str(casting.studioId)))
+				_sat("director", 25.0 if (int(ch.personal) >= 0 or dv >= 3.0) else 5.0)
+	if ["fee_down", "fee_up", "billing_first", "billing_second", "clause"].has(action):
+		table["points"] = int(table.points) - 1
+	return {"ok": true}
+
+# Abschluss nur, wenn keine Partei unter ihrer Veto-Schwelle ist.
+func close_table() -> Dictionary:
+	if table == null:
+		return {"success": false, "msg": "Kein Verhandlungstisch."}
+	var veto_party := ""
+	for pk in table.parties:
+		if float(table.parties[pk].sat) < float(table.parties[pk].veto):
+			veto_party = pk
+			break
+	if veto_party == "":
+		var casting = _casting(table.castingId)
+		if casting == null:
+			table.done = true
+			return {"success": false, "msg": "Das Projekt ist nicht mehr aktuell."}
+		close_deal(float(table.fee), " (Mehrparteien-Deal)", table.clauses, int(table.billing))
+		table.done = true
+		return {"success": true}
+	table.done = true
+	# Rückwege: Nebenrolle, anderer Klient oder Rückzug ohne Zusatzschaden
+	var fallbacks: Array = []
+	var casting2 = _casting(table.castingId)
+	if casting2 != null:
+		for i in casting2.roles.size():
+			var r: Dictionary = casting2.roles[i]
+			if str(r.type) == "support" and r.filled == null:
+				fallbacks.append({"kind": "support", "roleIdx": i})
+		fallbacks.append({"kind": "other"})
+	fallbacks.append({"kind": "withdraw"})
+	return {"success": false, "veto": veto_party, "fallbacks": fallbacks}
+
+# Trostpreis: dieselbe Klient:in in einer Nebenrolle (kein Zusatzschaden)
+func table_support_fallback(role_idx: int) -> Dictionary:
+	var casting = _casting(table.castingId)
+	if casting == null or role_idx >= casting.roles.size():
+		return {"ok": false}
+	var role: Dictionary = casting.roles[role_idx]
+	var c = client(table.clientId)
+	if c == null:
+		return {"ok": false}
+	pitch_ctx = {"casting": casting, "roleIdx": role_idx, "role": role, "client": c, "fee": role_fee_for(casting, role, c), "haggled": true, "alts": []}
+	close_deal(float(pitch_ctx.fee), " (Trostpreis: Nebenrolle)", [], 1)
+	return {"ok": true}
+
+func table_withdraw() -> void:
+	pitch_ctx = null
+
+# ---------- Feature 13: Produktionssignale ----------
+const SIGNAL_GOOD = ["Begeisterte Set-Berichte", "Testvorführung überrascht positiv", "Die Chemie am Set stimmt", "Dailies begeistern das Studio"]
+const SIGNAL_BAD = ["Schlechte Dailies", "Kostenüberschreitung", "Gerüchte über Nachdrehs", "Spannungen am Set"]
+
+# Versteckte Qualitätsbasis + Signal-Container anlegen
+func _init_production_uncertainty(prod: Dictionary) -> void:
+	var script_base := 35.0 + int(prod.prestige) * 8.0 + float(hashs(str(prod.id) + "scr") % 21)
+	var tq := script_base * 0.45
+	var tn := 0.0
+	var nn := 0
+	for role in prod.roles:
+		if role.filled == null:
+			continue
+		var cc = client(role.filled.get("clientId")) if role.filled.get("clientId") != null else null
+		tn += eff_talent(cc) if cc != null else float(role.filled.get("talent", 50.0))
+		nn += 1
+	if nn > 0:
+		tq += (tn / nn) * 0.5
+	prod["trueQ"] = tq + float(prod.get("qualityMod", 0.0))
+	if not prod.has("signals"):
+		prod["signals"] = []
+	if not prod.has("reactions"):
+		prod["reactions"] = {}
+
+func ensure_prod_fields(prod: Dictionary) -> void:
+	if not prod.has("signals"):
+		prod["signals"] = []
+	if not prod.has("reactions"):
+		prod["reactions"] = {}
+	if not prod.has("trueQ"):
+		prod["trueQ"] = 50.0
+
+# Monatliche, UNZUVERLÄSSIGE Signale aus laufenden Produktionen
+func _tick_signals(_events: Array, force: bool = false) -> void:
+	var accuracy := 0.7 + float(state.get("instinct", 20)) / 500.0
+	for prod in state.productions:
+		ensure_prod_fields(prod)
+		var has_client := false
+		for r in prod.roles:
+			if r.filled != null and r.filled.get("clientId") != null and client(r.filled.clientId) != null:
+				has_client = true
+		if not has_client:
+			continue
+		# Schlechte persönliche Chemie erhöht Set-Reibung (Feature 12)
+		var keys := _prod_people_keys(prod, false)
+		for i in keys.size():
+			for j in range(i + 1, keys.size()):
+				if int(chemistry(str(keys[i]), str(keys[j])).personal) <= -5 and chance(0.22):
+					prod.qualityMod = float(prod.get("qualityMod", 0.0)) - 1.0
+					for r2 in prod.roles:
+						if r2.filled != null and r2.filled.get("clientId") != null:
+							var cc2 = client(r2.filled.clientId)
+							if cc2 != null:
+								cc2.exhaustion = clampf(cc2.exhaustion + 6.0, 0.0, 100.0)
+					log_msg("Spannungen am Set von „%s“ — der Dreh leidet unter persönlichen Animositäten." % prod.title, "bad")
+		if not force and not chance(0.75):
+			continue
+		var good_actual := float(prod.trueQ) >= 55.0
+		var positive := good_actual == chance(accuracy)
+		prod.signals.append({"t": str(pick(SIGNAL_GOOD if positive else SIGNAL_BAD)), "pos": positive, "mi": mi()})
+		while prod.signals.size() > 4:
+			prod.signals.pop_front()
+
+func _production(pid) -> Variant:
+	for prod in state.productions:
+		if int(prod.id) == int(pid):
+			return prod
+	return null
+
+func latest_signal_pos(prod: Dictionary) -> bool:
+	ensure_prod_fields(prod)
+	if prod.signals.is_empty():
+		return true
+	return bool(prod.signals[prod.signals.size() - 1].get("pos", true))
+
+# Reaktion 1: Nachverhandeln (bei guten Signalen) — 1× pro Film
+func prod_renegotiate(prod_id: int) -> String:
+	var prod = _production(prod_id)
+	if prod == null:
+		return "Diese Produktion gibt es nicht mehr."
+	ensure_prod_fields(prod)
+	if bool(prod.reactions.get("reneg", false)):
+		return "Bereits nachverhandelt — ein zweites Mal platzt der Rahmen."
+	prod.reactions["reneg"] = true
+	var p := 0.55 + float(state.studioRel[prod.studioId]) / 300.0
+	if chance(p):
+		var gained := 0
+		for r in prod.roles:
+			if r.filled != null and r.filled.get("clientId") != null:
+				var c = client(r.filled.clientId)
+				if c != null:
+					var extra := roundi(float(r.filled.get("fee", 0)) * 0.2 * float(c.commission) / 100.0)
+					r.filled["fee"] = roundi(float(r.filled.get("fee", 0)) * 1.2)
+					gained += extra
+		if gained > 0:
+			book(float(gained), "provision", "Nachverhandlung bei guten Set-Signalen („%s“)" % prod.title)
+		return "Das Studio gibt nach: +20 %% Gage auf die laufenden Verträge (%s sofort). Die Hit-Gerüchte wollen belohnt werden." % fmt_money(gained)
+	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) - 5, 0, 100)
+	return "Das Studio blockt: „Der Vertrag steht.“ Die Beziehung kühlt sich spürbar ab."
+
+# Reaktion 2: Klienten rausziehen (bei schlechten Signalen) — 1× pro Film
+func prod_pull_client(prod_id: int) -> String:
+	var prod = _production(prod_id)
+	if prod == null:
+		return "Diese Produktion gibt es nicht mehr."
+	ensure_prod_fields(prod)
+	if bool(prod.reactions.get("pull", false)):
+		return "Bereits erledigt — ein zweiter Rückzug zerstört den Film."
+	var target = null
+	var target_role = null
+	for r in prod.roles:
+		if r.filled != null and r.filled.get("clientId") != null:
+			var cc = client(r.filled.clientId)
+			if cc != null:
+				target = cc
+				target_role = r
+				break
+	if target == null:
+		return "Kein eigener Klient an Bord."
+	prod.reactions["pull"] = true
+	var sev := roundi(float(target_role.filled.get("fee", 0)) * 0.3)
+	book(-float(sev), "abfindung", "Vertragsausstieg: %s („%s“)" % [client_name(target), prod.title])
+	target.busyUntil = mi()
+	target.exhaustion = clampf(target.exhaustion - 20.0, 0.0, 100.0)
+	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) - 8, 0, 100)
+	target_role.filled = {"npc": true, "name": "Ersatzbesetzung", "talent": 55, "fame": 30}
+	log_msg("%s steigt bei „%s“ aus — Abfindung %s, das Studio ist verärgert." % [client_name(target), prod.title, fmt_money(sev)], "bad")
+	return "%s ist raus. Abfindung %s gezahlt, der Ruhm bleibt unangetastet — aber %s wird sich das merken." % [client_name(target), fmt_money(sev), _studio(str(prod.studioId)).name]
+
+# Reaktion 3: Beteiligung fordern (Wette auf Erfolg) — 1× pro Film
+func prod_demand_share(prod_id: int) -> String:
+	var prod = _production(prod_id)
+	if prod == null:
+		return "Diese Produktion gibt es nicht mehr."
+	ensure_prod_fields(prod)
+	if bool(prod.reactions.get("share", false)):
+		return "Die Beteiligung ist bereits verhandelt."
+	prod.reactions["share"] = true
+	var changed := false
+	for r in prod.roles:
+		if r.filled != null and r.filled.get("clientId") != null:
+			var cl = client(r.filled.clientId)
+			if cl != null:
+				var cls: Array = r.filled.get("clauses", [])
+				if not cls.has("profitShare"):
+					cls.append("profitShare")
+				r.filled["clauses"] = cls
+				r.filled["fee"] = roundi(float(r.filled.get("fee", 0)) * 0.7)
+				changed = true
+	if not changed:
+		return "Kein eigener Klient an Bord."
+	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) - 3, 0, 100)
+	return "Wette auf den Erfolg: 30 % der Gage wandern in eine Gewinnbeteiligung. Wird der Film ein Hit, klingelt die Kasse doppelt."
+
+# ---------- Weekly Planner ----------
+const PLANNER_CLIENT = {
+	"erholung": {"de": "Erholung", "icon": "🌴", "desc": "Erschöpfung −12"},
+	"pr": {"de": "PR-Termin", "icon": "📸", "desc": "Heat +1,5, kleine Kosten"},
+	"training": {"de": "Training", "icon": "🎭", "desc": "Talent wächst langsam"},
+	"gala": {"de": "Gala", "icon": "🥂", "desc": "Chance auf Gefallen & Kontakte"},
+	"vorbereitung": {"de": "Vorbereitung", "icon": "📖", "desc": "Nächster Pitch: Passung +8 (einmalig)"},
+}
+const PLANNER_PLAYER = {
+	"scouting": {"de": "Scouting", "icon": "🔭", "desc": "Talentpool-Einschätzung wird genauer"},
+	"dinner": {"de": "Studio-Dinner", "icon": "🍽", "desc": "Beziehung +4 beim Wahlstudio"},
+	"pflege": {"de": "Klientenpflege", "icon": "🤝", "desc": "Vertrauen +3 beim Wahlklienten"},
+	"presse": {"de": "Pressearbeit", "icon": "🗞", "desc": "Gerücht-Früherkennung"},
+	"buecher": {"de": "Bücher prüfen", "icon": "🧾", "desc": "Bürokosten des Monats −10 %"},
+}
+
+func ensure_planner() -> void:
+	if not state.has("planner"):
+		state["planner"] = {"player": [null, null, null, null], "clients": {}}
+	if not state.planner.has("player"):
+		state.planner["player"] = [null, null, null, null]
+	if not state.planner.has("clients"):
+		state.planner["clients"] = {}
+	while state.planner.player.size() < 4:
+		state.planner.player.append(null)
+	var clients: Dictionary = state.planner.clients
+	for c in state.clients:
+		var key := str(int(c.id))
+		if not clients.has(key):
+			clients[key] = [null, null, null, null]
+	for key in clients.keys().duplicate():
+		if client(key) == null:
+			clients.erase(key)
+
+func _planner_has(action: String) -> bool:
+	if not state.has("planner") or not state.planner.has("player"):
+		return false
+	for s in state.planner.player:
+		if s != null and str(s.get("a", "")) == action:
+			return true
+	return false
+
+func planner_slot_set(who: String, cid: int, week: int, action, target = null) -> void:
+	ensure_planner()
+	var slot = null
+	if action != null:
+		slot = {"a": str(action)}
+		if target != null:
+			slot["t"] = str(target)
+	if who == "player":
+		state.planner.player[week] = slot
+	else:
+		var key := str(cid)
+		if not state.planner.clients.has(key):
+			state.planner.clients[key] = [null, null, null, null]
+		state.planner.clients[key][week] = slot
+
+# Auswertung in end_month VOR den Ereignissen
+func _apply_planner(events: Array) -> void:
+	ensure_planner()
+	state["scoutBonus"] = 0
+	for s in state.planner.player:
+		if s == null:
+			continue
+		match str(s.get("a", "")):
+			"scouting":
+				state["scoutBonus"] = int(state.scoutBonus) + 1
+			"dinner":
+				var sid := str(s.get("t", ""))
+				if sid != "" and state.studioRel.has(sid):
+					state.studioRel[sid] = clampi(int(state.studioRel[sid]) + 4, 0, 100)
+					log_msg("Studio-Dinner: Die Beziehung zu %s vertieft sich (+4)." % _studio(sid).name, "deal")
+			"pflege":
+				var pc = client(s.get("t", ""))
+				if pc != null:
+					change_trust(pc, 3.0)
+			"presse":
+				_planner_presse()
+			"buecher":
+				pass  # wird bei den Fixkosten berücksichtigt
+	for c in state.clients:
+		if not is_free(c):
+			continue  # Dreh-Wochen sind automatisch belegt
+		var slots: Array = state.planner.clients.get(str(int(c.id)), [null, null, null, null])
+		for s in slots:
+			# Default-Autoplanung: Erholung bei Erschöpfung > 50, sonst PR
+			var action := "erholung" if float(c.exhaustion) > 50.0 else "pr"
+			if s != null:
+				action = str(s.get("a", action))
+			_planner_client_effect(c, action)
+
+func _planner_client_effect(c: Dictionary, action: String) -> void:
+	match action:
+		"erholung":
+			c.exhaustion = clampf(c.exhaustion - 12.0, 0.0, 100.0)
+		"pr":
+			c.heat = clampf(c.heat + 1.5, -10.0, 10.0)
+			book(-float(roundi(400.0 * infl(state.year))), "pr_recht", "PR-Termin: %s" % client_name(c))
+		"training":
+			c.talentBonus = minf(10.0, float(c.get("talentBonus", 0.0)) + 0.3)
+		"gala":
+			book(-float(roundi(400.0 * infl(state.year))), "events", "Gala-Besuch: %s" % client_name(c))
+			if chance(0.3):
+				var kind_s: String = pick(["galaInvite", "extraAudition", "billing"])
+				grant_favor(kind_s, favor_contact_for(kind_s))
+			else:
+				c.heat = clampf(c.heat + 1.0, -10.0, 10.0)
+		"vorbereitung":
+			c.flags["prepFit"] = 8.0
+
+func _planner_presse() -> void:
+	# Gerücht-Früherkennung: das jüngste unbekannte Gerücht kommt auf den Tisch
+	for rumor in state.get("rumors", []):
+		if not rumor.get("knownToPlayer", false):
+			rumor["knownToPlayer"] = true
+			log_msg("Pressearbeit: Deine Leute hören früh, was über %s kursiert." % rumor_subject_name(rumor), "info")
+			return
+	# Nichts Neues: das stärkste bekannte Gerücht verliert etwas Zugkraft
+	var worst = null
+	for rumor in state.get("rumors", []):
+		if worst == null or float(rumor.belief) > float(worst.belief):
+			worst = rumor
+	if worst != null:
+		worst.belief = maxf(0.0, float(worst.belief) - 5.0)

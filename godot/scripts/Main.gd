@@ -61,6 +61,7 @@ var modal_queue: Array = []
 var modal_open := false
 var pool_filter := ""
 var nego_form: Dictionary = {}
+var _offer_clauses: Array = []
 var _nego_widgets: Dictionary = {}
 var font_scale := 1.0
 var _resize_timer: Timer
@@ -98,7 +99,7 @@ func _ready() -> void:
 		Game.start_negotiation("monroe")
 		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": ["assistant", "pr"], "promise": "lead12"})
 		var c = Game.state.clients[0]
-		c.dna = {"romantik": 62.0, "popular": 45.0, "verlass": -20.0, "unikat": 12.0, "familie": 30.0}
+		c.dna = {"romantik": 62.0, "popular": 45.0, "verlass": -20.0, "unikat": 12.0, "familie": -35.0}
 		c.films.push_front({"title": "Gilda", "year": 1950, "verdict": "Hit", "quality": 71, "lead": true})
 		_switch_tab("klienten")
 		await _take_shot("client")
@@ -175,6 +176,62 @@ func _ready() -> void:
 			Game.end_month()
 		_switch_tab("finanzen")
 		await _take_shot("finanzen")
+	elif args.has("--shot-power"):
+		_on_era_selected(1980)
+		Game.state.agency.rep = 100
+		Game.start_negotiation("eastwood")
+		Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
+		var power_client: Dictionary = Game.state.clients[0]
+		power_client.fame = 85.0
+		Game.become_power_figure(int(power_client.id), "director", true)
+		Game.assign_power_figure_to_casting(Game.state.castings[0], true)
+		_switch_tab("buero")
+		await _take_shot("power")
+	elif args.has("--shot-planner"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": ["assistant"], "promise": null})
+		Game.start_negotiation("brando")
+		Game.sign_client({"commission": 12, "bonus": 0, "years": 3, "perks": [], "promise": null})
+		Game.ensure_planner()
+		Game.planner_slot_set("player", 0, 0, "scouting")
+		Game.planner_slot_set("player", 0, 1, "dinner", Game.active_studios()[0].id)
+		Game.planner_slot_set("client", int(Game.state.clients[0].id), 0, "pr")
+		Game.planner_slot_set("client", int(Game.state.clients[1].id), 1, "training")
+		_switch_tab("planer")
+		await _take_shot("planer")
+	elif args.has("--shot-verhandlung"):
+		_on_era_selected(1950)
+		Game.state.agency.rep = 80
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var table_client: Dictionary = Game.state.clients[0]
+		table_client.fame = 70.0
+		var table_done := false
+		for cs in Game.state.castings:
+			if table_done:
+				break
+			for ri in cs.roles.size():
+				var role: Dictionary = cs.roles[ri]
+				if role.filled == null and str(role.type) == "lead" and int(cs.prestige) >= 2:
+					role.minFame = 10
+					role.ageMin = 18
+					role.ageMax = 60
+					for attempt in 14:
+						var pres = Game.submit_pitch(int(cs.id), ri, int(table_client.id))
+						if pres.get("success", false):
+							table_done = true
+							break
+					if table_done:
+						break
+			if table_done:
+				break
+		if Game.pitch_ctx != null and Game.pitch_ctx.get("table", false):
+			Game.start_table()
+			_render_table("")
+		else:
+			_switch_tab("castings")
+		await _take_shot("verhandlung")
 
 func _take_shot(name_s: String) -> void:
 	await get_tree().create_timer(1.2).timeout
@@ -459,7 +516,7 @@ func _build_game_ui() -> void:
 	era_chip = _lbl("", 12, GOLD)
 	era_chip.autowrap_mode = TextServer.AUTOWRAP_OFF
 	hb.add_child(era_chip)
-	for key in [["date", "📅 Datum"], ["cash", "💰 Kapital"], ["rep", "⭐ Ruf"], ["network", "🤝 Gefallen"], ["market", "📈 Markt"], ["clients", "👥 Klienten"]]:
+	for key in [["date", "📅 Datum"], ["cash", "💰 Kapital"], ["rep", "⭐ Ruf"], ["network", "🤝 Gefallen"], ["market", "📈 Markt"], ["clients", "👥 Klienten"], ["instinct", "🧠 Instinkt"]]:
 		var sv := VBoxContainer.new()
 		sv.add_theme_constant_override("separation", 0)
 		var cap := _lbl(key[1], 10, DIM)
@@ -565,13 +622,15 @@ func render() -> void:
 	header_stats.market.text = "%d %%%s" % [roundi(st.market * 100.0), "  ⚠" if int(st.strikeMonths) > 0 else ""]
 	header_stats.market.add_theme_color_override("font_color", RED if st.market < 0.85 or int(st.strikeMonths) > 0 else (GREEN if st.market > 1.1 else TEXT_C))
 	header_stats.clients.text = str(st.clients.size())
+	header_stats.instinct.text = "%d/100" % int(st.get("instinct", 20))
+	header_stats.instinct.add_theme_color_override("font_color", GREEN if int(st.get("instinct", 20)) >= 55 else TEXT_C)
 	header_stats.next.disabled = st.over
 	side_scroll.custom_minimum_size = Vector2(_sidebar_w(), 0)
 
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
 	var tabs := [["buero", "🏢 Agentur"], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
-		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.size()], ["filme", "🎞 Filme"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
+		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.size()], ["filme", "🎞 Filme"], ["planer", "🗓 Planer"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
 
@@ -584,6 +643,7 @@ func render() -> void:
 		"pool": _render_pool()
 		"castings": _render_castings()
 		"filme": _render_filme()
+		"planer": _render_planer()
 		"finanzen": _render_finanzen()
 		"chronik": _render_chronik()
 	_render_sidebar()
@@ -618,6 +678,18 @@ func _render_sidebar() -> void:
 		any = true
 	if not any:
 		cv[1].add_child(_lbl("Nichts in Arbeit. Zeit für Akquise.", 12, DIM))
+	# Set-Signale laufender Produktionen (Feature 13) — unzuverlässig, aber laut
+	var sig_lines: Array = []
+	for p in st.productions:
+		for sig in p.get("signals", []):
+			var sig_icon := "🟢" if bool(sig.get("pos", true)) else "🔴"
+			sig_lines.append([int(sig.get("mi", 0)), "%s „%s“: %s" % [sig_icon, p.title, str(sig.get("t", ""))]])
+	if sig_lines.size():
+		sig_lines.sort_custom(func(a, b): return a[0] > b[0])
+		var sv = _card("Set-Signale (Gerüchteküche)", "📡")
+		sidebar_box.add_child(sv[0])
+		for sl in sig_lines.slice(0, 5):
+			sv[1].add_child(_lbl(str(sl[1]), 12, GREEN if str(sl[1]).begins_with("🟢") else RED))
 	var deadlines: Array = []
 	for c in st.clients:
 		for pr in c.promises:
@@ -746,6 +818,31 @@ func _render_buero() -> void:
 		cr[1].add_child(rr)
 		cr[1].add_child(_lbl("Verhältnis %+d · Groll %d/100%s" % [roundi(float(rival.rel)), roundi(float(rival.grudge)), (" · Hausstudio: " + Game._studio(str(rival.studioId)).name) if str(rival.get("studioId", "")) != "" else ""], 11, RED if float(rival.grudge) >= 60.0 else DIM))
 
+	var cp = _card("Machtfiguren", "🎬")
+	grid.add_child(cp[0])
+	if st.powerFigures.is_empty():
+		cp[1].add_child(_lbl("Noch führt keiner deiner Stars Regie oder Produktion.", 12, DIM))
+	for figure in st.powerFigures:
+		var role_label := "Regie" if str(figure.role) == "director" else "Produktion"
+		var figure_rival = Game.rival_by_id(str(figure.rivalId))
+		var allegiance := "deinem Haus verbunden" if bool(figure.agencyFriendly) else ("bei %s" % figure_rival.name if figure_rival != null else "unabhängig")
+		cp[1].add_child(_lbl("🎥 %s · %s · %d Credits · %s" % [figure.name, role_label, int(figure.credits), allegiance], 12, GREEN if bool(figure.agencyFriendly) else RED))
+
+	# Instinkt & Prognosen (Feature 6): wächst nur durch richtige Vorhersagen
+	var ci2 = _card("Instinkt %d/100" % int(st.get("instinct", 20)), "🧠")
+	grid.add_child(ci2[0])
+	ci2[1].add_child(_bar(float(st.get("instinct", 20)), GREEN if int(st.get("instinct", 20)) >= 55 else ACC_DIM))
+	ci2[1].add_child(_lbl("Wächst nur durch richtige Prognosen. Schärft Talentpool-Noten (Spannweite ±%d), Drehbuch-Einsichten und Bauchgefühle." % roundi(Game.pool_spread()), 12, DIM))
+	var open_preds: Array = st.get("predictions", []).filter(func(pr): return not pr.get("resolved", false))
+	var done_preds: Array = st.get("predictions", []).filter(func(pr): return pr.get("resolved", false))
+	var hits := done_preds.filter(func(pr): return pr.get("correct", false)).size()
+	if done_preds.size():
+		ci2[1].add_child(_lbl("Bilanz: %d/%d richtig" % [hits, done_preds.size()], 13, GREEN if hits * 2 >= done_preds.size() else AMBER))
+	if open_preds.is_empty():
+		ci2[1].add_child(_lbl("Keine offenen Prognosen. Drehbeginne und Signings fragen dein Bauchgefühl.", 12, DIM))
+	for pr in open_preds.slice(0, 5):
+		ci2[1].add_child(_lbl("🔮 %s — Auflösung ~%s" % [str(pr.get("note", "Prognose")), Game.mi_str(int(pr.get("dueMi", 0)))], 12, ACC))
+
 # ---------- Tab: Klienten (inkl. Karriere-DNA & Dossier) ----------
 func _render_klienten() -> void:
 	var st = Game.state
@@ -774,6 +871,8 @@ func _render_klienten() -> void:
 			chips.append(_chip("🎭 Typecast", AMBER))
 		if c.flags.get("tvIncome") != null and int(c.flags.tvIncome.months) > 0:
 			chips.append(_chip("📺 TV-Serie: %d Mon." % int(c.flags.tvIncome.months), BLUE))
+		if str(c.flags.get("powerFigure", "")) != "":
+			chips.append(_chip("🎬 Machtfigur: %s" % ("Regie" if str(c.flags.powerFigure) == "director" else "Produktion"), GOLD))
 		chips.append(_chip("📈 Aufsteigend", GREEN) if st.year < a.peak else _chip("📉 Nach dem Zenit", DIM))
 		box.add_child(_chip_row(chips))
 		box.add_child(_lbl("%d J. · %s" % [Game.age_of(a, st.year), " · ".join(a.genres.map(_genre_de))], 12, DIM))
@@ -983,7 +1082,7 @@ func _open_negotiation(actor_id: String) -> void:
 		var rival_note := (" Der bestehende Vertrag bei %s erhöht die Hürde." % n.rivalName) if str(n.get("rivalName", "")) != "" else ""
 		_show_simple_modal("Kein Termin", "[i]„%s lässt ausrichten: Man kennt Ihre Agentur nicht.“[/i]\n\nStars dieses Kalibers (Ruhm %d) verhandeln erst mit Agenturen ab Ruf %d (aktuell: %d).%s" % [n.actor.name, n.fame, n.reqRep, int(Game.state.agency.rep), rival_note])
 		return
-	nego_form = {"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null}
+	nego_form = {"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null, "clauses": []}
 	_render_negotiation("")
 
 func _render_negotiation(hint: String) -> void:
@@ -1055,6 +1154,25 @@ func _render_negotiation(hint: String) -> void:
 			_update_mood())
 		right.add_child(cb)
 
+	right.add_child(_lbl("📑 Vertragsklauseln (lösen später Ereignisse aus):", 13))
+	for clk in Game.CLAUSES:
+		if not Game.clause_available(clk):
+			continue
+		var clause: Dictionary = Game.CLAUSES[clk]
+		var ccb := CheckBox.new()
+		ccb.text = clause.de
+		ccb.tooltip_text = clause.desc
+		ccb.button_pressed = nego_form.clauses.has(clk)
+		ccb.toggled.connect(func(on):
+			if on and not nego_form.clauses.has(clk):
+				nego_form.clauses.append(clk)
+			elif not on:
+				nego_form.clauses.erase(clk)
+			_update_mood())
+		right.add_child(ccb)
+	if int(Game.state.year) < 1995:
+		right.add_child(_lbl("Abbild-Rechte werden erst ab 1995 verhandelbar.", 11, DIM))
+
 	var mood := _lbl("", 14, ACC)
 	mood.name = "MoodLabel"
 	modal_box.add_child(mood)
@@ -1085,7 +1203,7 @@ func _update_mood() -> void:
 	_nego_widgets.mood.add_theme_color_override("font_color", GREEN if ml[1] == "pos" else (RED if ml[1] == "neg" else ACC))
 
 func _offer() -> Dictionary:
-	return {"commission": nego_form.commission, "bonus": nego_form.bonus, "years": nego_form.years, "perks": nego_form.perks.duplicate(), "promise": nego_form.promise}
+	return {"commission": nego_form.commission, "bonus": nego_form.bonus, "years": nego_form.years, "perks": nego_form.perks.duplicate(), "promise": nego_form.promise, "clauses": nego_form.get("clauses", []).duplicate()}
 
 func _submit_offer() -> void:
 	var offer := _offer()
@@ -1109,8 +1227,13 @@ func _accept_counter() -> void:
 func _show_signed(terms: Dictionary) -> void:
 	var a: Dictionary = Game.nego.actor
 	var perks_s: String = (", Perks: " + ", ".join(terms.perks.map(func(p): return Game.PERKS[p].de))) if terms.perks.size() else ""
+	var clause_s: String = ("\n\n📑 Vereinbarte Klauseln: " + ", ".join(terms.get("clauses", []).map(func(cl): return Game.clause_label(str(cl))))) if terms.get("clauses", []).size() else ""
 	var prom_s: String = ("\n\n📜 Dein Versprechen (%s) wurde protokolliert." % Game.PROMISES[terms.promise].label) if terms.get("promise") != null else ""
-	_show_simple_modal("Vertrag unterschrieben!", "[i]„Also gut. Machen Sie mich unsterblich.“[/i]\n\n%s ist jetzt Klient — %d %% Provision, %d Jahre%s%s.%s" % [a.name, int(terms.commission), int(terms.years), (", %s Bonus" % Game.fmt_money(terms.bonus)) if terms.bonus > 0 else "", perks_s, prom_s])
+	_show_simple_modal("Vertrag unterschrieben!", "[i]„Also gut. Machen Sie mich unsterblich.“[/i]\n\n%s ist jetzt Klient — %d %% Provision, %d Jahre%s%s.%s%s" % [a.name, int(terms.commission), int(terms.years), (", %s Bonus" % Game.fmt_money(terms.bonus)) if terms.bonus > 0 else "", perks_s, clause_s, prom_s])
+	# Star-Prognose (Feature 6b): beim Signing unter Ruhm 40 das Bauchgefühl befragen
+	var pev = Game.pop_pending_star_prediction()
+	if pev != null:
+		modal_queue.append(pev)
 
 # ---------- Tab: Castings ----------
 func _render_castings() -> void:
@@ -1140,6 +1263,10 @@ func _render_castings() -> void:
 			_chip("🏛 Beziehung %d" % int(rel), GREEN if rel >= 60 else (RED if rel < 30 else DIM)),
 		]))
 		box.add_child(_lbl("%s · Budget %s" % [studio.name, Game.fmt_money(cs.budget)], 12, DIM))
+		if cs.has("director"):
+			box.add_child(_lbl("🎬 Regie: %s%s" % [cs.director.name, " · bevorzugt deine Agentur" if bool(cs.director.agencyFriendly) else " · aus einem Rivalenhaus"], 12, GREEN if bool(cs.director.agencyFriendly) else RED))
+		if cs.has("producer"):
+			box.add_child(_lbl("💼 Produktion: %s%s" % [cs.producer.name, " · bevorzugt deine Agentur" if bool(cs.producer.agencyFriendly) else " · aus einem Rivalenhaus"], 12, GREEN if bool(cs.producer.agencyFriendly) else RED))
 		for i in cs.roles.size():
 			var r: Dictionary = cs.roles[i]
 			var row := HBoxContainer.new()
@@ -1168,6 +1295,17 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 	_open_modal()
 	modal_box.add_child(_lbl("🎬 Pitch: „%s“" % cs.title, 22, ACC))
 	modal_box.add_child(_lbl("%s · ab ⭐ %d · Basis-Gage ca. %s" % ["🎯 Hauptrolle" if role.type == "lead" else "▫ Nebenrolle", int(role.minFame), Game.fmt_money(role.fee)], 12, DIM))
+	# Bauchgefühl bei hohem Instinkt (Feature 6)
+	var gf: String = Game.gut_feeling(cs)
+	if gf != "":
+		modal_box.add_child(_lbl(gf, 13, ACC))
+	# Chemie-Partner am Set (Feature 12): bereits besetzte Rollen
+	var partner_keys: Array = []
+	for r2 in cs.roles:
+		if r2.filled != null:
+			var pk2: String = Game._person_key_for_role(r2)
+			if pk2 != "" and not partner_keys.has(pk2):
+				partner_keys.append(pk2)
 	if insight >= 0:
 		modal_box.add_child(_lbl("🔍 Drehbuch-Einsicht (Gefallen): Qualitätsbasis ca. %d/100 — Prestige plus Drehbuch-Roll, bevor Besetzung und Markt wirken." % insight, 13, ACC))
 	if options.is_empty():
@@ -1179,7 +1317,14 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 			modal_box.add_child(row)
 			var ficon := "🟢" if e.fit >= 60 else ("🟡" if e.fit >= 35 else "🔴")
 			var dicon := "🧬↑" if e.dna >= 3 else ("🧬↓" if e.dna <= -3 else "🧬·")
-			var nl := _lbl("%s %s — Passung %d %% · %s %+d · 💰 %s · 🔋 %d" % [ficon, Game.client_name(e.c), e.fit, dicon, e.dna, Game.fmt_money(e.estFee), roundi(e.c.exhaustion)], 13, TEXT_C if e.fit >= 35 else DIM)
+			var chem_s := ""
+			if partner_keys.size():
+				var csum := 0.0
+				for pk3 in partner_keys:
+					csum += float(Game.chemistry(str(e.c.aid), str(pk3)).screen)
+				var cavg := csum / partner_keys.size()
+				chem_s = " · 🧪" + ("🟢" if cavg >= 3 else ("🔴" if cavg <= -3 else "🟡"))
+			var nl := _lbl("%s %s — Passung %d %% · %s %+d · 💰 %s · 🔋 %d%s" % [ficon, Game.client_name(e.c), e.fit, dicon, e.dna, Game.fmt_money(e.estFee), roundi(e.c.exhaustion), chem_s], 13, TEXT_C if e.fit >= 35 else DIM)
 			nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(nl)
 			row.add_child(_btn("Vorschlagen", _do_pitch.bind(casting_id, role_idx, int(e.c.id))))
@@ -1220,6 +1365,12 @@ func _do_pitch(casting_id: int, role_idx: int, client_id: int) -> void:
 	if not res.success:
 		_show_simple_modal("Absage", "[i]„Wir hatten uns die Rolle … anders vorgestellt. Danke für Ihre Zeit.“[/i]")
 		return
+	_offer_clauses = []
+	# Große Hauptrollen: Mehrparteien-Verhandlung (Feature 9)
+	if Game.pitch_ctx != null and Game.pitch_ctx.get("table", false):
+		Game.start_table()
+		_render_table("")
+		return
 	_render_studio_offer("")
 
 func _render_studio_offer(note: String) -> void:
@@ -1229,10 +1380,52 @@ func _render_studio_offer(note: String) -> void:
 	if note != "":
 		modal_box.add_child(_rich("[i]%s[/i]" % note, 14))
 	modal_box.add_child(_rich("Das Studio will [b]%s[/b] für „%s“ — Gage: [color=#%s]%s[/color] (deine Provision: %s)." % [Game.client_name(ctx.client), ctx.casting.title, ACC.to_html(false), Game.fmt_money(ctx.fee), Game.fmt_money(ctx.fee * ctx.client.commission / 100.0)], 15))
+	# Rollen-Klauseln (Feature 8): lösen Jahre später Ereignisse aus
+	modal_box.add_child(_lbl("📑 Vertragsklauseln für diesen Deal:", 13))
+	var clause_flow := HFlowContainer.new()
+	clause_flow.add_theme_constant_override("h_separation", 14)
+	modal_box.add_child(clause_flow)
+	for clk in Game.CLAUSES:
+		if not Game.clause_available(clk):
+			continue
+		var ccb := CheckBox.new()
+		ccb.text = str(Game.CLAUSES[clk].de)
+		ccb.tooltip_text = str(Game.CLAUSES[clk].desc)
+		ccb.button_pressed = _offer_clauses.has(clk)
+		ccb.toggled.connect(func(on):
+			if on and not _offer_clauses.has(clk):
+				_offer_clauses.append(clk)
+			elif not on:
+				_offer_clauses.erase(clk))
+		clause_flow.add_child(ccb)
+	# Instinkt-Prognose (Feature 6c): „Wer passt besser?“ — ein Klick, freiwillig
+	var alts: Array = ctx.get("alts", [])
+	if alts.size() and not ctx.get("fitAsked", false):
+		var alt_c = Game.client(alts[0])
+		if alt_c != null:
+			modal_box.add_child(_lbl("🔮 Bauchgefühl: Passt %s wirklich besser als %s? (Wird beim Kinostart geprüft)" % [Game.client_name(ctx.client), Game.client_name(alt_c)], 13, ACC))
+			var brow := HBoxContainer.new()
+			brow.add_theme_constant_override("separation", 8)
+			modal_box.add_child(brow)
+			brow.add_child(_btn("Ja, besser", func():
+				Game.note_betterfit_prediction(ctx.client, alt_c, int(ctx.casting.id))
+				ctx["fitAsked"] = true
+				_render_studio_offer("Prognose notiert — dein Instinkt wird beim Kinostart auf die Probe gestellt.")))
+			brow.add_child(_btn("Nein", func():
+				Game.add_prediction("betterfit", {"prodId": int(ctx.casting.id), "chosen": int(ctx.client.id), "other": int(alt_c.id), "otherFame": float(alt_c.fame)}, false, Game.mi() + 30, "%s passt NICHT besser als %s" % [Game.client_name(ctx.client), Game.client_name(alt_c)])
+				ctx["fitAsked"] = true
+				_render_studio_offer("Prognose notiert.")))
+			brow.add_child(_btn("Keine Angabe", func():
+				ctx["fitAsked"] = true
+				_render_studio_offer("")))
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	modal_box.add_child(actions)
-	actions.add_child(_btn("✅ Annehmen", func(): Game.accept_offer(); _close_modal(), true))
+	actions.add_child(_btn("✅ Annehmen", func():
+		Game.pitch_ctx["offerClauses"] = _offer_clauses.duplicate()
+		Game.accept_offer()
+		_offer_clauses = []
+		_close_modal(), true))
 	if not ctx.haggled:
 		actions.add_child(_btn("💰 +25 % fordern", _do_haggle))
 	var pkg = Game.package_options()
@@ -1294,6 +1487,33 @@ func _render_filme() -> void:
 			cv[1].add_child(_lbl("%s · %s · Budget %s" % [Game._studio(p.studioId).name, _genre_de(p.genre), Game.fmt_money(p.budget)], 12, DIM))
 			cv[1].add_child(_lbl("Besetzung: " + ", ".join(names), 12, DIM))
 			cv[1].add_child(_chip_row([_chip("🎬 Kinostart in ~%d Mon." % int(p.monthsLeft), BLUE)]))
+			# Produktions-Signale (Feature 13): Set-Gerede statt Fakten
+			Game.ensure_prod_fields(p)
+			if p.signals.size():
+				var srow := HFlowContainer.new()
+				srow.add_theme_constant_override("h_separation", 6)
+				cv[1].add_child(srow)
+				for sig in p.signals:
+					srow.add_child(_chip(("🟢 " if bool(sig.get("pos", true)) else "🔴 ") + str(sig.get("t", "")), GREEN if bool(sig.get("pos", true)) else RED))
+				cv[1].add_child(_lbl("Signale sind Set-Gerede — die Trefferquote steigt mit deinem Instinkt.", 10, DIM))
+				var has_client_here := false
+				for r in p.roles:
+					if r.filled != null and r.filled.get("clientId") != null and Game.client(r.filled.clientId) != null:
+						has_client_here = true
+				if has_client_here:
+					var pid := int(p.id)
+					var arow := HBoxContainer.new()
+					arow.add_theme_constant_override("separation", 6)
+					cv[1].add_child(arow)
+					var b1 := _btn("💰 Nachverhandeln", func(): _show_simple_modal("Nachverhandeln", Game.prod_renegotiate(pid)))
+					b1.disabled = bool(p.reactions.get("reneg", false))
+					arow.add_child(b1)
+					var b2 := _btn("🚪 Klient rausziehen", func(): _show_simple_modal("Ausstieg", Game.prod_pull_client(pid)))
+					b2.disabled = bool(p.reactions.get("pull", false))
+					arow.add_child(b2)
+					var b3 := _btn("📈 Beteiligung fordern", func(): _show_simple_modal("Beteiligung", Game.prod_demand_share(pid)))
+					b3.disabled = bool(p.reactions.get("share", false))
+					arow.add_child(b3)
 	if st.released.size():
 		content_box.add_child(_lbl("🎞 Veröffentlicht", 18, ACC))
 		var txt := ""
@@ -1396,7 +1616,7 @@ func _render_zeitung() -> void:
 		var col: Color = {"Kritik":ACC, "Kasse":GREEN, "Blind Item":AMBER, "Skandal":RED, "Titelstory":GOLD, "Awards":GOLD, "Rivalen-Deals":BLUE, "Casting":BLUE}.get(cat, TEXT_C)
 		front[1].add_child(_lbl("%s  %s" % [cat.to_upper(), h.get("text", "")], 17 if i == 0 else 14, col))
 
-	content_box.add_child(_lbl("Archiv · letzte %d Ausgaben" % mini(24, Game.state.newspaper.size()), 17, ACC))
+	content_box.add_child(_lbl("Archiv · %d ältere Ausgaben" % mini(23, maxi(0, Game.state.newspaper.size() - 1)), 17, ACC))
 	var archive_grid := _grid(520.0)
 	content_box.add_child(archive_grid)
 	for old_issue in Game.state.newspaper.slice(1, 24):
@@ -1464,3 +1684,245 @@ func _resolve_choice(ev: Dictionary, idx: int) -> void:
 			modal_box.add_child(_btn("Weiter", _close_modal, true))
 			return
 	_close_modal()
+
+
+# =====================================================================
+# Feature 9: Mehrparteien-Verhandlung (UI)
+# =====================================================================
+func _render_table(note: String) -> void:
+	var t = Game.table
+	var ctx = Game.pitch_ctx
+	_open_modal()
+	modal_box.add_child(_lbl("🎩 Der große Verhandlungstisch", 22, ACC))
+	modal_box.add_child(_lbl("„%s“ — Hauptrolle für %s. Zugeständnisse übrig: %d · Gage am Tisch: %s · Vorspann: %s Nennung" % [ctx.casting.title, Game.client_name(ctx.client), int(t.points), Game.fmt_money(t.fee), "erste" if int(t.billing) == 1 else "zweite"], 13, DIM))
+	if note != "":
+		modal_box.add_child(_rich("[i]%s[/i]" % note, 14))
+	# Parteien-Karten mit Zufriedenheits-Balken
+	var grid := _grid(340.0)
+	modal_box.add_child(grid)
+	for pk in t.parties:
+		var p: Dictionary = t.parties[pk]
+		var cv = _card(str(p.name), {"studio": "🏛", "director": "🎬", "client": "⭐", "star": "🌟"}.get(str(pk), "◆"))
+		grid.add_child(cv[0])
+		cv[1].add_child(_lbl("„%s“" % str(p.demand), 12, DIM))
+		var sat := float(p.sat)
+		var veto := float(p.veto)
+		cv[1].add_child(_bar(sat, RED if sat < veto + 8.0 else (GREEN if sat >= 60.0 else AMBER)))
+		cv[1].add_child(_lbl("Zufriedenheit %d/100 · Veto unter %d" % [roundi(sat), roundi(veto)], 11, RED if sat < veto + 8.0 else DIM))
+	# Zugeständnisse (kosten Punkte)
+	modal_box.add_child(_lbl("Zugeständnisse — jede Geste kostet 1 Punkt:", 13))
+	var no_points: bool = int(t.points) < 1
+	var row1 := HFlowContainer.new()
+	row1.add_theme_constant_override("h_separation", 8)
+	row1.add_theme_constant_override("v_separation", 4)
+	modal_box.add_child(row1)
+	var b_up := _btn("💰 Gage +10 % (Klient)", func(): _table_action("fee_up"))
+	b_up.disabled = no_points
+	row1.add_child(b_up)
+	var b_down := _btn("💸 Gage −10 % (Studio)", func(): _table_action("fee_down"))
+	b_down.disabled = no_points
+	row1.add_child(b_down)
+	if t.parties.has("star"):
+		var b_b1 := _btn("🌟 Erste Nennung (Klient)", func(): _table_action("billing_first"))
+		b_b1.disabled = no_points or int(t.billing) == 1
+		row1.add_child(b_b1)
+		var b_b2 := _btn("▫ Zweite Nennung (Co-Star)", func(): _table_action("billing_second"))
+		b_b2.disabled = no_points or int(t.billing) == 2
+		row1.add_child(b_b2)
+	var row2 := HFlowContainer.new()
+	row2.add_theme_constant_override("h_separation", 8)
+	row2.add_theme_constant_override("v_separation", 4)
+	modal_box.add_child(row2)
+	var clause_ids: Array = []
+	var clause_ob := OptionButton.new()
+	for clk in Game.CLAUSES:
+		if Game.clause_available(clk) and not t.clauses.has(clk):
+			clause_ids.append(clk)
+			clause_ob.add_item(Game.clause_label(clk))
+	row2.add_child(clause_ob)
+	var b_cl := _btn("📑 Klausel gewähren (Klient)", func():
+		if clause_ids.size():
+			_table_action("clause", str(clause_ids[clause_ob.selected])))
+	b_cl.disabled = no_points or clause_ids.is_empty()
+	row2.add_child(b_cl)
+	# Punktelose Werkzeuge: Gefallen & Chemie-Argument
+	var row3 := HFlowContainer.new()
+	row3.add_theme_constant_override("h_separation", 8)
+	row3.add_theme_constant_override("v_separation", 4)
+	modal_box.add_child(row3)
+	for pk2 in t.parties:
+		var bf := _btn("🤝 Gefallen an %s" % str(t.parties[pk2].name), _table_action.bind("use_favor", str(pk2)))
+		bf.disabled = bool(t.favorUsed) or Game.state.favors.is_empty()
+		row3.add_child(bf)
+	var bc := _btn("🧬 Regisseur umstimmen (Chemie & DNA)", func(): _table_action("chem_argument"))
+	bc.disabled = bool(t.chemUsed)
+	row3.add_child(bc)
+	# Abschluss / Abbruch
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	modal_box.add_child(actions)
+	actions.add_child(_btn("✅ Vertrag abschließen", _close_table, true))
+	actions.add_child(_btn("🚶 Zurückziehen (ohne Zusatzschaden)", func():
+		Game.table_withdraw()
+		Game.table = null
+		_close_modal()))
+
+func _table_action(action: String, target: String = "") -> void:
+	var res := Game.table_concede(action, target)
+	_render_table("" if res.get("ok", false) else str(res.get("msg", "")))
+
+func _close_table() -> void:
+	var res := Game.close_table()
+	if res.get("success", false):
+		Game.table = null
+		_close_modal()
+		return
+	if res.has("veto"):
+		_render_table_veto(res)
+	else:
+		_render_table(str(res.get("msg", "")))
+
+func _render_table_veto(res: Dictionary) -> void:
+	var t = Game.table
+	var pname := str(t.parties.get(res.veto, {}).get("name", "Eine Partei"))
+	_open_modal()
+	modal_box.add_child(_lbl("💥 Veto — der Deal platzt", 22, RED))
+	modal_box.add_child(_rich("[i]„So kommen wir nicht zusammen. Mein letztes Wort.“[/i]\n\n[b]%s[/b] legt das Veto ein — der finanziell beste Deal nützt nichts, wenn die Menschen am Tisch nicht überzeugt sind.\n\nEs gibt immer einen Rückweg:" % pname, 15))
+	for fb in res.get("fallbacks", []):
+		match str(fb.kind):
+			"support":
+				modal_box.add_child(_btn("▫ Trostpreis: Nebenrolle für denselben Klienten", func():
+					Game.table_support_fallback(int(fb.roleIdx))
+					Game.table = null
+					_close_modal(), true))
+			"other":
+				modal_box.add_child(_btn("👥 Zurück zu den Castings — anderen Klienten pitchen", func():
+					Game.table_withdraw()
+					Game.table = null
+					_close_modal()
+					_switch_tab("castings")))
+			"withdraw":
+				modal_box.add_child(_btn("🚶 Ganz zurückziehen — ohne Zusatzschaden", func():
+					Game.table_withdraw()
+					Game.table = null
+					_close_modal()))
+
+# =====================================================================
+# Weekly Planner (UI)
+# =====================================================================
+func _render_planer() -> void:
+	var st = Game.state
+	Game.ensure_planner()
+	var hv = _card("Wochenplaner — %s" % Game.date_str(), "🗓")
+	content_box.add_child(hv[0])
+	hv[1].add_child(_lbl("Vier Wochen-Slots pro Monat — für dich und jeden freien Klienten. Dreh-Wochen sind automatisch belegt. Was leer bleibt, übernimmt die Automatik: Erholung bei Erschöpfung über 50, sonst PR.", 12, DIM))
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	hv[1].add_child(grid)
+	grid.add_child(_lbl("", 12, DIM))
+	for w in 4:
+		var hw := _lbl("Woche %d" % (w + 1), 13, ACC)
+		hw.autowrap_mode = TextServer.AUTOWRAP_OFF
+		grid.add_child(hw)
+	# Zeile: Spieler
+	var pl := _lbl("🕴 Du (Agentur)", 13)
+	pl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	grid.add_child(pl)
+	for w in 4:
+		var slot = st.planner.player[w]
+		var txt := "· frei ·"
+		if slot != null:
+			var info: Dictionary = Game.PLANNER_PLAYER.get(str(slot.get("a", "")), {})
+			txt = "%s %s" % [str(info.get("icon", "•")), str(info.get("de", str(slot.get("a", ""))))]
+			var tn := _planner_target_name(slot)
+			if tn != "":
+				txt += " → " + tn
+		var b := _btn(txt, _open_planner_picker.bind("player", 0, w))
+		b.custom_minimum_size = Vector2(160 * font_scale, 0)
+		grid.add_child(b)
+	# Zeilen: Klienten
+	for c in st.clients:
+		var nm := _lbl("⭐ %s" % Game.client_name(c), 13)
+		nm.autowrap_mode = TextServer.AUTOWRAP_OFF
+		grid.add_child(nm)
+		var busy := not Game.is_free(c)
+		var slots: Array = st.planner.clients.get(str(int(c.id)), [null, null, null, null])
+		for w in 4:
+			if busy:
+				var bl := _lbl("🎬 Dreh", 12, DIM)
+				bl.autowrap_mode = TextServer.AUTOWRAP_OFF
+				grid.add_child(bl)
+			else:
+				var slot = slots[w] if w < slots.size() else null
+				var txt := "· auto ·"
+				if slot != null:
+					var info2: Dictionary = Game.PLANNER_CLIENT.get(str(slot.get("a", "")), {})
+					txt = "%s %s" % [str(info2.get("icon", "•")), str(info2.get("de", "?"))]
+				var b2 := _btn(txt, _open_planner_picker.bind("client", int(c.id), w))
+				b2.custom_minimum_size = Vector2(160 * font_scale, 0)
+				grid.add_child(b2)
+	# Legende
+	var leg = _card("Was die Aktionen bringen", "ℹ")
+	content_box.add_child(leg[0])
+	var lt := "[b]Deine Slots:[/b] "
+	for k in Game.PLANNER_PLAYER:
+		var i1: Dictionary = Game.PLANNER_PLAYER[k]
+		lt += "%s %s (%s) · " % [i1.icon, i1.de, i1.desc]
+	lt = lt.trim_suffix(" · ") + "\n[b]Klienten-Slots:[/b] "
+	for k2 in Game.PLANNER_CLIENT:
+		var i2: Dictionary = Game.PLANNER_CLIENT[k2]
+		lt += "%s %s (%s) · " % [i2.icon, i2.de, i2.desc]
+	leg[1].add_child(_rich(lt.trim_suffix(" · "), 12))
+
+func _planner_target_name(slot: Dictionary) -> String:
+	var t := str(slot.get("t", ""))
+	if t == "":
+		return ""
+	match str(slot.get("a", "")):
+		"dinner":
+			if Game.state.studioRel.has(t):
+				return Game._studio(t).name
+		"pflege":
+			var c = Game.client(t)
+			if c != null:
+				return Game.client_name(c)
+	return ""
+
+func _open_planner_picker(who: String, cid: int, week: int) -> void:
+	_open_modal()
+	var title_s := "Du (Agentur)"
+	if who == "client":
+		var c = Game.client(cid)
+		title_s = Game.client_name(c) if c != null else "?"
+	modal_box.add_child(_lbl("🗓 Woche %d planen: %s" % [week + 1, title_s], 20, ACC))
+	var acts: Dictionary = Game.PLANNER_PLAYER if who == "player" else Game.PLANNER_CLIENT
+	for k in acts:
+		var info: Dictionary = acts[k]
+		if who == "player" and k == "dinner":
+			modal_box.add_child(_lbl("%s %s — %s:" % [info.icon, info.de, info.desc], 13))
+			var trow := HFlowContainer.new()
+			trow.add_theme_constant_override("h_separation", 6)
+			modal_box.add_child(trow)
+			for s in Game.active_studios():
+				trow.add_child(_btn(str(s.name), func():
+					Game.planner_slot_set("player", 0, week, "dinner", s.id)
+					_close_modal()))
+		elif who == "player" and k == "pflege":
+			modal_box.add_child(_lbl("%s %s — %s:" % [info.icon, info.de, info.desc], 13))
+			var trow2 := HFlowContainer.new()
+			trow2.add_theme_constant_override("h_separation", 6)
+			modal_box.add_child(trow2)
+			for c2 in Game.state.clients:
+				trow2.add_child(_btn(Game.client_name(c2), func():
+					Game.planner_slot_set("player", 0, week, "pflege", int(c2.id))
+					_close_modal()))
+		else:
+			modal_box.add_child(_btn("%s %s — %s" % [info.icon, info.de, info.desc], func():
+				Game.planner_slot_set(who, cid, week, k)
+				_close_modal()))
+	modal_box.add_child(_btn("Slot leeren", func():
+		Game.planner_slot_set(who, cid, week, null)
+		_close_modal()))
+	modal_box.add_child(_btn("Abbrechen", _close_modal))

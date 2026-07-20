@@ -20,6 +20,9 @@ godot/NVIDIA Corporation/
 # Python
 __pycache__/
 
+# UI-Screenshots aus Testläufen (generiert via --shot-*)
+shot_*.png
+
 # Misc
 *.tmp
 Thumbs.db
