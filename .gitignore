@@ -1,0 +1,22 @@
+# Secrets
+.env.local
+.env
+
+# Godot editor binary
+Godot_v*.exe
+
+# Godot generated/cache files
+godot/.godot/
+godot/build/
+godot/export_templates/
+godot/NVIDIA Corporation/
+
+# Local tool data
+.kimi-code/
+
+# Python
+__pycache__/
+
+# Misc
+*.tmp
+Thumbs.db

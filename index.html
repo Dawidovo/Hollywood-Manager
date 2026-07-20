@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hollywood Manager</title>
+<style>
+  :root {
+    --bg: #16130f;
+    --bg2: #211c15;
+    --panel: #2a241b;
+    --panel2: #332c21;
+    --gold: #d4af37;
+    --gold-dim: #9c823a;
+    --text: #e8dfc9;
+    --text-dim: #a89b7e;
+    --red: #c0504d;
+    --green: #7da05c;
+    --blue: #6f9bbf;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Georgia, 'Times New Roman', serif;
+    min-height: 100vh;
+    font-size: clamp(14px, 0.95vw, 17px);
+  }
+  h1, h2, h3, h4 { font-weight: normal; letter-spacing: 0.05em; }
+  button {
+    font-family: inherit;
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--gold-dim);
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background 0.15s;
+  }
+  button:hover { background: var(--gold-dim); color: #16130f; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  button:disabled:hover { background: var(--panel2); color: var(--text); }
+  button.primary { background: var(--gold); color: #16130f; border-color: var(--gold); font-weight: bold; }
+  button.primary:hover { background: #e8c95a; }
+  button.danger { border-color: var(--red); }
+  input, select {
+    font-family: inherit;
+    background: var(--bg2);
+    color: var(--text);
+    border: 1px solid var(--gold-dim);
+    padding: 6px 10px;
+    font-size: 0.95em;
+  }
+  input[type=range] { padding: 0; accent-color: var(--gold); }
+  input[type=checkbox] { accent-color: var(--gold); width: 15px; height: 15px; }
+
+  /* ===== Header ===== */
+  #header {
+    display: none;
+    background: linear-gradient(180deg, #241f16, #1a1610);
+    border-bottom: 2px solid var(--gold);
+    padding: 10px 24px;
+    align-items: center;
+    gap: 26px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  #header .agency-name {
+    font-size: 1.35em;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  #header .stat { font-size: 1em; white-space: nowrap; }
+  #header .stat .label { color: var(--text-dim); font-size: 0.7em; display: block; text-transform: uppercase; letter-spacing: 0.1em; }
+  #header .spacer { flex: 1; }
+  #music-ctl { display: flex; align-items: center; gap: 6px; }
+  #music-ctl input[type=range] { width: 90px; }
+
+  /* ===== Tabs ===== */
+  #tabs {
+    display: none;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--gold-dim);
+    padding: 0 24px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  #tabs button {
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    padding: 10px 18px;
+    font-size: 1.02em;
+    color: var(--text-dim);
+  }
+  #tabs button:hover { color: var(--gold); background: transparent; }
+  #tabs button.active { color: var(--gold); border-bottom-color: var(--gold); }
+  #tabs button .badge {
+    background: var(--red); color: #fff; border-radius: 10px;
+    font-size: 0.75em; padding: 1px 6px; margin-left: 5px;
+  }
+
+  /* ===== Layout: Hauptbereich + Sidebar (Widescreen) ===== */
+  #layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    max-width: 1880px;
+    margin: 0 auto;
+  }
+  #content { padding: 22px 24px; min-width: 0; }
+  #sidebar { display: none; padding: 22px 24px 22px 0; }
+  @media (min-width: 1500px) {
+    #layout { grid-template-columns: minmax(0, 1fr) 400px; }
+    #sidebar { display: block; }
+  }
+  #sidebar .card { margin-bottom: 14px; }
+  #sidebar h3 { font-size: 1em; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid #453b2a;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .card h3 { color: var(--gold); margin-bottom: 6px; font-size: 1.12em; }
+  .card .sub { color: var(--text-dim); font-size: 0.88em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+  .grid.wide { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .row.between { justify-content: space-between; }
+  .tag {
+    display: inline-block; font-size: 0.74em; padding: 1px 8px;
+    border: 1px solid var(--gold-dim); color: var(--gold-dim);
+    border-radius: 10px; margin-right: 4px; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .tag.hot { border-color: var(--red); color: var(--red); }
+  .tag.ok { border-color: var(--green); color: var(--green); }
+  .tag.warn { border-color: #c9963f; color: #c9963f; }
+  .bar { background: #1a160f; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 2px; }
+  .bar > div { height: 100%; background: var(--gold-dim); }
+  .bar.green > div { background: var(--green); }
+  .bar.red > div { background: var(--red); }
+  .bar.blue > div { background: var(--blue); }
+  .statline { font-size: 0.85em; color: var(--text-dim); margin-top: 4px; }
+  .money { color: var(--gold); }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+
+  /* Markt-Sparkline */
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 38px; margin-top: 6px; }
+  .spark > div { flex: 1; background: var(--gold-dim); min-height: 2px; border-radius: 1px 1px 0 0; }
+  .spark > div.lo { background: var(--red); }
+  .spark > div.hi { background: var(--green); }
+
+  /* ===== Log ===== */
+  .log-entry { padding: 6px 10px; border-left: 3px solid var(--gold-dim); margin-bottom: 6px; background: var(--panel); font-size: 0.92em; }
+  .log-entry .date { color: var(--text-dim); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.08em; }
+  .log-entry.event { border-left-color: var(--blue); }
+  .log-entry.deal { border-left-color: var(--green); }
+  .log-entry.bad { border-left-color: var(--red); }
+  .log-entry.history { border-left-color: var(--gold); background: #2e2717; }
+
+  /* ===== Modal ===== */
+  #modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 100;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  #modal {
+    background: var(--panel);
+    border: 2px solid var(--gold);
+    max-width: 900px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    padding: 26px;
+    box-shadow: 0 0 60px rgba(212,175,55,0.15);
+  }
+  #modal h2 { color: var(--gold); margin-bottom: 4px; font-size: 1.5em; }
+  #modal .quote {
+    font-style: italic; color: var(--text); background: var(--bg2);
+    padding: 10px 14px; border-left: 3px solid var(--gold); margin: 12px 0;
+  }
+  #modal .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  #modal label { display: block; margin: 12px 0 4px; color: var(--text-dim); font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.08em; }
+  #modal .hint { font-size: 0.88em; color: var(--text-dim); margin-top: 8px; }
+  .modal-cols { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 760px) { .modal-cols { grid-template-columns: 5fr 4fr; } }
+  .perk-row { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; font-size: 0.92em; }
+  .perk-row .pdesc { color: var(--text-dim); font-size: 0.85em; }
+  .counter-box {
+    border: 1px dashed var(--gold); background: #2e2717; padding: 12px 14px; margin-top: 14px;
+  }
+  .counter-box h4 { color: var(--gold); margin-bottom: 6px; }
+
+  table.simple { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+  table.simple th { text-align: left; color: var(--text-dim); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px; border-bottom: 1px solid var(--gold-dim); }
+  table.simple td { padding: 6px 8px; border-bottom: 1px solid #3a3226; }
+  table.kv td { padding: 3px 8px 3px 0; border: none; }
+  table.kv td:last-child { text-align: right; }
+
+  .filter-bar { margin-bottom: 14px; }
+
+  /* ===== Startscreen ===== */
+  #start-screen {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; padding: 30px; text-align: center;
+  }
+  #start-screen h1 {
+    font-size: clamp(34px, 4vw, 64px); color: var(--gold); letter-spacing: 0.25em;
+    text-transform: uppercase; margin-bottom: 4px;
+    text-shadow: 0 0 30px rgba(212,175,55,0.4);
+  }
+  #start-screen .tagline { color: var(--text-dim); font-style: italic; margin-bottom: 36px; font-size: 1.2em; }
+  .era-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; max-width: 1200px; margin-top: 20px; }
+  .era-card {
+    background: var(--panel); border: 1px solid var(--gold-dim);
+    padding: 22px; cursor: pointer; transition: all 0.2s; text-align: left;
+  }
+  .era-card:hover { border-color: var(--gold); background: var(--panel2); transform: translateY(-3px); }
+  .era-card h3 { color: var(--gold); font-size: 1.8em; }
+  .era-card .era-name { font-size: 1.05em; margin: 4px 0 8px; }
+  .era-card p { font-size: 0.9em; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+  <!-- Startbildschirm -->
+  <div id="start-screen">
+    <h1>Hollywood Manager</h1>
+    <div class="tagline">Du machst keine Filme. Du machst Karrieren.</div>
+    <div>
+      <label style="color: var(--text-dim); font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.1em;">Name deiner Agentur</label><br>
+      <input id="agency-name-input" type="text" value="Morgenstern & Partner" style="width: 320px; margin-top: 6px; text-align: center; font-size: 1.1em;">
+    </div>
+    <div class="era-grid" id="era-grid"></div>
+    <div id="load-save-row" style="margin-top: 28px;"></div>
+  </div>
+
+  <!-- Spiel-UI -->
+  <div id="header">
+    <div class="agency-name" id="hdr-agency"></div>
+    <div class="stat"><span class="label">Datum</span><span id="hdr-date"></span></div>
+    <div class="stat"><span class="label">Kapital</span><span class="money" id="hdr-cash"></span></div>
+    <div class="stat"><span class="label">Ruf</span><span id="hdr-rep"></span></div>
+    <div class="stat"><span class="label">Netzwerk</span><span id="hdr-network"></span></div>
+    <div class="stat"><span class="label">Markt</span><span id="hdr-market"></span></div>
+    <div class="stat"><span class="label">Klienten</span><span id="hdr-clients"></span></div>
+    <div class="spacer"></div>
+    <div id="music-ctl">
+      <button id="music-btn" title="Musik an/aus" onclick="UI.toggleMusic()">ðŸ”Š</button>
+      <input type="range" min="0" max="100" value="35" title="LautstÃ¤rke" oninput="Music.setVolume(this.value/100)">
+    </div>
+    <button onclick="UI.saveGame()">Speichern</button>
+    <button class="primary" id="btn-next" onclick="Game.endMonth()">Monat beenden â–¸</button>
+  </div>
+  <div id="tabs"></div>
+  <div id="layout">
+    <div id="content"></div>
+    <div id="sidebar"></div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal-overlay"><div id="modal"></div></div>
+
+  <script src="js/data.js?v=3"></script>
+  <script src="js/actors_full.js" onerror="void(0)"></script>
+  <script src="js/music.js?v=3"></script>
+  <script src="js/game.js?v=3"></script>
+  <script src="js/events.js?v=3"></script>
+  <script src="js/ui.js?v=3"></script>
+</body>
+</html>
+

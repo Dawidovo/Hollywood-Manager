@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Hollywood Manager"
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.7")
+
+[autoload]
+
+Data="*res://scripts/Data.gd"
+Game="*res://scripts/Game.gd"
+Ev="*res://scripts/Events.gd"
+Jukebox="*res://scripts/MusicGen.gd"
+
+[debug]
+
+gdscript/warnings/inference_on_variant=1
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/size/mode=2
+
+[rendering]
+
+environment/defaults/default_clear_color=Color(0.086, 0.075, 0.059, 1)
