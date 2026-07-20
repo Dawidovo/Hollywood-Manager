@@ -62,6 +62,7 @@ var modal_open := false
 var pool_filter := ""
 var nego_form: Dictionary = {}
 var _offer_clauses: Array = []
+var _chem_selected: Array = []
 var _nego_widgets: Dictionary = {}
 var font_scale := 1.0
 var _resize_timer: Timer
@@ -232,12 +233,74 @@ func _ready() -> void:
 		else:
 			_switch_tab("castings")
 		await _take_shot("verhandlung")
+	elif args.has("--shot-audition"):
+		_on_era_selected(1950)
+		Game.state.agency.rep = 100
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":["assistant"], "promise":"lead12"})
+		var audition_client: Dictionary = Game.state.clients[0]
+		var audition_casting: Dictionary = Game.state.castings[0]
+		audition_casting.prestige = 3
+		var audition_role: Dictionary = audition_casting.roles[0]
+		audition_role.type = "lead"
+		audition_role.gender = "f"
+		audition_role.minFame = 10
+		audition_role.ageMin = 18
+		audition_role.ageMax = 70
+		Game.state.rivals[0].clients = ["gkelly", "hepburn"]
+		Game.grant_favor("scriptAccess", {"type":"regisseur", "name":"Script Supervisor"}, true)
+		Game.begin_audition(int(audition_casting.id), 0, int(audition_client.id))
+		_render_audition_briefing()
+		await _take_shot("audition")
+	elif args.has("--shot-chemread"):
+		_on_era_selected(1950)
+		Game.state.agency.rep = 100
+		for aid in ["monroe", "gkelly", "brando", "bogart"]:
+			Game.start_negotiation(aid)
+			Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
+		var chem_casting: Dictionary = Game.state.castings[0]
+		chem_casting.roles[0].type = "lead"
+		chem_casting.roles[0].gender = "f"
+		chem_casting.roles[0].minFame = 10
+		chem_casting.roles[0].ageMin = 18
+		chem_casting.roles[0].ageMax = 70
+		chem_casting.roles[1].type = "lead"
+		chem_casting.roles[1].gender = "m"
+		chem_casting.roles[1].minFame = 10
+		chem_casting.roles[1].ageMin = 18
+		chem_casting.roles[1].ageMax = 70
+		_chem_selected = Game.chem_read_candidate_pairs(int(chem_casting.id)).slice(0, 2).map(func(p): return str(p.key))
+		Game.begin_chem_read(int(chem_casting.id), _chem_selected, "love")
+		_render_chem_signals()
+		await _take_shot("chemread")
+	elif args.has("--shot-coverage"):
+		# Coverage-Blatt erzwingen, einen Marker setzen, Modal zeigen
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		Game._issue_coverage()
+		Game.coverage_mark(0, "prestige")
+		_switch_tab("buero")
+		_open_coverage()
+		await _take_shot("coverage")
+	elif args.has("--shot-karrierebrett"):
+		# Drei kontrastreiche Slots planen, Klientenkarte mit Brett zeigen
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": ["assistant"], "promise": null})
+		var board_client: Dictionary = Game.state.clients[0]
+		Game.board_slot_add(int(board_client.id), "comedy", "lead", 1)
+		Game.board_slot_add(int(board_client.id), "thriller", "lead", 2)
+		Game.board_slot_add(int(board_client.id), "drama", "lead", 3)
+		_switch_tab("klienten")
+		await _take_shot("karrierebrett")
 
 func _take_shot(name_s: String) -> void:
 	await get_tree().create_timer(1.2).timeout
 	var img := get_viewport().get_texture().get_image()
-	img.save_png("user://shot_%s.png" % name_s)
-	print("SHOT_SAVED user://shot_%s.png" % name_s)
+	var output_path := ProjectSettings.globalize_path("res://../shot_%s.png" % name_s)
+	img.save_png(output_path)
+	print("SHOT_SAVED " + output_path)
 	get_tree().quit()
 
 # ---------------------------------------------------------------------
@@ -630,7 +693,7 @@ func render() -> void:
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
 	var tabs := [["buero", "🏢 Agentur"], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
-		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.size()], ["filme", "🎞 Filme"], ["planer", "🗓 Planer"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
+		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Filme"], ["planer", "🗓 Planer"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
 
@@ -667,6 +730,8 @@ func _render_sidebar() -> void:
 	sidebar_box.add_child(cv[0])
 	var any := false
 	for cs in st.castings:
+		if bool(cs.get("hidden", false)):
+			continue  # Coverage-Casting: erscheint erst nächsten Monat
 		var open := 0
 		for r in cs.roles:
 			if r.filled == null:
@@ -843,6 +908,166 @@ func _render_buero() -> void:
 	for pr in open_preds.slice(0, 5):
 		ci2[1].add_child(_lbl("🔮 %s — Auflösung ~%s" % [str(pr.get("note", "Prognose")), Game.mi_str(int(pr.get("dueMi", 0)))], 12, ACC))
 
+	# Script Coverage: das Lektorats-Blatt auf dem Schreibtisch
+	var cc = _card("Script Coverage", "📋")
+	grid.add_child(cc[0])
+	var cov_stats := Game.coverage_stats()
+	if int(cov_stats.done) > 0:
+		cc[1].add_child(_lbl("Trefferquote: %d/%d richtig%s" % [int(cov_stats.hits), int(cov_stats.done), (" · %d offen" % int(cov_stats.open)) if int(cov_stats.open) > 0 else ""], 12, GREEN if int(cov_stats.hits) * 2 >= int(cov_stats.done) else AMBER))
+	var cov_cur = st.coverage.get("current") if st.has("coverage") else null
+	if cov_cur != null:
+		cc[1].add_child(_lbl("„%s“ — %s sucht nächsten Monat. Das Blatt verfällt zum Monatsende." % [str(cov_cur.title), Game._studio(str(cov_cur.studioId)).name], 13, TEXT_C))
+		var used_marks := 0
+		for sttm in cov_cur.statements:
+			if str(sttm.get("marked", "")) != "":
+				used_marks += 1
+		cc[1].add_child(_lbl("Marker: %d/%d gesetzt · %d Aussagen" % [used_marks, int(cov_cur.markersMax), cov_cur.statements.size()], 12, AMBER if used_marks < int(cov_cur.markersMax) else DIM))
+		cc[1].add_child(_btn("📋 Coverage lesen", _open_coverage, true))
+	else:
+		cc[1].add_child(_lbl("Kein Blatt auf dem Tisch. Das Lektorat legt etwa monatlich eine Einschätzung zu einem kommenden Casting vor — freiwillig, aber oft Gold wert.", 12, DIM))
+		var cov_hist: Array = st.coverage.get("history", []) if st.has("coverage") else []
+		if cov_hist.size():
+			cc[1].add_child(_btn("📚 Archiv (%d Blätter)" % cov_hist.size(), _open_coverage))
+
+# ---------- Script Coverage: Lektorats-Blatt & Archiv ----------
+var _coverage_pick := -1          # Statement-Index, der auf eine Kategorie wartet
+var _coverage_archive := false    # Archiv-Ansicht statt aktuellem Blatt
+var _coverage_note := ""          # kurze Rückmeldung nach einem Marker
+
+func _coverage_prediction_for(sheet_id: int, cat: String) -> Variant:
+	for pr in Game.state.get("predictions", []):
+		if str(pr.get("type", "")) == "coverage" and int(pr.subject.get("sheetId", -1)) == sheet_id and str(pr.subject.get("cat", "")) == cat:
+			return pr
+	return null
+
+func _open_coverage() -> void:
+	var st = Game.state
+	_open_modal()
+	var cur = st.coverage.get("current") if st.has("coverage") else null
+	var y := int(st.year)
+	if _coverage_archive:
+		_render_coverage_archive()
+		return
+	if cur == null:
+		modal_box.add_child(_lbl("📋 Script Coverage", 22, ACC))
+		modal_box.add_child(_lbl("Kein Blatt auf dem Schreibtisch. Das Lektorat legt etwa monatlich eine Einschätzung zu einem kommenden Casting vor.", 13, DIM))
+		_coverage_archive = true
+		_render_coverage_archive(true)
+		return
+	# Epochen-Tonfall: Schreibmaschine vor 1970, Listicle ab 2010
+	if _coverage_pick >= 0:
+		_render_coverage_pick(cur)
+		return
+	if y < 1970:
+		modal_box.add_child(_lbl("COVERAGE · STRENG VERTRAULICH", 22, ACC))
+		modal_box.add_child(_lbl("VOM: Lektorat  ·  BETREFF: „%s“  ·  STUDIO: %s" % [str(cur.title), Game._studio(str(cur.studioId)).name], 12, DIM))
+	elif y >= 2010:
+		modal_box.add_child(_lbl("%d Dinge, die du über „%s“ wissen musst" % [cur.statements.size(), str(cur.title)], 22, ACC))
+		modal_box.add_child(_lbl("%s · %s — das Lektorat hat gelesen, damit du es nicht musst" % [Game._studio(str(cur.studioId)).name, _genre_de(str(cur.genre))], 12, DIM))
+	else:
+		modal_box.add_child(_lbl("📋 Coverage: „%s“" % str(cur.title), 22, ACC))
+		modal_box.add_child(_lbl("%s · %s · %s" % [Game._studio(str(cur.studioId)).name, _genre_de(str(cur.genre)), "★".repeat(int(cur.prestige))], 12, DIM))
+	modal_box.add_child(_rich("[i]%s[/i]" % str(cur.logline), 13))
+	if _coverage_note != "":
+		modal_box.add_child(_lbl(_coverage_note, 12, GREEN))
+		_coverage_note = ""
+	var used_marks := 0
+	for sttm in cur.statements:
+		if str(sttm.get("marked", "")) != "":
+			used_marks += 1
+	var marks_left: int = int(cur.markersMax) - used_marks
+	modal_box.add_child(_lbl("Marker übrig: %d/%d — das Blatt verfällt zum Monatsende. Überspringen kostet nichts." % [marks_left, int(cur.markersMax)], 12, AMBER if marks_left > 0 else DIM))
+	for i in cur.statements.size():
+		var sttm: Dictionary = cur.statements[i]
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		modal_box.add_child(row)
+		var tl := _lbl("%d. %s" % [i + 1, str(sttm.get("text", ""))], 13, TEXT_C)
+		tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(tl)
+		var marked := str(sttm.get("marked", ""))
+		if marked != "":
+			var info: Dictionary = Game.COVERAGE_CATS.get(marked, {})
+			var pr = _coverage_prediction_for(int(cur.id), marked)
+			var state_icon := "⏳"
+			if pr != null and bool(pr.get("resolved", false)):
+				state_icon = "✅" if bool(pr.get("correct", false)) else "❌"
+			row.add_child(_chip("%s %s %s" % [state_icon, info.get("icon", ""), info.get("de", marked)], ACC))
+		elif marks_left > 0:
+			row.add_child(_btn("🏷 Marker", _on_coverage_pick.bind(i)))
+	modal_box.add_child(_lbl("Kategorien: 🛡 Sichere Rolle · 🎩 Prestigechance · 📉 Schwaches Drehbuch · 🌟 Überraschungserfolg · ✂ Rolle wird geschnitten · 🌪 Problematische Produktion", 11, DIM))
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 8)
+	modal_box.add_child(btn_row)
+	btn_row.add_child(_btn("Schließen", _close_modal, true))
+	if st.coverage.get("history", []).size():
+		btn_row.add_child(_btn("📚 Archiv (%d)" % st.coverage.history.size(), func():
+			_coverage_archive = true
+			_open_coverage()))
+
+# Kategorie-Auswahl für eine Aussage
+func _render_coverage_pick(cur: Dictionary) -> void:
+	var sttm: Dictionary = cur.statements[_coverage_pick]
+	modal_box.add_child(_lbl("🏷 Marker setzen", 22, ACC))
+	modal_box.add_child(_rich("[i]„%s“[/i]" % str(sttm.get("text", "")), 14))
+	modal_box.add_child(_lbl("Welche Einschätzung legst du zu dieser Notiz ab? Aufgelöst wird beim Kinostart — richtig gibt Instinkt +3, falsch nur einen Punkt Abzug.", 12, DIM))
+	for cat in Game.COVERAGE_CATS:
+		var info: Dictionary = Game.COVERAGE_CATS[cat]
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		modal_box.add_child(row)
+		var dl := _lbl("%s %s — %s" % [info.icon, info.de, info.desc], 12, TEXT_C)
+		dl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(dl)
+		var stmt_idx := _coverage_pick
+		row.add_child(_btn("Wählen", _on_coverage_mark.bind(stmt_idx, cat)))
+	modal_box.add_child(_btn("Zurück", _on_coverage_pick.bind(-1)))
+
+func _on_coverage_pick(i: int) -> void:
+	_coverage_pick = i
+	_open_coverage()
+
+func _on_coverage_mark(stmt_idx: int, cat: String) -> void:
+	_coverage_pick = -1
+	_coverage_note = Game.coverage_mark(stmt_idx, cat)
+	_open_coverage()
+
+# Archiv der letzten 8 Blätter inkl. Trefferquote (embedded = ohne eigene Kopfzeile)
+func _render_coverage_archive(embedded: bool = false) -> void:
+	var st = Game.state
+	if not embedded:
+		modal_box.add_child(_lbl("📚 Coverage-Archiv", 22, ACC))
+	var cov_stats := Game.coverage_stats()
+	modal_box.add_child(_lbl("Trefferquote gesamt: %d/%d Marker richtig%s" % [int(cov_stats.hits), int(cov_stats.done), (" · %d warten auf den Kinostart" % int(cov_stats.open)) if int(cov_stats.open) > 0 else ""], 13, GREEN if int(cov_stats.hits) * 2 >= int(cov_stats.done) else AMBER))
+	var hist: Array = st.coverage.get("history", [])
+	if hist.is_empty():
+		modal_box.add_child(_lbl("Noch keine abgelaufenen Blätter.", 12, DIM))
+	for sheet in hist:
+		var marks: Array = []
+		var truth_n := 0
+		for sttm in sheet.statements:
+			if bool(sttm.get("truth", false)):
+				truth_n += 1
+			var marked := str(sttm.get("marked", ""))
+			if marked == "":
+				continue
+			var info: Dictionary = Game.COVERAGE_CATS.get(marked, {})
+			var pr = _coverage_prediction_for(int(sheet.id), marked)
+			var icon := "⏳"
+			if pr != null and bool(pr.get("resolved", false)):
+				icon = "✅" if bool(pr.get("correct", false)) else "❌"
+			marks.append("%s %s" % [icon, info.get("de", marked)])
+		modal_box.add_child(_lbl("„%s“ (%s) · Lektorat traf zu: %d/%d%s" % [str(sheet.title), Game.mi_str(int(sheet.mi)), truth_n, sheet.statements.size(),
+			(" · Marker: " + " · ".join(marks)) if marks.size() else " · keine Marker gesetzt"], 12, TEXT_C))
+	var back_row := HBoxContainer.new()
+	back_row.add_theme_constant_override("separation", 8)
+	modal_box.add_child(back_row)
+	if st.coverage.get("current") != null:
+		back_row.add_child(_btn("📋 Aktuelles Blatt", func():
+			_coverage_archive = false
+			_open_coverage(), true))
+	back_row.add_child(_btn("Schließen", _close_modal, st.coverage.get("current") == null))
+
 # ---------- Tab: Klienten (inkl. Karriere-DNA & Dossier) ----------
 func _render_klienten() -> void:
 	var st = Game.state
@@ -869,6 +1094,8 @@ func _render_klienten() -> void:
 			chips.append(_chip("⚠ Überlastet", RED))
 		if c.flags.get("typecast", false):
 			chips.append(_chip("🎭 Typecast", AMBER))
+		if c.flags.get("typecastRisk", false):
+			chips.append(_chip("⚠ Typecasting-Risiko", AMBER))
 		if c.flags.get("tvIncome") != null and int(c.flags.tvIncome.months) > 0:
 			chips.append(_chip("📺 TV-Serie: %d Mon." % int(c.flags.tvIncome.months), BLUE))
 		if str(c.flags.get("powerFigure", "")) != "":
@@ -936,9 +1163,100 @@ func _render_klienten() -> void:
 		for f in c.films.slice(0, 3):
 			var fcol := GREEN if f.verdict in ["Hit", "Blockbuster"] else (RED if f.verdict == "Flop" else DIM)
 			box.add_child(_lbl("🎞 „%s“ (%d) — %s, Q %d" % [f.title, int(f.year), f.verdict, int(f.quality)], 12, fcol))
+		_render_career_board(box, c)
 
 func _on_narrative(cid: int, type_s: String) -> void:
 	_show_simple_modal("Eine Karriere wird zur Geschichte", Game.declare_narrative(cid, type_s))
+
+# ---------- Karrierebrett: 3 Plan-Slots mit DNA-Trajektorie ----------
+func _render_career_board(box: VBoxContainer, c: Dictionary) -> void:
+	Game.ensure_board(c)
+	var board: Dictionary = c.careerBoard
+	var ana := Game.board_analysis(c)
+	box.add_child(_lbl("🎯 Karrierebrett — die nächsten drei Projekte%s" % (" · %d× abgeschlossen" % int(board.get("completed", 0)) if int(board.get("completed", 0)) > 0 else ""), 13, ACC))
+	# Ehrliche Vorschau der Folge: Bonus UND Risiko auf den Tisch
+	if int(ana.planned) == Game.BOARD_SLOTS:
+		if bool(ana.contrasting):
+			box.add_child(_lbl("✨ Transformations-Bonus: drei Genres in Folge — die Presse wird die Vielseitigkeit feiern (Einzigartig steigt).", 11, GREEN))
+		elif bool(ana.repetitive):
+			box.add_child(_lbl("⚠ Typecasting-Sog: dreimal dasselbe Profil — schneller Ruhm kurzfristig, aber das Bild erstarrt (ab Slot 3 Risiko).", 11, AMBER))
+		else:
+			box.add_child(_lbl("Eine ausgewogene Folge — weder Feuerwerk noch Sog, dafür Kontrolle über das Image.", 11, DIM))
+		var proj_label: String = Game.dna_label({"dna": ana.projected})
+		box.add_child(_lbl("Projektion: „%s“ → „%s“ (bei normalem Verlauf)" % [Game.dna_label(c), proj_label], 11, DIM))
+	elif int(ana.planned) > 0:
+		box.add_child(_lbl("Noch %d Slot(s) frei — erst die volle Folge zeigt ihre Wirkung." % (Game.BOARD_SLOTS - int(ana.planned)), 11, DIM))
+	var next_open := Game.board_next_open(c)
+	for i in board.slots.size():
+		var slot: Dictionary = board.slots[i]
+		var filled := int(slot.get("filledMi", -1)) >= 0
+		var srow := HBoxContainer.new()
+		srow.add_theme_constant_override("separation", 8)
+		box.add_child(srow)
+		if filled:
+			var fl := _lbl("✅ Slot %d: %s — erfüllt durch „%s“ (×1,5 Prägung)" % [i + 1, Game.board_slot_label(slot), str(slot.get("filledTitle", ""))], 11, GREEN)
+			fl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			srow.add_child(fl)
+		else:
+			var sl2 := _lbl("%s Slot %d: %s%s" % ["🎯" if i == next_open else "▫", i + 1, Game.board_slot_label(slot), " — als Nächstes" if i == next_open else ""], 11, TEXT_C if i == next_open else DIM)
+			sl2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			srow.add_child(sl2)
+			srow.add_child(_btn("✕", Game.board_slot_remove.bind(int(c.id), i)))
+	if board.slots.size() < Game.BOARD_SLOTS:
+		box.add_child(_btn("＋ Rollenprofil planen", _open_board_picker.bind(int(c.id))))
+	# Narrativ-Integration: passende Profile per Ein-Klick-Übernahme
+	var nar: Dictionary = c.get("narrative", {})
+	if not nar.is_empty() and str(nar.get("status", "")) == "aktiv":
+		var sug := Game.board_suggestions(c)
+		var sug_labels: Array = []
+		for s in sug:
+			sug_labels.append(Game.board_slot_label({"genre": s[0], "roleType": s[1], "prestige": s[2]}))
+		box.add_child(_lbl("📖 Vorschlag zum Narrativ: %s" % "  →  ".join(sug_labels), 11, ACC))
+		box.add_child(_btn("Vorschlag übernehmen", _on_board_adopt.bind(int(c.id))))
+
+var _board_picker := {}
+
+func _on_board_adopt(cid: int) -> void:
+	_show_simple_modal("Karrierebrett", Game.board_adopt_suggestion(cid))
+
+func _open_board_picker(cid: int) -> void:
+	_open_modal()
+	modal_box.add_child(_lbl("＋ Rollenprofil planen", 22, ACC))
+	modal_box.add_child(_lbl("Eine Absicht, kein konkreter Film: Genre + Rollentyp + Prestige-Stufe. Erfüllt wird der Slot, wenn ein Deal zum Genre ODER zur Kombination aus Typ & Stufe passt.", 12, DIM))
+	_board_picker = {"cid": cid}
+	var genre_opt := OptionButton.new()
+	for g in Data.GENRES:
+		genre_opt.add_item(_genre_de(g))
+	genre_opt.add_theme_font_size_override("font_size", int(14 * font_scale))
+	modal_box.add_child(_lbl("Genre", 12, DIM))
+	modal_box.add_child(genre_opt)
+	_board_picker["genre"] = genre_opt
+	var type_opt := OptionButton.new()
+	type_opt.add_item("🎯 Hauptrolle")
+	type_opt.add_item("▫ Nebenrolle")
+	type_opt.add_theme_font_size_override("font_size", int(14 * font_scale))
+	modal_box.add_child(_lbl("Rollentyp", 12, DIM))
+	modal_box.add_child(type_opt)
+	_board_picker["type"] = type_opt
+	var tier_opt := OptionButton.new()
+	for t in [1, 2, 3]:
+		tier_opt.add_item(str(Game.BOARD_PRESTIGE_TIERS[t]))
+	tier_opt.add_theme_font_size_override("font_size", int(14 * font_scale))
+	modal_box.add_child(_lbl("Prestige-Stufe", 12, DIM))
+	modal_box.add_child(tier_opt)
+	_board_picker["tier"] = tier_opt
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 8)
+	modal_box.add_child(btn_row)
+	btn_row.add_child(_btn("Slot planen", _do_board_slot_add, true))
+	btn_row.add_child(_btn("Abbrechen", _close_modal))
+
+func _do_board_slot_add() -> void:
+	var genres := Data.GENRES.keys()
+	var g := str(genres[_board_picker.genre.selected])
+	var rt := "lead" if _board_picker.type.selected == 0 else "support"
+	var p: int = _board_picker.tier.selected + 1
+	_show_simple_modal("Karrierebrett", Game.board_slot_add(int(_board_picker.cid), g, rt, p))
 
 # ---------- Tab: Gerüchte ----------
 func _render_rumors() -> void:
@@ -1243,14 +1561,16 @@ func _render_castings() -> void:
 		cv0[1].add_child(_lbl("Für %d weitere Monate ruhen alle Castings." % int(st.strikeMonths), 13, DIM))
 		content_box.add_child(cv0[0])
 		return
-	if st.castings.is_empty():
+	# Coverage-Castings bleiben bis nächsten Monat verdeckt
+	var visible_castings: Array = st.castings.filter(func(cs): return not bool(cs.get("hidden", false)))
+	if visible_castings.is_empty():
 		var cv1 = _card("Keine offenen Castings", "🎬")
 		cv1[1].add_child(_lbl("Nächsten Monat schreiben die Studios neue Projekte aus.", 13, DIM))
 		content_box.add_child(cv1[0])
 		return
 	var grid := _grid(620.0)
 	content_box.add_child(grid)
-	for cs in st.castings:
+	for cs in visible_castings:
 		var studio = Game._studio(cs.studioId)
 		var cv = _card("„%s“" % cs.title, GENRE_ICONS.get(cs.genre, "🎬"))
 		grid.add_child(cv[0])
@@ -1267,6 +1587,9 @@ func _render_castings() -> void:
 			box.add_child(_lbl("🎬 Regie: %s%s" % [cs.director.name, " · bevorzugt deine Agentur" if bool(cs.director.agencyFriendly) else " · aus einem Rivalenhaus"], 12, GREEN if bool(cs.director.agencyFriendly) else RED))
 		if cs.has("producer"):
 			box.add_child(_lbl("💼 Produktion: %s%s" % [cs.producer.name, " · bevorzugt deine Agentur" if bool(cs.producer.agencyFriendly) else " · aus einem Rivalenhaus"], 12, GREEN if bool(cs.producer.agencyFriendly) else RED))
+		if Game.chem_read_available(cs):
+			box.add_child(_btn("🧪 Chemistry Read arrangieren", _start_chem_read_ui.bind(int(cs.id)), true))
+			box.add_child(_lbl("Zwei offene Rollen, zwei eigene Paarungen — plus der Vorschlag des Studios. Jederzeit überspringbar.", 11, DIM))
 		for i in cs.roles.size():
 			var r: Dictionary = cs.roles[i]
 			var row := HBoxContainer.new()
@@ -1275,6 +1598,7 @@ func _render_castings() -> void:
 			var desc := "%s %s (%s, %d–%d J.) · ab ⭐ %d · ca. %s" % ["🎯" if r.type == "lead" else "▫", "Hauptrolle" if r.type == "lead" else "Nebenrolle", "♂" if r.gender == "m" else "♀", int(r.ageMin), int(r.ageMax), int(r.minFame), Game.fmt_money(r.fee)]
 			var dl := _lbl(desc, 12, TEXT_C if r.type == "lead" else DIM)
 			dl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			dl.autowrap_mode = TextServer.AUTOWRAP_OFF
 			row.add_child(dl)
 			if r.filled == null:
 				row.add_child(_btn("Klient pitchen", _open_pitch.bind(int(cs.id), i)))
@@ -1328,6 +1652,8 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 			nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(nl)
 			row.add_child(_btn("Vorschlagen", _do_pitch.bind(casting_id, role_idx, int(e.c.id))))
+			if Game.audition_available(cs, role):
+				row.add_child(_btn("Zum Vorsprechen antreten", _start_audition_ui.bind(casting_id, role_idx, int(e.c.id)), true))
 		modal_box.add_child(_lbl("🧬 = Karriere-DNA/Image-Abgleich. Ein Westernstar überzeugt nicht über Nacht als Romantiker.", 12, DIM))
 	# Gefallen: Drehbuch-Einsicht vor dem Pitch
 	if insight < 0 and Game.has_favor("scriptAccess"):
@@ -1372,6 +1698,214 @@ func _do_pitch(casting_id: int, role_idx: int, client_id: int) -> void:
 		_render_table("")
 		return
 	_render_studio_offer("")
+
+# ---------- Bühnen-Cluster: Das entscheidende Vorsprechen ----------
+func _start_audition_ui(casting_id: int, role_idx: int, client_id: int) -> void:
+	var result := Game.begin_audition(casting_id, role_idx, client_id)
+	if not bool(result.get("ok", false)):
+		_show_simple_modal("Vorsprechen verpasst", str(result.get("msg", "Die Gelegenheit ist verstrichen.")))
+		return
+	_render_audition_briefing()
+
+func _render_audition_briefing() -> void:
+	if Game.state.get("audition") == null:
+		_close_modal()
+		return
+	var aud: Dictionary = Game.state.audition
+	var casting = Game._casting(aud.castingId)
+	var c = Game.client(aud.clientId)
+	if casting == null or c == null:
+		Game.state.audition = null
+		_close_modal()
+		return
+	var role: Dictionary = casting.roles[int(aud.roleIdx)]
+	var director_name := Game._director_name_for(casting)
+	_open_modal()
+	modal_box.add_child(_lbl("🎭 Das entscheidende Vorsprechen", 22, ACC))
+	modal_box.add_child(_rich("[i]„Eine Szene. Vier Entscheidungen. Danach weiß der Raum, ob er deinen Namen vergisst.“[/i]", 14))
+	modal_box.add_child(_lbl("„%s“ · %s · Regie: %s" % [casting.title, "Hauptrolle" if str(role.type) == "lead" else "Nebenrolle", director_name], 13, DIM))
+	modal_box.add_child(_chip_row([_chip(Game.client_name(c), BLUE), _chip("🧬 " + Game.dna_label(c), ACC),
+		_chip("📖 %d Entscheidungen vorbereitbar" % Game.audition_preparation_limit(c), GREEN)]))
+	var competition := Game.audition_competition(casting, role)
+	if competition.size():
+		modal_box.add_child(_lbl("Bekannte Konkurrenz", 13, AMBER))
+		for rival in competition:
+			modal_box.add_child(_lbl("• %s · %s · Image: %s" % [rival.name, rival.agency, rival.image], 12, DIM))
+	if aud.revealed.size():
+		modal_box.add_child(_lbl("Hinweise aus dem Vorzimmer", 13, GREEN))
+		for hint in aud.revealed:
+			modal_box.add_child(_lbl("• " + Game.audition_hint_text(casting, hint), 12, GREEN))
+	var archive_s := Game.director_archive_hint(director_name)
+	if archive_s != "":
+		modal_box.add_child(_lbl(archive_s, 12, DIM))
+	if Game.has_favor("scriptAccess") and not aud.revealed.any(func(h): return str(h.get("source", "")) == "script"):
+		modal_box.add_child(_btn("🔍 Drehbuch-Einsicht einlösen — eine Vorliebe enthüllen", func():
+			Game.audition_reveal_script()
+			_render_audition_briefing()))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	modal_box.add_child(actions)
+	actions.add_child(_btn("Vorsprechen beginnen", func():
+		Game.audition_begin_choices()
+		_render_audition_choice(), true))
+	actions.add_child(_btn("Nur normal pitchen", func():
+		var cid := int(aud.castingId)
+		var ridx := int(aud.roleIdx)
+		Game.state.audition = null
+		_open_pitch(cid, ridx)))
+	actions.add_child(_btn("Absagen", _abandon_audition))
+
+func _abandon_audition() -> void:
+	Game.state.audition = null
+	_close_modal()
+
+func _render_audition_choice() -> void:
+	if Game.state.get("audition") == null:
+		return
+	var aud: Dictionary = Game.state.audition
+	var casting = Game._casting(aud.castingId)
+	var c = Game.client(aud.clientId)
+	var step := int(aud.step)
+	if casting == null or c == null or step < 1 or step > Game.AUDITION_DIMS.size():
+		return
+	var dim: String = str(Game.AUDITION_DIMS[step - 1])
+	var heading := {"scene":"Welche Szene?", "interpretation":"Welche Interpretation?", "appearance":"Wie betritt der Klient den Raum?", "emphasis":"Was soll hängen bleiben?"}.get(dim, dim)
+	var prepared_n: int = aud.choices.values().filter(func(ch): return bool(ch.get("prepared", false))).size()
+	var limit := Game.audition_preparation_limit(c)
+	_open_modal()
+	modal_box.add_child(_lbl("🎭 Vorsprechen · Entscheidung %d/4" % step, 22, ACC))
+	modal_box.add_child(_lbl(heading, 16, TEXT_C))
+	modal_box.add_child(_lbl("Vorbereitung: %d/%d eingesetzt. Spontane Entscheidungen enthalten einen unsicheren Wurf." % [prepared_n, limit], 12, DIM))
+	for value in Game.AUDITION_OPTIONS[dim]:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		modal_box.add_child(row)
+		var option_label := _lbl(Game.audition_choice_label(casting, dim, str(value)), 14)
+		option_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		option_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		row.add_child(option_label)
+		if prepared_n < limit:
+			row.add_child(_btn("📖 Vorbereiten", _audition_pick.bind(dim, str(value), true), true))
+		row.add_child(_btn("🎲 Spontan", _audition_pick.bind(dim, str(value), false)))
+	modal_box.add_child(_btn("Vorsprechen abbrechen", _abandon_audition))
+
+func _audition_pick(dim: String, value: String, prepared: bool) -> void:
+	var result := Game.audition_choose(dim, value, prepared)
+	if not bool(result.get("ok", false)):
+		_show_simple_modal("Nicht möglich", str(result.get("msg", "Diese Entscheidung ist nicht mehr verfügbar.")))
+		return
+	if bool(result.get("done", false)):
+		_render_audition_result(Game.resolve_audition())
+	else:
+		_render_audition_choice()
+
+func _render_audition_result(result: Dictionary) -> void:
+	_open_modal()
+	var outcome := str(result.get("outcome", "clear"))
+	if outcome == "win":
+		modal_box.add_child(_lbl("🌟 Die Rolle gehört deinem Klienten", 22, GREEN))
+		modal_box.add_child(_rich("[i]„Das war keine Probe. Das war die Figur.“[/i]\n\n%d von 4 Regievorlieben getroffen. Der Vertrag bringt [b]10 %% Gagenbonus[/b], und %s merkt sich die Zusammenarbeit." % [int(result.matches), str(result.director)], 15))
+		modal_box.add_child(_btn("Zurück zu den Castings", _close_modal, true))
+	elif outcome == "narrow":
+		modal_box.add_child(_lbl("🎬 Ein Foto-Finish", 22, AMBER))
+		modal_box.add_child(_rich("[i]„Für die Hauptrolle war es ein Wimpernschlag. Aber wir wollen weiterreden.“[/i]\n\nKein Ruf- oder Karriere-Dauerschaden.", 15))
+		var fallbacks: Array = result.get("fallbacks", [])
+		for fallback in fallbacks:
+			modal_box.add_child(_btn("Nebenrollen-Angebot annehmen · %s" % Game.fmt_money(fallback.fee),
+				_take_audition_support.bind(int(result.castingId), int(result.clientId), int(fallback.roleIdx)), true))
+		if bool(result.get("favor", false)):
+			modal_box.add_child(_lbl("Das Studio schuldet dir stattdessen ein zusätzliches Vorsprechen.", 13, GREEN))
+		modal_box.add_child(_btn("Ohne Deal weiter", _close_modal))
+	else:
+		modal_box.add_child(_lbl("Der Raum bleibt kühl", 22, DIM))
+		modal_box.add_child(_rich("[i]„Heute war es nicht die Figur, die ich suche.“[/i]\n\nKeine Werte sinken. Nur beim nächsten Vorsprechen bei %s wirkt einmalig ein kleiner Malus — danach ist die Sache vergessen." % str(result.director), 15))
+		modal_box.add_child(_btn("Weiter", _close_modal, true))
+
+func _take_audition_support(casting_id: int, client_id: int, role_idx: int) -> void:
+	var result := Game.audition_support_fallback(casting_id, client_id, role_idx)
+	if bool(result.get("ok", false)):
+		_show_simple_modal("Nebenrolle unter Dach und Fach", "[i]„Nicht die Rolle über dem Titel — aber eine, an die man sich erinnern kann.“[/i]")
+	else:
+		_show_simple_modal("Angebot verstrichen", "Das Studio hat die Nebenrolle inzwischen anders besetzt.")
+
+# ---------- Bühnen-Cluster: Der Chemistry Read ----------
+func _start_chem_read_ui(casting_id: int) -> void:
+	_chem_selected.clear()
+	_render_chem_pair_picker(casting_id)
+
+func _render_chem_pair_picker(casting_id: int) -> void:
+	var casting = Game._casting(casting_id)
+	if casting == null:
+		_close_modal()
+		return
+	var pairs: Array = Game.chem_read_candidate_pairs(casting_id).slice(0, 5)
+	_open_modal()
+	modal_box.add_child(_lbl("🧪 Der Chemistry Read", 22, ACC))
+	modal_box.add_child(_rich("[i]„Zwei gute Schauspieler sind noch lange kein gutes Paar.“[/i]", 14))
+	modal_box.add_child(_lbl("Stelle zwei eigene Paarungen für „%s“ zusammen (%d/2 gewählt). Das Studio bringt zusätzlich einen eigenen Vorschlag." % [casting.title, _chem_selected.size()], 12, DIM))
+	for pair in pairs:
+		var selected := _chem_selected.has(str(pair.key))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		modal_box.add_child(row)
+		var names := _lbl("%s  ×  %s" % [pair.aName, pair.bName], 14, GREEN if selected else TEXT_C)
+		names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		names.autowrap_mode = TextServer.AUTOWRAP_OFF
+		row.add_child(names)
+		row.add_child(_btn("✓ Gewählt" if selected else "Paarung wählen", _toggle_chem_pair.bind(casting_id, str(pair.key)), selected))
+	if _chem_selected.size() == 2:
+		modal_box.add_child(_lbl("Testszene wählen", 14, ACC))
+		var scenes := HBoxContainer.new()
+		scenes.add_theme_constant_override("separation", 8)
+		modal_box.add_child(scenes)
+		for scene_s in Game.CHEM_READ_SCENES:
+			scenes.add_child(_btn(str(Game.CHEM_READ_SCENES[scene_s]), _begin_chem_test.bind(casting_id, str(scene_s)), scene_s == "love"))
+	modal_box.add_child(_btn("Nur einen Klienten pitchen", _close_modal))
+
+func _toggle_chem_pair(casting_id: int, pair_key: String) -> void:
+	if _chem_selected.has(pair_key):
+		_chem_selected.erase(pair_key)
+	elif _chem_selected.size() < 2:
+		_chem_selected.append(pair_key)
+	_render_chem_pair_picker(casting_id)
+
+func _begin_chem_test(casting_id: int, scene_s: String) -> void:
+	var result := Game.begin_chem_read(casting_id, _chem_selected, scene_s)
+	if not bool(result.get("ok", false)):
+		_show_simple_modal("Test abgesagt", "Eine der Paarungen ist nicht mehr verfügbar.")
+		return
+	_render_chem_signals()
+
+func _render_chem_signals() -> void:
+	if Game.chem_read == null:
+		return
+	_open_modal()
+	modal_box.add_child(_lbl("🎬 %s · Dailies aus dem Testraum" % str(Game.CHEM_READ_SCENES[Game.chem_read.scene]), 22, ACC))
+	modal_box.add_child(_lbl("Keine nackten Chemiewerte — nur Körpersprache, gemeinsame Vergangenheit und Flüstern aus dem Netzwerk.", 12, DIM))
+	for pair in Game.chem_read.pairs:
+		var badge := " · Vorschlag des Studios" if bool(pair.get("studioSuggestion", false)) else ""
+		modal_box.add_child(_lbl("%s × %s%s" % [pair.aName, pair.bName, badge], 15, BLUE if bool(pair.get("studioSuggestion", false)) else ACC))
+		modal_box.add_child(_rich("[i]„%s“[/i]  %s  %s" % [pair.signal.text, pair.historyText, pair.personalHint], 12))
+		modal_box.add_child(_btn("Diese Paarung besetzen", _choose_chem_pair.bind(str(pair.key)), true))
+	modal_box.add_child(_btn("Abbrechen — nur einen Klienten pitchen", func(): Game.chem_read = null; _close_modal()))
+
+func _choose_chem_pair(pair_key: String) -> void:
+	var result := Game.resolve_chem_read(pair_key)
+	if not bool(result.get("ok", false)):
+		_show_simple_modal("Entscheidung verstrichen", "Das Studio hat den Testraum bereits geschlossen.")
+		return
+	_open_modal()
+	match str(result.outcome):
+		"best":
+			modal_box.add_child(_lbl("✨ Das Traumpaar", 22, GREEN))
+			modal_box.add_child(_rich("[i]„Genau diese beiden. Keine weiteren Tests.“[/i]\n\nBeide Rollen sind besetzt, die Gagen steigen als Package um [b]12 %%[/b], und für den Dreh ist das Signal „Die Chemie stimmt“ vorgemerkt.", 15))
+		"middle":
+			modal_box.add_child(_lbl("🎬 Solide Besetzung", 22, ACC))
+			modal_box.add_child(_rich("[i]„Das trägt den Film. Machen wir den Vertrag.“[/i]\n\nBeide Rollen werden zu normalen Konditionen besetzt.", 15))
+		_:
+			modal_box.add_child(_lbl("↩ Das Studio korrigiert das Paar", 22, AMBER))
+			modal_box.add_child(_rich("[i]„Ihr Klient bleibt. Den Partner besetzen wir selbst.“[/i]\n\nDer Rückweg greift: Ein eigener Klient behält sicher seine Rolle; nur die zweite Besetzung kommt von außen.", 15))
+	modal_box.add_child(_btn("Zurück zu den Castings", _close_modal, true))
 
 func _render_studio_offer(note: String) -> void:
 	var ctx = Game.pitch_ctx
@@ -1644,6 +2178,9 @@ func _open_modal() -> void:
 func _close_modal() -> void:
 	modal_layer.visible = false
 	modal_open = false
+	_coverage_pick = -1
+	_coverage_archive = false
+	_coverage_note = ""
 	Game.save_game()
 	render()
 	_show_next_modal()

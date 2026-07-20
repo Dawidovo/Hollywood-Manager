@@ -136,9 +136,30 @@ const RIVAL_STYLE_INFO := {
 	"prestige": {"label":"Prestige", "icon":"🎩"},
 }
 
+# Bühnen-Cluster: Die vier Entscheidungen eines Vorsprechens. Die Werte sind
+# bewusst genreunabhängige Schlüssel; nur ihre Texte wechseln mit dem Film.
+const AUDITION_DIMS := ["scene", "interpretation", "appearance", "emphasis"]
+const AUDITION_OPTIONS := {
+	"scene": ["speech", "quiet", "confrontation"],
+	"interpretation": ["faithful", "modern", "bold"],
+	"appearance": ["glamour", "serious", "in_character"],
+	"emphasis": ["charm", "professional", "courage"],
+}
+const AUDITION_LABELS := {
+	"interpretation": {"faithful":"werktreu", "modern":"modern", "bold":"gewagt"},
+	"appearance": {"glamour":"Glamour", "serious":"seriös", "in_character":"in der Rolle erscheinen"},
+	"emphasis": {"charm":"Charme", "professional":"Professionalität", "courage":"künstlerischer Mut"},
+}
+const CHEM_READ_SCENES := {
+	"love": "Liebesszene",
+	"conflict": "Streitszene",
+	"comedy": "Komödien-Timing",
+}
+
 var state = null
 var nego = null
 var pitch_ctx = null
+var chem_read = null
 var actor_by_id: Dictionary = {}
 var _attr_cache: Dictionary = {}
 
@@ -391,7 +412,9 @@ func new_game(agency_name: String, start_year: int) -> void:
 		"rumors": [], "newspaper": [], "pressFeed": [],
 		"rivals": [], "powerFigures": [], "identity": {}, "identityLastTop": [],
 		"instinct": 20, "predictions": [], "history_pairs": {},
+		"audition": null, "directors": {},
 		"planner": {"player": [null, null, null, null], "clients": {}}, "scoutBonus": 0,
+		"coverage": {"current": null, "history": []}, "coverageQueue": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [],
 		"strikeMonths": 0, "strikeExempt": false,
@@ -1514,32 +1537,40 @@ func project_title(genre: String) -> String:
 	return make_title(genre)
 
 func spawn_castings(count: int) -> void:
-	var y = state.year
 	for i in count:
-		var studio = pick(active_studios())
-		var genre := pick_genre()
-		var prestige := rndi(1, 3) if studio.style != "commercial" else rndi(0, 2)
-		if genre == "drama" and chance(0.4):
-			prestige = mini(3, prestige + 1)
-		var roles: Array = []
-		var lead_gender = "m" if chance(0.5) else "f"
-		roles.append(_mk_role("lead", lead_gender, prestige, y))
-		if chance(0.6):
-			roles.append(_mk_role("lead", "f" if lead_gender == "m" else "m", prestige, y))
+		state.castings.append(_make_casting())
+
+# Einzelnes Casting erzeugen (auch von der Coverage genutzt — die hält es
+# einen Monat verdeckt, bevor es regulär auf dem Markt erscheint).
+func _make_casting() -> Dictionary:
+	var y = state.year
+	var studio = pick(active_studios())
+	var genre := pick_genre()
+	var prestige := rndi(1, 3) if studio.style != "commercial" else rndi(0, 2)
+	if genre == "drama" and chance(0.4):
+		prestige = mini(3, prestige + 1)
+	var roles: Array = []
+	var lead_gender = "m" if chance(0.5) else "f"
+	roles.append(_mk_role("lead", lead_gender, prestige, y))
+	if chance(0.6):
+		roles.append(_mk_role("lead", "f" if lead_gender == "m" else "m", prestige, y))
+	roles.append(_mk_role("support", "m" if chance(0.5) else "f", prestige, y))
+	if chance(0.4):
 		roles.append(_mk_role("support", "m" if chance(0.5) else "f", prestige, y))
-		if chance(0.4):
-			roles.append(_mk_role("support", "m" if chance(0.5) else "f", prestige, y))
-		var fee_sum := 0.0
-		for r in roles:
-			fee_sum += r.fee
-		var casting := {
-			"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
-			"prestige": prestige,
-			"budget": roundi(fee_sum * rndf(3.0, 4.5) + 400000.0 * infl(y) * rndf(0.6, 1.4) * (1.0 + prestige * 0.3)),
-			"deadline": rndi(2, 3), "roles": roles, "qualityMod": 0.0,
-		}
-		assign_power_figure_to_casting(casting)
-		state.castings.append(casting)
+	var fee_sum := 0.0
+	for r in roles:
+		fee_sum += r.fee
+	var casting := {
+		"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
+		"prestige": prestige,
+		"budget": roundi(fee_sum * rndf(3.0, 4.5) + 400000.0 * infl(y) * rndf(0.6, 1.4) * (1.0 + prestige * 0.3)),
+		"deadline": rndi(2, 3), "roles": roles, "qualityMod": 0.0,
+	}
+	# Seltene offene Einladung auch für eine Nebenrolle.
+	casting["auditionSupport"] = chance(0.12)
+	casting["dreamPair"] = chance(0.08)
+	assign_power_figure_to_casting(casting)
+	return casting
 
 func _mk_role(type: String, gender: String, prestige: int, y: float) -> Dictionary:
 	var min_fame := rndi(25, 55 + prestige * 10) if type == "lead" else rndi(10, 35)
@@ -1752,6 +1783,9 @@ func check_promises_on_deal(c: Dictionary, casting: Dictionary, role: Dictionary
 			fulfill_promise(c, pr)
 		if pr.type == "prestige" and int(casting.prestige) >= 2:
 			fulfill_promise(c, pr)
+	# Karrierebrett: jede Deal-Art (Casting, Package, Sofort-Deal) läuft hier
+	# hindurch — die geplante Rollenfolge wird an derselben Stelle abgeglichen.
+	check_board_on_deal(c, casting, role)
 
 func fulfill_promise(c: Dictionary, pr: Dictionary) -> void:
 	pr.fulfilled = true
@@ -1881,11 +1915,17 @@ func end_month() -> Array:
 		while state.castings.size() > 10:
 			state.castings.pop_front()
 
+	# Script Coverage: Blatt verfällt, verdecktes Casting wird sichtbar,
+	# ggf. neues Blatt auf den Schreibtisch (neue Blätter nur ohne Streik)
+	_tick_coverage(events, strike)
+
 	# Weekly Planner: geplante Wochen-Aktivitäten wirken VOR den Ereignissen
 	_apply_planner(events)
 	tick_clients(events)
 	tick_rumors(events)
 	tick_rivals(events)
+	# Karrierebretter: veraltete Plan-Slots verfallen lautlos
+	_tick_boards()
 	# Instinkt-Prognosen (Feature 6): fällige Wetten auflösen
 	tick_predictions(events)
 
@@ -2141,6 +2181,18 @@ func release_film(prod: Dictionary) -> Dictionary:
 	var revenue := roundi(prod.budget * (0.25 + quality / 45.0 + star_power / 70.0) * state.market * rndf(0.55, 1.75))
 	var ratio: float = float(revenue) / prod.budget
 	var verdict := "Flop" if ratio < 1.0 else ("Achtbarer Erfolg" if ratio < 2.0 else ("Hit" if ratio < 3.2 else "Blockbuster"))
+	# Coverage-Prognose „Rolle wird geschnitten“: der Schnitt-Wurf fällt beim
+	# Release, die Wahrscheinlichkeit hängt am verdeckten Rollengrößen-Flag.
+	for pr in state.get("predictions", []):
+		if pr.get("resolved", false) or str(pr.get("type", "")) != "coverage":
+			continue
+		if str(pr.subject.get("cat", "")) != "schnitt":
+			continue
+		if int(pr.subject.get("castingId", -1)) != int(prod.id):
+			continue
+		var ridx := clampi(int(pr.subject.get("roleIdx", 0)), 0, prod.roles.size() - 1)
+		if _coverage_cut_roll(prod, prod.roles[ridx]):
+			prod.roles[ridx]["_coverageCut"] = true
 	var affected: Array = []
 	var fame_deltas := {}
 	for r in prod.roles:
@@ -2158,6 +2210,11 @@ func release_film(prod: Dictionary) -> Dictionary:
 			c.mood = clampf(c.mood - 4.0, 0.0, 100.0)
 		else:
 			delta = clampf(delta * 1.05, -12.0, 18.0)
+		# Coverage bestätigt: die Rolle fällt der Schere zum Opfer
+		if bool(r.get("_coverageCut", false)):
+			delta = clampf(delta * 0.25, -12.0, 18.0)
+			c.mood = clampf(c.mood - 6.0, 0.0, 100.0)
+			press_event("Kritik", "Die Schere von %s: %s fällt in „%s“ der Endfassung zum Opfer" % [_studio(str(prod.studioId)).name, client_name(c), prod.title])
 		fame_deltas[int(c.id)] = delta
 		# Gefallen "billing": prominente Platzierung im Vorspann bringt Extra-Ruhm.
 		if c.flags.get("billingBoost", false):
@@ -2171,7 +2228,8 @@ func release_film(prod: Dictionary) -> Dictionary:
 		if c.films.size() > 12:
 			c.films.pop_back()
 		# Karriere-DNA: jede Rolle prägt das öffentliche Bild
-		imprint_dna(c, prod.genre, mult * narrative_mult, int(prod.prestige), ratio)
+		# (boardMult: erfüllter Karrierebrett-Plan prägt ×1,5 ein)
+		imprint_dna(c, prod.genre, mult * narrative_mult * float(r.filled.get("boardMult", 1.0)), int(prod.prestige), ratio)
 		advance_narrative_on_release(c, prod, r)
 		if delta >= 5.0:
 			press_event("Neue Stars", "%s springt mit „%s“ um %d Ruhmpunkte nach vorn" % [client_name(c), prod.title, roundi(delta)])
@@ -2196,9 +2254,10 @@ func release_film(prod: Dictionary) -> Dictionary:
 	var lead_keys := _prod_people_keys(prod, true)
 	for i in lead_keys.size():
 		for j in range(i + 1, lead_keys.size()):
-			note_pair_history(lead_keys[i], lead_keys[j], 2 if ratio >= 2.0 else -1)
-	# Instinkt-Prognosen auflösen (Feature 6): Hit-Wette & „Wer passt besser?“
-	_resolve_release_predictions(prod, ratio, fame_deltas)
+			note_pair_history(lead_keys[i], lead_keys[j], 2 if ratio >= 2.0 else -1, ratio, str(prod.title))
+	# Instinkt-Prognosen auflösen (Feature 6): Hit-Wette, „Wer passt besser?“
+	# und die Coverage-Marker aus dem Lektorats-Blatt
+	_resolve_release_predictions(prod, ratio, fame_deltas, quality)
 	# Produktions-Signale im Rückblick (Feature 13): Haben die Meldungen gestimmt?
 	var sigs: Array = prod.get("signals", [])
 	if sigs.size():
@@ -2342,6 +2401,10 @@ func load_game() -> bool:
 		state["predictions"] = []
 	if not state.has("history_pairs"):
 		state["history_pairs"] = {}
+	if not state.has("audition"):
+		state["audition"] = null
+	if not state.has("directors") or not (state.directors is Dictionary):
+		state["directors"] = {}
 	if not state.has("scoutBonus"):
 		state["scoutBonus"] = 0
 	if not state.has("planner"):
@@ -2350,6 +2413,15 @@ func load_game() -> bool:
 		state.planner["player"] = [null, null, null, null]
 	if not state.planner.has("clients"):
 		state.planner["clients"] = {}
+	# Migration Bewertungs-Cluster (Coverage & Karrierebretter)
+	if not state.has("coverage") or not (state.coverage is Dictionary):
+		state["coverage"] = {"current": null, "history": []}
+	if not state.coverage.has("current"):
+		state.coverage["current"] = null
+	if not state.coverage.has("history"):
+		state.coverage["history"] = []
+	if not state.has("coverageQueue"):
+		state["coverageQueue"] = 0
 	# Migration: alter Netzwerk-Wert wird in konkrete Gefallen umgewandelt
 	# (pro 15 Punkte ein Gefallen), das Feld danach entfernt.
 	if state.has("network"):
@@ -2382,6 +2454,18 @@ func load_game() -> bool:
 			c["fameHistory"] = [{"mi":mi(), "v":float(c.fame)}]
 		if not c.has("dnaHistory"):
 			c["dnaHistory"] = [{"mi":mi(), "romantik":float(c.dna.romantik), "popular":float(c.dna.popular), "verlass":float(c.dna.verlass), "unikat":float(c.dna.unikat), "familie":float(c.dna.familie)}]
+		# Migration: Karrierebrett (3 Plan-Slots pro Klient)
+		if not c.has("careerBoard") or not (c.careerBoard is Dictionary):
+			c["careerBoard"] = {"slots": [], "startedMi": mi(), "completed": 0}
+		if not c.careerBoard.has("slots"):
+			c.careerBoard["slots"] = []
+		if not c.careerBoard.has("startedMi"):
+			c.careerBoard["startedMi"] = mi()
+		for slot in c.careerBoard.slots:
+			if not slot.has("filledMi"):
+				slot["filledMi"] = -1
+			if not slot.has("createdMi"):
+				slot["createdMi"] = int(c.careerBoard.startedMi)
 	for rumor in state.rumors:
 		if not rumor.has("impactApplied"):
 			rumor["impactApplied"] = false
@@ -2506,8 +2590,8 @@ func _resolve_prediction(pr: Dictionary, correct: bool, label: String) -> void:
 		state.instinct = maxi(5, int(state.instinct) - 1)
 		log_msg("Prognose daneben: %s — Instinkt −1." % label, "info")
 
-# Auflösung beim Release (Hit-Wette & „Wer passt besser?“)
-func _resolve_release_predictions(prod: Dictionary, ratio: float, fame_deltas: Dictionary) -> void:
+# Auflösung beim Release (Hit-Wette, „Wer passt besser?“, Coverage-Marker)
+func _resolve_release_predictions(prod: Dictionary, ratio: float, fame_deltas: Dictionary, quality: int = -1) -> void:
 	for pr in state.get("predictions", []):
 		if pr.get("resolved", false):
 			continue
@@ -2518,6 +2602,8 @@ func _resolve_release_predictions(prod: Dictionary, ratio: float, fame_deltas: D
 			var other_c = client(pr.subject.get("other", -1))
 			var other_delta := (float(other_c.fame) - float(pr.subject.get("otherFame", 0.0))) if other_c != null else -99.0
 			_resolve_prediction(pr, (chosen_delta >= other_delta) == bool(pr.guess), str(pr.get("note", "Besetzungs-Prognose")))
+		elif str(pr.type) == "coverage" and int(pr.subject.get("castingId", -1)) == int(prod.id):
+			_resolve_coverage_prediction(pr, prod, ratio, quality)
 
 # Monatstakt: Star-Prognosen verfallen nach 8 Jahren; Sicherheits-Verfall ohne Strafe
 func tick_predictions(_events: Array) -> void:
@@ -2530,7 +2616,7 @@ func tick_predictions(_events: Array) -> void:
 					var c = client(pr.subject)
 					var fame_now := float(c.fame) if c != null else 0.0
 					_resolve_prediction(pr, (fame_now >= 70.0) == bool(pr.guess), str(pr.get("note", "Star-Prognose")))
-			"hit", "betterfit":
+			"hit", "betterfit", "coverage":
 				if mi() >= int(pr.dueMi) + 12:
 					pr["resolved"] = true
 
@@ -2564,11 +2650,16 @@ func chemistry(a_key: String, b_key: String) -> Dictionary:
 	personal = clampi(personal + int(hist.get("p", 0)), -10, 10)
 	return {"screen": screen, "personal": personal}
 
-func note_pair_history(a_key: String, b_key: String, personal_delta: int) -> void:
+func note_pair_history(a_key: String, b_key: String, personal_delta: int, success: float = -1.0, title_s: String = "") -> void:
 	var k := pair_key(a_key, b_key)
 	var hist: Dictionary = state.history_pairs.get(k, {"n": 0, "p": 0})
 	hist["n"] = int(hist.get("n", 0)) + 1
 	hist["p"] = clampi(int(hist.get("p", 0)) + personal_delta, -8, 8)
+	if success >= 0.0:
+		hist["successSum"] = float(hist.get("successSum", 0.0)) + success
+		hist["lastSuccess"] = success
+	if title_s != "":
+		hist["lastTitle"] = title_s
 	state.history_pairs[k] = hist
 	while state.history_pairs.size() > 120:
 		state.history_pairs.erase(state.history_pairs.keys()[0])
@@ -2587,7 +2678,7 @@ func _director_key(prod_or_casting: Dictionary) -> String:
 		if d is Dictionary:
 			return "dir:" + str(d.get("name", "?"))
 		return "dir:" + str(d)
-	return "dir:" + str(FAVOR_CONTACTS.regisseur[hashs(str(prod_or_casting.get("id", 0))) % FAVOR_CONTACTS.regisseur.size()])
+	return "dir:" + str(FAVOR_CONTACTS.regisseur[hashs(str(prod_or_casting.get("title", prod_or_casting.get("id", 0)))) % FAVOR_CONTACTS.regisseur.size()])
 
 func _director_name_for(casting: Dictionary) -> String:
 	var k := _director_key(casting)
@@ -2605,6 +2696,496 @@ func _prod_people_keys(prod: Dictionary, leads_only: bool) -> Array:
 	if dir_key != "" and not keys.has(dir_key):
 		keys.append(dir_key)
 	return keys
+
+# =====================================================================
+# Bühnen-Cluster: Das entscheidende Vorsprechen · Der Chemistry Read
+# =====================================================================
+
+func audition_available(casting: Dictionary, role: Dictionary) -> bool:
+	if role == null or role.get("filled") != null:
+		return false
+	return (str(role.get("type", "")) == "lead" and int(casting.get("prestige", 0)) >= 2) \
+		or (str(role.get("type", "")) == "support" and bool(casting.get("auditionSupport", false)))
+
+func audition_choice_label(casting: Dictionary, dim: String, value: String) -> String:
+	if dim == "scene":
+		var genre_s := str(Data.GENRES.get(str(casting.get("genre", "drama")), {}).get("de", "Film"))
+		return {
+			"speech": "die große Rede des %s" % genre_s,
+			"quiet": "der stille Moment",
+			"confrontation": "die Konfrontation",
+		}.get(value, value)
+	return str(AUDITION_LABELS.get(dim, {}).get(value, value))
+
+func audition_profile(director_name: String, prod_title: String) -> Dictionary:
+	var profile := {}
+	var seed_s := director_name + prod_title
+	for dim in AUDITION_DIMS:
+		var values: Array = AUDITION_OPTIONS[dim]
+		profile[dim] = str(values[hashs(seed_s + ":" + dim) % values.size()])
+	return profile
+
+func audition_competition(casting: Dictionary, role: Dictionary) -> Array:
+	var out: Array = []
+	for rival in state.get("rivals", []):
+		for aid in rival.get("clients", []):
+			var actor: Dictionary = actor_by_id.get(str(aid), {})
+			if actor.is_empty() or str(actor.get("g", "")) != str(role.get("gender", "")):
+				continue
+			var age := age_of(actor, state.year)
+			if age < int(role.get("ageMin", 18)) - 6 or age > int(role.get("ageMax", 99)) + 8:
+				continue
+			var image_c := {"dna": initial_dna(actor)}
+			out.append({"name":str(actor.name), "aid":str(actor.id), "agency":str(rival.name),
+				"image":dna_label(image_c), "talent":float(actor.talent), "fame":float(fame_at(actor, state.year))})
+	out.sort_custom(func(a, b): return hashs(str(a.aid) + str(casting.title)) < hashs(str(b.aid) + str(casting.title)))
+	if out.is_empty():
+		var fallback: Array = available_actors().filter(func(a): return str(a.g) == str(role.get("gender", "")))
+		if fallback.size():
+			var actor: Dictionary = fallback[hashs(str(casting.title) + "competition") % mini(8, fallback.size())]
+			out.append({"name":str(actor.name), "aid":str(actor.id), "agency":"Studiofavorit",
+				"image":dna_label({"dna":initial_dna(actor)}), "talent":float(actor.talent), "fame":float(fame_at(actor, state.year))})
+	return out.slice(0, 2)
+
+func _audition_reveal(source_s: String) -> Variant:
+	if state.get("audition") == null:
+		return null
+	var aud: Dictionary = state.audition
+	var casting = _casting(aud.castingId)
+	if casting == null:
+		return null
+	var director_name := _director_name_for(casting)
+	var profile := audition_profile(director_name, str(casting.title))
+	var used: Array = aud.get("revealed", []).map(func(h): return str(h.get("dim", "")))
+	var start := hashs(str(casting.title) + source_s + str(aud.clientId)) % AUDITION_DIMS.size()
+	for offset in AUDITION_DIMS.size():
+		var dim: String = str(AUDITION_DIMS[(start + offset) % AUDITION_DIMS.size()])
+		if used.has(dim):
+			continue
+		var hint := {"dim":dim, "value":str(profile[dim]), "source":source_s}
+		aud.revealed.append(hint)
+		return hint
+	return null
+
+func begin_audition(casting_id: int, role_idx: int, client_id: int) -> Dictionary:
+	var casting = _casting(casting_id)
+	var c = client(client_id)
+	if casting == null or c == null or role_idx < 0 or role_idx >= casting.roles.size():
+		return {"ok":false, "msg":"Dieses Vorsprechen ist nicht mehr verfügbar."}
+	var role: Dictionary = casting.roles[role_idx]
+	if not audition_available(casting, role) or not is_free(c):
+		return {"ok":false, "msg":"Dieses Vorsprechen ist nicht mehr verfügbar."}
+	var eligible := eligible_clients(casting, role).any(func(e): return int(e.c.id) == client_id)
+	if not eligible:
+		return {"ok":false, "msg":"Der Klient passt nicht auf die ausgeschriebene Rolle."}
+	state.audition = {"castingId":casting_id, "roleIdx":role_idx, "clientId":client_id,
+		"step":0, "choices":{}, "revealed":[]}
+	var director_name := _director_name_for(casting)
+	var dir_chem := chemistry("dir:" + director_name, str(c.aid))
+	if int(dir_chem.personal) > 3:
+		_audition_reveal("chemistry")
+	if int(state.get("instinct", 20)) >= 60:
+		_audition_reveal("instinct")
+	return {"ok":true, "director":director_name, "competition":audition_competition(casting, role),
+		"prepLimit":audition_preparation_limit(c), "archive":director_archive_hint(director_name)}
+
+func audition_preparation_limit(c: Dictionary) -> int:
+	ensure_planner()
+	var slots: Array = state.planner.clients.get(str(int(c.id)), [])
+	var planned := slots.any(func(s): return s != null and str(s.get("a", "")) == "vorbereitung")
+	return 3 if planned or float(c.flags.get("prepFit", 0.0)) > 0.0 else 2
+
+func audition_begin_choices() -> void:
+	if state.get("audition") != null:
+		state.audition.step = 1
+
+func audition_reveal_script() -> Variant:
+	if state.get("audition") == null or not consume_favor("scriptAccess"):
+		return null
+	return _audition_reveal("script")
+
+func audition_choose(dim: String, value: String, prepared: bool) -> Dictionary:
+	if state.get("audition") == null:
+		return {"ok":false}
+	var aud: Dictionary = state.audition
+	var step := int(aud.get("step", 0))
+	if step < 1 or step > AUDITION_DIMS.size() or str(AUDITION_DIMS[step - 1]) != dim:
+		return {"ok":false}
+	if not AUDITION_OPTIONS.get(dim, []).has(value):
+		return {"ok":false}
+	var c = client(aud.clientId)
+	if c == null:
+		return {"ok":false}
+	var prepared_n := 0
+	for choice in aud.choices.values():
+		if bool(choice.get("prepared", false)):
+			prepared_n += 1
+	if prepared and prepared_n >= audition_preparation_limit(c):
+		return {"ok":false, "msg":"Alle Vorbereitungsplätze sind vergeben."}
+	aud.choices[dim] = {"value":value, "prepared":prepared}
+	aud.step = step + 1
+	return {"ok":true, "done":int(aud.step) > AUDITION_DIMS.size()}
+
+func director_archive_hint(director_name: String) -> String:
+	var memory: Dictionary = state.get("directors", {}).get(director_name, {})
+	var liked: Array = memory.get("liked", [])
+	if liked.is_empty():
+		return ""
+	var first := str(liked[0]).split(":")
+	if first.size() != 2:
+		return ""
+	return "🗞 Zeitungsarchiv: Bei einem früheren Film fiel auf, dass %s %s bevorzugte." % [director_name,
+		audition_choice_label({"genre":"drama"}, str(first[0]), str(first[1]))]
+
+func audition_hint_text(casting: Dictionary, hint: Dictionary) -> String:
+	var source_s := {"script":"Drehbuch-Einsicht", "chemistry":"Regisseur-Chemie", "instinct":"Bauchgefühl"}.get(str(hint.get("source", "")), "Hinweis")
+	return "%s: %s tendiert zu „%s“ bei %s." % [source_s, _director_name_for(casting),
+		audition_choice_label(casting, str(hint.dim), str(hint.value)),
+		{"scene":"der Szene", "interpretation":"der Interpretation", "appearance":"dem Auftreten", "emphasis":"der Betonung"}.get(str(hint.dim), str(hint.dim))]
+
+func _remember_director(director_name: String, profile: Dictionary) -> void:
+	var liked: Array = []
+	for dim in AUDITION_DIMS:
+		liked.append("%s:%s" % [dim, str(profile[dim])])
+	state.directors[director_name] = {"liked":liked, "lastSeen":mi()}
+
+func audition_support_options(casting: Dictionary, c: Dictionary) -> Array:
+	var out: Array = []
+	var actor: Dictionary = actor_by_id[c.aid]
+	for i in casting.roles.size():
+		var role: Dictionary = casting.roles[i]
+		if str(role.type) != "support" or role.filled != null or str(role.gender) != str(actor.g):
+			continue
+		out.append({"roleIdx":i, "fee":role_fee_for(casting, role, c)})
+	return out
+
+func resolve_audition(forced_outcome: String = "") -> Dictionary:
+	if state.get("audition") == null:
+		return {"ok":false, "msg":"Kein laufendes Vorsprechen."}
+	var aud: Dictionary = state.audition
+	var casting = _casting(aud.castingId)
+	var c = client(aud.clientId)
+	if casting == null or c == null or aud.choices.size() < AUDITION_DIMS.size():
+		return {"ok":false, "msg":"Das Vorsprechen ist unvollständig."}
+	var role: Dictionary = casting.roles[int(aud.roleIdx)]
+	var director_name := _director_name_for(casting)
+	var profile := audition_profile(director_name, str(casting.title))
+	var matches := 0
+	var prepared_n := 0
+	var performance := 0.0
+	for dim in AUDITION_DIMS:
+		var choice: Dictionary = aud.choices[dim]
+		var matched := str(choice.value) == str(profile[dim])
+		if matched:
+			matches += 1
+		if bool(choice.prepared):
+			prepared_n += 1
+			performance += 18.0 if matched else 6.0
+		else:
+			var roll := float(hashs("%s:%s:%s:%s" % [casting.title, c.aid, dim, choice.value]) % 11) - 5.0
+			performance += (13.0 if matched else 3.0) + roll
+	var setback := 0.0
+	var setbacks: Dictionary = c.flags.get("auditionSetbacks", {})
+	if setbacks.has(director_name):
+		setback = float(setbacks[director_name])
+		setbacks.erase(director_name)
+		if setbacks.is_empty():
+			c.flags.erase("auditionSetbacks")
+		else:
+			c.flags["auditionSetbacks"] = setbacks
+	var own_score := performance + eff_talent(c) * 0.32 + dna_fit(c, str(casting.genre), studio_style(str(casting.studioId))) * 0.65 \
+		+ fit_score(casting, role, c) * 0.12 - setback
+	var rivals := audition_competition(casting, role)
+	var competition_score := 72.0
+	for rival in rivals:
+		competition_score = maxf(competition_score, 35.0 + float(rival.talent) * 0.38 + float(rival.fame) * 0.18 \
+			+ float(hashs(str(casting.title) + str(rival.aid) + "aud") % 17))
+	var margin := own_score - competition_score
+	var outcome := "win" if margin >= 0.0 else ("narrow" if margin >= -12.0 else "clear")
+	if forced_outcome in ["win", "narrow", "clear"]:
+		outcome = forced_outcome
+	_remember_director(director_name, profile)
+	var result := {"ok":true, "outcome":outcome, "margin":margin, "score":own_score,
+		"competitionScore":competition_score, "matches":matches, "prepared":prepared_n,
+		"director":director_name, "title":str(casting.title), "castingId":int(casting.id),
+		"clientId":int(c.id), "roleIdx":int(aud.roleIdx), "profile":profile}
+	if outcome == "win":
+		pitch_ctx = {"casting":casting, "roleIdx":int(aud.roleIdx), "role":role, "client":c,
+			"fee":roundi(role_fee_for(casting, role, c) * 1.10), "haggled":true, "alts":[]}
+		close_deal(float(pitch_ctx.fee), " (Vorsprechen: +10 %)")
+		note_pair_history("dir:" + director_name, str(c.aid), 2)
+		if narrative_role_match(c, casting, role):
+			c.narrative.progress = minf(100.0, float(c.narrative.get("progress", 0.0)) + 10.0)
+			press_event("Karrieren", "%s gewinnt die Schlüsselrolle für das laufende Karrierenarrativ" % client_name(c))
+		press_event("Casting", "Wer bekam die Traumrolle? %s überzeugt %s in „%s“" % [client_name(c), director_name, casting.title])
+		result["fee"] = int(role.filled.fee)
+	elif outcome == "narrow":
+		var fallbacks := audition_support_options(casting, c)
+		result["fallbacks"] = fallbacks
+		if fallbacks.is_empty():
+			grant_favor("extraAudition", {"type":"studio", "name":str(_studio(str(casting.studioId)).name), "studioId":str(casting.studioId)})
+			result["favor"] = true
+		press_event("Casting", "Foto-Finish bei „%s“: %s verpasst die Traumrolle knapp" % [casting.title, client_name(c)])
+	else:
+		if not c.flags.has("auditionSetbacks"):
+			c.flags["auditionSetbacks"] = {}
+		c.flags.auditionSetbacks[director_name] = 4.0
+		result["setback"] = 4
+		press_event("Casting", "Wer bekam die Traumrolle? Bei „%s“ setzt sich die Konkurrenz durch" % casting.title)
+	state.audition = null
+	return result
+
+func audition_support_fallback(casting_id: int, client_id: int, role_idx: int) -> Dictionary:
+	var casting = _casting(casting_id)
+	var c = client(client_id)
+	if casting == null or c == null or role_idx < 0 or role_idx >= casting.roles.size():
+		return {"ok":false}
+	var role: Dictionary = casting.roles[role_idx]
+	if str(role.type) != "support" or role.filled != null:
+		return {"ok":false}
+	pitch_ctx = {"casting":casting, "roleIdx":role_idx, "role":role, "client":c,
+		"fee":role_fee_for(casting, role, c), "haggled":true, "alts":[]}
+	close_deal(float(pitch_ctx.fee), " (Trostpreis nach Vorsprechen)")
+	return {"ok":true}
+
+# ---------- Chemistry Read ----------
+func _chem_role_indices(casting: Dictionary) -> Array:
+	var leads: Array = []
+	var other: Array = []
+	for i in casting.roles.size():
+		var role: Dictionary = casting.roles[i]
+		if role.filled != null:
+			continue
+		if str(role.type) == "lead":
+			leads.append(i)
+		else:
+			other.append(i)
+	if leads.size() >= 2:
+		return leads.slice(0, 2)
+	if bool(casting.get("dreamPair", false)) and leads.size() == 1 and other.size():
+		return [leads[0], other[0]]
+	return []
+
+func chem_read_available(casting: Dictionary) -> bool:
+	var indices := _chem_role_indices(casting)
+	return indices.size() == 2 and chem_read_candidate_pairs(int(casting.id)).size() >= 2
+
+func _chem_pair_from_clients(casting: Dictionary, role_indices: Array, a: Dictionary, b: Dictionary) -> Dictionary:
+	return {"key":"%d|%d" % [int(a.c.id), int(b.c.id)], "npc":false,
+		"aClientId":int(a.c.id), "bClientId":int(b.c.id),
+		"aName":client_name(a.c), "bName":client_name(b.c),
+		"aKey":str(a.c.aid), "bKey":str(b.c.aid),
+		"aTalent":eff_talent(a.c), "bTalent":eff_talent(b.c),
+		"aFit":float(a.fit), "bFit":float(b.fit), "roleIndices":role_indices.duplicate()}
+
+func chem_read_candidate_pairs(casting_id: int) -> Array:
+	var casting = _casting(casting_id)
+	if casting == null:
+		return []
+	var indices := _chem_role_indices(casting)
+	if indices.size() != 2:
+		return []
+	var left := eligible_clients(casting, casting.roles[int(indices[0])])
+	var right := eligible_clients(casting, casting.roles[int(indices[1])])
+	var out: Array = []
+	for a in left:
+		for b in right:
+			if int(a.c.id) == int(b.c.id):
+				continue
+			out.append(_chem_pair_from_clients(casting, indices, a, b))
+	out.sort_custom(func(a, b): return float(a.aFit) + float(a.bFit) > float(b.aFit) + float(b.bFit))
+	return out.slice(0, 8)
+
+func _chem_npc(casting: Dictionary, role: Dictionary) -> Dictionary:
+	var pool: Array = available_actors().filter(func(a): return str(a.g) == str(role.gender))
+	if pool.size():
+		var actor: Dictionary = pool[hashs(str(casting.title) + str(role.gender) + "chem_npc") % mini(8, pool.size())]
+		return {"name":str(actor.name), "key":"npc:" + str(actor.name), "talent":float(actor.talent),
+			"fame":float(fame_at(actor, state.year))}
+	var name_s := "%s %s" % [pick(Data.NPC_FIRST_M) if str(role.gender) == "m" else pick(Data.NPC_FIRST_F), pick(Data.NPC_LAST)]
+	return {"name":name_s, "key":"npc:" + name_s, "talent":55.0, "fame":25.0}
+
+func chem_read_studio_pair(casting_id: int) -> Dictionary:
+	var casting = _casting(casting_id)
+	if casting == null:
+		return {}
+	var indices := _chem_role_indices(casting)
+	if indices.size() != 2:
+		return {}
+	var own_left := eligible_clients(casting, casting.roles[int(indices[0])])
+	var own_right := eligible_clients(casting, casting.roles[int(indices[1])])
+	var own_on_left := own_left.size() > 0 and (own_right.is_empty() or hashs(str(casting.title) + "studio_side") % 2 == 0)
+	if own_on_left:
+		var own: Dictionary = own_left[0]
+		var npc := _chem_npc(casting, casting.roles[int(indices[1])])
+		return {"key":"studio|%d|%s" % [int(own.c.id), str(npc.key)], "npc":true,
+			"aClientId":int(own.c.id), "bClientId":null, "aName":client_name(own.c), "bName":str(npc.name),
+			"aKey":str(own.c.aid), "bKey":str(npc.key), "aTalent":eff_talent(own.c), "bTalent":float(npc.talent),
+			"aFit":float(own.fit), "bFit":52.0, "roleIndices":indices.duplicate(), "studioSuggestion":true}
+	if own_right.size():
+		var own2: Dictionary = own_right[0]
+		var npc2 := _chem_npc(casting, casting.roles[int(indices[0])])
+		return {"key":"studio|%s|%d" % [str(npc2.key), int(own2.c.id)], "npc":true,
+			"aClientId":null, "bClientId":int(own2.c.id), "aName":str(npc2.name), "bName":client_name(own2.c),
+			"aKey":str(npc2.key), "bKey":str(own2.c.aid), "aTalent":float(npc2.talent), "bTalent":eff_talent(own2.c),
+			"aFit":52.0, "bFit":float(own2.fit), "roleIndices":indices.duplicate(), "studioSuggestion":true}
+	return {}
+
+func chemistry_signal(screen_value: int, with_noise: bool = true, seed_s: String = "") -> Dictionary:
+	var true_sign := signi(screen_value)
+	var shown_sign := true_sign
+	var reliable := true
+	if with_noise and true_sign != 0:
+		reliable = hashs(seed_s + "signal") % 100 < 75
+		if not reliable:
+			shown_sign = -true_sign
+	var lines := {
+		1: ["Sie vervollständigen einander die Sätze, ohne den Rhythmus zu verlieren.", "Ein Blick genügt, und beide finden denselben Takt."],
+		-1: ["Einer weicht dem Blick des anderen aus; jede Pause fühlt sich eine Spur zu lang an.", "Die Körper bleiben auf Abstand, selbst wenn der Text Nähe verlangt."],
+		0: ["Professionell und sauber — doch noch ohne jenen Funken, den man nicht proben kann.", "Die Szene sitzt, aber die Luft zwischen beiden bleibt neutral."],
+	}
+	var choices: Array = lines[shown_sign]
+	return {"text":str(choices[hashs(seed_s + "prose") % choices.size()]), "sign":shown_sign, "reliable":reliable}
+
+func chem_read_score(casting: Dictionary, pair: Dictionary, scene_s: String) -> float:
+	var chem := chemistry(str(pair.aKey), str(pair.bKey))
+	var screen := float(chem.screen)
+	var personal := float(chem.personal)
+	var scene_score := 0.0
+	match scene_s:
+		"love": scene_score = screen * 3.0 + personal * 0.6
+		"conflict": scene_score = screen * 1.8 + maxf(0.0, -personal) * 1.5 + maxf(0.0, personal) * 0.35
+		"comedy": scene_score = screen * 1.8 + personal * 1.5
+	var individual := (float(pair.aTalent) + float(pair.bTalent)) * 0.18 + (float(pair.aFit) + float(pair.bFit)) * 0.12
+	var roll := float(hashs(str(casting.title) + str(pair.key) + scene_s + "chem_read") % 11) - 5.0
+	return individual + scene_score + roll
+
+func _chem_history_text(pair: Dictionary) -> String:
+	var hist: Dictionary = state.history_pairs.get(pair_key(str(pair.aKey), str(pair.bKey)), {})
+	var n := int(hist.get("n", 0))
+	if n <= 0:
+		return "Noch kein gemeinsamer Film im Archiv."
+	var avg := float(hist.get("successSum", 0.0)) / maxf(1.0, float(n))
+	var verdict := "damals erfolgreich" if avg >= 2.0 else ("damals durchwachsen" if avg >= 1.0 else "damals ohne Kassenfunken")
+	return "%d gemeinsame Produktion%s · %s%s" % [n, "en" if n != 1 else "", verdict,
+		(" („%s“ zuletzt)" % str(hist.lastTitle)) if str(hist.get("lastTitle", "")) != "" else ""]
+
+func _chem_personal_hint(pair: Dictionary) -> String:
+	var subjects: Array = []
+	for cid in [pair.get("aClientId"), pair.get("bClientId")]:
+		if cid == null:
+			continue
+		var c = client(cid)
+		if c != null:
+			subjects.append(int(c.id))
+			subjects.append(str(c.aid))
+	var known: bool = state.get("rumors", []).any(func(r): return bool(r.get("knownToPlayer", false)) and subjects.has(r.get("subject")))
+	if not known:
+		return "Im Gerüchtenetz gibt es über die beiden noch kein belastbares Flüstern."
+	var personal := int(chemistry(str(pair.aKey), str(pair.bKey)).personal)
+	if personal >= 3:
+		return "Assistenten erzählen, die beiden suchten auch nach dem Take noch das Gespräch."
+	if personal <= -3:
+		return "Aus den Garderoben heißt es, außerhalb der Kamera fielen die Türen etwas zu laut ins Schloss."
+	return "Die Gerüchte widersprechen einander — Nähe und Distanz halten sich die Waage."
+
+func begin_chem_read(casting_id: int, selected_keys: Array, scene_s: String) -> Dictionary:
+	var casting = _casting(casting_id)
+	if casting == null or not CHEM_READ_SCENES.has(scene_s) or selected_keys.size() != 2:
+		return {"ok":false}
+	var all_pairs := chem_read_candidate_pairs(casting_id)
+	var selected: Array = []
+	for pair in all_pairs:
+		if selected_keys.has(str(pair.key)):
+			selected.append(pair)
+	if selected.size() != 2:
+		return {"ok":false}
+	var studio_pair := chem_read_studio_pair(casting_id)
+	if not studio_pair.is_empty():
+		selected.append(studio_pair)
+	for pair in selected:
+		pair["score"] = chem_read_score(casting, pair, scene_s)
+		pair["signal"] = chemistry_signal(int(chemistry(str(pair.aKey), str(pair.bKey)).screen), true,
+			str(casting.title) + str(pair.key) + scene_s)
+		pair["historyText"] = _chem_history_text(pair)
+		pair["personalHint"] = _chem_personal_hint(pair)
+	chem_read = {"castingId":casting_id, "scene":scene_s, "pairs":selected}
+	return {"ok":true, "scene":scene_s, "pairs":selected}
+
+func _chem_fill_client(casting: Dictionary, role_idx: int, cid, bonus: float, extra_s: String) -> bool:
+	if cid == null:
+		return false
+	var c = client(cid)
+	if c == null:
+		return false
+	var role: Dictionary = casting.roles[role_idx]
+	pitch_ctx = {"casting":casting, "roleIdx":role_idx, "role":role, "client":c,
+		"fee":roundi(role_fee_for(casting, role, c) * bonus), "haggled":true, "alts":[]}
+	close_deal(float(pitch_ctx.fee), extra_s)
+	return true
+
+func _chem_fill_npc(casting: Dictionary, role_idx: int, pair: Dictionary, side: String) -> void:
+	var role: Dictionary = casting.roles[role_idx]
+	var name_s := str(pair.get(side + "Name", "Studiofavorit"))
+	var talent := float(pair.get(side + "Talent", 55.0))
+	role.filled = {"npc":true, "name":name_s, "talent":talent, "fame":roundi(talent * 0.65)}
+
+func resolve_chem_read(chosen_key: String) -> Dictionary:
+	if chem_read == null:
+		return {"ok":false}
+	var casting = _casting(chem_read.castingId)
+	if casting == null:
+		return {"ok":false}
+	var pairs: Array = chem_read.pairs
+	var ranked := pairs.duplicate()
+	ranked.sort_custom(func(a, b): return float(a.score) > float(b.score))
+	var chosen = null
+	for pair in pairs:
+		if str(pair.key) == chosen_key:
+			chosen = pair
+			break
+	if chosen == null:
+		return {"ok":false}
+	var rank := ranked.find(chosen)
+	var outcome := "best" if rank == 0 else ("worst" if rank == ranked.size() - 1 else "middle")
+	var indices: Array = chosen.roleIndices
+	var own_retained := false
+	if outcome in ["best", "middle"]:
+		var bonus := 1.12 if outcome == "best" else 1.0
+		if chosen.aClientId != null:
+			own_retained = _chem_fill_client(casting, int(indices[0]), chosen.aClientId, bonus, " (Chemistry-Package%s)" % (": +12 %" if outcome == "best" else "")) or own_retained
+		else:
+			_chem_fill_npc(casting, int(indices[0]), chosen, "a")
+		if chosen.bClientId != null:
+			own_retained = _chem_fill_client(casting, int(indices[1]), chosen.bClientId, bonus, " (Chemistry-Package%s)" % (": +12 %" if outcome == "best" else "")) or own_retained
+		else:
+			_chem_fill_npc(casting, int(indices[1]), chosen, "b")
+		if outcome == "best":
+			if not casting.has("signals"):
+				casting["signals"] = []
+			casting.signals.append({"t":"Die Chemie stimmt", "pos":true, "mi":mi()})
+	else:
+		# Rückweg: Der stärkere eigene Name bleibt; nur die andere Rolle geht ans Studio.
+		var keep_a := chosen.aClientId != null and (chosen.bClientId == null or float(chosen.aFit) >= float(chosen.bFit))
+		if keep_a:
+			own_retained = _chem_fill_client(casting, int(indices[0]), chosen.aClientId, 1.0, " (Chemistry Read: Studio besetzt Partnerrolle)")
+			var replacement_b := _chem_npc(casting, casting.roles[int(indices[1])])
+			var repl_pair_b := {"bName":replacement_b.name, "bTalent":replacement_b.talent}
+			_chem_fill_npc(casting, int(indices[1]), repl_pair_b, "b")
+		else:
+			own_retained = _chem_fill_client(casting, int(indices[1]), chosen.bClientId, 1.0, " (Chemistry Read: Studio besetzt Partnerrolle)")
+			var replacement_a := _chem_npc(casting, casting.roles[int(indices[0])])
+			var repl_pair_a := {"aName":replacement_a.name, "aTalent":replacement_a.talent}
+			_chem_fill_npc(casting, int(indices[0]), repl_pair_a, "a")
+	var hist_delta := 1 if outcome == "best" else (0 if outcome == "middle" else -1)
+	note_pair_history(str(chosen.aKey), str(chosen.bKey), hist_delta, 2.0 if outcome == "best" else (1.2 if outcome == "middle" else 0.6), str(casting.title))
+	var names_s := "%s & %s" % [str(chosen.aName), str(chosen.bName)]
+	press_event("Casting", "Chemistry Read bei „%s“: %s — %s" % [casting.title, names_s,
+		"Traumpaar" if outcome == "best" else ("solide Besetzung" if outcome == "middle" else "Studio tauscht einen Namen aus")])
+	var result := {"ok":true, "outcome":outcome, "rank":rank, "pair":chosen,
+		"ownRetained":own_retained, "castingId":int(casting.id)}
+	chem_read = null
+	return result
 
 # Leinwandchemie der Leads fließt in die Qualität (±8)
 func lead_chem_quality(prod: Dictionary) -> float:
@@ -3052,3 +3633,503 @@ func _planner_presse() -> void:
 			worst = rumor
 	if worst != null:
 		worst.belief = maxf(0.0, float(worst.belief) - 5.0)
+
+
+# =====================================================================
+# Bewertungs-Cluster
+# (Script Coverage · Das perfekte Rollen-Karrierebrett)
+# =====================================================================
+
+# ---------- Feature C: Script Coverage ----------
+# Einmal im Monat (≈60 %, mindestens einmal pro Quartal) legt das Lektorat
+# ein Coverage-Blatt auf den Schreibtisch: eine verdichtete Einschätzung zu
+# einem Casting, das erst NÄCHSTEN Monat sichtbar ausgeschrieben wird.
+# Der Spieler setzt wenige Marker (Prognosen) auf Aussagen des Blattes.
+
+const COVERAGE_CATS = {
+	"sicher":        {"de": "Sichere Rolle", "icon": "🛡", "desc": "Der Film floppt nicht: Einspiel ≥ Budget und Qualität ≥ 45."},
+	"prestige":      {"de": "Prestigechance", "icon": "🎩", "desc": "Qualität ≥ 62 — die Kritik wird aufhorchen. Marker gibt +5 Passung beim Pitch."},
+	"schwach":       {"de": "Schwaches Drehbuch", "icon": "📉", "desc": "Das Einspielergebnis bleibt unter dem Budget (ratio < 1)."},
+	"sleeper":       {"de": "Möglicher Überraschungserfolg", "icon": "🌟", "desc": "Hit (≥ 2× Budget), obwohl das Skript schwach aussieht."},
+	"schnitt":       {"de": "Gefahr: Rolle wird geschnitten", "icon": "✂", "desc": "Die markierte Rolle fällt der Endfassung zum Opfer."},
+	"problematisch": {"de": "Problematische Produktion", "icon": "🌪", "desc": "Set-Reibung und schlechte Signale überwiegen."},
+}
+
+func _tick_coverage(_events: Array, strike: bool = false) -> void:
+	if not state.has("coverage") or not (state.coverage is Dictionary):
+		state["coverage"] = {"current": null, "history": []}
+	# 1. Das aktuelle Blatt verfällt zum Monatsende → ins Archiv
+	var cur = state.coverage.get("current")
+	if cur != null and mi() >= int(cur.get("dueMi", 0)):
+		_archive_coverage(cur)
+		state.coverage["current"] = null
+	# 2. Das verdeckte Coverage-Casting des Vormonats wird regulär sichtbar
+	for cs in state.castings:
+		if bool(cs.get("hidden", false)):
+			cs["hidden"] = false
+	if strike:
+		return
+	# 3. Neues Blatt? ~60 % pro Monat, garantiert mindestens einmal pro Quartal
+	state["coverageQueue"] = int(state.get("coverageQueue", 0)) + 1
+	if state.coverage.get("current") == null and (chance(0.6) or int(state.coverageQueue) >= 3):
+		_issue_coverage()
+
+func _issue_coverage() -> void:
+	state["coverageQueue"] = 0
+	var casting := _make_casting()
+	casting["hidden"] = true
+	state.castings.append(casting)
+	var role_idx := _coverage_role_idx(casting)
+	var sheet := {
+		"id": next_id(),
+		"castingRef": int(casting.id),
+		"title": str(casting.title), "genre": str(casting.genre),
+		"studioId": str(casting.studioId), "prestige": int(casting.prestige),
+		"logline": _coverage_logline(casting),
+		"statements": _coverage_statements(casting, role_idx),
+		"roleIdx": role_idx,
+		"markersMax": 3 if int(state.get("instinct", 20)) >= 60 else 2,
+		"createdMi": mi(), "dueMi": mi() + 1,
+	}
+	state.coverage["current"] = sheet
+	log_msg("Coverage auf dem Schreibtisch: „%s“ (%s) — Einschätzung bis Monatsende, %d Marker." % [sheet.title, _studio(str(casting.studioId)).name, int(sheet.markersMax)], "info")
+
+# Referenzierte Rolle bestimmen (bevorzugt eine Nebenrolle) und das verdeckte
+# Rollengrößen-Flag würfeln: klein geschriebene Parts landen eher im Schnitt.
+func _coverage_role_idx(casting: Dictionary) -> int:
+	var idx := 0
+	for i in casting.roles.size():
+		if str(casting.roles[i].type) == "support":
+			idx = i
+			break
+	var role: Dictionary = casting.roles[idx]
+	var risk := 0.15
+	if str(role.type) == "support":
+		risk += 0.2
+	if int(role.minFame) <= 18:
+		risk += 0.15
+	role["cutRisk"] = chance(risk)
+	return idx
+
+func _coverage_logline(casting: Dictionary) -> String:
+	var studio: Dictionary = _studio(str(casting.studioId))
+	var genre_de: String = Data.GENRES[str(casting.genre)].de
+	var style_phrase := {"prestige": "mit deutlichen Preisträger-Ambitionen", "indie": "mit überschaubarem Risiko und großem Herzen", "commercial": "auf das breite Publikum gezimmert"}.get(str(studio.get("style", "commercial")), "auf das breite Publikum gezimmert")
+	var y := int(state.year)
+	if y < 1970:
+		return "LOGLINE: „%s“ — ein %s aus dem Hause %s, %s." % [casting.title, genre_de, studio.name, style_phrase]
+	if y >= 2010:
+		return "Kurzfassung: „%s“ ist der neue %s von %s — %s, und alle reden schon davon." % [casting.title, genre_de, studio.name, style_phrase]
+	return "Logline: „%s“ — ein %s von %s, %s." % [casting.title, genre_de, studio.name, style_phrase]
+
+# 4–6 kurze Aussagen: echte Indikatoren (Skriptbasis, Budget vs. Genre,
+# Regie-Historie, geplante Klauseln, Rollengröße) plus Rauschen.
+# Zuverlässigkeit ~70 %, steigt mit Instinkt (wie script_insight).
+func _coverage_statements(casting: Dictionary, role_idx: int) -> Array:
+	var rel := 0.7 + float(state.get("instinct", 20)) / 1000.0
+	var pool: Array = []
+	# 1. Verdeckte Skriptbasis (dieselbe Formel wie script_insight / release_film)
+	var script_base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
+	var script_band := 1  # 0 schwach, 1 mittel, 2 stark
+	if script_base <= 47:
+		script_band = 0
+	elif script_base >= 60:
+		script_band = 2
+	pool.append(_band_statement("scriptQ", script_band, [
+		"Das Skript holpert ab Akt zwei — das Lektorat legt es skeptisch beiseite.",
+		"Solide Handwerksarbeit ohne große Überraschungen, Seite für Seite.",
+		"Das Skript trägt die Handschrift eines Preiskandidaten — Struktur, Dialog, alles sitzt.",
+	], rel))
+	# 2. Budget vs. Genre-Anspruch
+	var fee_sum := 0.0
+	for r in casting.roles:
+		fee_sum += float(r.fee)
+	var typical := fee_sum * 3.75 + 400000.0 * infl(state.year) * (1.0 + int(casting.prestige) * 0.3)
+	var budget_band := 1
+	if float(casting.budget) > typical * 1.15:
+		budget_band = 2
+	elif float(casting.budget) < typical * 0.75:
+		budget_band = 0
+	pool.append(_band_statement("budget", budget_band, [
+		"Das Budget wirkt knapp kalkuliert — selbst nach Maßstäben des Genres.",
+		"Das Budget bewegt sich im erwartbaren Rahmen eines solchen Projekts.",
+		"Das Budget ist für dieses Genre ungewöhnlich hoch — das Studio setzt alles auf eine Karte.",
+	], rel))
+	# 3. Regie-Historie (deterministisch aus dem Namen abgeleitet)
+	var dir_name := _director_name_for(casting)
+	var track := hashs("track:" + dir_name) % 100
+	var dir_band := 1
+	if track <= 40:
+		dir_band = 0
+	elif track >= 55:
+		dir_band = 2
+	pool.append(_band_statement("regie", dir_band, [
+		"%s hat zuletzt zwei Flops abgeliefert — intern hört man Zweifel." % dir_name,
+		"Zu %s hält man sich an der Studioleitung bedeckt." % dir_name,
+		"%s kommt von einem Erfolg — das Studio lässt gewähren." % dir_name,
+	], rel))
+	# 4. Geplante Klauseln: Hardliner-Flag des Studios
+	var hardliner := hashs(str(casting.id) + "hard") % 100 < 35
+	pool.append(_bool_statement("klauseln", hardliner,
+		"Das Studio pocht intern auf weitreichende Optionen — Sequel-Klauseln und Moral-Paragraphen liegen bereit.",
+		"Das Studio gibt sich bei den Vertragsformeln erfahrungsgemäß entspannt.", rel))
+	# 5. Rollengröße der referenzierten Rolle
+	var role: Dictionary = casting.roles[role_idx]
+	pool.append(_bool_statement("rollengroesse", bool(role.get("cutRisk", false)),
+		"Die Rolle wirkt dünn geschrieben — erste Schnitt-Listen des Studios führen sie bereits.",
+		"Die Rolle ist fest im Plot verankert — daran rüttelt kein Cutter.", rel))
+	# Mischen und auf 4–5 kürzen (mindestens 4, mit Füller auffüllen)
+	pool.shuffle()
+	var out: Array = pool.slice(0, mini(5, maxi(4, pool.size())))
+	while out.size() < 4:
+		out.append({"text": "Termindruck: Das Studio will den Starttermin um jeden Preis halten.", "truthKey": "fueller", "truth": true, "marked": ""})
+	return out
+
+# Band-Aussage (0/1/2). Mit Wahrscheinlichkeit rel stimmt die Behauptung,
+# sonst wird eine andere Band-Behauptung gezeigt (Rauschen).
+func _band_statement(key: String, band: int, texts: Array, rel: float) -> Dictionary:
+	var shown := band
+	if not chance(rel):
+		var others := [0, 1, 2]
+		others.erase(band)
+		shown = int(pick(others))
+	return {"text": str(texts[shown]), "truthKey": key, "truth": shown == band, "marked": ""}
+
+func _bool_statement(key: String, fact: bool, true_text: String, false_text: String, rel: float) -> Dictionary:
+	var shown := fact
+	if not chance(rel):
+		shown = not fact
+	return {"text": true_text if shown else false_text, "truthKey": key, "truth": shown == fact, "marked": ""}
+
+# Marker setzen: eine Aussage einer Kategorie zuordnen → Prognose.
+func coverage_mark(stmt_idx: int, cat: String) -> String:
+	var cur = state.coverage.get("current") if state.has("coverage") else null
+	if cur == null:
+		return "Kein Coverage-Blatt auf dem Schreibtisch."
+	if not COVERAGE_CATS.has(cat):
+		return "Unbekannte Kategorie."
+	var stmts: Array = cur.get("statements", [])
+	if stmt_idx < 0 or stmt_idx >= stmts.size():
+		return "Diese Aussage gibt es nicht."
+	var st: Dictionary = stmts[stmt_idx]
+	if str(st.get("marked", "")) != "":
+		return "Diese Aussage ist bereits markiert — Tinte trocknet schnell."
+	var used := 0
+	for s in stmts:
+		if str(s.get("marked", "")) != "":
+			used += 1
+	if used >= int(cur.get("markersMax", 2)):
+		return "Keine Marker mehr übrig — nur wenige klare Wetten pro Blatt."
+	st["marked"] = cat
+	var cs = _casting(cur.get("castingRef", -1))
+	var due := mi() + (int(cs.deadline) if cs != null else 2) + 7
+	add_prediction("coverage",
+		{"castingId": int(cur.get("castingRef", -1)), "cat": cat, "roleIdx": int(cur.get("roleIdx", 0)), "sheetId": int(cur.get("id", 0))},
+		true, due, "Coverage „%s“: %s" % [str(cur.get("title", "?")), COVERAGE_CATS[cat].de])
+	# Prestigechance: Die Überzeugung des Lektorats trägt durch den Pitch (+5 Passung)
+	if cat == "prestige" and cs != null:
+		cs["agencyBoost"] = float(cs.get("agencyBoost", 0.0)) + 5.0
+	return "Marker gesetzt: %s. Aufgelöst wird beim Kinostart von „%s“." % [COVERAGE_CATS[cat].de, str(cur.get("title", "?"))]
+
+# Der Schnitt-Wurf beim Release — Wahrscheinlichkeit hängt am Rollengrößen-Flag.
+func _coverage_cut_roll(_prod: Dictionary, role: Dictionary) -> bool:
+	return chance(0.75 if bool(role.get("cutRisk", false)) else 0.12)
+
+func _resolve_coverage_prediction(pr: Dictionary, prod: Dictionary, ratio: float, quality: int) -> void:
+	var cat := str(pr.subject.get("cat", ""))
+	var q := quality if quality >= 0 else 50
+	var script_base := 35.0 + int(prod.prestige) * 8.0 + float(hashs(str(prod.id) + "scr") % 21)
+	var pos := 0
+	var neg := 0
+	for sg in prod.get("signals", []):
+		if bool(sg.get("pos", false)):
+			pos += 1
+		else:
+			neg += 1
+	var troubled := float(prod.get("qualityMod", 0.0)) < 0.0 or neg > pos
+	var ok := false
+	match cat:
+		"sicher":
+			ok = ratio >= 1.0 and q >= 45
+		"prestige":
+			ok = q >= 62
+		"schwach":
+			ok = ratio < 1.0
+		"sleeper":
+			ok = ratio >= 2.0 and script_base < 62.0
+		"schnitt":
+			var ridx := clampi(int(pr.subject.get("roleIdx", 0)), 0, maxi(0, prod.roles.size() - 1))
+			ok = prod.roles.size() > 0 and bool(prod.roles[ridx].get("_coverageCut", false))
+		"problematisch":
+			ok = troubled
+	_resolve_prediction(pr, ok, "Coverage „%s“: %s" % [str(prod.get("title", "?")), COVERAGE_CATS.get(cat, {}).get("de", cat)])
+
+# Abgelaufenes Blatt ins Archiv (max. 8) — inkl. der Wahrheit hinter den Aussagen.
+func _archive_coverage(cur: Dictionary) -> void:
+	var hist: Array = state.coverage.get("history", [])
+	var stmts: Array = []
+	for st in cur.get("statements", []):
+		stmts.append({"text": str(st.get("text", "")), "truthKey": str(st.get("truthKey", "")),
+			"truth": bool(st.get("truth", false)), "marked": str(st.get("marked", ""))})
+	hist.push_front({
+		"id": int(cur.get("id", 0)), "title": str(cur.get("title", "")),
+		"genre": str(cur.get("genre", "")), "studioId": str(cur.get("studioId", "")),
+		"mi": int(cur.get("createdMi", mi())), "castingRef": int(cur.get("castingRef", -1)),
+		"roleIdx": int(cur.get("roleIdx", 0)), "statements": stmts,
+	})
+	while hist.size() > 8:
+		hist.pop_back()
+	state.coverage["history"] = hist
+
+# Trefferquote aller Coverage-Prognosen (für Karte & Archiv).
+func coverage_stats() -> Dictionary:
+	var done := 0
+	var hits := 0
+	var open_n := 0
+	for pr in state.get("predictions", []):
+		if str(pr.get("type", "")) != "coverage":
+			continue
+		if pr.get("resolved", false):
+			done += 1
+			if pr.get("correct", false):
+				hits += 1
+		else:
+			open_n += 1
+	return {"done": done, "hits": hits, "open": open_n}
+
+
+# ---------- Feature D: Das perfekte Rollen-Karrierebrett ----------
+# Drei Plan-Slots pro Klient: Genre + Rollentyp + Prestige-Stufe als Absicht,
+# kein konkreter Film. Die Folge prägt die DNA-Trajektorie — Kontrast bringt
+# den Transformations-Bonus, Wiederholung den Typecasting-Sog.
+
+const BOARD_SLOTS := 3
+const BOARD_PRESTIGE_TIERS := {1: "Kommerziell (★)", 2: "Anspruch (★★)", 3: "Prestige (★★★)"}
+
+func ensure_board(c: Dictionary) -> void:
+	if not c.has("careerBoard") or not (c.careerBoard is Dictionary):
+		c["careerBoard"] = {"slots": [], "startedMi": mi(), "completed": 0}
+	if not c.careerBoard.has("slots"):
+		c.careerBoard["slots"] = []
+	if not c.careerBoard.has("startedMi"):
+		c.careerBoard["startedMi"] = mi()
+	for slot in c.careerBoard.slots:
+		if not slot.has("filledMi"):
+			slot["filledMi"] = -1
+		if not slot.has("createdMi"):
+			slot["createdMi"] = int(c.careerBoard.startedMi)
+
+func board_slot_label(slot: Dictionary) -> String:
+	var genre_de: String = Data.GENRES.get(str(slot.get("genre", "drama")), {}).get("de", str(slot.get("genre", "?")))
+	var type_de := "Hauptrolle" if str(slot.get("roleType", "lead")) == "lead" else "Nebenrolle"
+	var tier_de: String = BOARD_PRESTIGE_TIERS.get(clampi(int(slot.get("prestige", 1)), 1, 3), "★")
+	return "%s · %s · %s" % [genre_de, type_de, tier_de]
+
+func board_slot_add(cid: int, genre: String, role_type: String, prestige: int) -> String:
+	var c = client(cid)
+	if c == null:
+		return "Dieser Klient ist nicht mehr im Haus."
+	if not Data.GENRES.has(genre):
+		return "Unbekanntes Genre."
+	if not ["lead", "support"].has(role_type):
+		return "Unbekannter Rollentyp."
+	ensure_board(c)
+	var board: Dictionary = c.careerBoard
+	if board.slots.size() >= BOARD_SLOTS:
+		return "Das Brett ist voll — drei Pläne auf einmal reichen in dieser Stadt."
+	prestige = clampi(prestige, 1, 3)
+	var slot := {"genre": genre, "roleType": role_type, "prestige": prestige, "createdMi": mi(), "filledMi": -1, "filledTitle": ""}
+	board.slots.append(slot)
+	log_msg("Karrierebrett: %s plant %s." % [client_name(c), board_slot_label(slot)], "info")
+	return "Slot %d geplant: %s" % [board.slots.size(), board_slot_label(slot)]
+
+func board_slot_remove(cid: int, idx: int) -> void:
+	var c = client(cid)
+	if c == null:
+		return
+	ensure_board(c)
+	if idx >= 0 and idx < c.careerBoard.slots.size():
+		c.careerBoard.slots.remove_at(idx)
+
+# Index des nächsten offenen Slots (−1 = Brett leer oder komplett erfüllt)
+func board_next_open(c: Dictionary) -> int:
+	ensure_board(c)
+	for i in c.careerBoard.slots.size():
+		if int(c.careerBoard.slots[i].get("filledMi", -1)) < 0:
+			return i
+	return -1
+
+func _prestige_bucket(p: int) -> int:
+	return clampi(p, 1, 3)
+
+# Erfüllungs-Abgleich bei JEDEM Deal (über check_promises_on_deal erreicht).
+# Match: Genre stimmt ODER Kombination aus Rollentyp + Prestige-Stufe stimmt.
+# Kein Match: kein Abzug, kein Ärger — Pläne ändern sich in Hollywood.
+func check_board_on_deal(c: Dictionary, prod: Dictionary, role: Dictionary) -> void:
+	ensure_board(c)
+	var idx := board_next_open(c)
+	if idx < 0:
+		return
+	var slot: Dictionary = c.careerBoard.slots[idx]
+	var genre := str(prod.get("genre", ""))
+	var role_type := str(role.get("type", "support"))
+	var prestige := int(prod.get("prestige", 0))
+	var match_genre := str(slot.get("genre", "")) == genre
+	var match_combo := str(slot.get("roleType", "")) == role_type and _prestige_bucket(int(slot.get("prestige", 1))) == _prestige_bucket(prestige)
+	if not (match_genre or match_combo):
+		log_msg("Karrierebrett: „%s“ passt nicht in den Plan von %s — der Slot bleibt offen, ganz ohne Drama." % [str(prod.get("title", "?")), client_name(c)], "info")
+		return
+	slot["filledMi"] = mi()
+	slot["filledTitle"] = str(prod.get("title", ""))
+	if role.get("filled") != null:
+		role.filled["boardMult"] = 1.5
+	c.heat = clampf(float(c.heat) + 1.0, -10.0, 10.0)
+	log_msg("Karrierebrett: Slot %d erfüllt — %s folgt dem Plan (%s). Die Rolle prägt beim Release ×1,5 ein." % [idx + 1, client_name(c), board_slot_label(slot)], "deal")
+	var ana := board_analysis(c)
+	if ana.repetitive:
+		# Typecasting-Sog: kurzfristig schneller Ruhm, aber das Bild erstarrt
+		c.fame = clampf(float(c.fame) + 1.5, 5.0, 100.0)
+		c.dna.unikat = clampf(float(c.dna.unikat) - 3.0, -100.0, 100.0)
+		if idx >= 2:
+			c.flags["typecastRisk"] = true
+			log_msg("Typecasting-Risiko: Drei gleiche Rollenprofile in Folge — das Bild von %s erstarrt zur Schablone." % client_name(c), "bad")
+	if board_next_open(c) < 0:
+		_board_complete(c, ana)
+
+# Analyse der geplanten Folge inkl. schreibgeschützter DNA-Projektion.
+func board_analysis(c: Dictionary) -> Dictionary:
+	ensure_board(c)
+	var genres: Array = []
+	var lead_n := 0
+	for slot in c.careerBoard.slots:
+		var g := str(slot.get("genre", ""))
+		if not genres.has(g):
+			genres.append(g)
+		if str(slot.get("roleType", "lead")) == "lead":
+			lead_n += 1
+	var planned := int(c.careerBoard.slots.size())
+	var ana := {
+		"planned": planned,
+		"distinct": genres.size(),
+		"leadN": lead_n,
+		"contrasting": planned == BOARD_SLOTS and genres.size() == BOARD_SLOTS,
+		"repetitive": planned == BOARD_SLOTS and genres.size() == 1,
+		"projected": _board_project_dna(c),
+	}
+	return ana
+
+# DNA-Trajektorie: imprint_dna-Formeln read-only auf einer Kopie simuliert
+# (Board-Match ×1,5, ratio-neutral — eine ehrliche Mittelwert-Projektion).
+func _board_project_dna(c: Dictionary) -> Dictionary:
+	var proj := {}
+	for ax in DNA_AXES:
+		proj[ax.key] = float(c.dna[ax.key])
+	var genres: Array = []
+	for slot in c.careerBoard.slots:
+		var m := (1.0 if str(slot.get("roleType", "lead")) == "lead" else 0.5) * 1.5
+		var vec: Dictionary = GENRE_DNA.get(str(slot.get("genre", "")), {})
+		for k in vec:
+			proj[k] = clampf(float(proj[k]) + float(vec[k]) * m, -100.0, 100.0)
+		if int(slot.get("prestige", 1)) >= 2:
+			proj.unikat = clampf(float(proj.unikat) + 3.0 * m, -100.0, 100.0)
+			proj.popular = clampf(float(proj.popular) - 2.0 * m, -100.0, 100.0)
+		var g := str(slot.get("genre", ""))
+		if not genres.has(g):
+			genres.append(g)
+	if c.careerBoard.slots.size() == BOARD_SLOTS:
+		if genres.size() == 1:
+			proj.unikat = clampf(float(proj.unikat) - 9.0, -100.0, 100.0)  # 3 × Typecasting-Drift
+		elif genres.size() == BOARD_SLOTS:
+			proj.unikat = clampf(float(proj.unikat) + 6.0, -100.0, 100.0)  # Transformations-Bonus
+	return proj
+
+func _board_complete(c: Dictionary, ana: Dictionary) -> void:
+	c.fame = clampf(float(c.fame) + 4.0, 5.0, 100.0)
+	press_event("Karrieren", "Die Neuerfindung des %s: %s erfüllt den eigenen Drei-Projekte-Plan — und Hollywood staunt" % [dna_label(c), client_name(c)])
+	log_msg("Karrierebrett komplett: %s — Ruhm +4 und eine Titelstory über die Neuerfindung." % client_name(c), "history")
+	if ana.contrasting:
+		# Transformations-Bonus: die Presse feiert die Vielseitigkeit
+		c.dna.unikat = clampf(float(c.dna.unikat) + 6.0, -100.0, 100.0)
+		press_event("Karrieren", "Wandlungskünstler %s: Drei Genres, drei Volltreffer — Vielseitigkeit wird zum Markenzeichen" % client_name(c))
+	# Integration statt Konkurrenz: aktives Narrativ profitiert, wenn es passt
+	var nar: Dictionary = c.get("narrative", {})
+	if not nar.is_empty() and str(nar.get("status", "")) == "aktiv" and _board_narrative_compatible(c):
+		nar["progress"] = minf(100.0, float(nar.get("progress", 0.0)) + 30.0)
+		press_event("Karrieren", "Der Drei-Projekte-Plan von %s trägt auch die große Geschichte ein Stück weiter" % client_name(c))
+		_narrative_maybe_complete(c)
+	c.careerBoard["slots"] = []
+	c.careerBoard["startedMi"] = mi()
+	c.careerBoard["completed"] = int(c.careerBoard.get("completed", 0)) + 1
+
+func _board_narrative_compatible(c: Dictionary) -> bool:
+	for slot in c.careerBoard.slots:
+		if int(slot.get("filledMi", -1)) < 0:
+			continue
+		if narrative_role_match(c, {"genre": str(slot.get("genre", "")), "prestige": int(slot.get("prestige", 1))}, {"type": str(slot.get("roleType", "lead"))}):
+			return true
+	return false
+
+# Abschluss-Block eines Narrativs (gleiche Wirkung wie advance_narrative_on_release).
+func _narrative_maybe_complete(c: Dictionary) -> void:
+	var nar: Dictionary = c.get("narrative", {})
+	if nar.is_empty() or str(nar.get("status", "")) != "aktiv":
+		return
+	if float(nar.get("progress", 0.0)) < 100.0:
+		return
+	var info: Dictionary = NARRATIVE_TYPES.get(str(nar.get("type", "")), {})
+	nar["status"] = "abgeschlossen"
+	c.fame = clampf(float(c.fame) + 8.0, 5.0, 100.0)
+	state.agency.rep = clampi(int(state.agency.rep) + 5, 0, 100)
+	press_event("Titelstory", "%s vollendet „%s“ — Hollywood sieht eine Karriere mit neuen Augen" % [client_name(c), info.get("label", "die Verwandlung")])
+	log_msg("Karrierenarrativ abgeschlossen: %s — %s." % [client_name(c), info.get("label", "Neuanfang")], "history")
+
+# Rollenprofil-Vorschläge, die ein aktives Narrativ nahelegt (Ein-Klick-Übernahme).
+func board_suggestions(c: Dictionary) -> Array:
+	var actor: Dictionary = actor_by_id[c.aid]
+	var home := str(actor.genres[0]) if actor.genres.size() else "drama"
+	var nar: Dictionary = c.get("narrative", {})
+	match str(nar.get("type", "")):
+		"kinderstar_ernst":
+			return [["drama", "lead", 3], ["thriller", "lead", 2], ["crime", "support", 2]]
+		"comeback":
+			return [["drama", "lead", 3], ["thriller", "lead", 2], ["comedy", "support", 1]]
+		"spaetberufen":
+			return [["drama", "lead", 2], [home, "lead", 2], ["crime", "lead", 3]]
+		"action_prestige":
+			return [["drama", "lead", 3], ["thriller", "lead", 2], ["action", "support", 2]]
+		"skandal_respekt":
+			return [["drama", "support", 2], ["adventure", "lead", 2], ["western", "support", 2]]
+		"ensemble_star":
+			return [["drama", "lead", 3], [home, "lead", 2], ["comedy", "lead", 1]]
+	# Ohne Narrativ: Kontrast zum Heimatgenre als ehrlicher Default
+	var contra := "drama" if home in ["comedy", "action", "musical"] else "comedy"
+	return [[home, "lead", 2], [contra, "lead", 2], ["thriller", "support", 2]]
+
+func board_adopt_suggestion(cid: int) -> String:
+	var c = client(cid)
+	if c == null:
+		return "Dieser Klient ist nicht mehr im Haus."
+	ensure_board(c)
+	var kept: Array = []
+	for slot in c.careerBoard.slots:
+		if int(slot.get("filledMi", -1)) >= 0:
+			kept.append(slot)
+	c.careerBoard["slots"] = kept
+	var sug := board_suggestions(c)
+	var i := 0
+	while c.careerBoard.slots.size() < BOARD_SLOTS and i < sug.size():
+		c.careerBoard.slots.append({"genre": str(sug[i][0]), "roleType": str(sug[i][1]), "prestige": int(sug[i][2]),
+			"createdMi": mi(), "filledMi": -1, "filledTitle": ""})
+		i += 1
+	log_msg("Karrierebrett: %s übernimmt die empfohlene Rollenfolge." % client_name(c), "info")
+	return "Drei Slots nach Maß übernommen — jetzt fehlen nur noch die passenden Deals."
+
+# Verfall: offene Slots, die älter als 30 Monate sind, verfallen still (Log, keine Strafe).
+func _tick_boards() -> void:
+	for c in state.clients:
+		ensure_board(c)
+		var board: Dictionary = c.careerBoard
+		for slot in board.slots.duplicate():
+			if int(slot.get("filledMi", -1)) < 0 and mi() - int(slot.get("createdMi", mi())) > 30:
+				board.slots.erase(slot)
+				log_msg("Karrierebrett: Ein Plan-Slot von %s verfällt still — Pläne ändern sich in dieser Stadt." % client_name(c), "info")

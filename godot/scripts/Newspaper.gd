@@ -82,8 +82,11 @@ func _real_fallbacks(headlines: Array) -> void:
 		var identity_s := "noch ohne festes Etikett" if labels.is_empty() else " & ".join(labels)
 		headlines.append(_headline("Agenturen", "%s: Ruf %d, %d Klienten — in der Stadt gilt das Haus als %s" % [Game.state.agency.name, int(Game.state.agency.rep), Game.state.clients.size(), identity_s]))
 	if not _has_category(headlines, "Casting") and Game.state.castings.size():
-		var cs: Dictionary = Game.state.castings[0]
-		headlines.append(_headline("Casting", "%s sucht Gesichter für „%s“ — %d Rollen sind im Rennen" % [Game._studio(str(cs.studioId)).name, cs.title, cs.roles.size()]))
+		# Verdeckte Coverage-Castings sind noch kein öffentliches Casting
+		var visible: Array = Game.state.castings.filter(func(cs): return not bool(cs.get("hidden", false)))
+		if visible.size():
+			var cs: Dictionary = visible[0]
+			headlines.append(_headline("Casting", "%s sucht Gesichter für „%s“ — %d Rollen sind im Rennen" % [Game._studio(str(cs.studioId)).name, cs.title, cs.roles.size()]))
 	if not _has_category(headlines, "Markt"):
 		headlines.append(_headline("Markt", "Traumfabrik-Barometer bei %d Prozent — %d Produktionen drehen derzeit" % [roundi(float(Game.state.market) * 100.0), Game.state.productions.size()]))
 	if not _has_category(headlines, "Talente"):

@@ -469,6 +469,258 @@ func _ready() -> void:
 	check(int(Game.state.history_pairs.get("t1|t2", {}).get("p", 0)) == 3, "Chemie-Historie überlebt Save/Load")
 	check(Game.state.clients[0].has("clauses") and Game.state.clients[0].has("exclusiveStudio"), "Klausel- & Exklusiv-Felder migriert")
 
+	# 33. Script Coverage: Blatt, Marker, Auflösung, Schnitt-Wurf, Verfall
+	Game.new_game("Lektorat", 1950)
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
+	var cov_client: Dictionary = Game.state.clients[0]
+	Game._issue_coverage()
+	var sheet: Dictionary = Game.state.coverage.current
+	check(sheet != null and sheet.has("castingRef"), "Coverage-Blatt liegt auf dem Schreibtisch")
+	check(sheet.statements.size() >= 4, "Coverage erzeugt mindestens 4 Aussagen aus Sim-Daten (%d)" % sheet.statements.size())
+	var cov_casting = Game._casting(sheet.castingRef)
+	check(cov_casting != null and bool(cov_casting.get("hidden", false)), "Coverage-Casting bleibt einen Monat verdeckt")
+	var pred_n0: int = Game.state.predictions.size()
+	var mark_msg := Game.coverage_mark(0, "schwach")
+	check(Game.state.predictions.size() == pred_n0 + 1 and str(Game.state.predictions[-1].type) == "coverage", "Marker legt Coverage-Prognose an")
+	check(mark_msg.contains("Marker gesetzt"), "Marker-Setzen bestätigt")
+	Game.coverage_mark(1, "sicher")
+	check(Game.coverage_mark(2, "prestige").contains("Keine Marker"), "Marker-Kontingent begrenzt (%d)" % int(sheet.markersMax))
+	# Auflösung beim Release: richtig +3, falsch fällt nie unter 5
+	var cov_fake := {"id": 4242, "title": "Testfilm", "genre": "drama", "prestige": 1, "budget": 1000.0,
+		"qualityMod": 0.0, "signals": [], "studioId": str(Game.active_studios()[0].id),
+		"roles": [{"type": "lead", "gender": "f", "minFame": 10, "ageMin": 18, "ageMax": 99, "fee": 1, "cutRisk": true, "filled": {"npc": true, "name": "X", "talent": 50, "fame": 30}, "rejected": []}]}
+	var inst0 := int(Game.state.instinct)
+	var pr_weak := Game.add_prediction("coverage", {"castingId": 4242, "cat": "schwach", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test schwach")
+	Game._resolve_release_predictions(cov_fake, 0.5, {}, 50)
+	check(bool(pr_weak.resolved) and bool(pr_weak.correct) and int(Game.state.instinct) == inst0 + 3, "Richtiger Marker: Instinkt +3 (%d → %d)" % [inst0, int(Game.state.instinct)])
+	Game.state.instinct = 5
+	var pr_pres := Game.add_prediction("coverage", {"castingId": 4242, "cat": "prestige", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test prestige")
+	Game._resolve_release_predictions(cov_fake, 0.5, {}, 50)
+	check(bool(pr_pres.resolved) and not bool(pr_pres.correct) and int(Game.state.instinct) == 5, "Falscher Marker: Instinkt fällt nie unter 5")
+	# Schnitt-Auflösung: Wurf triggert, Release löst die Prognose auf
+	var cut_hit := false
+	for i in 80:
+		if Game._coverage_cut_roll(cov_fake, cov_fake.roles[0]):
+			cut_hit = true
+			break
+	check(cut_hit, "Schnitt-Wurf triggert bei markierter Rolle (cutRisk)")
+	var cov_qp: Dictionary = Game.quick_production(cov_client, {"genre": "drama", "prestige": 1})
+	var cov_prod: Dictionary = cov_qp.prod
+	var pr_cut := Game.add_prediction("coverage", {"castingId": int(cov_prod.id), "cat": "schnitt", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test schnitt")
+	Game.release_film(cov_prod)
+	Game.state.productions.erase(cov_prod)
+	check(bool(pr_cut.resolved), "Schnitt-Prognose wird beim Release aufgelöst (Schnitt eingetreten: %s)" % ("ja" if bool(pr_cut.correct) else "nein"))
+	# Verfall: Blatt verfällt zum Monatsende, Casting wird sichtbar
+	Jukebox._current_key = Jukebox.key_for_year(int(Game.state.year))
+	cov_client.busyUntil = 0
+	var hist_n0: int = Game.state.coverage.history.size()
+	Game.end_month()
+	check(Game.state.coverage.history.size() == hist_n0 + 1, "Coverage-Blatt verfällt ins Archiv")
+	check(not bool(cov_casting.get("hidden", false)), "Coverage-Casting erscheint im Folgemonat regulär")
+
+	# 34. Karrierebrett: Kontrast-Bonus, ×1,5-Imprint, Typecasting-Sog, Abschluss
+	Game.new_game("Karriereplanung", 1950)
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
+	var board_client: Dictionary = Game.state.clients[0]
+	Game.board_slot_add(int(board_client.id), "comedy", "lead", 1)
+	Game.board_slot_add(int(board_client.id), "thriller", "lead", 2)
+	Game.board_slot_add(int(board_client.id), "drama", "lead", 3)
+	check(board_client.careerBoard.slots.size() == 3, "Drei Plan-Slots angelegt")
+	var ana := Game.board_analysis(board_client)
+	check(bool(ana.contrasting) and not bool(ana.repetitive), "Kontrastfolge erkannt (Transformations-Bonus)")
+	var heat0 := float(board_client.heat)
+	var bp1: Dictionary = Game.quick_production(board_client, {"genre": "comedy", "prestige": 1, "roleType": "lead"})
+	check(int(board_client.careerBoard.slots[0].filledMi) >= 0, "Genre-Match füllt Slot 1")
+	check(float(bp1.prod.roles[0].filled.get("boardMult", 1.0)) == 1.5, "Erfüllter Slot: DNA-Prägung ×1,5 markiert")
+	check(float(board_client.heat) == heat0 + 1.0, "Slot-Bonus: Heat +1")
+	var fame_before_miss := float(board_client.fame)
+	Game.quick_production(board_client, {"genre": "horror", "prestige": 1, "roleType": "support"})
+	check(Game.board_next_open(board_client) == 1, "Nicht passende Rolle: Slot 2 bleibt offen")
+	check(absf(float(board_client.fame) - fame_before_miss) < 0.01, "Kein Match: kein Abzug, keine Strafe")
+	# ×1,5-Imprint wirkt beim Release
+	var popular0 := float(board_client.dna.popular)
+	Game.release_film(bp1.prod)
+	Game.state.productions.erase(bp1.prod)
+	check(float(board_client.dna.popular) >= popular0 + 8.5, "Release prägt ×1,5 ein: populär %0.1f → %0.1f" % [popular0, float(board_client.dna.popular)])
+	# Slots 2 & 3 füllen → Abschluss mit Ruhm +4, Titelstory, Transformations-Bonus
+	var fame0b := float(board_client.fame)
+	var unikat0 := float(board_client.dna.unikat)
+	Game.quick_production(board_client, {"genre": "thriller", "prestige": 2, "roleType": "lead"})
+	Game.quick_production(board_client, {"genre": "drama", "prestige": 3, "roleType": "lead"})
+	check(board_client.careerBoard.slots.is_empty() and int(board_client.careerBoard.completed) == 1, "Komplettes Brett wird abgeräumt und gewürdigt")
+	check(float(board_client.fame) >= fame0b + 4.0, "Abschluss: Ruhm +4 (+%0.1f)" % (float(board_client.fame) - fame0b))
+	check(float(board_client.dna.unikat) >= unikat0 + 6.0, "Transformations-Bonus: Einzigartig +6")
+	check(Game.state.pressFeed.any(func(p): return str(p.text).contains("Neuerfindung")), "Titelstory „Die Neuerfindung des …“ im Pressespiegel")
+	# Typecasting-Sog: dreimal dasselbe Profil
+	Game.board_slot_add(int(board_client.id), "action", "lead", 1)
+	Game.board_slot_add(int(board_client.id), "action", "lead", 1)
+	Game.board_slot_add(int(board_client.id), "action", "lead", 1)
+	check(bool(Game.board_analysis(board_client).repetitive), "Wiederholungsfolge erkannt (Typecasting-Sog)")
+	var unikat1 := float(board_client.dna.unikat)
+	Game.quick_production(board_client, {"genre": "action", "prestige": 1, "roleType": "lead"})
+	Game.quick_production(board_client, {"genre": "action", "prestige": 1, "roleType": "lead"})
+	check(not board_client.flags.get("typecastRisk", false), "Typecasting-Risiko erst ab Slot 3")
+	Game.quick_production(board_client, {"genre": "action", "prestige": 1, "roleType": "lead"})
+	check(bool(board_client.flags.get("typecastRisk", false)), "Typecasting-Risiko-Flag ab Slot 3 gesetzt")
+	check(float(board_client.dna.unikat) <= unikat1 - 9.0, "Typecasting-Drift: Einzigartig −9 über drei Slots (%0.1f)" % float(board_client.dna.unikat))
+	# Verfall: offener Slot verfällt nach 30 Monaten lautlos
+	Game.board_slot_add(int(board_client.id), "western", "support", 2)
+	board_client.careerBoard.slots[0].createdMi = Game.mi() - 31
+	Game._tick_boards()
+	check(board_client.careerBoard.slots.is_empty(), "Slot älter als 30 Monate verfällt still")
+
+	# 35. Save/Load-Roundtrip: Coverage & Karrierebrett
+	Game._issue_coverage()
+	Game.board_slot_add(int(board_client.id), "comedy", "lead", 1)
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Bewertungs-Spielstand geladen")
+	check(Game.state.has("coverage") and Game.state.coverage.has("history") and Game.state.has("coverageQueue"), "Coverage-Struktur migriert")
+	check(Game.state.coverage.current != null and int(Game.state.coverage.current.castingRef) > 0, "Aktuelles Blatt überlebt Save/Load")
+	check(Game.state.clients[0].careerBoard.slots.size() == 1, "Karrierebrett-Slots überleben Save/Load")
+	check(int(Game.state.clients[0].careerBoard.completed) == 2, "Brett-Abschlüsse überleben Save/Load")
+
+	# 36. Das entscheidende Vorsprechen: Profil, Hinweis, Sieg, Rückweg, Save/Load
+	Game.new_game("Bühnenagentur", 1950)
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":"lead12"})
+	var aud_client: Dictionary = Game.state.clients[0]
+	var aud_casting: Dictionary = Game.state.castings[0]
+	var aud_role: Dictionary = aud_casting.roles[0]
+	var aud_role_idx := 0
+	for ari in aud_casting.roles.size():
+		if str(aud_casting.roles[ari].gender) == "f":
+			aud_role_idx = ari
+			aud_role = aud_casting.roles[ari]
+			break
+	aud_casting.prestige = 3
+	aud_role.type = "lead"
+	aud_role.gender = "f"
+	aud_role.minFame = 10
+	aud_role.ageMin = 18
+	aud_role.ageMax = 70
+	var aud_director := Game._director_name_for(aud_casting)
+	var profile_a := Game.audition_profile(aud_director, str(aud_casting.title))
+	var profile_b := Game.audition_profile(aud_director, str(aud_casting.title))
+	check(profile_a == profile_b and profile_a.size() == 4, "Regisseur-Profil ist deterministisch und vierdimensional")
+	Game.grant_favor("scriptAccess", {"type":"regisseur", "name":aud_director}, true)
+	check(bool(Game.begin_audition(int(aud_casting.id), aud_role_idx, int(aud_client.id)).ok), "Vorsprechen für Prestige-Hauptrolle gestartet")
+	var revealed_hint: Dictionary = Game.audition_reveal_script()
+	check(not revealed_hint.is_empty() and str(revealed_hint.value) == str(profile_a[revealed_hint.dim]), "Aufgedeckter Hinweis stimmt mit dem Regisseur-Profil überein")
+	Game.audition_begin_choices()
+	for adi in Game.AUDITION_DIMS.size():
+		var dim_s: String = str(Game.AUDITION_DIMS[adi])
+		Game.audition_choose(dim_s, str(profile_a[dim_s]), adi < 2)
+	var aud_win := Game.resolve_audition("win")
+	check(str(aud_win.outcome) == "win" and aud_role.filled != null and int(aud_role.filled.clientId) == int(aud_client.id), "Vorsprechen-Sieg besetzt die Rolle")
+	check(bool(aud_client.promises[0].fulfilled), "Vorsprechen-Sieg läuft durch check_promises_on_deal")
+	check(int(Game.chemistry("dir:" + aud_director, str(aud_client.aid)).personal) >= -8, "Regisseur-Chemie erhält den +2-Gedächtniseffekt")
+
+	# Klare Niederlage: Rolle bleibt offen, Werte bleiben unverändert, normaler Pitch bleibt möglich.
+	Game.new_game("Zweiter Take", 1950)
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
+	var loss_client: Dictionary = Game.state.clients[0]
+	var loss_casting: Dictionary = Game.state.castings[0]
+	var loss_idx := 0
+	for lri in loss_casting.roles.size():
+		if str(loss_casting.roles[lri].gender) == "f":
+			loss_idx = lri
+			break
+	var loss_role: Dictionary = loss_casting.roles[loss_idx]
+	loss_casting.prestige = 3
+	loss_role.type = "lead"
+	loss_role.gender = "f"
+	loss_role.minFame = 10
+	loss_role.ageMin = 18
+	loss_role.ageMax = 70
+	var fame_before_loss := float(loss_client.fame)
+	var dna_before_loss: Dictionary = loss_client.dna.duplicate(true)
+	Game.begin_audition(int(loss_casting.id), loss_idx, int(loss_client.id))
+	Game.audition_begin_choices()
+	for dim_v in Game.AUDITION_DIMS:
+		Game.audition_choose(str(dim_v), str(Game.AUDITION_OPTIONS[str(dim_v)][0]), false)
+	var aud_loss := Game.resolve_audition("clear")
+	check(str(aud_loss.outcome) == "clear" and loss_role.filled == null and Game.audition_available(loss_casting, loss_role), "Niederlage lässt den normalen Casting-Rückweg offen")
+	check(absf(float(loss_client.fame) - fame_before_loss) < 0.01 and loss_client.dna == dna_before_loss, "Niederlage verursacht keinen dauerhaften Karriere- oder DNA-Schaden")
+	check(loss_client.flags.get("auditionSetbacks", {}).has(str(aud_loss.director)), "Nur ein einmaliger Regisseur-Malus wird vorgemerkt")
+	# Laufendes Vorsprechen und kompaktes Regisseur-Gedächtnis überleben JSON.
+	Game.begin_audition(int(loss_casting.id), loss_idx, int(loss_client.id))
+	Game.audition_begin_choices()
+	Game.audition_choose("scene", "quiet", true)
+	var saved_audition: Dictionary = Game.state.audition.duplicate(true)
+	var saved_director := str(aud_loss.director)
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Bühnen-Spielstand geladen")
+	check(Game.state.audition != null and int(Game.state.audition.castingId) == int(saved_audition.castingId) and Game.state.audition.choices.has("scene"), "state.audition überlebt Save/Load")
+	check(Game.state.directors.has(saved_director) and Game.state.directors[saved_director].get("liked", []).size() == 4, "Regisseur-Gedächtnis überlebt Save/Load")
+
+	# 37. Chemistry Read: Rangfolge, indirekte Signale, Package und Fremdbesetzungs-Rückweg
+	Game.new_game("Chemieagentur", 1950)
+	Game.state.agency.rep = 100
+	for chem_aid in ["monroe", "gkelly", "brando"]:
+		Game.start_negotiation(chem_aid)
+		Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
+	var chem_casting: Dictionary = Game.state.castings[0]
+	chem_casting.roles[0].type = "lead"
+	chem_casting.roles[0].gender = "f"
+	chem_casting.roles[0].minFame = 10
+	chem_casting.roles[0].ageMin = 18
+	chem_casting.roles[0].ageMax = 70
+	chem_casting.roles[1].type = "lead"
+	chem_casting.roles[1].gender = "m"
+	chem_casting.roles[1].minFame = 10
+	chem_casting.roles[1].ageMin = 18
+	chem_casting.roles[1].ageMax = 70
+	var chem_pairs := Game.chem_read_candidate_pairs(int(chem_casting.id))
+	check(chem_pairs.size() >= 2, "Zwei eigene Kandidaten-Paarungen für den Chemistry Read verfügbar")
+	var selected_keys := [str(chem_pairs[0].key), str(chem_pairs[1].key)]
+	var chem_begin := Game.begin_chem_read(int(chem_casting.id), selected_keys, "love")
+	check(bool(chem_begin.ok) and chem_begin.pairs.size() >= 3, "Chemistry Read ergänzt den Studio-NPC-Vorschlag")
+	var chem_ranked: Array = Game.chem_read.pairs.duplicate()
+	chem_ranked.sort_custom(func(a, b): return float(a.score) > float(b.score))
+	var best_key := str(chem_ranked[0].key)
+	var best_result := Game.resolve_chem_read(best_key)
+	check(str(best_result.outcome) == "best" and chem_casting.roles[0].filled != null and chem_casting.roles[1].filled != null, "Beste Paarung gewinnt bei festem deterministischem Seed")
+	check(chem_casting.get("signals", []).any(func(s): return str(s.t) == "Die Chemie stimmt"), "Beste Paarung merkt das Set-Signal „Die Chemie stimmt“ vor")
+	var pos_signal := Game.chemistry_signal(7, false, "test_pos")
+	var neg_signal := Game.chemistry_signal(-7, false, "test_neg")
+	check(int(pos_signal.sign) > 0 and (str(pos_signal.text).contains("vervollständigen") or str(pos_signal.text).contains("Takt")), "Positive Signal-Prosa passt zum Vorzeichen des screen-Werts")
+	check(int(neg_signal.sign) < 0 and (str(neg_signal.text).contains("weicht") or str(neg_signal.text).contains("Abstand")), "Negative Signal-Prosa passt zum Vorzeichen des screen-Werts")
+
+	# Schlechteste Wahl: neuer Castinglauf, mindestens ein eigener Name bleibt sicher drin.
+	Game.new_game("Chemie-Rückweg", 1950)
+	Game.state.agency.rep = 100
+	for chem_aid2 in ["monroe", "gkelly", "brando"]:
+		Game.start_negotiation(chem_aid2)
+		Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
+	var worst_casting: Dictionary = Game.state.castings[0]
+	worst_casting.roles[0].type = "lead"
+	worst_casting.roles[0].gender = "f"
+	worst_casting.roles[0].minFame = 10
+	worst_casting.roles[0].ageMin = 18
+	worst_casting.roles[0].ageMax = 70
+	worst_casting.roles[1].type = "lead"
+	worst_casting.roles[1].gender = "m"
+	worst_casting.roles[1].minFame = 10
+	worst_casting.roles[1].ageMin = 18
+	worst_casting.roles[1].ageMax = 70
+	var worst_pairs := Game.chem_read_candidate_pairs(int(worst_casting.id))
+	Game.begin_chem_read(int(worst_casting.id), [str(worst_pairs[0].key), str(worst_pairs[1].key)], "comedy")
+	var worst_ranked: Array = Game.chem_read.pairs.duplicate()
+	worst_ranked.sort_custom(func(a, b): return float(a.score) > float(b.score))
+	var worst_result := Game.resolve_chem_read(str(worst_ranked[-1].key))
+	var own_filled: int = worst_casting.roles.slice(0, 2).filter(func(r): return r.filled != null and r.filled.get("clientId") != null).size()
+	check(str(worst_result.outcome) == "worst" and bool(worst_result.ownRetained) and own_filled >= 1, "Fremdbesetzungs-Pfad lässt mindestens einen eigenen Klienten in der Rolle")
+	check(Game.state.history_pairs.size() >= 1, "Chemistry-Read-Ergebnis schreibt die Paarhistorie fort")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()
