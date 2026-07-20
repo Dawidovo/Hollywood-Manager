@@ -168,6 +168,23 @@ func _ready() -> void:
 		Game.nego.counter = Game.build_counter({"commission": 12, "bonus": 0, "years": 2, "perks": [], "promise": null})
 		_render_negotiation("Monroe: „Versprechen Sie mir nichts, was Sie nicht halten können.“")
 		await _take_shot("nego")
+	elif args.has("--shot-pitch"):
+		_on_era_selected(1950)
+		Game.state.agency.rep = 80
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var pitch_client: Dictionary = Game.state.clients[0]
+		var pitch_casting: Dictionary = Game.state.castings[0]
+		var pitch_role: Dictionary = pitch_casting.roles[0]
+		pitch_role.type = "support"
+		pitch_role.gender = "f"
+		pitch_role.minFame = 10
+		pitch_role.ageMin = 18
+		pitch_role.ageMax = 70
+		Game.pitch_ctx = {"casting": pitch_casting, "roleIdx": 0, "role": pitch_role, "client": pitch_client,
+			"fee": Game.role_fee_for(pitch_casting, pitch_role, pitch_client), "haggled": false, "alts": []}
+		_render_studio_offer("Das Studio wartet auf deine Antwort.")
+		await _take_shot("pitch")
 	elif args.has("--shot-finanzen"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
@@ -208,7 +225,7 @@ func _ready() -> void:
 		Game.planner_slot_set("client", int(Game.state.clients[1].id), 1, 2, "gala")
 		_switch_tab("planer")
 		await _take_shot("planer")
-	elif args.has("--shot-verhandlung"):
+	elif args.has("--shot-verhandlung") or args.has("--shot-tisch"):
 		_on_era_selected(1950)
 		Game.state.agency.rep = 80
 		Game.start_negotiation("monroe")
@@ -239,7 +256,28 @@ func _ready() -> void:
 			_render_table("")
 		else:
 			_switch_tab("castings")
-		await _take_shot("verhandlung")
+		await _take_shot("tisch" if args.has("--shot-tisch") else "verhandlung")
+	elif args.has("--shot-produktionsverhandlung"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var production_client: Dictionary = Game.state.clients[0]
+		var production: Dictionary = Game.quick_production(production_client, {"genre": "drama", "prestige": 2}).prod
+		Game.ensure_prod_fields(production)
+		production.signals = [{"t": "Starke Dailies überzeugen das Studio.", "pos": true, "mi": Game.mi()}]
+		_run_production_negotiation(int(production.id), "reneg")
+		await _take_shot("produktionsverhandlung")
+	elif args.has("--shot-eventverhandlung"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var event_client: Dictionary = Game.state.clients[0]
+		event_client.fame = 70.0
+		var event_data = EvEngine.build_by_id("rollen_transformation", {"cid": int(event_client.id), "sid": str(Game.active_studios()[0].id)})
+		if event_data != null:
+			modal_queue.append(event_data)
+			_show_next_modal()
+		await _take_shot("eventverhandlung")
 	elif args.has("--shot-audition"):
 		_on_era_selected(1950)
 		Game.state.agency.rep = 100
@@ -501,6 +539,45 @@ func _chip_row(chips: Array) -> HBoxContainer:
 	for c in chips:
 		h.add_child(c)
 	return h
+
+func _nego_header(icon_title: String, subtitle: String, chips: Array = []) -> VBoxContainer:
+	var header := VBoxContainer.new()
+	header.name = "NegotiationHeader"
+	header.add_theme_constant_override("separation", 5)
+	header.add_child(_lbl(icon_title, 22, ACC))
+	if subtitle != "":
+		header.add_child(_lbl(subtitle, 12, DIM))
+	if chips.size():
+		var chip_line := _chip_row(chips)
+		chip_line.name = "NegotiationChips"
+		header.add_child(chip_line)
+	return header
+
+func _nego_action_button(spec: Dictionary, primary: bool = false) -> Button:
+	var cb: Callable = spec.get("cb", func(): pass)
+	var button := _btn(str(spec.get("label", "Weiter")), cb, primary)
+	button.disabled = bool(spec.get("disabled", false))
+	return button
+
+func _nego_actions(primary: Dictionary, secondary: Array, cancel = null) -> HFlowContainer:
+	var actions := HFlowContainer.new()
+	actions.name = "NegotiationActions"
+	actions.add_theme_constant_override("h_separation", 8)
+	actions.add_theme_constant_override("v_separation", 6)
+	if not primary.is_empty():
+		actions.add_child(_nego_action_button(primary, true))
+	for spec in secondary:
+		if spec is Dictionary and not spec.is_empty():
+			actions.add_child(_nego_action_button(spec))
+	if cancel is Callable and cancel.is_valid():
+		actions.add_child(_btn("Abbrechen", cancel))
+	return actions
+
+func _nego_mood_chip(score: float) -> PanelContainer:
+	var mood := Game.mood_label(score)
+	var icon := {"begeistert": "😃", "interessiert": "🙂", "abwägend": "🤔", "ablehnend": "😒"}.get(str(mood[0]), "")
+	var color := GREEN if str(mood[1]) == "pos" else (RED if str(mood[1]) == "neg" else DIM)
+	return _chip("%s Stimmung: %s" % [icon, str(mood[0])], color)
 
 # Bipolarer DNA-Balken: füllt von der Mitte nach links oder rechts
 class DnaBar extends Control:
@@ -1502,8 +1579,14 @@ func _render_negotiation(hint: String) -> void:
 	var a: Dictionary = n.actor
 	var body := Game.body_of(a)
 	_open_modal()
-	modal_box.add_child(_lbl("🤝 Verhandlung: %s" % a.name, 22, ACC))
-	modal_box.add_child(_lbl("Runde %d/%d · %s · ⭐ Ruhm %d · Talent %s · %d Jahre · %d cm · %d kg · 💰 Gagen-Niveau %s" % [int(n.round), int(n.maxRounds), _gender_symbol(a), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Game.age_of(a, Game.state.year), int(body.height), int(body.weight), Game.fmt_money(n.ask)], 12, DIM))
+	var mood_chip := _nego_mood_chip(Game.evaluate_offer(_offer()))
+	var header := _nego_header("🤝 Klienten-Anwerbung: %s" % a.name,
+		"%s · ⭐ Ruhm %d · Talent %s · %d Jahre · %d cm · %d kg · Gagen-Niveau %s" % [_gender_symbol(a), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Game.age_of(a, Game.state.year), int(body.height), int(body.weight), Game.fmt_money(n.ask)], [
+			_chip("Runde %d/%d" % [int(n.round), int(n.maxRounds)], BLUE),
+			mood_chip,
+		])
+	modal_box.add_child(header)
+	_nego_widgets = {"mood_row": header.get_node("NegotiationChips"), "mood_chip": mood_chip}
 	var nego_known := _filmography_line(a, Game.state.year)
 	if nego_known != "":
 		modal_box.add_child(_lbl(nego_known, 12, DIM))
@@ -1589,34 +1672,30 @@ func _render_negotiation(hint: String) -> void:
 	if int(Game.state.year) < 1995:
 		right.add_child(_lbl("Abbild-Rechte werden erst ab 1995 verhandelbar.", 11, DIM))
 
-	var mood := _lbl("", 14, ACC)
-	mood.name = "MoodLabel"
-	modal_box.add_child(mood)
-	_nego_widgets = {"mood": mood}
-	_update_mood()
-
+	var secondary_actions: Array = []
 	if n.counter != null:
 		var cbox = _card("Gegenvorschlag von %s" % a.name, "↩")
 		modal_box.add_child(cbox[0])
 		cbox[1].add_child(_rich("[i]%s[/i]" % n.counter.text, 14))
 		var affordable: bool = n.counter.bonus <= Game.state.agency.cash
-		var acc := _btn("Gegenvorschlag annehmen" + ("" if affordable else " (zu teuer)"), _accept_counter, true)
-		acc.disabled = not affordable
-		cbox[1].add_child(acc)
+		secondary_actions.append({"label": "Gegenvorschlag annehmen" + ("" if affordable else " (zu teuer)"), "cb": _accept_counter, "disabled": not affordable})
 
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	modal_box.add_child(actions)
-	actions.add_child(_btn("Eigenes Angebot machen", _submit_offer, true))
-	actions.add_child(_btn("Abbrechen", _close_modal))
+	modal_box.add_child(_nego_actions({"label": "Eigenes Angebot machen", "cb": _submit_offer}, secondary_actions, _close_modal))
 
 func _update_mood() -> void:
-	if not _nego_widgets.has("mood") or not is_instance_valid(_nego_widgets.mood):
+	if not _nego_widgets.has("mood_row") or not is_instance_valid(_nego_widgets.mood_row):
 		return
-	var ml = Game.mood_label(Game.evaluate_offer(_offer()))
-	var icon := {"begeistert": "😃", "interessiert": "🙂", "abwägend": "🤔", "ablehnend": "😒"}.get(ml[0], "")
-	_nego_widgets.mood.text = "Stimmung: %s %s" % [icon, ml[0]]
-	_nego_widgets.mood.add_theme_color_override("font_color", GREEN if ml[1] == "pos" else (RED if ml[1] == "neg" else ACC))
+	var row: HBoxContainer = _nego_widgets.mood_row
+	var old_chip = _nego_widgets.get("mood_chip")
+	var index := row.get_child_count()
+	if old_chip != null and is_instance_valid(old_chip):
+		index = old_chip.get_index()
+		row.remove_child(old_chip)
+		old_chip.queue_free()
+	var new_chip := _nego_mood_chip(Game.evaluate_offer(_offer()))
+	row.add_child(new_chip)
+	row.move_child(new_chip, mini(index, row.get_child_count() - 1))
+	_nego_widgets["mood_chip"] = new_chip
 
 func _offer() -> Dictionary:
 	return {"commission": nego_form.commission, "bonus": nego_form.bonus, "years": nego_form.years, "perks": nego_form.perks.duplicate(), "promise": nego_form.promise, "clauses": nego_form.get("clauses", []).duplicate()}
@@ -1625,12 +1704,12 @@ func _submit_offer() -> void:
 	var offer := _offer()
 	var res = Game.make_offer(offer)
 	if res.get("broke", false):
-		_show_simple_modal("Zu wenig Kapital", "Der Signing-Bonus übersteigt deine Kasse.")
+		_show_outcome_modal("Klienten-Anwerbung", "[b]Zu wenig Kapital:[/b] Der Signing-Bonus übersteigt deine Kasse.")
 		return
 	if res.get("accepted", false):
 		_show_signed(offer)
 	elif res.get("final", false):
-		_show_simple_modal("Abgelehnt", "[i]%s[/i]\n\n%s hat genug gehört. Vielleicht nächstes Jahr — mit besserem Ruf." % [res.hint, Game.nego.actor.name])
+		_show_outcome_modal("Klienten-Anwerbung", "[b]Abgelehnt[/b]\n\n[i]%s[/i]\n\n%s hat genug gehört. Vielleicht nächstes Jahr — mit besserem Ruf." % [res.hint, Game.nego.actor.name])
 	else:
 		_render_negotiation(res.hint)
 
@@ -1645,7 +1724,7 @@ func _show_signed(terms: Dictionary) -> void:
 	var perks_s: String = (", Perks: " + ", ".join(terms.perks.map(func(p): return Game.PERKS[p].de))) if terms.perks.size() else ""
 	var clause_s: String = ("\n\n📑 Vereinbarte Klauseln: " + ", ".join(terms.get("clauses", []).map(func(cl): return Game.clause_label(str(cl))))) if terms.get("clauses", []).size() else ""
 	var prom_s: String = ("\n\n📜 Dein Versprechen (%s) wurde protokolliert." % Game.PROMISES[terms.promise].label) if terms.get("promise") != null else ""
-	_show_simple_modal("Vertrag unterschrieben!", "[i]„Also gut. Machen Sie mich unsterblich.“[/i]\n\n%s ist jetzt Klient — %d %% Provision, %d Jahre%s%s.%s%s" % [a.name, int(terms.commission), int(terms.years), (", %s Bonus" % Game.fmt_money(terms.bonus)) if terms.bonus > 0 else "", perks_s, clause_s, prom_s])
+	_show_outcome_modal("Klienten-Anwerbung", "[b]Vertrag unterschrieben![/b]\n\n[i]„Also gut. Machen Sie mich unsterblich.“[/i]\n\n%s ist jetzt Klient — %d %% Provision, %d Jahre%s%s.%s%s" % [a.name, int(terms.commission), int(terms.years), (", %s Bonus" % Game.fmt_money(terms.bonus)) if terms.bonus > 0 else "", perks_s, clause_s, prom_s])
 	# Star-Prognose (Feature 6b): beim Signing unter Ruhm 40 das Bauchgefühl befragen
 	var pev = Game.pop_pending_star_prediction()
 	if pev != null:
@@ -1715,8 +1794,13 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 	var role: Dictionary = cs.roles[role_idx]
 	var options = Game.eligible_clients(cs, role).filter(func(e): return not role.rejected.has(int(e.c.id)))
 	_open_modal()
-	modal_box.add_child(_lbl("🎬 Pitch: „%s“" % cs.title, 22, ACC))
-	modal_box.add_child(_lbl("%s · ab ⭐ %d · Basis-Gage ca. %s" % ["🎯 Hauptrolle" if role.type == "lead" else "▫ Nebenrolle", int(role.minFame), Game.fmt_money(role.fee)], 12, DIM))
+	modal_box.add_child(_nego_header("🎬 Studio-Pitch: „%s“" % cs.title,
+		"%s · ab ⭐ %d · Basis-Gage ca. %s" % ["🎯 Hauptrolle" if role.type == "lead" else "▫ Nebenrolle", int(role.minFame), Game.fmt_money(role.fee)], [
+			_chip(str(Game._studio(str(cs.studioId)).name), BLUE),
+			_chip("%d Kandidaten" % int(options.size()), DIM),
+			_chip("%d Wo. Frist" % int(cs.deadline), RED if int(cs.deadline) <= 4 else DIM),
+		]))
+	var footer_actions: Array = []
 	# Bauchgefühl bei hohem Instinkt (Feature 6)
 	var gf: String = Game.gut_feeling(cs)
 	if gf != "":
@@ -1755,9 +1839,9 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 		modal_box.add_child(_lbl("🧬 = Karriere-DNA/Image-Abgleich. Ein Westernstar überzeugt nicht über Nacht als Romantiker.", 12, DIM))
 	# Gefallen: Drehbuch-Einsicht vor dem Pitch
 	if insight < 0 and Game.has_favor("scriptAccess"):
-		modal_box.add_child(_btn("🔍 Gefallen einlösen: Drehbuch-Einsicht", func():
+		footer_actions.append({"label": "🔍 Gefallen einlösen: Drehbuch-Einsicht", "cb": func():
 			if Game.consume_favor("scriptAccess"):
-				_open_pitch(casting_id, role_idx, Game.script_insight(cs))))
+				_open_pitch(casting_id, role_idx, Game.script_insight(cs))})
 	# Gefallen: abgelehnte Klienten erneut pitchen lassen
 	var rejected_clients: Array = []
 	for cid in role.rejected:
@@ -1782,12 +1866,12 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 						_show_simple_modal("Kein Gefallen", "Niemand schuldet dir mehr ein zusätzliches Vorsprechen.")))
 			else:
 				rrow.add_child(_lbl("(Gefallen „Zusätzliches Vorsprechen“ nötig)", 11, DIM))
-	modal_box.add_child(_btn("Abbrechen", _close_modal))
+	modal_box.add_child(_nego_actions({}, footer_actions, _close_modal))
 
 func _do_pitch(casting_id: int, role_idx: int, client_id: int) -> void:
 	var res = Game.submit_pitch(casting_id, role_idx, client_id)
 	if not res.success:
-		_show_simple_modal("Absage", "[i]„Wir hatten uns die Rolle … anders vorgestellt. Danke für Ihre Zeit.“[/i]")
+		_show_outcome_modal("Studio-Pitch", "[b]Absage[/b]\n\n[i]„Wir hatten uns die Rolle … anders vorgestellt. Danke für Ihre Zeit.“[/i]")
 		return
 	_offer_clauses = []
 	# Große Hauptrollen: Mehrparteien-Verhandlung (Feature 9)
@@ -1938,9 +2022,12 @@ func _render_chem_pair_picker(casting_id: int) -> void:
 		return
 	var pairs: Array = Game.chem_read_candidate_pairs(casting_id).slice(0, 5)
 	_open_modal()
-	modal_box.add_child(_lbl("🧪 Der Chemistry Read", 22, ACC))
+	modal_box.add_child(_nego_header("🧪 Studio-Pitch: Chemistry Read",
+		"Stelle zwei eigene Paarungen für „%s“ zusammen; das Studio ergänzt einen Vorschlag." % casting.title, [
+			_chip("%d/2 Paarungen" % int(_chem_selected.size()), BLUE),
+			_chip("%d Kandidatenpaare" % int(pairs.size()), DIM),
+		]))
 	modal_box.add_child(_rich("[i]„Zwei gute Schauspieler sind noch lange kein gutes Paar.“[/i]", 14))
-	modal_box.add_child(_lbl("Stelle zwei eigene Paarungen für „%s“ zusammen (%d/2 gewählt). Das Studio bringt zusätzlich einen eigenen Vorschlag." % [casting.title, _chem_selected.size()], 12, DIM))
 	for pair in pairs:
 		var selected := _chem_selected.has(str(pair.key))
 		var row := HBoxContainer.new()
@@ -1953,12 +2040,18 @@ func _render_chem_pair_picker(casting_id: int) -> void:
 		row.add_child(_btn("✓ Gewählt" if selected else "Paarung wählen", _toggle_chem_pair.bind(casting_id, str(pair.key)), selected))
 	if _chem_selected.size() == 2:
 		modal_box.add_child(_lbl("Testszene wählen", 14, ACC))
-		var scenes := HBoxContainer.new()
-		scenes.add_theme_constant_override("separation", 8)
-		modal_box.add_child(scenes)
+		var primary_scene: Dictionary = {}
+		var secondary_scenes: Array = []
 		for scene_s in Game.CHEM_READ_SCENES:
-			scenes.add_child(_btn(str(Game.CHEM_READ_SCENES[scene_s]), _begin_chem_test.bind(casting_id, str(scene_s)), scene_s == "love"))
-	modal_box.add_child(_btn("Nur einen Klienten pitchen", _close_modal))
+			var scene_spec := {"label": str(Game.CHEM_READ_SCENES[scene_s]), "cb": _begin_chem_test.bind(casting_id, str(scene_s))}
+			if scene_s == "love":
+				primary_scene = scene_spec
+			else:
+				secondary_scenes.append(scene_spec)
+		modal_box.add_child(_nego_actions(primary_scene, secondary_scenes, null))
+	modal_box.add_child(_nego_actions({}, [
+		{"label": "Einzel-Pitch statt Chemistry Read", "cb": _close_modal},
+	], _close_modal))
 
 func _toggle_chem_pair(casting_id: int, pair_key: String) -> void:
 	if _chem_selected.has(pair_key):
@@ -1978,37 +2071,49 @@ func _render_chem_signals() -> void:
 	if Game.chem_read == null:
 		return
 	_open_modal()
-	modal_box.add_child(_lbl("🎬 %s · Dailies aus dem Testraum" % str(Game.CHEM_READ_SCENES[Game.chem_read.scene]), 22, ACC))
-	modal_box.add_child(_lbl("Keine nackten Chemiewerte — nur Körpersprache, gemeinsame Vergangenheit und Flüstern aus dem Netzwerk.", 12, DIM))
+	modal_box.add_child(_nego_header("🎬 Studio-Pitch: Dailies aus dem Testraum",
+		"Keine nackten Chemiewerte — nur Körpersprache, gemeinsame Vergangenheit und Flüstern aus dem Netzwerk.", [
+			_chip(str(Game.CHEM_READ_SCENES[Game.chem_read.scene]), BLUE),
+			_chip("%d Paarungen" % int(Game.chem_read.pairs.size()), DIM),
+		]))
 	for pair in Game.chem_read.pairs:
 		var badge := " · Vorschlag des Studios" if bool(pair.get("studioSuggestion", false)) else ""
 		modal_box.add_child(_lbl("%s × %s%s" % [pair.aName, pair.bName, badge], 15, BLUE if bool(pair.get("studioSuggestion", false)) else ACC))
 		modal_box.add_child(_rich("[i]„%s“[/i]  %s  %s" % [pair.signal.text, pair.historyText, pair.personalHint], 12))
 		modal_box.add_child(_btn("Diese Paarung besetzen", _choose_chem_pair.bind(str(pair.key)), true))
-	modal_box.add_child(_btn("Abbrechen — nur einen Klienten pitchen", func(): Game.chem_read = null; _close_modal()))
+	modal_box.add_child(_nego_actions({}, [
+		{"label": "Einzel-Pitch statt Paarbesetzung", "cb": _leave_chem_read},
+	], _leave_chem_read))
+
+func _leave_chem_read() -> void:
+	Game.chem_read = null
+	_close_modal()
 
 func _choose_chem_pair(pair_key: String) -> void:
 	var result := Game.resolve_chem_read(pair_key)
 	if not bool(result.get("ok", false)):
 		_show_simple_modal("Entscheidung verstrichen", "Das Studio hat den Testraum bereits geschlossen.")
 		return
-	_open_modal()
+	var outcome_text := ""
 	match str(result.outcome):
 		"best":
-			modal_box.add_child(_lbl("✨ Das Traumpaar", 22, GREEN))
-			modal_box.add_child(_rich("[i]„Genau diese beiden. Keine weiteren Tests.“[/i]\n\nBeide Rollen sind besetzt, die Gagen steigen als Package um [b]12 %%[/b], und für den Dreh ist das Signal „Die Chemie stimmt“ vorgemerkt.", 15))
+			outcome_text = "[b]Das Traumpaar[/b]\n\n[i]„Genau diese beiden. Keine weiteren Tests.“[/i]\n\nBeide Rollen sind besetzt, die Gagen steigen als Package um [b]12 %%[/b], und für den Dreh ist das Signal „Die Chemie stimmt“ vorgemerkt."
 		"middle":
-			modal_box.add_child(_lbl("🎬 Solide Besetzung", 22, ACC))
-			modal_box.add_child(_rich("[i]„Das trägt den Film. Machen wir den Vertrag.“[/i]\n\nBeide Rollen werden zu normalen Konditionen besetzt.", 15))
+			outcome_text = "[b]Solide Besetzung[/b]\n\n[i]„Das trägt den Film. Machen wir den Vertrag.“[/i]\n\nBeide Rollen werden zu normalen Konditionen besetzt."
 		_:
-			modal_box.add_child(_lbl("↩ Das Studio korrigiert das Paar", 22, AMBER))
-			modal_box.add_child(_rich("[i]„Ihr Klient bleibt. Den Partner besetzen wir selbst.“[/i]\n\nDer Rückweg greift: Ein eigener Klient behält sicher seine Rolle; nur die zweite Besetzung kommt von außen.", 15))
-	modal_box.add_child(_btn("Zurück zu den Castings", _close_modal, true))
+			outcome_text = "[b]Das Studio korrigiert das Paar[/b]\n\n[i]„Ihr Klient bleibt. Den Partner besetzen wir selbst.“[/i]\n\nDer Rückweg greift: Ein eigener Klient behält sicher seine Rolle; nur die zweite Besetzung kommt von außen."
+	_show_outcome_modal("Studio-Pitch: Chemistry Read", outcome_text)
 
 func _render_studio_offer(note: String) -> void:
 	var ctx = Game.pitch_ctx
 	_open_modal()
-	modal_box.add_child(_lbl("💼 Angebot des Studios", 22, ACC))
+	var fit_score := Game.fit_score(ctx.casting, ctx.role, ctx.client)
+	modal_box.add_child(_nego_header("💼 Studio-Pitch: Angebot",
+		"„%s“ · %s für %s" % [str(ctx.casting.title), "Hauptrolle" if str(ctx.role.type) == "lead" else "Nebenrolle", Game.client_name(ctx.client)], [
+			_chip("Gage %s" % Game.fmt_money(ctx.fee), BLUE),
+			_chip("Nachverhandelt" if bool(ctx.haggled) else "Erstes Angebot", DIM),
+			_nego_mood_chip(fit_score),
+		]))
 	if note != "":
 		modal_box.add_child(_rich("[i]%s[/i]" % note, 14))
 	modal_box.add_child(_rich("Das Studio will [b]%s[/b] für „%s“ — Gage: [color=#%s]%s[/color] (deine Provision: %s)." % [Game.client_name(ctx.client), ctx.casting.title, ACC.to_html(false), Game.fmt_money(ctx.fee), Game.fmt_money(ctx.fee * ctx.client.commission / 100.0)], 15))
@@ -2036,52 +2141,61 @@ func _render_studio_offer(note: String) -> void:
 		var alt_c = Game.client(alts[0])
 		if alt_c != null:
 			modal_box.add_child(_lbl("🔮 Bauchgefühl: Passt %s wirklich besser als %s? (Wird beim Kinostart geprüft)" % [Game.client_name(ctx.client), Game.client_name(alt_c)], 13, ACC))
-			var brow := HBoxContainer.new()
-			brow.add_theme_constant_override("separation", 8)
-			modal_box.add_child(brow)
-			brow.add_child(_btn("Ja, besser", func():
+			modal_box.add_child(_nego_actions({"label": "Ja, besser", "cb": func():
 				Game.note_betterfit_prediction(ctx.client, alt_c, int(ctx.casting.id))
 				ctx["fitAsked"] = true
-				_render_studio_offer("Prognose notiert — dein Instinkt wird beim Kinostart auf die Probe gestellt.")))
-			brow.add_child(_btn("Nein", func():
-				Game.add_prediction("betterfit", {"prodId": int(ctx.casting.id), "chosen": int(ctx.client.id), "other": int(alt_c.id), "otherFame": float(alt_c.fame)}, false, Game.mi() + 30, "%s passt NICHT besser als %s" % [Game.client_name(ctx.client), Game.client_name(alt_c)])
-				ctx["fitAsked"] = true
-				_render_studio_offer("Prognose notiert.")))
-			brow.add_child(_btn("Keine Angabe", func():
-				ctx["fitAsked"] = true
-				_render_studio_offer("")))
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	modal_box.add_child(actions)
-	actions.add_child(_btn("✅ Annehmen", func():
-		Game.pitch_ctx["offerClauses"] = _offer_clauses.duplicate()
-		Game.accept_offer()
-		_offer_clauses = []
-		_close_modal(), true))
+				_render_studio_offer("Prognose notiert — dein Instinkt wird beim Kinostart auf die Probe gestellt.")}, [
+				{"label": "Nein", "cb": func():
+					Game.add_prediction("betterfit", {"prodId": int(ctx.casting.id), "chosen": int(ctx.client.id), "other": int(alt_c.id), "otherFame": float(alt_c.fame)}, false, Game.mi() + 30, "%s passt NICHT besser als %s" % [Game.client_name(ctx.client), Game.client_name(alt_c)])
+					ctx["fitAsked"] = true
+					_render_studio_offer("Prognose notiert.")},
+				{"label": "Keine Angabe", "cb": func():
+					ctx["fitAsked"] = true
+					_render_studio_offer("")},
+			], null))
+	var secondary_actions: Array = []
 	if not ctx.haggled:
-		actions.add_child(_btn("💰 +25 % fordern", _do_haggle))
+		secondary_actions.append({"label": "💰 25 % mehr Gage fordern", "cb": _do_haggle})
 	var pkg = Game.package_options()
 	if pkg.size():
-		actions.add_child(_btn("👥 Package-Deal …", _render_package))
+		secondary_actions.append({"label": "👥 Package-Deal verhandeln", "cb": _render_package})
 	if Game.has_favor("billing") and not ctx.client.flags.get("billingBoost", false):
-		actions.add_child(_btn("🎬 Gefallen: Top-Billing", func():
+		secondary_actions.append({"label": "🎬 Top-Billing mit Gefallen", "cb": func():
 			if Game.consume_favor("billing"):
 				ctx.client.flags["billingBoost"] = true
-				_render_studio_offer("„Na gut — der Name Ihres Klienten steht über dem Titel. Zufrieden?“ (+Ruhm beim Release)")))
-	actions.add_child(_btn("Absagen", func(): Game.pitch_ctx = null; _close_modal()))
+				_render_studio_offer("„Na gut — der Name Ihres Klienten steht über dem Titel. Zufrieden?“ (+Ruhm beim Release)")})
+	modal_box.add_child(_nego_actions({"label": "Angebot annehmen", "cb": _accept_studio_offer}, secondary_actions, _cancel_pitch))
+
+func _accept_studio_offer() -> void:
+	var ctx = Game.pitch_ctx
+	var client_name := Game.client_name(ctx.client)
+	var film_title := str(ctx.casting.title)
+	var fee := float(ctx.fee)
+	var provision := fee * float(ctx.client.commission) / 100.0
+	Game.pitch_ctx["offerClauses"] = _offer_clauses.duplicate()
+	Game.accept_offer()
+	_offer_clauses = []
+	_show_outcome_modal("Studio-Pitch", "[b]Angebot angenommen[/b]\n\n%s spielt in „%s“ für %s. Deine Provision: %s." % [client_name, film_title, Game.fmt_money(fee), Game.fmt_money(provision)])
+
+func _cancel_pitch() -> void:
+	Game.pitch_ctx = null
+	_offer_clauses = []
+	_close_modal()
 
 func _do_haggle() -> void:
 	var res = Game.haggle()
 	if res.get("lost", false):
-		_show_simple_modal("Verhandlung geplatzt", "[i]„Sagen Sie Ihrem Klienten, er soll sich einen anderen Film suchen.“[/i]")
+		_show_outcome_modal("Studio-Pitch", "[b]Verhandlung geplatzt[/b]\n\n[i]„Sagen Sie Ihrem Klienten, er soll sich einen anderen Film suchen.“[/i]")
 		return
 	_render_studio_offer("„Also gut. %s. Aber kein Cent mehr.“" % Game.fmt_money(res.get("fee", 0)) if res.success else "„Nein. Das Angebot steht — nehmen Sie es oder lassen Sie es.“")
 
 func _render_package() -> void:
 	var ctx = Game.pitch_ctx
 	_open_modal()
-	modal_box.add_child(_lbl("👥 Package-Deal schnüren", 22, ACC))
-	modal_box.add_child(_lbl("Hauptdeal: %s (%s). Wähle den zweiten Klienten:" % [Game.client_name(ctx.client), Game.fmt_money(ctx.fee)], 13, DIM))
+	modal_box.add_child(_nego_header("👥 Studio-Pitch: Package-Deal",
+		"Hauptdeal: %s · %s. Wähle den zweiten Klienten." % [Game.client_name(ctx.client), Game.fmt_money(ctx.fee)], [
+			_chip("Package", BLUE),
+		]))
 	for o in Game.package_options():
 		var row := HBoxContainer.new()
 		modal_box.add_child(row)
@@ -2089,12 +2203,14 @@ func _render_package() -> void:
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(l)
 		row.add_child(_btn("Vorschlagen", _do_package.bind(int(o.roleIdx), int(o.c.id))))
-	modal_box.add_child(_btn("Zurück", func(): _render_studio_offer("")))
+	modal_box.add_child(_nego_actions({}, [
+		{"label": "Zum Studioangebot", "cb": func(): _render_studio_offer("")},
+	], _cancel_pitch))
 
 func _do_package(role_idx: int, client_id: int) -> void:
 	var res = Game.try_package(role_idx, client_id)
 	if res.success:
-		_show_simple_modal("Package-Deal perfekt!", "[i]„Zwei Ihrer Leute in einem Film? Sie werden mir langsam unheimlich.“[/i]\n\nBeide Deals sind unter Dach und Fach — mit 12 % Aufschlag.")
+		_show_outcome_modal("Studio-Pitch", "[b]Package-Deal perfekt![/b]\n\n[i]„Zwei Ihrer Leute in einem Film? Sie werden mir langsam unheimlich.“[/i]\n\nBeide Deals sind unter Dach und Fach — mit 12 % Aufschlag.")
 	else:
 		_render_studio_offer("„Den zweiten Namen nehmen wir nicht. Aber das ursprüngliche Angebot steht noch.“")
 
@@ -2134,18 +2250,12 @@ func _render_filme() -> void:
 						has_client_here = true
 				if has_client_here:
 					var pid := int(p.id)
-					var arow := HBoxContainer.new()
-					arow.add_theme_constant_override("separation", 6)
-					cv[1].add_child(arow)
-					var b1 := _btn("💰 Nachverhandeln", func(): _show_simple_modal("Nachverhandeln", Game.prod_renegotiate(pid)))
-					b1.disabled = bool(p.reactions.get("reneg", false))
-					arow.add_child(b1)
-					var b2 := _btn("🚪 Klient rausziehen", func(): _show_simple_modal("Ausstieg", Game.prod_pull_client(pid)))
-					b2.disabled = bool(p.reactions.get("pull", false))
-					arow.add_child(b2)
-					var b3 := _btn("📈 Beteiligung fordern", func(): _show_simple_modal("Beteiligung", Game.prod_demand_share(pid)))
-					b3.disabled = bool(p.reactions.get("share", false))
-					arow.add_child(b3)
+					cv[1].add_child(_nego_actions({
+						"label": "Nachverhandeln", "cb": _run_production_negotiation.bind(pid, "reneg"), "disabled": bool(p.reactions.get("reneg", false)),
+					}, [
+						{"label": "Klient rausziehen", "cb": _run_production_negotiation.bind(pid, "pull"), "disabled": bool(p.reactions.get("pull", false))},
+						{"label": "Beteiligung fordern", "cb": _run_production_negotiation.bind(pid, "share"), "disabled": bool(p.reactions.get("share", false))},
+					], null))
 	if st.released.size():
 		content_box.add_child(_lbl("🎞 Veröffentlicht", 18, ACC))
 		var txt := ""
@@ -2158,6 +2268,15 @@ func _render_filme() -> void:
 		var cv = _card("Noch keine Filme", "🎞")
 		cv[1].add_child(_lbl("Platziere Klienten in Castings — sobald ein Film abgedreht ist, erscheint er hier.", 13, DIM))
 		content_box.add_child(cv[0])
+
+func _run_production_negotiation(prod_id: int, kind: String) -> void:
+	var outcome := ""
+	match kind:
+		"reneg": outcome = Game.prod_renegotiate(prod_id)
+		"pull": outcome = Game.prod_pull_client(prod_id)
+		"share": outcome = Game.prod_demand_share(prod_id)
+		_: return
+	_show_outcome_modal("Produktions-Nachverhandlung", outcome)
 
 # ---------- Tab: Finanzen (Ledger-Bilanz) ----------
 func _render_finanzen() -> void:
@@ -2289,21 +2408,33 @@ func _show_simple_modal(title: String, bbcode: String) -> void:
 	modal_box.add_child(_rich(bbcode, 15))
 	modal_box.add_child(_btn("Weiter", _close_modal, true))
 
+func _show_outcome_modal(title: String, bbcode: String) -> void:
+	_open_modal()
+	modal_box.add_child(_nego_header("✅ %s — Ergebnis" % title, "Die Entscheidung ist abgeschlossen.", [
+		_chip("Ergebnis", GREEN),
+	]))
+	modal_box.add_child(_rich(bbcode, 15))
+	modal_box.add_child(_nego_actions({"label": "Weiter", "cb": _close_modal}, [], null))
+
 func _show_next_modal() -> void:
 	if modal_open or modal_queue.is_empty():
 		return
 	var ev: Dictionary = modal_queue.pop_front()
 	_open_modal()
-	modal_box.add_child(_lbl(ev.title, 22, ACC))
+	modal_box.add_child(_nego_header("💬 %s" % str(ev.title), "Treffe eine Entscheidung; die erste Option ist die direkte Empfehlung.", [
+		_chip("%d Optionen" % int(ev.choices.size()), BLUE),
+	]))
 	modal_box.add_child(_rich(ev.text, 15))
-	var actions := VBoxContainer.new()
-	actions.add_theme_constant_override("separation", 6)
-	modal_box.add_child(actions)
+	var primary: Dictionary = {}
+	var secondary: Array = []
 	for i in ev.choices.size():
 		var ch: Dictionary = ev.choices[i]
-		var b := _btn(ch.label, _resolve_choice.bind(ev, i), i == 0)
-		b.disabled = bool(ch.get("disabled", false))
-		actions.add_child(b)
+		var spec := {"label": str(ch.label), "cb": _resolve_choice.bind(ev, i), "disabled": bool(ch.get("disabled", false))}
+		if i == 0:
+			primary = spec
+		else:
+			secondary.append(spec)
+	modal_box.add_child(_nego_actions(primary, secondary, null))
 
 func _resolve_choice(ev: Dictionary, idx: int) -> void:
 	var ch: Dictionary = ev.choices[idx]
@@ -2314,11 +2445,7 @@ func _resolve_choice(ev: Dictionary, idx: int) -> void:
 	if ch.has("fn"):
 		var outcome = ch.fn.call()
 		if outcome is String and outcome != "":
-			modal_open = false
-			_open_modal()
-			modal_box.add_child(_lbl("…", 22, ACC))
-			modal_box.add_child(_rich(outcome, 15))
-			modal_box.add_child(_btn("Weiter", _close_modal, true))
+			_show_outcome_modal(str(ev.title), outcome)
 			return
 	_close_modal()
 
@@ -2330,8 +2457,16 @@ func _render_table(note: String) -> void:
 	var t = Game.table
 	var ctx = Game.pitch_ctx
 	_open_modal()
-	modal_box.add_child(_lbl("🎩 Der große Verhandlungstisch", 22, ACC))
-	modal_box.add_child(_lbl("„%s“ — Hauptrolle für %s. Zugeständnisse übrig: %d · Gage am Tisch: %s · Vorspann: %s Nennung" % [ctx.casting.title, Game.client_name(ctx.client), int(t.points), Game.fmt_money(t.fee), "erste" if int(t.billing) == 1 else "zweite"], 13, DIM))
+	var weakest_mood := 100.0
+	for party_key in t.parties:
+		weakest_mood = minf(weakest_mood, float(t.parties[party_key].sat))
+	modal_box.add_child(_nego_header("🎩 Mehrparteien-Verhandlung",
+		"„%s“ · Hauptrolle für %s · Rückzug bleibt ohne Zusatzschaden" % [ctx.casting.title, Game.client_name(ctx.client)], [
+			_chip("%d Zugeständnisse" % int(t.points), RED if int(t.points) < 1 else BLUE),
+			_chip("Gage %s" % Game.fmt_money(t.fee), GREEN),
+			_chip("%s Nennung" % ("Erste" if int(t.billing) == 1 else "Zweite"), DIM),
+			_nego_mood_chip(weakest_mood),
+		]))
 	if note != "":
 		modal_box.add_child(_rich("[i]%s[/i]" % note, 14))
 	# Parteien-Karten mit Zufriedenheits-Balken
@@ -2394,25 +2529,23 @@ func _render_table(note: String) -> void:
 	var bc := _btn("🧬 Regisseur umstimmen (Chemie & DNA)", func(): _table_action("chem_argument"))
 	bc.disabled = bool(t.chemUsed)
 	row3.add_child(bc)
-	# Abschluss / Abbruch
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	modal_box.add_child(actions)
-	actions.add_child(_btn("✅ Vertrag abschließen", _close_table, true))
-	actions.add_child(_btn("🚶 Zurückziehen (ohne Zusatzschaden)", func():
-		Game.table_withdraw()
-		Game.table = null
-		_close_modal()))
+	modal_box.add_child(_nego_actions({"label": "Vertrag abschließen", "cb": _close_table}, [], _cancel_table))
 
 func _table_action(action: String, target: String = "") -> void:
 	var res := Game.table_concede(action, target)
 	_render_table("" if res.get("ok", false) else str(res.get("msg", "")))
 
 func _close_table() -> void:
+	var table_state = Game.table
+	var casting = Game._casting(int(table_state.castingId)) if table_state != null else null
+	var film_title := str(casting.title) if casting != null else "das Projekt"
+	var client_at_table = Game.client(int(table_state.clientId)) if table_state != null else null
+	var client_name := Game.client_name(client_at_table) if client_at_table != null else "Der Klient"
+	var fee := float(table_state.fee) if table_state != null else 0.0
 	var res := Game.close_table()
 	if res.get("success", false):
 		Game.table = null
-		_close_modal()
+		_show_outcome_modal("Mehrparteien-Verhandlung", "[b]Vertrag abgeschlossen[/b]\n\n%s übernimmt die Hauptrolle in „%s“ für %s." % [client_name, film_title, Game.fmt_money(fee)])
 		return
 	if res.has("veto"):
 		_render_table_veto(res)
@@ -2423,26 +2556,39 @@ func _render_table_veto(res: Dictionary) -> void:
 	var t = Game.table
 	var pname := str(t.parties.get(res.veto, {}).get("name", "Eine Partei"))
 	_open_modal()
-	modal_box.add_child(_lbl("💥 Veto — der Deal platzt", 22, RED))
+	var weakest_mood := 100.0
+	for party_key in t.parties:
+		weakest_mood = minf(weakest_mood, float(t.parties[party_key].sat))
+	modal_box.add_child(_nego_header("💥 Mehrparteien-Verhandlung — Ergebnis", "Ein Veto hat den Hauptdeal beendet; die Rückwege bleiben offen.", [
+		_chip("Veto: %s" % pname, RED),
+		_nego_mood_chip(weakest_mood),
+	]))
 	modal_box.add_child(_rich("[i]„So kommen wir nicht zusammen. Mein letztes Wort.“[/i]\n\n[b]%s[/b] legt das Veto ein — der finanziell beste Deal nützt nichts, wenn die Menschen am Tisch nicht überzeugt sind.\n\nEs gibt immer einen Rückweg:" % pname, 15))
+	var primary: Dictionary = {}
+	var secondary: Array = []
 	for fb in res.get("fallbacks", []):
 		match str(fb.kind):
 			"support":
-				modal_box.add_child(_btn("▫ Trostpreis: Nebenrolle für denselben Klienten", func():
-					Game.table_support_fallback(int(fb.roleIdx))
-					Game.table = null
-					_close_modal(), true))
+				primary = {"label": "Nebenrolle für denselben Klienten", "cb": _table_support_fallback.bind(int(fb.roleIdx))}
 			"other":
-				modal_box.add_child(_btn("👥 Zurück zu den Castings — anderen Klienten pitchen", func():
-					Game.table_withdraw()
-					Game.table = null
-					_close_modal()
-					_switch_tab("castings")))
-			"withdraw":
-				modal_box.add_child(_btn("🚶 Ganz zurückziehen — ohne Zusatzschaden", func():
-					Game.table_withdraw()
-					Game.table = null
-					_close_modal()))
+				secondary.append({"label": "Anderen Klienten pitchen", "cb": _table_other_fallback})
+	modal_box.add_child(_nego_actions(primary, secondary, _cancel_table))
+
+func _table_support_fallback(role_idx: int) -> void:
+	Game.table_support_fallback(role_idx)
+	Game.table = null
+	_close_modal()
+
+func _table_other_fallback() -> void:
+	Game.table_withdraw()
+	Game.table = null
+	_close_modal()
+	_switch_tab("castings")
+
+func _cancel_table() -> void:
+	Game.table_withdraw()
+	Game.table = null
+	_close_modal()
 
 # =====================================================================
 # Weekly Planner (UI)
