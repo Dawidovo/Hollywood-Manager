@@ -26,15 +26,9 @@ Die Export-Templates (4.7.1.stable) sind bereits unter `%APPDATA%\Godot\export_t
 - **Exklusiv: Karriere-DNA** — fünf bipolare Image-Achsen pro Klient (Romantisch↔Bedrohlich, Populär↔Elitär, Zuverlässig↔Unberechenbar, Einzigartig↔Austauschbar, Familientauglich↔Kontrovers). Jede Rolle prägt das öffentliche Bild (Hauptrollen doppelt so stark wie Nebenrollen), Prestige-Filme machen elitär/einzigartig, Blockbuster machen populär, Ereignis-Entscheidungen wirken ebenfalls. Das Casting gleicht Rollenbild und DNA ab („Image“-Wert in der Pitch-Liste): Ein Westernstar überzeugt nicht über Nacht als Romantiker — Typecasting entsteht organisch, und Karrieren lassen sich nur über gezielt gewählte Rollen umbauen. Bei Untätigkeit verblasst das Image langsam.
 - Logiktest: `Godot_console.exe --headless --path godot res://tests/Test.tscn`
 
-## Web-Prototyp starten
+## Web-Prototyp (EINGEFROREN — nicht weiterentwickeln!)
 
-Das Spiel ist eine statische Web-App ohne Build-Schritt. Im Projektordner:
-
-```
-py -3 -m http.server 8123
-```
-
-Dann im Browser `http://localhost:8123` öffnen. (Direktes Öffnen von `index.html` per Doppelklick funktioniert meist auch.)
+⚠️ **Die Webversion (`index.html`, `js/`) ist eingefroren und spielt keine Rolle mehr.** Sie bleibt nur als Referenz liegen: keine neuen Features, keine Bugfixes, keine Refactorings, keine Analyse. **Alle Arbeit (auch von KI-Modellen) findet ausschließlich in `godot/` statt.** Bei Bedarf startbar mit `py -3 -m http.server 8123` im Projektordner.
 
 ## Spielprinzip
 
@@ -62,8 +56,8 @@ Bekanntheit wird aus den IMDb-Stimmenzahlen abgeleitet, Debüt/Peak aus den Jahr
 ## Code-Qualität & Aufgaben
 
 - **Aufgaben-Chunks:** `prompts/tasks/` — kleine, abgeschlossene Arbeitspakete (Features + Technical-Debt-Abbau) mit Statusliste in `prompts/tasks/README.md`. Pro Session ein Chunk, pro Chunk ein Commit.
-- **SonarQube (lokal):** analysiert `js/`, `tools/`, `index.html`. Server: `powershell -File tools\sonar-server.ps1`, Scan: `powershell -File tools\sonar-analyze.ps1`, Dashboard: http://localhost:9000/dashboard?id=hollywood-manager. Details: `tools/sonar-README.md`.
-- **GDScript:** wird von SonarQube nicht unterstützt → gdlint einführen (Chunk 06).
+- **SonarQube (lokal):** analysiert nur noch `tools/` (Python) — die eingefrorene Webversion ist ausgeschlossen. Server: `powershell -File tools\sonar-server.ps1`, Scan: `powershell -File tools\sonar-analyze.ps1`, Dashboard: http://localhost:9000/dashboard?id=hollywood-manager. Details: `tools/sonar-README.md`.
+- **GDScript:** wird von SonarQube nicht unterstützt → gdlint ist das Analyse-Werkzeug für den Hauptcode (Chunk 06).
 
 ## Struktur
 

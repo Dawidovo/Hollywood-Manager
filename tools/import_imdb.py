@@ -57,6 +57,76 @@ def tsv_rows(path: str):
             yield dict(zip(header, line.rstrip("\n").split("\t")))
 
 
+def load_titles(cache_dir: str) -> dict:
+    """Filme: tconst -> (Jahr, Genres, Bewertung, Stimmenzahl als Bekanntheits-Proxy)."""
+    ratings = {}
+    for r in tsv_rows(os.path.join(cache_dir, "title.ratings.tsv.gz")):
+        try:
+            ratings[r["tconst"]] = (float(r["averageRating"]), int(r["numVotes"]))
+        except ValueError:
+            pass
+
+    titles = {}
+    for r in tsv_rows(os.path.join(cache_dir, "title.basics.tsv.gz")):
+        if r["titleType"] not in ("movie", "tvMovie"):
+            continue
+        t = r["tconst"]
+        if t not in ratings or r["startYear"] == "\\N":
+            continue
+        titles[t] = (int(r["startYear"]), r["genres"], ratings[t][0], ratings[t][1])
+    return titles
+
+
+def load_people(cache_dir: str, titles: dict) -> list:
+    """Schauspieler mit Geburtsjahr; Bekanntheit = Stimmen ihrer bekanntesten Filme."""
+    people = []
+    for r in tsv_rows(os.path.join(cache_dir, "name.basics.tsv.gz")):
+        prof = r["primaryProfession"]
+        if "actor" not in prof and "actress" not in prof:
+            continue
+        if r["birthYear"] == "\\N":
+            continue
+        known = [t for t in r["knownForTitles"].split(",") if t in titles]
+        if not known:
+            continue
+        votes = sum(titles[t][3] for t in known)
+        people.append((votes, r, known))
+    people.sort(key=lambda x: -x[0])
+    return people
+
+
+def film_genres(films: list) -> list:
+    genres = []
+    for f in films:
+        for g in f[1].split(","):
+            mapped = GENRE_MAP.get(g)
+            if mapped and mapped not in genres:
+                genres.append(mapped)
+    return genres[:3] or ["drama"]
+
+
+def build_actor(votes: int, r: dict, known: list, titles: dict, max_votes: float, rng) -> dict:
+    birth = int(r["birthYear"])
+    death = None if r["deathYear"] == "\\N" else int(r["deathYear"])
+    films = sorted((titles[t] for t in known), key=lambda f: f[0])
+    # Debüt: ~2 Jahre vor dem ersten bekannten Film, frühestens mit 15
+    debut = max(birth + 15, films[0][0] - 2)
+    # Peak: Jahr des meistbewerteten Films
+    peak_film = max(films, key=lambda f: f[3])
+    peak = max(debut + 2, peak_film[0])
+    # Ruhm/Talent aus Stimmen & Bewertungen (log-skaliert)
+    peak_fame = int(round(45 + 55 * math.log10(max(votes, 10)) / max_votes))
+    avg_rating = sum(f[2] for f in films) / len(films)
+    talent = int(max(30, min(100, round(avg_rating * 11 + rng.uniform(-6, 6)))))
+    # Geschlecht aus der Berufsbezeichnung (IMDb unterscheidet actor/actress)
+    gender = "f" if "actress" in r["primaryProfession"] else "m"
+    return {
+        "id": r["nconst"], "name": r["primaryName"], "birth": birth, "death": death,
+        "g": gender, "debut": debut, "talent": talent, "ego": rng.randint(25, 90),
+        "genres": film_genres(films), "peak": peak, "peakFame": max(35, min(100, peak_fame)),
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="IMDb-Datasets → js/actors_full.js")
     ap.add_argument("--top", type=int, default=2000, help="Anzahl Schauspieler (nach Bekanntheit)")
@@ -68,45 +138,12 @@ def main() -> int:
     print("1/4 Downloads prüfen …")
     download(args.cache)
 
-    # Filme: Jahr, Genres, Bewertungszahl (Bekanntheits-Proxy)
     print("2/4 Filme einlesen (title.basics + title.ratings) …")
-    ratings = {}
-    for r in tsv_rows(os.path.join(args.cache, "title.ratings.tsv.gz")):
-        try:
-            ratings[r["tconst"]] = (float(r["averageRating"]), int(r["numVotes"]))
-        except ValueError:
-            pass
-
-    titles = {}
-    for r in tsv_rows(os.path.join(args.cache, "title.basics.tsv.gz")):
-        if r["titleType"] not in ("movie", "tvMovie"):
-            continue
-        t = r["tconst"]
-        if t not in ratings:
-            continue
-        year = r["startYear"]
-        if year == "\\N":
-            continue
-        titles[t] = (int(year), r["genres"], ratings[t][0], ratings[t][1])
-
+    titles = load_titles(args.cache)
     print(f"   {len(titles):,} bewertete Filme")
 
-    # Schauspieler mit Geburtsjahr; Bekanntheit = Stimmen ihrer bekanntesten Filme
     print("3/4 Schauspieler einlesen (name.basics) …")
-    people = []
-    for r in tsv_rows(os.path.join(args.cache, "name.basics.tsv.gz")):
-        prof = r["primaryProfession"]
-        if "actor" not in prof and "actress" not in prof:
-            continue
-        if r["birthYear"] == "\\N":
-            continue
-        known = [t for t in r["knownForTitles"].split(",") if t in titles]
-        if not known:
-            continue
-        votes = sum(titles[t][3] for t in known)
-        people.append((votes, r, known))
-
-    people.sort(key=lambda x: -x[0])
+    people = load_people(args.cache, titles)
     top = people[: args.top]
     print(f"   {len(people):,} Kandidaten, Top {len(top)} werden exportiert")
 
@@ -116,37 +153,10 @@ def main() -> int:
     actors = []
     seen_ids = set()
     for votes, r, known in top:
-        birth = int(r["birthYear"])
-        death = None if r["deathYear"] == "\\N" else int(r["deathYear"])
-        films = sorted((titles[t] for t in known), key=lambda f: f[0])
-        # Debüt: ~2 Jahre vor dem ersten bekannten Film, frühestens mit 15
-        debut = max(birth + 15, films[0][0] - 2)
-        # Peak: Jahr des meistbewerteten Films
-        peak_film = max(films, key=lambda f: f[3])
-        peak = max(debut + 2, peak_film[0])
-        # Ruhm/Talent aus Stimmen & Bewertungen (log-skaliert)
-        peak_fame = int(round(45 + 55 * math.log10(max(votes, 10)) / max_votes))
-        avg_rating = sum(f[2] for f in films) / len(films)
-        talent = int(max(30, min(100, round(avg_rating * 11 + rng.uniform(-6, 6)))))
-        ego = rng.randint(25, 90)
-        genres = []
-        for f in films:
-            for g in f[1].split(","):
-                mapped = GENRE_MAP.get(g)
-                if mapped and mapped not in genres:
-                    genres.append(mapped)
-        genres = genres[:3] or ["drama"]
-        # Geschlecht aus der Berufsbezeichnung (IMDb unterscheidet actor/actress)
-        gender = "f" if "actress" in r["primaryProfession"] else "m"
-        aid = r["nconst"]
-        if aid in seen_ids:
+        if r["nconst"] in seen_ids:
             continue
-        seen_ids.add(aid)
-        actors.append({
-            "id": aid, "name": r["primaryName"], "birth": birth, "death": death,
-            "g": gender, "debut": debut, "talent": talent, "ego": ego,
-            "genres": genres, "peak": peak, "peakFame": max(35, min(100, peak_fame)),
-        })
+        seen_ids.add(r["nconst"])
+        actors.append(build_actor(votes, r, known, titles, max_votes, rng))
 
     with open(args.out, "w", encoding="utf-8") as fh:
         fh.write("// Automatisch erzeugt von tools/import_imdb.py — IMDb Non-Commercial Datasets\n")

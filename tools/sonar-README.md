@@ -1,6 +1,6 @@
 # SonarQube — lokale Code-Analyse
 
-Analysiert `js/`, `tools/` und `index.html`. **GDScript wird von SonarQube nicht unterstützt** — dafür gdlint einführen (siehe `prompts/tasks/06-gdlint-einfuehren.md`).
+Analysiert nur noch `tools/` (Python). **Die Webversion (`js/`, `index.html`) ist eingefroren und aus der Analyse ausgeschlossen.** GDScript wird von SonarQube nicht unterstützt — dafür gdlint einführen (siehe `prompts/tasks/06-gdlint-einfuehren.md`).
 
 ## Installation (bereits erledigt)
 
