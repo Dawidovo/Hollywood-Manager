@@ -69,6 +69,8 @@ var _resize_timer: Timer
 
 # ---------------------------------------------------------------------
 func _ready() -> void:
+	var args := OS.get_cmdline_user_args()
+	_apply_shot_resolution(args)
 	bg_rect = ColorRect.new()
 	bg_rect.color = ERA_THEMES["noir"].bg
 	bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -83,7 +85,6 @@ func _ready() -> void:
 	_resize_timer.timeout.connect(_on_resized_settled)
 	add_child(_resize_timer)
 	get_viewport().size_changed.connect(func(): _resize_timer.start())
-	var args := OS.get_cmdline_user_args()
 	if args.has("--shot-start"):
 		await _take_shot("start")
 	elif args.has("--shot-game"):
@@ -162,6 +163,18 @@ func _ready() -> void:
 		Newspaper.build_newspaper()
 		_switch_tab("zeitung")
 		await _take_shot("zeitung")
+	elif args.has("--shot-zeitungsarchiv"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": ["pr"], "promise": null})
+		for archive_month in 3:
+			Game.state.month = archive_month + 1
+			Game.press_event("Casting", "Archivmeldung %d: Ein neuer Vertrag bewegt die Studios." % (archive_month + 1))
+			Newspaper.build_newspaper()
+		_switch_tab("zeitung")
+		await get_tree().process_frame
+		content_scroll.scroll_vertical = 100000
+		await _take_shot("zeitungsarchiv")
 	elif args.has("--shot-nego"):
 		_on_era_selected(1950)
 		_open_negotiation("monroe")
@@ -267,6 +280,19 @@ func _ready() -> void:
 		production.signals = [{"t": "Starke Dailies überzeugen das Studio.", "pos": true, "mi": Game.mi()}]
 		_run_production_negotiation(int(production.id), "reneg")
 		await _take_shot("produktionsverhandlung")
+	elif args.has("--shot-filme"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var film_client: Dictionary = Game.state.clients[0]
+		var film_prod: Dictionary = Game.quick_production(film_client, {"genre": "drama", "prestige": 2}).prod
+		Game.ensure_prod_fields(film_prod)
+		film_prod.signals = [
+			{"t": "Begeisterte Set-Berichte", "pos": true, "mi": Game.mi()},
+			{"t": "Der Zeitplan gerät unter Druck", "pos": false, "mi": Game.mi()},
+		]
+		_switch_tab("filme")
+		await _take_shot("filme")
 	elif args.has("--shot-eventverhandlung"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
@@ -278,6 +304,17 @@ func _ready() -> void:
 			modal_queue.append(event_data)
 			_show_next_modal()
 		await _take_shot("eventverhandlung")
+	elif args.has("--shot-eventergebnis"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var result_client: Dictionary = Game.state.clients[0]
+		result_client.fame = 70.0
+		var result_event = EvEngine.build_by_id("rollen_transformation", {"cid": int(result_client.id), "sid": str(Game.active_studios()[0].id)})
+		if result_event != null:
+			var result_text = result_event.choices[2].fn.call()
+			_show_outcome_modal(str(result_event.title), str(result_text))
+		await _take_shot("eventergebnis")
 	elif args.has("--shot-audition"):
 		_on_era_selected(1950)
 		Game.state.agency.rep = 100
@@ -328,6 +365,17 @@ func _ready() -> void:
 		_switch_tab("buero")
 		_open_coverage()
 		await _take_shot("coverage")
+	elif args.has("--shot-coveragearchiv"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		Game._issue_coverage()
+		var archived_sheet: Dictionary = Game.state.coverage.current.duplicate(true)
+		archived_sheet["mi"] = Game.mi()
+		Game.state.coverage.history = [archived_sheet, archived_sheet.duplicate(true)]
+		_coverage_archive = true
+		_open_coverage()
+		await _take_shot("coveragearchiv")
 	elif args.has("--shot-karrierebrett"):
 		# Drei kontrastreiche Slots planen, Klientenkarte mit Brett zeigen
 		_on_era_selected(1950)
@@ -339,6 +387,37 @@ func _ready() -> void:
 		Game.board_slot_add(int(board_client.id), "drama", "lead", 3)
 		_switch_tab("klienten")
 		await _take_shot("karrierebrett")
+	elif args.has("--shot-chronik"):
+		_on_era_selected(1950)
+		Game.log_msg("Ein langer Chronikeintrag prüft die verfügbare Breite ohne Buchstaben-Umbruch in der historischen Übersicht.", "history")
+		Game.log_msg("Die Agentur erhält ein Angebot und bereitet die nächste Verhandlung vor.", "deal")
+		_switch_tab("chronik")
+		await _take_shot("chronik")
+
+func _apply_shot_resolution(user_args: PackedStringArray) -> void:
+	var shot_requested := false
+	for arg in user_args:
+		if str(arg).begins_with("--shot-"):
+			shot_requested = true
+			break
+	if not shot_requested:
+		return
+	var size_text := ""
+	var all_args := OS.get_cmdline_args()
+	for i in all_args.size() - 1:
+		if str(all_args[i]) == "--resolution":
+			size_text = str(all_args[i + 1])
+	for arg in user_args:
+		if str(arg).begins_with("--shot-resolution="):
+			size_text = str(arg).trim_prefix("--shot-resolution=")
+	if size_text == "":
+		return
+	var parts := size_text.to_lower().split("x")
+	if parts.size() != 2:
+		return
+	var shot_size := Vector2i(maxi(640, int(parts[0])), maxi(480, int(parts[1])))
+	get_window().mode = Window.MODE_WINDOWED
+	get_window().size = shot_size
 
 func _take_shot(name_s: String) -> void:
 	await get_tree().create_timer(1.2).timeout
@@ -357,6 +436,7 @@ func _recalc_scale() -> void:
 
 func _on_resized_settled() -> void:
 	_recalc_scale()
+	_update_modal_width()
 	if Game.state != null and game_root.visible and not modal_open:
 		render()
 
@@ -814,13 +894,22 @@ func _build_modal_layer() -> void:
 	modal_sb.set_border_width_all(2)
 	modal_sb.set_content_margin_all(20)
 	modal_panel.add_theme_stylebox_override("panel", modal_sb)
-	modal_panel.custom_minimum_size = Vector2(780, 0)
 	center.add_child(modal_panel)
 	modal_box = VBoxContainer.new()
 	modal_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	modal_box.custom_minimum_size = Vector2(740, 0)
 	modal_box.add_theme_constant_override("separation", 8)
 	modal_panel.add_child(modal_box)
+	_update_modal_width()
+
+func _update_modal_width() -> void:
+	if modal_box == null or modal_panel == null:
+		return
+	# Verhindert schmale Buchstabensäulen, bleibt aber auch bei kleinen
+	# Viewports vollständig sichtbar. Der Panelwert enthält die Innenränder.
+	var viewport_w := float(get_viewport_rect().size.x)
+	var content_w := minf(720.0 * font_scale, maxf(360.0, viewport_w - 120.0))
+	modal_box.custom_minimum_size.x = content_w
+	modal_panel.custom_minimum_size.x = minf(content_w + 40.0 * font_scale, viewport_w - 72.0)
 
 # =====================================================================
 # Rendering
@@ -1865,7 +1954,9 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 					else:
 						_show_simple_modal("Kein Gefallen", "Niemand schuldet dir mehr ein zusätzliches Vorsprechen.")))
 			else:
-				rrow.add_child(_lbl("(Gefallen „Zusätzliches Vorsprechen“ nötig)", 11, DIM))
+				var favor_hint := _lbl("(Gefallen „Zusätzliches Vorsprechen“ nötig)", 11, DIM)
+				favor_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
+				rrow.add_child(favor_hint)
 	modal_box.add_child(_nego_actions({}, footer_actions, _close_modal))
 
 func _do_pitch(casting_id: int, role_idx: int, client_id: int) -> void:
@@ -2389,6 +2480,7 @@ func _render_chronik() -> void:
 # =====================================================================
 func _open_modal() -> void:
 	_clear(modal_box)
+	_update_modal_width()
 	modal_layer.visible = true
 	modal_open = true
 
@@ -2475,6 +2567,7 @@ func _render_table(note: String) -> void:
 	for pk in t.parties:
 		var p: Dictionary = t.parties[pk]
 		var cv = _card(str(p.name), {"studio": "🏛", "director": "🎬", "client": "⭐", "star": "🌟"}.get(str(pk), "◆"))
+		cv[0].custom_minimum_size.x = 190.0 * font_scale
 		grid.add_child(cv[0])
 		cv[1].add_child(_lbl("„%s“" % str(p.demand), 12, DIM))
 		var sat := float(p.sat)

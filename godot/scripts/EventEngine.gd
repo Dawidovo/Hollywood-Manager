@@ -58,27 +58,28 @@ func build_by_id(id_s: String, ctx: Dictionary = {}) -> Variant:
 
 
 # ---------- Bedingungen ----------
-func check_conditions(conds: Dictionary, ctx: Dictionary = {}) -> bool:
+# Zahlenfenster: Jahr, Ruf, Kasse, Klientenzahl
+func _limits_ok(conds: Dictionary) -> bool:
 	var st = Game.state
-	if conds.is_empty():
-		return true
-	if int(st.year) < int(conds.get("min_year", -9999)):
+	if int(st.year) < int(conds.get("min_year", -9999)) or int(st.year) > int(conds.get("max_year", 9999)):
 		return false
-	if int(st.year) > int(conds.get("max_year", 9999)):
-		return false
-	if int(st.agency.rep) < int(conds.get("min_rep", -9999)):
-		return false
-	if int(st.agency.rep) > int(conds.get("max_rep", 9999)):
+	if int(st.agency.rep) < int(conds.get("min_rep", -9999)) or int(st.agency.rep) > int(conds.get("max_rep", 9999)):
 		return false
 	if conds.has("min_cash") and float(st.agency.cash) < _money(float(conds.min_cash)):
 		return false
-	if st.clients.size() < int(conds.get("min_clients", 0)):
+	return st.clients.size() >= int(conds.get("min_clients", 0))
+
+
+func check_conditions(conds: Dictionary, ctx: Dictionary = {}) -> bool:
+	if conds.is_empty():
+		return true
+	if not _limits_ok(conds):
 		return false
 	var fav := str(conds.get("has_favor", ""))
 	if fav != "" and not Game.has_favor(fav):
 		return false
 	var bs := str(conds.get("backstory", ""))
-	if bs != "" and str(st.get("backstory", "")) != bs:
+	if bs != "" and str(Game.state.get("backstory", "")) != bs:
 		return false
 	if conds.get("requires_client") != null and not ctx.has("cid"):
 		if _client_candidates(conds.requires_client).is_empty():

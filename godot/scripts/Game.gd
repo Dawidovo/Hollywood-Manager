@@ -1769,7 +1769,7 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 	out.sort_custom(func(x, y2): return x.fit > y2.fit)
 	return out
 
-func role_fee_for(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
+func role_fee_for(_cs: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	var ask: float = ask_fee(c.fame, state.year) * (1.0 if role.type == "lead" else 0.35) * (1.0 + int(c.get("awards", 0)) * 0.08)
 	# Gagen-Eskalator-Klausel: jede weitere Zusammenarbeit wird teurer
 	if c.get("clauses", []).has("escalator"):
@@ -3150,7 +3150,7 @@ func chem_read_available(casting: Dictionary) -> bool:
 	var indices := _chem_role_indices(casting)
 	return indices.size() == 2 and chem_read_candidate_pairs(int(casting.id)).size() >= 2
 
-func _chem_pair_from_clients(casting: Dictionary, role_indices: Array, a: Dictionary, b: Dictionary) -> Dictionary:
+func _chem_pair_from_clients(_cs: Dictionary, role_indices: Array, a: Dictionary, b: Dictionary) -> Dictionary:
 	return {"key":"%d|%d" % [int(a.c.id), int(b.c.id)], "npc":false,
 		"aClientId":int(a.c.id), "bClientId":int(b.c.id),
 		"aName":client_name(a.c), "bName":client_name(b.c),

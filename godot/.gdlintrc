@@ -1,0 +1,31 @@
+# =====================================================================
+# gdlint-Konfiguration Hollywood Manager (gdtoolkit 4.x)
+# Pragmatischer Start: Bestandscode soll pruefbar sein, ohne dass echte
+# Befunde im Rauschen untergehen. Werte bei Gelegenheit verschaerfen.
+# Aufruf: py -m gdtoolkit.linter <dateien>  (laeuft im Pre-Commit-Hook)
+# =====================================================================
+
+# Lange Zeilen sind hier fast immer deutsche Event-/UI-Prosa in Format-Strings
+# (Daten, kein Code) — Zerhacken macht die Texte unpflegbar. Diese Texte
+# wandern sukzessive in data/events/*.json; danach Limit senken (Ziel: 200).
+max-line-length: 360
+
+# Game.gd (~4300) und Main.gd (~2700 Zeilen) sind bekannte Grossbaustellen;
+# das Aufteilen ist prompts/tasks/02, 03 und 09. Bis dahin kein Dauer-Rot.
+max-file-lines: 5000
+
+# Guard-Klausel-Ketten (z. B. EventEngine.check_conditions) sind hier Stil.
+max-returns: 12
+# Game.gd ist ein bekanntes God-Object mit aktuell ~200 oeffentlichen
+# Funktionen (Aufteilen: Chunks 02/03) — bis dahin grosszuegig, damit echte
+# Neuzugaenge nicht im Dauer-Rot verschwinden. Nach dem Split senken.
+max-public-methods: 220
+
+# Datenbank-/Konstanten-Konvention erlauben: var ACTORS, GENRES, ... in
+# Data.gd sind bewusst UPPER_CASE (historisch var statt const wegen Fassade).
+class-variable-name: '(_?[a-z][a-z0-9]*(_[a-z0-9]+)*|[A-Z][A-Z0-9]*(_[A-Z0-9]+)*)'
+
+disable:
+  # Bestand hat gewachsene const/var/func-Reihenfolge; Umsortieren waere
+  # reiner Diff-Laerm ohne Nutzen. Bei den Splitting-Chunks 02/03/09 beheben.
+  - class-definitions-order

@@ -17,6 +17,13 @@ if ($status -ne "UP") { Write-Error "Server-Status: $status - kurz warten und er
 
 $env:SONAR_TOKEN = (Get-Content $tokenFile -Raw).Trim()
 Set-Location (Split-Path $PSScriptRoot -Parent)
+# GDScript-Befunde einsammeln, damit sie im Dashboard erscheinen
+py (Join-Path $PSScriptRoot "gdlint-report.py")
+if ($LASTEXITCODE -ne 0) { Write-Warning "gdlint-report.py fehlgeschlagen - Scan laeuft ohne GDScript-Report weiter." }
 & $scanner
+$scanExit = $LASTEXITCODE
 Write-Host ""
 Write-Host "Ergebnis: http://localhost:9000/dashboard?id=hollywood-manager"
+# Exit-Code des Scanners durchreichen (Quality Gate rot => != 0),
+# damit der Pre-Commit-Hook den Commit blocken kann.
+exit $scanExit

@@ -16,6 +16,8 @@ godot/NVIDIA Corporation/
 
 # SonarQube Scanner-Arbeitsverzeichnis
 .scannerwork/
+# Generierter gdlint-Report fuer den SonarQube-Import
+gdlint-report.json
 
 # Python
 __pycache__/

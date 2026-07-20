@@ -1,6 +1,6 @@
 # SonarQube — lokale Code-Analyse
 
-Analysiert nur noch `tools/` (Python). **Die Webversion (`js/`, `index.html`) ist eingefroren und aus der Analyse ausgeschlossen.** GDScript wird von SonarQube nicht unterstützt — dafür gdlint einführen (siehe `prompts/tasks/06-gdlint-einfuehren.md`).
+Analysiert `tools/` (Python) direkt. **Die GDScript-Prüfung erscheint ebenfalls im Dashboard:** `tools/gdlint-report.py` führt gdlint aus und schreibt `gdlint-report.json` (Generic Issue Format), das der Scan über `sonar.externalIssuesReportPaths` importiert — `sonar-analyze.ps1` macht beides in einem Schritt. Die Webversion (`js/`, `index.html`) ist eingefroren und ausgeschlossen.
 
 ## Installation (bereits erledigt)
 
@@ -30,4 +30,14 @@ Beide Dateien liegen bewusst **außerhalb** des Repos.
 
 ## Konfiguration
 
-`sonar-project.properties` im Projektroot: Quellen, Ausschlüsse (`js/actors_full.js` ist generiert), Projekt-Key `hollywood-manager`.
+`sonar-project.properties` im Projektroot: Quellen, Ausschlüsse (`js/actors_full.js` ist generiert), Projekt-Key `hollywood-manager`. `sonar.qualitygate.wait=true` lässt den Scan bei rotem Quality Gate mit Fehler enden.
+
+## Automatik: Scan bei jedem Commit
+
+Ein versionierter Pre-Commit-Hook (`tools/git-hooks/pre-commit`, aktiviert via `git config core.hooksPath tools/git-hooks` — bereits gesetzt) führt vor **jedem Commit** den Scan aus:
+
+- Server läuft & Quality Gate grün → Commit geht durch
+- Quality Gate **rot** → Commit wird abgebrochen (Findings im Dashboard beheben; bewusster Notausstieg: `git commit --no-verify`)
+- Server **nicht erreichbar** → Warnung, Commit geht durch (Offline-Arbeit wird nicht blockiert — Server per `tools\sonar-server.ps1` starten)
+
+Nach einem frischen Clone einmalig `git config core.hooksPath tools/git-hooks` ausführen.
