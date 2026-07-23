@@ -133,6 +133,36 @@ const PLAYER_LEDGER_MAX := 120
 # Anteil der Monats-Provisionen, der als Erfolgstantieme privat ankommt.
 const PLAYER_ROYALTY := 0.08
 
+# ---------------------------------------------------------------------
+# Kontakte & Kommunikationswege: Wichtige Aktionen geschehen mit einer
+# Person über einen konkreten Kanal — nicht per "+10 Beziehung"-Knopf.
+# Kosten in 1925er-Dollar (mit infl() skaliert), bezahlt PRIVAT.
+# ---------------------------------------------------------------------
+const CONTACT_ROLES := {
+	"produzent": "Produzent:in", "regisseur": "Regisseur:in",
+	"kolumnist": "Kolumnist:in", "journalist": "Journalist:in", "studio": "Studioboss",
+}
+
+const CONTACT_CHANNELS := {
+	"call": {"de": "Telefonat", "icon": "📞", "ap": 1, "energy": 2.0, "cost": 0.0, "rel_min": 2, "rel_max": 5,
+		"desc": "Schnell, direkt, relativ diskret — aber ohne Bedenkzeit passieren Fauxpas."},
+	"meet": {"de": "Treffen/Dinner", "icon": "🤝", "ap": 2, "energy": 6.0, "cost": 40.0, "rel_min": 5, "rel_max": 9,
+		"desc": "Stärkster Beziehungseffekt — kostet Zeit, Anreise und ein gutes Restaurant."},
+	"note": {"de": "Nachricht", "icon": "✉", "ap": 0, "energy": 1.0, "cost": 5.0, "rel_min": 1, "rel_max": 2,
+		"desc": "Präzise und asynchron — kann aber weitergeleitet oder geleakt werden."},
+	"gift": {"de": "Geschenk", "icon": "🎁", "ap": 0, "energy": 1.0, "cost": 120.0, "rel_min": 3, "rel_max": 7,
+		"desc": "Persönlich und wirkungsvoll — wirkt bei kühlen Kontakten schnell unangemessen."},
+	"aide": {"de": "Assistent schicken", "icon": "🧑‍💼", "ap": 0, "energy": 0.0, "cost": 15.0, "rel_min": 1, "rel_max": 3,
+		"desc": "Spart deine Zeit — aber man merkt sich, dass du nicht selbst gekommen bist."},
+	"club": {"de": "Privatclub", "icon": "🥃", "ap": 2, "energy": 5.0, "cost": 90.0, "rel_min": 4, "rel_max": 8,
+		"desc": "Vertraulich: Hier entstehen Gefallen, Tipps und Versprechen — und Gerüchte über dich."},
+}
+
+# Kontaktzeit: so viele Zeitpunkte pro Woche hat der Manager für Beziehungspflege.
+const CONTACT_AP_PER_WEEK := 3
+const CONTACT_LOG_MAX := 8
+const PROMISES_MAX := 30
+
 # Was eine Rolle dieses Genres dem öffentlichen Bild einprägt (pro Film, Hauptrolle ×1).
 const GENRE_DNA = {
 	"romance":  {"romantik":8.0,  "familie":3.0,  "popular":2.0},
@@ -516,10 +546,12 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
 		"player": _default_player(),
+		"contacts": [], "contactAP": CONTACT_AP_PER_WEEK, "promises": [],
 	}
 	for key in IDENTITY_KEYS:
 		state.identity[key] = 0.0
 	_init_rivals(start_year)
+	_init_contacts()
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = rndi(20, 45)
 	book(float(roundi(120000.0 * infl(start_year))), "sonstiges", "Eröffnungskapital — Büroeröffnung am Sunset Boulevard")
@@ -1597,6 +1629,7 @@ func grant_favor(kind: String, from: Dictionary = {}, silent: bool = false) -> D
 		exp = mi() + rndi(24, 36)
 	var fav := {"id": next_id(), "kind": kind, "from": person, "gainedMi": mi(), "expiresMi": exp, "note": str(FAVOR_KINDS[kind].desc)}
 	state.favors.append(fav)
+	_touch_contact_person(person, 2.0)
 	if not silent:
 		log_msg("%s schuldet dir jetzt einen Gefallen: %s." % [person.get("name", "?"), FAVOR_KINDS[kind].de], "deal")
 	return fav
@@ -1606,6 +1639,7 @@ func owe_favor(kind: String, from: Dictionary = {}) -> Dictionary:
 	var person: Dictionary = from if not from.is_empty() else favor_contact_for(kind)
 	var debt := {"id": next_id(), "kind": kind, "from": person, "gainedMi": mi(), "expiresMi": -1, "note": str(FAVOR_KINDS[kind].desc)}
 	state.debts.append(debt)
+	_touch_contact_person(person, 1.0, "Hat dir ausgeholfen — du stehst in der Schuld.")
 	log_msg("Du stehst bei %s in der Schuld (%s)." % [person.get("name", "?"), FAVOR_KINDS[kind].de], "bad")
 	return debt
 
@@ -1651,6 +1685,223 @@ func _expire_favors() -> void:
 		if int(f.expiresMi) >= 0 and mi() > int(f.expiresMi):
 			state.favors.erase(f)
 			log_msg("Verjährt: %s lässt nicht mehr mit sich reden (%s)." % [f["from"].get("name", "?"), FAVOR_KINDS.get(str(f.kind), {}).get("de", str(f.kind))], "info")
+
+
+# =====================================================================
+# Kontaktbuch & Versprechen (Feature: Interaktion über echte Kanäle)
+# =====================================================================
+# Startbesetzung: je eine Person pro Rolle plus zweite:r Produzent:in
+# und ein Studioboss — die Leute, über die in Hollywood alles läuft.
+func _init_contacts() -> void:
+	state.contacts = []
+	for ctype in ["produzent", "produzent", "regisseur", "kolumnist", "journalist"]:
+		var cname := str(pick(FAVOR_CONTACTS[ctype]))
+		if state.contacts.any(func(ct): return str(ct.name) == cname):
+			continue
+		_add_contact(ctype, cname)
+	var sid := str(pick(active_studios()).id)
+	_add_contact("studio", "Studioboss %s" % _studio(sid).name)
+
+func _add_contact(ctype: String, cname: String) -> Dictionary:
+	var ct := {"id": next_id(), "type": ctype, "name": cname, "rel": float(rndi(15, 35)),
+		"lastMi": mi(), "lastActWeek": -99, "log": [], "waitNoted": false}
+	state.contacts.append(ct)
+	return ct
+
+func contact_by_id(cid) -> Dictionary:
+	for ct in state.contacts:
+		if int(ct.id) == int(cid):
+			return ct
+	return {}
+
+func _contact_memory(ct: Dictionary, text: String) -> void:
+	ct.log.push_front({"mi": mi(), "text": text})
+	while ct.log.size() > CONTACT_LOG_MAX:
+		ct.log.pop_back()
+
+# Gefallen-Verkehr färbt auf das Kontaktbuch ab (nur bestehende Kontakte).
+func _touch_contact_person(person: Dictionary, delta: float, memo: String = "") -> void:
+	if state == null or not state.has("contacts"):
+		return
+	for ct in state.contacts:
+		if str(ct.name) == str(person.get("name", "")):
+			ct.rel = clampf(float(ct.rel) + delta, 0.0, 100.0)
+			if memo != "":
+				_contact_memory(ct, memo)
+			return
+
+func contact_channel_cost(key: String) -> float:
+	return roundf(float(CONTACT_CHANNELS[key].cost) * infl(state.year))
+
+# Warum ein Kanal für diesen Kontakt gerade nicht geht ("" = verfügbar).
+func contact_blocked_reason(ct: Dictionary, key: String) -> String:
+	var ch: Dictionary = CONTACT_CHANNELS[key]
+	if int(ct.lastActWeek) == wi():
+		return "Diese Woche schon kontaktiert"
+	if int(state.contactAP) < int(ch.ap):
+		return "Keine Kontaktzeit mehr"
+	if float(state.player.cash) < contact_channel_cost(key):
+		return "Privat nicht flüssig"
+	return ""
+
+# Kontaktaufnahme über einen Kanal: Kosten, Beziehungseffekt, Risiken,
+# Gedächtnis — und offene Versprechen an diese Person gelten als gehalten.
+func contact_interact(cid, key: String) -> Dictionary:
+	var ct := contact_by_id(cid)
+	if ct.is_empty() or not CONTACT_CHANNELS.has(key):
+		return {"ok": false, "text": "Kontakt unbekannt."}
+	var reason := contact_blocked_reason(ct, key)
+	if reason != "":
+		return {"ok": false, "text": reason}
+	var ch: Dictionary = CONTACT_CHANNELS[key]
+	var cost := contact_channel_cost(key)
+	if cost > 0.0:
+		player_book(-cost, "%s %s — %s" % [str(ch.icon), str(ch.de), str(ct.name)])
+	state.contactAP = int(state.contactAP) - int(ch.ap)
+	state.player.energy = clampf(float(state.player.energy) - float(ch.energy), 0.0, 100.0)
+	ct.lastActWeek = wi()
+	ct.lastMi = mi()
+	ct.waitNoted = false
+	var gain := float(rndi(int(ch.rel_min), int(ch.rel_max)))
+	var lines: Array = []
+	match key:
+		"call":
+			if chance(0.15):
+				gain = -2.0
+				state.player.stress = clampf(float(state.player.stress) + 2.0, 0.0, 100.0)
+				lines.append("Ohne Bedenkzeit rutscht dir eine Taktlosigkeit heraus — das Gespräch kippt.")
+				_contact_memory(ct, "Verpatztes Telefonat — dein Ton kam schlecht an.")
+			else:
+				lines.append("Ein kurzes, gutes Gespräch — man bleibt im Geschäft.")
+				_contact_memory(ct, "Persönlich angerufen.")
+		"meet":
+			lines.append("Ein langes Essen, echte Aufmerksamkeit — so entsteht Vertrauen.")
+			_contact_memory(ct, "Du bist persönlich erschienen — das vergisst man nicht.")
+			if chance(0.25):
+				lines.append(_make_promise(ct))
+		"note":
+			lines.append("Eine präzise Nachricht, sauber formuliert.")
+			_contact_memory(ct, "Schriftlich gemeldet.")
+			if chance(0.1):
+				state.player.discretion = clampf(float(state.player.discretion) - 5.0, 0.0, 100.0)
+				add_rumor("agency", "Eine private Nachricht von %s an %s kursiert in Kopie." % [state.agency.name, ct.name], true, "skandal", ["Journalisten"], 20.0, true)
+				lines.append("Die Nachricht wurde weitergereicht — Kopien kursieren (Diskretion −5).")
+		"gift":
+			if float(ct.rel) < 25.0 and chance(0.5):
+				gain = -4.0
+				lines.append("Das Geschenk wirkt wie ein plumper Kaufversuch — Stirnrunzeln statt Dank.")
+				_contact_memory(ct, "Unangemessenes Geschenk zur falschen Zeit.")
+			else:
+				lines.append("Eine aufmerksame Geste, die im Gedächtnis bleibt.")
+				_contact_memory(ct, "Geschmackvolles Geschenk erhalten.")
+		"aide":
+			if chance(0.25):
+				gain = 0.0
+				lines.append("Man lässt deinen Assistenten spüren, dass man den Chef erwartet hätte.")
+			else:
+				lines.append("Dein Assistent erledigt das solide — mehr aber auch nicht.")
+			_contact_memory(ct, "Nur der Assistent kam vorbei.")
+		"club":
+			lines.append("Im Hinterzimmer des Clubs redet man offener als in jedem Büro.")
+			_contact_memory(ct, "Abend im Privatclub — vertraulich und lang.")
+			if chance(0.25):
+				var kinds := ["extraAudition", "suppressStory", "scriptAccess", "billing", "galaInvite"]
+				var fav := grant_favor(str(pick(kinds)), {"type": str(ct.type), "name": str(ct.name)})
+				lines.append("Beim zweiten Glas sagt %s dir etwas zu: %s." % [str(ct.name), str(FAVOR_KINDS[str(fav.kind)].de)])
+			if chance(0.2):
+				# Clubwissen: ein Gerücht, das dich sonst nie erreicht hätte
+				for rumor in state.rumors:
+					if not bool(rumor.knownToPlayer):
+						rumor.knownToPlayer = true
+						lines.append("Nebenbei fällt ein Name — ein Gerücht erreicht dich, das du sonst nie gehört hättest.")
+						break
+			if chance(0.3):
+				lines.append(_make_promise(ct))
+			if chance(0.15):
+				state.player.discretion = clampf(float(state.player.discretion) - 3.0, 0.0, 100.0)
+				lines.append("Am Nebentisch saß jemand mit guten Ohren (Diskretion −3).")
+	ct.rel = clampf(float(ct.rel) + gain, 0.0, 100.0)
+	_fulfill_promises(ct)
+	var head := "%s %s — %s: Beziehung %s%d auf %d/100." % [str(ch.icon), str(ch.de), str(ct.name),
+		"+" if gain >= 0.0 else "", roundi(gain), roundi(float(ct.rel))]
+	return {"ok": true, "text": head + "\n\n" + "\n".join(lines)}
+
+# ---------- Versprechensregister ----------
+func _make_promise(ct: Dictionary) -> String:
+	var due := mi() + rndi(2, 4)
+	state.promises.append({"id": next_id(), "to": str(ct.name), "madeMi": mi(), "dueMi": due,
+		"text": "Du hast %s zugesagt, dich bald wieder zu melden." % str(ct.name), "status": "offen"})
+	while state.promises.size() > PROMISES_MAX:
+		state.promises.pop_front()
+	_contact_memory(ct, "Hat sich dein Versprechen gemerkt.")
+	return "Zum Abschied gibst du ein Versprechen: bald wieder melden. %s wird sich daran erinnern." % str(ct.name)
+
+# Jede Kontaktaufnahme hält offene Versprechen an diese Person.
+func _fulfill_promises(ct: Dictionary) -> void:
+	for pr in state.promises:
+		if str(pr.status) == "offen" and str(pr.to) == str(ct.name):
+			pr.status = "gehalten"
+			ct.rel = clampf(float(ct.rel) + 4.0, 0.0, 100.0)
+			_contact_memory(ct, "Du hast Wort gehalten.")
+			log_msg("Versprechen gehalten: %s weiß das zu schätzen." % str(ct.name), "deal")
+
+# Monatstick: gebrochene Versprechen, Beziehungs-Verfall, Beziehungs-Perks.
+func _tick_contacts_month(events: Array) -> void:
+	for pr in state.promises:
+		if str(pr.status) == "offen" and mi() > int(pr.dueMi):
+			pr.status = "gebrochen"
+			state.player.stress = clampf(float(state.player.stress) + 3.0, 0.0, 100.0)
+			for ct in state.contacts:
+				if str(ct.name) == str(pr.to):
+					ct.rel = clampf(float(ct.rel) - 12.0, 0.0, 100.0)
+					_contact_memory(ct, "Du hast dein Versprechen gebrochen.")
+			log_msg("Versprechen gebrochen: %s hat vergeblich gewartet." % str(pr.to), "bad")
+	# Vernachlässigte Kontakte kühlen ab — und merken es sich genau einmal an.
+	for ct in state.contacts:
+		var idle := mi() - int(ct.lastMi)
+		if idle >= 4:
+			ct.rel = clampf(float(ct.rel) - 2.0, 0.0, 100.0)
+			if not bool(ct.get("waitNoted", false)):
+				ct.waitNoted = true
+				_contact_memory(ct, "Wartet seit Monaten auf ein Lebenszeichen.")
+	# Gute Beziehungen zahlen sich aus (max. 1 Zuwendung pro Monat).
+	var warm: Array = state.contacts.filter(func(ct): return float(ct.rel) >= 65.0)
+	warm.shuffle()
+	for ct in warm:
+		if not chance(0.15):
+			continue
+		match str(ct.type):
+			"produzent":
+				grant_favor(pick(["extraAudition", "billing"]), {"type": "produzent", "name": str(ct.name)})
+			"regisseur":
+				grant_favor("scriptAccess", {"type": "regisseur", "name": str(ct.name)})
+			"kolumnist", "journalist":
+				grant_favor("suppressStory", {"type": str(ct.type), "name": str(ct.name)})
+			"studio":
+				for s in Data.STUDIOS:
+					if str(ct.name).contains(str(s.name)):
+						state.studioRel[s.id] = clampi(int(state.studioRel.get(s.id, 40)) + 3, 0, 100)
+						log_msg("%s öffnet dir Türen bei %s (Beziehung +3)." % [str(ct.name), str(s.name)], "deal")
+		events.append({"title": "Ein Anruf, der sich lohnt", "text": "Beziehungspflege zahlt sich aus: [b]%s[/b] denkt an dich, ohne dass du fragen musstest." % str(ct.name), "choices": [{"label": "Weiter"}]})
+		break
+
+# Migration: Kontaktbuch für alte Spielstände nachrüsten.
+func ensure_contacts() -> void:
+	if state == null:
+		return
+	if not state.has("contacts") or not (state.contacts is Array) or state.contacts.is_empty():
+		_init_contacts()
+	for ct in state.contacts:
+		if not ct.has("lastActWeek"):
+			ct["lastActWeek"] = -99
+		if not ct.has("waitNoted"):
+			ct["waitNoted"] = false
+		if not ct.has("log"):
+			ct["log"] = []
+	if not state.has("contactAP"):
+		state["contactAP"] = CONTACT_AP_PER_WEEK
+	if not state.has("promises"):
+		state["promises"] = []
 
 
 # =====================================================================
@@ -2252,6 +2503,8 @@ func end_week() -> Array:
 		_month_close(events)
 	else:
 		state.week = int(state.get("week", 1)) + 1
+	# Neue Woche, neue Kontaktzeit
+	state.contactAP = CONTACT_AP_PER_WEEK
 	save_game()
 	return events
 
@@ -2272,6 +2525,7 @@ func _month_close(events: Array) -> void:
 	# Spielfigur: Gehalt, Lebensstil, Zustand & Karriere — vor dem
 	# Ledger-Abschluss, damit die Buchungen im ablaufenden Monat landen.
 	_tick_player_month(events)
+	_tick_contacts_month(events)
 	_close_ledger_month(mi())
 	state.month = int(state.month) + 1
 	if state.month > 12:
@@ -2815,6 +3069,7 @@ func load_game() -> bool:
 		state["powerFigures"] = []
 	# Migration Spielfigur-Cluster
 	ensure_player()
+	ensure_contacts()
 	# Migration Simulations- & Verhandlungs-Cluster
 	if not state.has("instinct"):
 		state["instinct"] = 20

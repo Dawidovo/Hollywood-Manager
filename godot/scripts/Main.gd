@@ -117,6 +117,12 @@ func _ready() -> void:
 		_on_era_selected(1950)
 		_switch_tab("privat")
 		await _take_shot("privat")
+	elif args.has("--shot-kontakte"):
+		_on_era_selected(1950)
+		Game.contact_interact(int(Game.state.contacts[0].id), "meet")
+		Game.contact_interact(int(Game.state.contacts[1].id), "aide")
+		_switch_tab("kontakte")
+		await _take_shot("kontakte")
 	elif args.has("--shot-client"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
@@ -1034,7 +1040,7 @@ func render() -> void:
 
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
-	var tabs := [["buero", "🏢 Agentur"], ["privat", "🎩 Privat"], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
+	var tabs := [["buero", "🏢 Agentur"], ["privat", "🎩 Privat"], ["kontakte", "📇 Kontakte (%d⏱)" % int(st.contactAP)], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
 		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Filme"], ["planer", "🗓 Planer"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
@@ -1043,6 +1049,7 @@ func render() -> void:
 	match current_tab:
 		"buero": _render_buero()
 		"privat": _render_privat()
+		"kontakte": _render_kontakte()
 		"klienten": _render_klienten()
 		"rumors": _render_rumors()
 		"zeitung": _render_zeitung()
@@ -1156,6 +1163,83 @@ func _render_privat() -> void:
 	_stat_row(rv[1], "🤫 Diskretion", float(p.discretion), BLUE)
 	_stat_row(rv[1], "🧲 Einfluss", float(p.influence), AMBER)
 	rv[1].add_child(_lbl("Branchenruf folgt dem Agentur-Ruf, Einfluss wächst mit Karrierestufe und offenen Gefallen. Skandale treffen zuerst den öffentlichen Ruf.", 11, DIM))
+
+# ---------- Kontakte: Beziehungen über echte Kommunikationswege ----------
+func _on_contact_channel(cid: int, key: String) -> void:
+	var res: Dictionary = Game.contact_interact(cid, key)
+	_open_modal()
+	modal_box.add_child(_lbl("Kontaktaufnahme", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Weiter", _modal_done, true))
+
+func _modal_done() -> void:
+	_close_modal()
+	render()
+
+func _months_ago(m: int) -> String:
+	var diff := Game.mi() - m
+	if diff <= 0:
+		return "diesen Monat"
+	if diff == 1:
+		return "vor 1 Monat"
+	return "vor %d Monaten" % diff
+
+func _render_kontakte() -> void:
+	var st = Game.state
+	var head = _card("Beziehungspflege", "📇")
+	content_box.add_child(head[0])
+	head[1].add_child(_lbl("Kontaktzeit diese Woche: %d/%d ⏱ — persönliche Termine kosten mehr Zeit als ein Anruf. Alle Kosten gehen vom Privatkonto ab (aktuell %s)." % [int(st.contactAP), Game.CONTACT_AP_PER_WEEK, Game.fmt_money(st.player.cash)], 13))
+	head[1].add_child(_lbl("Menschen erinnern sich: ob du selbst kamst oder nur den Assistenten geschickt hast, was du versprochen hast — und wie lange du sie hast warten lassen.", 12, DIM))
+
+	# Versprechensregister: eigene Zusagen + Gefallen-Schulden
+	var pv = _card("Versprechensregister", "🤞")
+	content_box.add_child(pv[0])
+	var pr_list: Array = st.promises.slice(maxi(0, st.promises.size() - 8))
+	pr_list.reverse()
+	if pr_list.is_empty() and st.debts.is_empty():
+		pv[1].add_child(_lbl("Keine offenen Zusagen. Noch schuldet niemand jemandem etwas — das bleibt selten so.", 12, DIM))
+	for pr in pr_list:
+		var status := str(pr.status)
+		var color := AMBER if status == "offen" else (GREEN if status == "gehalten" else RED)
+		var suffix := " — fällig bis %s" % Game.mi_str(pr.dueMi) if status == "offen" else " (%s)" % status
+		pv[1].add_child(_lbl("%s %s%s" % ["⏳" if status == "offen" else ("✔" if status == "gehalten" else "✖"), str(pr.text), suffix], 12, color))
+	for d in st.debts:
+		pv[1].add_child(_lbl("⚠ Gefallen-Schuld bei %s: %s" % [d["from"].get("name", "?"), str(d.get("note", ""))], 12, AMBER))
+
+	var grid := _grid(560.0)
+	content_box.add_child(grid)
+	for ct in st.contacts:
+		var cv = _card(str(ct.name))
+		grid.add_child(cv[0])
+		var box: VBoxContainer = cv[1]
+		box.add_child(_chip(str(Game.CONTACT_ROLES.get(str(ct.type), str(ct.type))), BLUE))
+		_stat_row(box, "💛 Beziehung", float(ct.rel), ACC if float(ct.rel) >= 40.0 else DIM)
+		box.add_child(_lbl("Zuletzt gesprochen: %s" % _months_ago(int(ct.lastMi)), 11, DIM))
+		var mem: Array = ct.log.slice(0, 3)
+		if not mem.is_empty():
+			box.add_child(_lbl("Erinnert sich:", 11, DIM))
+			for entry in mem:
+				box.add_child(_lbl("• %s (%s)" % [str(entry.text), Game.mi_str(entry.mi)], 11, TEXT_C))
+		for pr in st.promises:
+			if str(pr.status) == "offen" and str(pr.to) == str(ct.name):
+				box.add_child(_lbl("⏳ Offenes Versprechen — fällig bis %s" % Game.mi_str(pr.dueMi), 11, AMBER))
+		var flow := HFlowContainer.new()
+		flow.add_theme_constant_override("h_separation", 6)
+		flow.add_theme_constant_override("v_separation", 6)
+		box.add_child(flow)
+		for key in Game.CONTACT_CHANNELS:
+			var ch: Dictionary = Game.CONTACT_CHANNELS[key]
+			var cost := Game.contact_channel_cost(key)
+			var label := "%s %s" % [str(ch.icon), str(ch.de)]
+			if cost > 0.0:
+				label += " (−%s)" % Game.fmt_money(cost)
+			if int(ch.ap) > 0:
+				label += " %d⏱" % int(ch.ap)
+			var b := _btn(label, _on_contact_channel.bind(int(ct.id), str(key)))
+			var reason: String = Game.contact_blocked_reason(ct, key)
+			b.disabled = reason != ""
+			b.tooltip_text = str(ch.desc) + ("" if reason == "" else "\n⛔ " + reason)
+			flow.add_child(b)
 
 # ---------- Sidebar ----------
 func _render_sidebar() -> void:

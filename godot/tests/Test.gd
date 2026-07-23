@@ -972,6 +972,48 @@ func _ready() -> void:
 	Game.ensure_player()
 	check(Game.state.has("player") and int(Game.state.player.career) == 1, "ensure_player rüstet nach und leitet Karrierestufe her")
 
+	# 23. Kontakte & Versprechen: Kanäle, Gedächtnis, Kontaktzeit
+	Game.new_game("Kontakttest", 1950)
+	check(Game.state.contacts.size() >= 5, "Kontaktbuch initialisiert (%d Personen)" % Game.state.contacts.size())
+	check(int(Game.state.contactAP) == Game.CONTACT_AP_PER_WEEK, "Kontaktzeit startet mit %d Punkten" % Game.CONTACT_AP_PER_WEEK)
+	var kt: Dictionary = Game.state.contacts[0]
+	var kt_rel0 := float(kt.rel)
+	var kt_cash0 := float(Game.state.player.cash)
+	var kt_res: Dictionary = Game.contact_interact(int(kt.id), "meet")
+	check(bool(kt_res.ok), "Persönliches Treffen durchgeführt")
+	check(int(Game.state.contactAP) == Game.CONTACT_AP_PER_WEEK - 2, "Treffen kostet 2 Kontaktzeit")
+	check(float(Game.state.player.cash) < kt_cash0, "Treffen geht vom Privatkonto ab")
+	check(float(kt.rel) > kt_rel0, "Beziehung steigt durch das Treffen")
+	check(kt.log.size() >= 1, "Kontakt erinnert sich an die Begegnung")
+	var kt_res2: Dictionary = Game.contact_interact(int(kt.id), "call")
+	check(not bool(kt_res2.ok), "Gleiche Woche, gleiche Person: gesperrt")
+	var kt2: Dictionary = Game.state.contacts[1]
+	Game.contact_interact(int(kt2.id), "aide")
+	check(kt2.log.any(func(entry): return str(entry.text).contains("Assistent")), "Assistenten-Besuch bleibt im Gedächtnis")
+	# Versprechen brechen: Frist in die Vergangenheit legen
+	Game.state.promises.append({"id": 9999, "to": str(kt.name), "madeMi": Game.mi() - 5, "dueMi": Game.mi() - 1, "text": "Testzusage", "status": "offen"})
+	var kt_events: Array = []
+	Game._tick_contacts_month(kt_events)
+	check(str(Game.state.promises.back().status) == "gebrochen", "Überfällige Zusage gilt als gebrochen")
+	# Halten: neues Versprechen, dann Kontaktaufnahme in einer neuen Woche
+	Game.state.promises.append({"id": 10000, "to": str(kt2.name), "madeMi": Game.mi(), "dueMi": Game.mi() + 3, "text": "Testzusage 2", "status": "offen"})
+	Game.state.week = 2
+	Game.state.contactAP = 3
+	Game.contact_interact(int(kt2.id), "call")
+	check(str(Game.state.promises.back().status) == "gehalten", "Kontaktaufnahme hält offene Zusage")
+	# Verfall bei Vernachlässigung
+	var kt3: Dictionary = Game.state.contacts[2]
+	var kt3_rel0 := float(kt3.rel)
+	kt3.lastMi = Game.mi() - 6
+	Game._tick_contacts_month(kt_events)
+	check(float(kt3.rel) < kt3_rel0, "Vernachlässigte Kontakte kühlen ab")
+	check(kt3.log.any(func(entry): return str(entry.text).contains("Lebenszeichen")), "Warten wird im Gedächtnis vermerkt")
+	# Migration alter Stände
+	Game.state.erase("contacts")
+	Game.state.erase("promises")
+	Game.ensure_contacts()
+	check(Game.state.contacts.size() >= 5 and Game.state.promises.is_empty(), "ensure_contacts rüstet alte Stände nach")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()
