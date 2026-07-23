@@ -87,6 +87,7 @@ const LEDGER_CATS = {
 	"bonus": "Signing- & Loyalitäts-Boni",
 	"buero": "Büro & Fixkosten",
 	"gehalt": "Gehalt & Privatentnahmen",
+	"reisen": "Reisen & Spesen",
 	"perks": "Klienten-Perks",
 	"pr_recht": "PR, Anwälte & Kampagnen",
 	"events": "Ereignisse",
@@ -162,6 +163,32 @@ const CONTACT_CHANNELS := {
 const CONTACT_AP_PER_WEEK := 3
 const CONTACT_LOG_MAX := 8
 const PROMISES_MAX := 30
+
+# ---------------------------------------------------------------------
+# Orte: stilisierte Knotenpunkt-Map. Der Manager ist immer genau an
+# einem Ort — Anwesenheit entscheidet, was möglich ist. Reisekosten in
+# 1925er-Dollar (Agentur zahlt Geschäftsreisen), "months" = Saisonfenster.
+# ---------------------------------------------------------------------
+const LOCATIONS := {
+	"la": {"name": "Los Angeles", "icon": "🌴", "cost": 0.0, "energy": 0.0,
+		"desc": "Heimatbasis: Büro, Klienten, Castings, Clubs — hier läuft das Geschäft.",
+		"action": "", "action_desc": ""},
+	"ny": {"name": "New York", "icon": "🗽", "cost": 260.0, "energy": 8.0,
+		"desc": "Presse, Banken, Broadway: Wer hier gesehen wird, existiert auch an der Ostküste.",
+		"action": "Pressetermine", "action_desc": "Interviews & Fotografen: öffentlicher Ruf +4, Stress +3."},
+	"london": {"name": "London", "icon": "🎩", "cost": 420.0, "energy": 12.0,
+		"desc": "Theater und altes Geld — die Schule der leisen Töne.",
+		"action": "Theaterabend", "action_desc": "West-End-Loge: Instinkt +1, künstlerisches Profil, Energie −3."},
+	"cannes": {"name": "Cannes", "icon": "🎬", "cost": 380.0, "energy": 10.0, "months": [5],
+		"desc": "Das Festival im Mai: Deals an der Croisette, die es in L.A. nie gäbe.",
+		"action": "Festival-Deals", "action_desc": "Croisette-Gespräche: Einfluss +2, Chance auf Gefallen oder ein exklusives Casting."},
+	"venice": {"name": "Venedig", "icon": "🛶", "cost": 400.0, "energy": 10.0, "months": [9],
+		"desc": "Die Filmfestspiele im September: Kunst, Prestige und lange Abende am Lido.",
+		"action": "Premieren-Empfang", "action_desc": "Lido-Empfang: Branchenruf +3, künstlerisches Profil."},
+	"vegas": {"name": "Las Vegas", "icon": "🎲", "cost": 90.0, "energy": 4.0,
+		"desc": "Neonlicht und Diskretion auf Abruf — hier entspannt man sich oder verspielt den Ruf.",
+		"action": "Eine Nacht durchmachen", "action_desc": "Stress −10, Energie −6 — und manchmal sieht dich doch jemand."},
+}
 
 # Was eine Rolle dieses Genres dem öffentlichen Bild einprägt (pro Film, Hauptrolle ×1).
 const GENRE_DNA = {
@@ -622,6 +649,7 @@ func _default_player() -> Dictionary:
 		"energy": 70.0, "stress": 20.0, "health": 85.0,
 		"pubRep": 10.0, "indRep": 15.0, "discretion": 50.0, "influence": 5.0,
 		"ledger": [], "monthFlags": {},
+		"location": "la", "locActWeek": -99, "awayNoted": false,
 	}
 
 # Migration: rüstet state.player (und fehlende Einzelfelder) für alte Stände nach.
@@ -717,6 +745,7 @@ func _tick_player_week() -> void:
 	var workload: float = state.clients.size() * 1.0 + state.productions.size() * 0.5 + state.castings.size() * 0.25
 	p.energy = clampf(float(p.energy) + 9.0 - workload * 1.1, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) - 4.0 + workload * 0.8 + (4.0 if state.agency.cash < 0 else 0.0), 0.0, 100.0)
+	_tick_location_week()
 
 # Monatlicher Spielfigur-Abschluss: läuft im _month_close VOR dem
 # Ledger-Monatsabschluss, damit Gehalt/Tantieme im richtigen Monat landen.
@@ -1736,6 +1765,9 @@ func contact_channel_cost(key: String) -> float:
 # Warum ein Kanal für diesen Kontakt gerade nicht geht ("" = verfügbar).
 func contact_blocked_reason(ct: Dictionary, key: String) -> String:
 	var ch: Dictionary = CONTACT_CHANNELS[key]
+	# Anwesenheit: Treffen und Clubabende gehen nur, wenn du in der Stadt bist.
+	if is_away() and (key == "meet" or key == "club"):
+		return "Du bist nicht in Los Angeles"
 	if int(ct.lastActWeek) == wi():
 		return "Diese Woche schon kontaktiert"
 	if int(state.contactAP) < int(ch.ap):
@@ -1884,6 +1916,126 @@ func _tick_contacts_month(events: Array) -> void:
 						log_msg("%s öffnet dir Türen bei %s (Beziehung +3)." % [str(ct.name), str(s.name)], "deal")
 		events.append({"title": "Ein Anruf, der sich lohnt", "text": "Beziehungspflege zahlt sich aus: [b]%s[/b] denkt an dich, ohne dass du fragen musstest." % str(ct.name), "choices": [{"label": "Weiter"}]})
 		break
+
+# =====================================================================
+# Orte & Anwesenheit (Feature: Knotenpunkt-Map)
+# =====================================================================
+func player_location() -> String:
+	return str(state.player.get("location", "la"))
+
+func location_def(id_s: String = "") -> Dictionary:
+	return LOCATIONS.get(id_s if id_s != "" else player_location(), LOCATIONS["la"])
+
+func is_away() -> bool:
+	return player_location() != "la"
+
+func travel_cost(id_s: String) -> float:
+	return roundf(float(LOCATIONS[id_s].cost) * infl(state.year))
+
+# Warum eine Reise gerade nicht geht ("" = möglich).
+func travel_blocked_reason(id_s: String) -> String:
+	if not LOCATIONS.has(id_s):
+		return "Unbekanntes Ziel"
+	if id_s == player_location():
+		return "Du bist bereits hier"
+	var loc: Dictionary = LOCATIONS[id_s]
+	if loc.has("months") and not loc.months.has(int(state.month)):
+		return "Nur zur Festivalsaison (%s)" % MONTHS_DE[int(loc.months[0]) - 1]
+	if float(state.agency.cash) < travel_cost(id_s):
+		return "Agenturkasse zu knapp"
+	return ""
+
+# Reisen ist abstrahiert: Die Reise frisst die Kontaktzeit der Woche
+# und Energie — dafür bist du sofort vor Ort (Rückreise genauso).
+func travel_to(id_s: String) -> bool:
+	if travel_blocked_reason(id_s) != "":
+		return false
+	var loc: Dictionary = LOCATIONS[id_s]
+	var cost := travel_cost(id_s)
+	if cost > 0.0:
+		book(-cost, "reisen", "Reise nach %s" % str(loc.name))
+	state.player.energy = clampf(float(state.player.energy) - float(loc.energy), 0.0, 100.0)
+	state.contactAP = 0
+	state.player.location = id_s
+	state.player.awayNoted = false
+	log_msg("Du reist nach %s — die Woche gehört der Anreise." % str(loc.name), "info")
+	return true
+
+# Ortsaktion: eine besondere Handlung pro Woche am aktuellen Ort.
+func location_action_available() -> bool:
+	return str(location_def().action) != "" and int(state.player.get("locActWeek", -99)) != wi()
+
+func do_location_action() -> String:
+	if not location_action_available():
+		return ""
+	var p: Dictionary = state.player
+	p.locActWeek = wi()
+	match player_location():
+		"ny":
+			p.pubRep = clampf(float(p.pubRep) + 4.0, 0.0, 100.0)
+			p.stress = clampf(float(p.stress) + 3.0, 0.0, 100.0)
+			book(-roundf(30.0 * infl(state.year)), "reisen", "Pressetermine in New York")
+			log_msg("New Yorker Pressetermine: Dein Name fällt jetzt auch an der Ostküste.", "info")
+			return "Interviews, Fotografen, ein Abendessen mit Verlegern — öffentlicher Ruf +4, Stress +3."
+		"london":
+			state.instinct = clampi(int(state.instinct) + 1, 5, 100)
+			record_identity("kuenstlerisch", 0.5)
+			p.energy = clampf(float(p.energy) - 3.0, 0.0, 100.0)
+			log_msg("Theaterabend im West End — du siehst Schauspieler mit anderen Augen.", "info")
+			return "Drei Stunden große Bühne: Instinkt +1, dein künstlerisches Profil schärft sich."
+		"cannes":
+			p.influence = clampf(float(p.influence) + 2.0, 0.0, 100.0)
+			if chance(0.5):
+				grant_favor(pick(["extraAudition", "billing", "galaInvite"]), favor_contact_for("extraAudition"))
+				return "An der Croisette reicht ein Handschlag: Einfluss +2 — und jemand schuldet dir jetzt einen Gefallen."
+			spawn_castings(1)
+			log_msg("Cannes-Gespräche bringen ein Projekt auf deinen Tisch.", "deal")
+			return "Zwischen zwei Vorführungen entsteht ein Projekt: Einfluss +2, ein neues Casting wartet."
+		"venice":
+			p.indRep = clampf(float(p.indRep) + 3.0, 0.0, 100.0)
+			record_identity("kuenstlerisch", 0.5)
+			log_msg("Lido-Empfang: Man kennt dich jetzt auch in Europa.", "info")
+			return "Prosecco mit Produzenten am Lido: Branchenruf +3, künstlerisches Profil geschärft."
+		"vegas":
+			p.stress = clampf(float(p.stress) - 10.0, 0.0, 100.0)
+			p.energy = clampf(float(p.energy) - 6.0, 0.0, 100.0)
+			if chance(0.2):
+				p.pubRep = clampf(float(p.pubRep) - 3.0, 0.0, 100.0)
+				add_rumor("agency", "Man will %s spätnachts an einem Roulettetisch gesehen haben." % state.agency.name, true, "skandal", ["Partygäste"], 15.0, true)
+				return "Die Nacht war lang — und leider nicht diskret: Stress −10, öffentlicher Ruf −3."
+			return "Neon, Jazz, keine Uhren: Stress −10, Energie −6. Was in Vegas passiert, bleibt diesmal dort."
+	return ""
+
+# Wöchentliche Orts-Effekte (aus _tick_player_week aufgerufen).
+func _tick_location_week() -> void:
+	var p: Dictionary = state.player
+	match player_location():
+		"ny":
+			p.pubRep = clampf(float(p.pubRep) + 1.5, 0.0, 100.0)
+		"london":
+			p.indRep = clampf(float(p.indRep) + 1.0, 0.0, 100.0)
+		"cannes":
+			p.influence = clampf(float(p.influence) + 1.0, 0.0, 100.0)
+		"venice":
+			p.indRep = clampf(float(p.indRep) + 1.0, 0.0, 100.0)
+		"vegas":
+			p.stress = clampf(float(p.stress) - 6.0, 0.0, 100.0)
+			p.energy = clampf(float(p.energy) + 4.0, 0.0, 100.0)
+	# Abwesenheit hat einen Preis: Die Klienten in L.A. fühlen sich allein.
+	if is_away():
+		for c in state.clients:
+			c.trust = clampf(float(c.trust) - 0.5, 0.0, float(c.get("trustCap", 100.0)))
+			c.mood = clampf(float(c.mood) - 1.0, 0.0, 100.0)
+		if not bool(p.get("awayNoted", false)) and not state.clients.is_empty():
+			p.awayNoted = true
+			log_msg("Deine Klienten merken, dass du nicht in der Stadt bist.", "bad")
+
+# Saisonfenster: Nach dem Festival geht es automatisch zurück nach L.A.
+func _tick_location_month() -> void:
+	var loc := location_def()
+	if loc.has("months") and not loc.months.has(int(state.month)):
+		state.player.location = "la"
+		log_msg("Das Festival ist vorbei — zurück nach Los Angeles.", "info")
 
 # Migration: Kontaktbuch für alte Spielstände nachrüsten.
 func ensure_contacts() -> void:
@@ -2526,6 +2678,7 @@ func _month_close(events: Array) -> void:
 	# Ledger-Abschluss, damit die Buchungen im ablaufenden Monat landen.
 	_tick_player_month(events)
 	_tick_contacts_month(events)
+	_tick_location_month()
 	_close_ledger_month(mi())
 	state.month = int(state.month) + 1
 	if state.month > 12:

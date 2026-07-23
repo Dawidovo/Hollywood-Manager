@@ -117,6 +117,11 @@ func _ready() -> void:
 		_on_era_selected(1950)
 		_switch_tab("privat")
 		await _take_shot("privat")
+	elif args.has("--shot-orte"):
+		_on_era_selected(1950)
+		Game.travel_to("ny")
+		_switch_tab("orte")
+		await _take_shot("orte")
 	elif args.has("--shot-kontakte"):
 		_on_era_selected(1950)
 		Game.contact_interact(int(Game.state.contacts[0].id), "meet")
@@ -911,7 +916,7 @@ func _build_game_ui() -> void:
 	era_chip = _lbl("", 12, GOLD)
 	era_chip.autowrap_mode = TextServer.AUTOWRAP_OFF
 	hb.add_child(era_chip)
-	for key in [["date", "📅 Datum"], ["cash", "💰 Kapital"], ["rep", "⭐ Ruf"], ["network", "🤝 Gefallen"], ["market", "📈 Markt"], ["clients", "👥 Klienten"], ["instinct", "🧠 Instinkt"], ["zustand", "🔋 Zustand"]]:
+	for key in [["date", "📅 Datum"], ["cash", "💰 Kapital"], ["rep", "⭐ Ruf"], ["network", "🤝 Gefallen"], ["market", "📈 Markt"], ["clients", "👥 Klienten"], ["instinct", "🧠 Instinkt"], ["zustand", "🔋 Zustand"], ["ort", "📍 Ort"]]:
 		var sv := VBoxContainer.new()
 		sv.add_theme_constant_override("separation", 0)
 		var cap := _lbl(key[1], 10, DIM)
@@ -1035,12 +1040,15 @@ func render() -> void:
 	var pl: Dictionary = st.player
 	header_stats.zustand.text = "🔋%d 😰%d" % [roundi(float(pl.energy)), roundi(float(pl.stress))]
 	header_stats.zustand.add_theme_color_override("font_color", RED if float(pl.energy) < 25.0 or float(pl.stress) > 70.0 else TEXT_C)
+	var cur_loc: Dictionary = Game.location_def()
+	header_stats.ort.text = "%s %s" % [str(cur_loc.icon), str(cur_loc.name)]
+	header_stats.ort.add_theme_color_override("font_color", AMBER if Game.is_away() else TEXT_C)
 	header_stats.next.disabled = st.over
 	side_scroll.custom_minimum_size = Vector2(_sidebar_w(), 0)
 
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
-	var tabs := [["buero", "🏢 Agentur"], ["privat", "🎩 Privat"], ["kontakte", "📇 Kontakte (%d⏱)" % int(st.contactAP)], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
+	var tabs := [["buero", "🏢 Agentur"], ["privat", "🎩 Privat"], ["kontakte", "📇 Kontakte (%d⏱)" % int(st.contactAP)], ["orte", "🗺 Orte"], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
 		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Filme"], ["planer", "🗓 Planer"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
@@ -1050,6 +1058,7 @@ func render() -> void:
 		"buero": _render_buero()
 		"privat": _render_privat()
 		"kontakte": _render_kontakte()
+		"orte": _render_orte()
 		"klienten": _render_klienten()
 		"rumors": _render_rumors()
 		"zeitung": _render_zeitung()
@@ -1240,6 +1249,61 @@ func _render_kontakte() -> void:
 			b.disabled = reason != ""
 			b.tooltip_text = str(ch.desc) + ("" if reason == "" else "\n⛔ " + reason)
 			flow.add_child(b)
+
+# ---------- Orte: Knotenpunkt-Map mit Anwesenheit ----------
+func _on_travel(id_s: String) -> void:
+	Game.travel_to(id_s)
+	render()
+
+func _on_location_action() -> void:
+	var text_s: String = Game.do_location_action()
+	if text_s == "":
+		render()
+		return
+	_open_modal()
+	modal_box.add_child(_lbl("%s %s" % [str(Game.location_def().icon), str(Game.location_def().name)], 22, ACC))
+	modal_box.add_child(_rich(text_s, 14))
+	modal_box.add_child(_btn("Weiter", _modal_done, true))
+
+func _render_orte() -> void:
+	var st = Game.state
+	var cur: Dictionary = Game.location_def()
+	var head = _card("Anwesenheit", "🗺")
+	content_box.add_child(head[0])
+	head[1].add_child(_lbl("Du bist in: %s %s" % [str(cur.icon), str(cur.name)], 16, ACC))
+	if Game.is_away():
+		head[1].add_child(_lbl("⚠ Ohne dich in L.A.: Klienten verlieren wöchentlich Vertrauen und Stimmung, Treffen und Clubabende mit deinen Kontakten sind nicht möglich.", 12, AMBER))
+	else:
+		head[1].add_child(_lbl("Reisen kostet die Kontaktzeit der Woche, Energie und Agentur-Spesen. Wer nicht da ist, verpasst, was zu Hause passiert — und findet anderswo Türen, die es in L.A. nicht gibt.", 12, DIM))
+
+	var grid := _grid(520.0)
+	content_box.add_child(grid)
+	for id_s in Game.LOCATIONS:
+		var loc: Dictionary = Game.LOCATIONS[id_s]
+		var cv = _card("%s %s" % [str(loc.icon), str(loc.name)])
+		grid.add_child(cv[0])
+		var box: VBoxContainer = cv[1]
+		box.add_child(_lbl(str(loc.desc), 12, DIM))
+		if loc.has("months"):
+			box.add_child(_chip("📅 Saison: %s" % Game.MONTHS_DE[int(loc.months[0]) - 1], AMBER))
+		if str(id_s) == Game.player_location():
+			box.add_child(_chip("📍 Du bist hier", GREEN))
+			if str(loc.action) != "":
+				box.add_child(_lbl(str(loc.action_desc), 11, DIM))
+				var ab := _btn("★ %s" % str(loc.action), _on_location_action, true)
+				ab.disabled = not Game.location_action_available()
+				ab.tooltip_text = str(loc.action_desc) + ("" if not ab.disabled else "\n⛔ Diese Woche schon geschehen")
+				box.add_child(ab)
+		else:
+			var cost := Game.travel_cost(str(id_s))
+			var label := "✈ Hinreisen" if str(id_s) != "la" else "✈ Zurück nach Los Angeles"
+			if cost > 0.0:
+				label += " (−%s)" % Game.fmt_money(cost)
+			var tb := _btn(label, _on_travel.bind(str(id_s)), str(id_s) == "la")
+			var reason: String = Game.travel_blocked_reason(str(id_s))
+			tb.disabled = reason != ""
+			tb.tooltip_text = "Kostet die Kontaktzeit der Woche und %d Energie." % roundi(float(loc.energy)) + ("" if reason == "" else "\n⛔ " + reason)
+			box.add_child(tb)
 
 # ---------- Sidebar ----------
 func _render_sidebar() -> void:

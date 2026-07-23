@@ -1014,6 +1014,43 @@ func _ready() -> void:
 	Game.ensure_contacts()
 	check(Game.state.contacts.size() >= 5 and Game.state.promises.is_empty(), "ensure_contacts rüstet alte Stände nach")
 
+	# 24. Orte: Reisen, Anwesenheit, Saison, Ortsaktionen
+	Game.new_game("Reisetest", 1950)
+	check(Game.player_location() == "la" and not Game.is_away(), "Start in Los Angeles")
+	check(Game.travel_blocked_reason("cannes") != "", "Cannes im Januar gesperrt (Saison Mai)")
+	var tr_cash0 := float(Game.state.agency.cash)
+	check(Game.travel_to("ny"), "Reise nach New York")
+	check(Game.is_away() and int(Game.state.contactAP) == 0, "Anreise frisst die Kontaktzeit der Woche")
+	check(float(Game.state.agency.cash) < tr_cash0, "Agentur zahlt die Reisespesen")
+	var tr_kt: Dictionary = Game.state.contacts[0]
+	check(not bool(Game.contact_interact(int(tr_kt.id), "meet").ok), "Treffen aus der Ferne unmöglich")
+	Game.state.contactAP = 3  # neue Woche simulieren: Anreise hatte die Kontaktzeit gefressen
+	check(Game.contact_blocked_reason(tr_kt, "call") == "", "Telefonat bleibt aus der Ferne möglich")
+	# Abwesenheits-Drift bei Klienten
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	var tr_c: Dictionary = Game.state.clients[0]
+	var tr_trust0 := float(tr_c.trust)
+	Game._tick_player_week()
+	check(float(tr_c.trust) < tr_trust0, "Klienten-Vertrauen sinkt, solange du weg bist")
+	# Ortsaktion mit Wochen-Cooldown
+	var tr_pub0 := float(Game.state.player.pubRep)
+	check(Game.location_action_available(), "Ortsaktion in New York verfügbar")
+	check(Game.do_location_action() != "", "Pressetermine durchgeführt")
+	check(float(Game.state.player.pubRep) > tr_pub0, "Öffentlicher Ruf steigt durch Pressetermine")
+	check(not Game.location_action_available(), "Ortsaktion nur 1× pro Woche")
+	# Saison-Auto-Rückreise: Cannes im Mai, Monatswechsel wirft zurück
+	Game.state.month = 5
+	check(Game.travel_to("cannes"), "Cannes zur Festivalsaison erreichbar")
+	Game.state.month = 6
+	Game._tick_location_month()
+	check(Game.player_location() == "la", "Nach der Saison automatisch zurück in L.A.")
+	# Migration alter Stände
+	Game.state.player.erase("location")
+	Game.ensure_player()
+	check(Game.player_location() == "la", "ensure_player rüstet den Ort nach")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()
