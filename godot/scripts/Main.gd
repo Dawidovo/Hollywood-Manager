@@ -16,15 +16,24 @@ const AMBER := Color("c9963f")
 const GOLD := Color("d4af37")
 
 # Epochen-Farbwelten — Schlüssel identisch mit Jukebox.key_for_year()
+# Typografie & Formensprache pro Epoche (Fonts: SIL OFL, siehe assets/CREDITS.md):
+#   ragtime  — Art-Deco-Titelkarten der Stummfilmzeit: Limelight, scharfe Kanten, Doppelrahmen-Optik
+#   noir     — Kinoplakate des Studiosystems (Trajan-Stil): Cinzel, Gold, dezente Rundung
+#   synth    — Neon/Chrom der Blockbuster-Jahre: Orbitron, runde Ecken, Leuchtrand
+#   modern   — Streaming-Interfaces: Bebas Neue, flach, randlos, starke Rundung
 const ERA_THEMES := {
 	"ragtime": {"name": "Stummfilm-Ära", "icon": "🎞", "accent": Color("cfcfcf"), "accent_dim": Color("8a8a86"),
-		"panel": Color("242220"), "panel2": Color("2f2c29"), "header": Color("191817"), "bg": Color("151413")},
+		"panel": Color("242220"), "panel2": Color("2f2c29"), "header": Color("191817"), "bg": Color("151413"),
+		"font": "res://assets/fonts/Limelight-Regular.ttf", "radius": 0, "btn_radius": 0, "border_w": 2, "glow": false, "header_border": 3},
 	"noir": {"name": "Goldenes Zeitalter", "icon": "🎬", "accent": Color("d4af37"), "accent_dim": Color("9c823a"),
-		"panel": Color("2a241b"), "panel2": Color("332c21"), "header": Color("1a1610"), "bg": Color("16130f")},
+		"panel": Color("2a241b"), "panel2": Color("332c21"), "header": Color("1a1610"), "bg": Color("16130f"),
+		"font": "res://assets/fonts/Cinzel.ttf", "radius": 3, "btn_radius": 3, "border_w": 1, "glow": false, "header_border": 2},
 	"synth": {"name": "Blockbuster-Ära", "icon": "🌆", "accent": Color("ff9d45"), "accent_dim": Color("b06a2c"),
-		"panel": Color("232030"), "panel2": Color("2c2841"), "header": Color("161425"), "bg": Color("121019")},
+		"panel": Color("232030"), "panel2": Color("2c2841"), "header": Color("161425"), "bg": Color("121019"),
+		"font": "res://assets/fonts/Orbitron.ttf", "radius": 6, "btn_radius": 6, "border_w": 1, "glow": true, "header_border": 2},
 	"modern": {"name": "Streaming-Ära", "icon": "📡", "accent": Color("e05a5a"), "accent_dim": Color("97423f"),
-		"panel": Color("21252b"), "panel2": Color("2a2f38"), "header": Color("14171c"), "bg": Color("101317")},
+		"panel": Color("21252b"), "panel2": Color("2a2f38"), "header": Color("14171c"), "bg": Color("101317"),
+		"font": "res://assets/fonts/BebasNeue-Regular.ttf", "radius": 8, "btn_radius": 8, "border_w": 0, "glow": false, "header_border": 1},
 }
 
 const GENRE_ICONS := {"drama": "🎭", "comedy": "😄", "action": "💥", "romance": "💘", "thriller": "🕵", "western": "🤠",
@@ -39,6 +48,13 @@ var ACC_DIM := Color("9c823a")
 var PANEL_C := Color("2a241b")
 var PANEL2_C := Color("332c21")
 var _era_key := ""
+# Aktive Epochen-Formensprache (von _apply_era_theme gesetzt)
+var RADIUS := 3
+var BTN_RADIUS := 3
+var BORDER_W := 1
+var GLOW := false
+var DISPLAY_FONT: Font = null
+var _font_cache: Dictionary = {}
 
 var bg_rect: ColorRect
 var start_screen: Control
@@ -75,6 +91,7 @@ func _ready() -> void:
 	bg_rect.color = ERA_THEMES["noir"].bg
 	bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg_rect)
+	DISPLAY_FONT = _era_font("noir")
 	_recalc_scale()
 	_build_start_screen()
 	_build_game_ui()
@@ -447,6 +464,20 @@ func _cols(card_w: float = 500.0) -> int:
 func _sidebar_w() -> float:
 	return clampf(float(get_viewport_rect().size.x) * 0.21, 350.0, 540.0)
 
+# Epochen-Displayfont laden (mit Fallback auf den Default-Font,
+# damit Emojis/Symbole weiterhin über die Systemschrift gerendert werden)
+func _era_font(key: String) -> Font:
+	if _font_cache.has(key):
+		return _font_cache[key]
+	var path := str(ERA_THEMES[key].font)
+	var f: Font = null
+	if ResourceLoader.exists(path):
+		f = load(path)
+		if f is FontFile:
+			f.fallbacks = [ThemeDB.fallback_font]
+	_font_cache[key] = f
+	return f
+
 func _apply_era_theme() -> void:
 	var key: String = Jukebox.key_for_year(int(Game.state.year)) if Game.state != null else "noir"
 	if key == _era_key:
@@ -457,11 +488,33 @@ func _apply_era_theme() -> void:
 	ACC_DIM = t.accent_dim
 	PANEL_C = t.panel
 	PANEL2_C = t.panel2
+	RADIUS = int(t.radius)
+	BTN_RADIUS = int(t.btn_radius)
+	BORDER_W = int(t.border_w)
+	GLOW = bool(t.glow)
+	DISPLAY_FONT = _era_font(key)
 	bg_rect.color = t.bg
 	header_sb.bg_color = t.header
 	header_sb.border_color = ACC
+	header_sb.border_width_bottom = int(t.header_border)
+	if GLOW:
+		header_sb.shadow_color = Color(ACC.r, ACC.g, ACC.b, 0.25)
+		header_sb.shadow_size = 6
+	else:
+		header_sb.shadow_size = 0
 	modal_sb.border_color = ACC
 	modal_sb.bg_color = PANEL_C
+	modal_sb.set_corner_radius_all(RADIUS)
+	modal_sb.set_border_width_all(maxi(BORDER_W, 1) * 2)
+	# Persistente Header-Labels auf den Epochen-Font umstellen
+	for n in [header_stats.get("agency"), era_chip]:
+		if n != null and DISPLAY_FONT != null:
+			n.add_theme_font_override("font", DISPLAY_FONT)
+	# Persistente Header-Buttons in die Formensprache der Epoche bringen
+	for pair in [["music", false], ["save", false], ["next", true]]:
+		var b = header_stats.get(pair[0])
+		if b != null:
+			_style_btn(b, bool(pair[1]))
 
 # =====================================================================
 # UI-Bausteine
@@ -497,12 +550,24 @@ func _btn(text: String, cb: Callable, primary: bool = false) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.pressed.connect(cb)
+	_style_btn(b, primary)
+	return b
+
+# Epochen-Styling eines Buttons (auch zum Umstylen persistenter
+# Header-Buttons beim Epochenwechsel wiederverwendet)
+func _style_btn(b: Button, primary: bool = false) -> void:
+	if DISPLAY_FONT != null:
+		b.add_theme_font_override("font", DISPLAY_FONT)
 	b.add_theme_font_size_override("font_size", int(14 * font_scale))
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = ACC if primary else PANEL2_C
 	sb.border_color = ACC if primary else ACC_DIM
-	sb.set_border_width_all(1)
+	sb.set_border_width_all(maxi(BORDER_W, 1) if not primary else BORDER_W)
+	sb.set_corner_radius_all(BTN_RADIUS)
 	sb.set_content_margin_all(int(7 * font_scale))
+	if GLOW and primary:
+		sb.shadow_color = Color(ACC.r, ACC.g, ACC.b, 0.4)
+		sb.shadow_size = 4
 	b.add_theme_stylebox_override("normal", sb)
 	var sbh := sb.duplicate()
 	sbh.bg_color = ACC.lightened(0.2) if primary else ACC_DIM
@@ -510,14 +575,17 @@ func _btn(text: String, cb: Callable, primary: bool = false) -> Button:
 	b.add_theme_stylebox_override("pressed", sbh)
 	b.add_theme_color_override("font_color", Color("16130f") if primary else TEXT_C)
 	b.add_theme_color_override("font_hover_color", Color("16130f"))
-	return b
 
 func _card(title: String = "", icon: String = "") -> Array:
 	var p := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = PANEL_C
 	sb.border_color = PANEL2_C.lightened(0.08)
-	sb.set_border_width_all(1)
+	sb.set_border_width_all(BORDER_W)
+	sb.set_corner_radius_all(RADIUS)
+	if GLOW:
+		sb.shadow_color = Color(ACC.r, ACC.g, ACC.b, 0.12)
+		sb.shadow_size = 5
 	sb.set_content_margin_all(int(12 * font_scale))
 	p.add_theme_stylebox_override("panel", sb)
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -526,7 +594,10 @@ func _card(title: String = "", icon: String = "") -> Array:
 	v.add_theme_constant_override("separation", int(4 * font_scale))
 	p.add_child(v)
 	if title != "":
-		v.add_child(_lbl(("%s " % icon if icon != "" else "") + title, 18, ACC))
+		var tl := _lbl(("%s " % icon if icon != "" else "") + title, 18, ACC)
+		if DISPLAY_FONT != null:
+			tl.add_theme_font_override("font", DISPLAY_FONT)
+		v.add_child(tl)
 	return [p, v]
 
 func _grid(card_w: float = 500.0) -> GridContainer:
@@ -721,6 +792,8 @@ func _build_start_screen() -> void:
 	start_screen.add_child(v)
 	var title := _lbl("HOLLYWOOD MANAGER", 52, GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if DISPLAY_FONT != null:
+		title.add_theme_font_override("font", DISPLAY_FONT)
 	v.add_child(title)
 	var tag := _lbl("Du machst keine Filme. Du machst Karrieren.", 18, DIM)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -737,17 +810,27 @@ func _build_start_screen() -> void:
 	grid.add_theme_constant_override("v_separation", 12)
 	v.add_child(grid)
 	for era in Data.ERAS:
-		var theme: Dictionary = ERA_THEMES[Jukebox.key_for_year(int(era.year))]
+		var era_key: String = Jukebox.key_for_year(int(era.year))
+		var theme: Dictionary = ERA_THEMES[era_key]
 		var cv = _card("%s %d" % [theme.icon, int(era.year)])
 		var card: PanelContainer = cv[0]
 		var box: VBoxContainer = cv[1]
 		card.custom_minimum_size = Vector2(290, 180)
-		box.add_child(_lbl(era.name, 15, theme.accent))
+		# Jede Epochen-Karte trägt ihre eigene Schrift & Farbwelt
+		var era_lbl := _lbl(era.name, 15, theme.accent)
+		var era_f := _era_font(era_key)
+		if era_f != null:
+			cv[1].get_child(0).add_theme_font_override("font", era_f)
+			era_lbl.add_theme_font_override("font", era_f)
+		box.add_child(era_lbl)
 		box.add_child(_lbl(era.desc, 12, DIM))
 		box.add_child(_btn("In %d starten" % int(era.year), _show_backstory_picker.bind(int(era.year)), true))
 		grid.add_child(card)
 	if Game.has_save():
 		v.add_child(_btn("Gespeichertes Spiel fortsetzen", _on_load_save, true))
+	var credits := _lbl("Schrift & Musik aus offenen Quellen: Limelight · Cinzel · Orbitron · Bebas Neue (SIL OFL)  —  Soundtrack: gemeinfreie & CC0-Aufnahmen (assets/CREDITS.md)", 11, DIM)
+	credits.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(credits)
 
 # Nach der Ära wählt der Spieler die Vorgeschichte seiner Figur
 func _show_backstory_picker(year: int) -> void:
@@ -818,7 +901,7 @@ func _build_game_ui() -> void:
 	era_chip = _lbl("", 12, GOLD)
 	era_chip.autowrap_mode = TextServer.AUTOWRAP_OFF
 	hb.add_child(era_chip)
-	for key in [["date", "📅 Datum"], ["cash", "💰 Kapital"], ["rep", "⭐ Ruf"], ["network", "🤝 Gefallen"], ["market", "📈 Markt"], ["clients", "👥 Klienten"], ["instinct", "🧠 Instinkt"]]:
+	for key in [["date", "📅 Datum"], ["cash", "💰 Kapital"], ["rep", "⭐ Ruf"], ["network", "🤝 Gefallen"], ["market", "📈 Markt"], ["clients", "👥 Klienten"], ["instinct", "🧠 Instinkt"], ["zustand", "🔋 Zustand"]]:
 		var sv := VBoxContainer.new()
 		sv.add_theme_constant_override("separation", 0)
 		var cap := _lbl(key[1], 10, DIM)
@@ -834,6 +917,7 @@ func _build_game_ui() -> void:
 	hb.add_child(spacer)
 	var music_btn := _btn("🔊", func(): pass)
 	music_btn.pressed.connect(func(): music_btn.text = "🔊" if Jukebox.toggle() else "🔇")
+	header_stats["music"] = music_btn
 	hb.add_child(music_btn)
 	var vol := HSlider.new()
 	vol.min_value = 0
@@ -843,7 +927,9 @@ func _build_game_ui() -> void:
 	vol.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	vol.value_changed.connect(func(v): Jukebox.set_volume(v / 100.0))
 	hb.add_child(vol)
-	hb.add_child(_btn("💾 Speichern", func(): Game.save_game()))
+	var save_btn := _btn("💾 Speichern", func(): Game.save_game())
+	header_stats["save"] = save_btn
+	hb.add_child(save_btn)
 	var next_btn := _btn("Woche beenden ▸", _on_end_week, true)
 	header_stats["next"] = next_btn
 	hb.add_child(next_btn)
@@ -922,6 +1008,7 @@ func render() -> void:
 	var theme: Dictionary = ERA_THEMES[_era_key]
 	era_chip.text = "%s %s" % [theme.icon, theme.name]
 	era_chip.add_theme_color_override("font_color", ACC)
+	header_stats.music.tooltip_text = "♪ %s" % Jukebox.current_title()
 	header_stats.agency.text = st.agency.name
 	header_stats.agency.add_theme_color_override("font_color", ACC)
 	header_stats.date.text = Game.date_str()
@@ -935,12 +1022,15 @@ func render() -> void:
 	header_stats.clients.text = str(st.clients.size())
 	header_stats.instinct.text = "%d/100" % int(st.get("instinct", 20))
 	header_stats.instinct.add_theme_color_override("font_color", GREEN if int(st.get("instinct", 20)) >= 55 else TEXT_C)
+	var pl: Dictionary = st.player
+	header_stats.zustand.text = "🔋%d 😰%d" % [roundi(float(pl.energy)), roundi(float(pl.stress))]
+	header_stats.zustand.add_theme_color_override("font_color", RED if float(pl.energy) < 25.0 or float(pl.stress) > 70.0 else TEXT_C)
 	header_stats.next.disabled = st.over
 	side_scroll.custom_minimum_size = Vector2(_sidebar_w(), 0)
 
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
-	var tabs := [["buero", "🏢 Agentur"], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
+	var tabs := [["buero", "🏢 Agentur"], ["privat", "🎩 Privat"], ["klienten", "👥 Klienten (%d)" % st.clients.size()], ["rumors", "🗣 Gerüchte (%d)" % known_rumors],
 		["zeitung", "🗞 Zeitung"], ["pool", "🎭 Talentpool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Filme"], ["planer", "🗓 Planer"], ["finanzen", "💰 Finanzen"], ["chronik", "📰 Chronik"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
@@ -948,6 +1038,7 @@ func render() -> void:
 	_clear(content_box)
 	match current_tab:
 		"buero": _render_buero()
+		"privat": _render_privat()
 		"klienten": _render_klienten()
 		"rumors": _render_rumors()
 		"zeitung": _render_zeitung()

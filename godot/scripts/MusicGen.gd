@@ -1,9 +1,23 @@
 extends Node
 # =====================================================================
-# Hollywood Manager (Godot) — Generative Epochen-Musik ohne Audiodateien.
-# Pro Epoche wird einmalig ein Loop offline synthetisiert (AudioStreamWAV)
-# und dann nahtlos wiederholt. Presets analog zur Web-Version.
+# Hollywood Manager (Godot) — Epochen-Soundtrack.
+# Primär: echte gemeinfreie/CC0-Aufnahmen pro Epoche (assets/music/,
+# Quellen & Lizenzen in assets/CREDITS.md). Fehlt eine Datei, greift
+# als Fallback die generative Offline-Synthese (AudioStreamWAV).
 # =====================================================================
+
+# Gemeinfreie/CC0-Tracks pro Epoche; "db" gleicht Lautheitsunterschiede
+# der historischen Aufnahmen gegenüber den modernen Produktionen aus.
+const TRACKS := {
+	"ragtime": {"path": "res://assets/music/era_ragtime.ogg", "db": 0.0,
+		"title": "Scott Joplin — Maple Leaf Rag (Pianola-Aufnahme, 1916 · gemeinfrei)"},
+	"noir": {"path": "res://assets/music/era_noir.ogg", "db": 2.0,
+		"title": "Gershwin & Paul Whiteman Orch. — Rhapsody in Blue (Erstaufnahme, 1924 · gemeinfrei)"},
+	"synth": {"path": "res://assets/music/era_synth.ogg", "db": -3.0,
+		"title": "Loyalty Freak Music — One Cool Minute (CC0)"},
+	"modern": {"path": "res://assets/music/era_modern.ogg", "db": -3.0,
+		"title": "Loyalty Freak Music — Softly (CC0)"},
+}
 
 const SAMPLE_RATE := 22050
 
@@ -27,8 +41,9 @@ const PRESETS := {
 }
 
 var player: AudioStreamPlayer
-var _cache: Dictionary = {}
+var _cache: Dictionary = {}  # key -> [AudioStream, db_offset, is_recording]
 var _current_key := ""
+var _track_db := 0.0
 var enabled := true
 var volume := 0.35
 
@@ -54,14 +69,34 @@ func set_era(year: int) -> void:
 		return
 	_current_key = key
 	if not _cache.has(key):
-		_cache[key] = _render_loop(PRESETS[key])
-	player.stream = _cache[key]
+		_cache[key] = _load_track(key)
+	player.stream = _cache[key][0]
+	_track_db = float(_cache[key][1])
+	set_volume(volume)
 	if enabled:
 		player.play()
 
+# Echte Aufnahme laden; wenn nicht vorhanden (z. B. Assets fehlen),
+# auf die alte Offline-Synthese zurückfallen.
+func _load_track(key: String) -> Array:
+	var info: Dictionary = TRACKS[key]
+	if ResourceLoader.exists(str(info.path)):
+		var s: AudioStream = load(str(info.path))
+		if s is AudioStreamOggVorbis:
+			s.loop = true
+			return [s, float(info.db), true]
+	return [_render_loop(PRESETS[key]), 0.0, false]
+
+func current_title() -> String:
+	if _current_key == "":
+		return ""
+	if _cache.has(_current_key) and bool(_cache[_current_key][2]):
+		return str(TRACKS[_current_key].title)
+	return "Generierte Epochen-Musik"
+
 func set_volume(v: float) -> void:
 	volume = v
-	player.volume_db = linear_to_db(clampf(v, 0.0001, 1.0)) - 6.0
+	player.volume_db = linear_to_db(clampf(v, 0.0001, 1.0)) - 6.0 + _track_db
 
 func toggle() -> bool:
 	enabled = not enabled

@@ -86,6 +86,7 @@ const LEDGER_CATS = {
 	"provision": "Provisionen",
 	"bonus": "Signing- & Loyalitäts-Boni",
 	"buero": "Büro & Fixkosten",
+	"gehalt": "Gehalt & Privatentnahmen",
 	"perks": "Klienten-Perks",
 	"pr_recht": "PR, Anwälte & Kampagnen",
 	"events": "Ereignisse",
@@ -97,6 +98,40 @@ const LEDGER_CATS = {
 
 const LEDGER_MAX := 600
 const LEDGER_MONTHS_MAX := 240
+
+# ---------------------------------------------------------------------
+# Spielfigur: Der Spieler ist nicht die Agentur. Er hat eigene Finanzen,
+# eigenen Zustand, eigenen Ruf und eine persönliche Karriereleiter.
+# Beträge in 1925er-Dollar, werden zur Laufzeit mit infl() skaliert.
+# ---------------------------------------------------------------------
+const CAREER_LEVELS := [
+	{"id": "junior", "name": "Junior-Agent", "salary": 600.0, "living": 350.0},
+	{"id": "etabliert", "name": "Etablierter Agent", "salary": 1000.0, "living": 550.0,
+		"req": {"rep": 25, "films": 3}},
+	{"id": "senior", "name": "Senior-Agent", "salary": 1600.0, "living": 900.0,
+		"req": {"rep": 40, "films": 10, "clients": 3}},
+	{"id": "partner", "name": "Partner", "salary": 2600.0, "living": 1500.0,
+		"req": {"rep": 55, "films": 20, "indRep": 50}},
+	{"id": "chef", "name": "Agenturchef", "salary": 4000.0, "living": 2400.0,
+		"req": {"rep": 70, "films": 35, "influence": 40}},
+	{"id": "mogul", "name": "Hollywood-Mogul", "salary": 6500.0, "living": 4000.0,
+		"req": {"rep": 85, "films": 60, "influence": 70, "wealth": 250000.0}},
+]
+
+# Erspielter Ruf-Titel: leitet sich aus der moralischen Identität ab —
+# man WÄHLT keinen Archetyp, man wird dazu gemacht.
+const PLAYER_TITLES := {
+	"kuenstlerisch": "Künstleragent",
+	"kommerziell": "Star-Macher",
+	"skrupellos": "Skrupelloser Strippenzieher",
+	"diskret": "Diskreter Problemlöser",
+	"studiotreu": "Studio-Liebling",
+	"klientenorientiert": "Talentschmied",
+}
+
+const PLAYER_LEDGER_MAX := 120
+# Anteil der Monats-Provisionen, der als Erfolgstantieme privat ankommt.
+const PLAYER_ROYALTY := 0.08
 
 # Was eine Rolle dieses Genres dem öffentlichen Bild einprägt (pro Film, Hauptrolle ×1).
 const GENRE_DNA = {
@@ -480,6 +515,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		"eventCd": {}, "followups": [], "usedTitles": [],
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
+		"player": _default_player(),
 	}
 	for key in IDENTITY_KEYS:
 		state.identity[key] = 0.0
@@ -487,6 +523,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = rndi(20, 45)
 	book(float(roundi(120000.0 * infl(start_year))), "sonstiges", "Eröffnungskapital — Büroeröffnung am Sunset Boulevard")
+	player_book(roundf(2500.0 * infl(start_year)), "Erspartes aus den Jahren davor")
 	# Ein alter Bekannter aus den Anfangsjahren erinnert sich.
 	grant_favor("galaInvite", favor_contact_for("galaInvite"))
 	log_msg("%s öffnet ihre Büros am Sunset Boulevard. Zeit, Karrieren zu machen." % agency_name, "history")
@@ -544,6 +581,205 @@ func _apply_backstory_start() -> void:
 			state.studioRel[s.id] = clampi(int(state.studioRel[s.id]) + add, 0, 100)
 	log_msg("Vorgeschichte: %s — %s" % [str(b.name), str(b.get("desc", ""))], "history")
 
+# =====================================================================
+# Spielfigur (Feature: "Der Spieler verkörpert einen Manager")
+# =====================================================================
+func _default_player() -> Dictionary:
+	return {
+		"cash": 0.0, "career": 0,
+		"energy": 70.0, "stress": 20.0, "health": 85.0,
+		"pubRep": 10.0, "indRep": 15.0, "discretion": 50.0, "influence": 5.0,
+		"ledger": [], "monthFlags": {},
+	}
+
+# Migration: rüstet state.player (und fehlende Einzelfelder) für alte Stände nach.
+func ensure_player() -> void:
+	if state == null:
+		return
+	if not state.has("player") or not (state.player is Dictionary):
+		state["player"] = _default_player()
+		# Bestandsstände: Karrierestufe aus dem Erreichten herleiten, damit
+		# ein Mogul-Spielstand nicht als Junior-Agent aufwacht.
+		while _promotion_due():
+			state.player.career = int(state.player.career) + 1
+		return
+	var defaults := _default_player()
+	for key in defaults:
+		if not state.player.has(key):
+			state.player[key] = defaults[key]
+
+func player() -> Dictionary:
+	return state.player
+
+func career_def() -> Dictionary:
+	return CAREER_LEVELS[clampi(int(state.player.career), 0, CAREER_LEVELS.size() - 1)]
+
+func player_salary() -> float:
+	return roundf(float(career_def().salary) * infl(state.year))
+
+func player_living_cost() -> float:
+	return roundf(float(career_def().living) * infl(state.year))
+
+# Erspielter Ruf-Titel aus der moralischen Identität (ab spürbarer Prägung).
+func player_title() -> String:
+	var tops := identity_top_labels()
+	if tops.is_empty() or identity_total() < 3.0:
+		return "Noch ohne Profil"
+	for key in IDENTITY_KEYS:
+		if str(IDENTITY_LABELS[key]) == str(tops[0]):
+			return str(PLAYER_TITLES[key])
+	return "Noch ohne Profil"
+
+func player_book(amount: float, text: String) -> void:
+	var p: Dictionary = state.player
+	p.cash = float(p.cash) + amount
+	p.ledger.append({"mi": mi(), "amount": amount, "text": text})
+	while p.ledger.size() > PLAYER_LEDGER_MAX:
+		p.ledger.pop_front()
+
+# Beförderungsbedingungen für die nächste Stufe; leeres Dict = Endstufe erreicht.
+func promotion_requirements() -> Array:
+	var idx := int(state.player.career)
+	if idx >= CAREER_LEVELS.size() - 1:
+		return []
+	var req: Dictionary = CAREER_LEVELS[idx + 1].get("req", {})
+	var p: Dictionary = state.player
+	var out: Array = []
+	if req.has("rep"):
+		out.append({"label": "Agentur-Ruf %d" % int(req.rep), "met": int(state.agency.rep) >= int(req.rep)})
+	if req.has("films"):
+		out.append({"label": "%d vermittelte Filme" % int(req.films), "met": state.released.size() >= int(req.films)})
+	if req.has("clients"):
+		out.append({"label": "%d Klienten" % int(req.clients), "met": state.clients.size() >= int(req.clients)})
+	if req.has("indRep"):
+		out.append({"label": "Branchenruf %d" % int(req.indRep), "met": float(p.indRep) >= float(req.indRep)})
+	if req.has("influence"):
+		out.append({"label": "Einfluss %d" % int(req.influence), "met": float(p.influence) >= float(req.influence)})
+	if req.has("wealth"):
+		var need := roundf(float(req.wealth) * infl(state.year))
+		out.append({"label": "Privatvermögen %s" % fmt_money(need), "met": float(p.cash) >= need})
+	return out
+
+func _promotion_due() -> bool:
+	var reqs := promotion_requirements()
+	if reqs.is_empty():
+		return false
+	return reqs.all(func(r): return bool(r.met))
+
+func _check_promotion(events: Array) -> void:
+	if not _promotion_due():
+		return
+	var p: Dictionary = state.player
+	p.career = int(p.career) + 1
+	var lvl := career_def()
+	p.indRep = clampf(float(p.indRep) + 5.0, 0.0, 100.0)
+	p.pubRep = clampf(float(p.pubRep) + 4.0, 0.0, 100.0)
+	p.influence = clampf(float(p.influence) + 8.0, 0.0, 100.0)
+	log_msg("Aufstieg: Du giltst jetzt als %s. Gehalt und Erwartungen steigen." % str(lvl.name), "history")
+	press_event("business", "Personalie: %s wird als %s gehandelt." % [state.agency.name, str(lvl.name)])
+	events.append({"title": "Beförderung", "text": "Die Branche kennt deinen Namen jetzt: [b]%s[/b].\n\nDein Gehalt steigt auf %s im Monat — dein Lebensstil zieht mit (%s Lebenshaltung)." % [str(lvl.name), fmt_money(player_salary()), fmt_money(player_living_cost())], "choices": [{"label": "Weiter"}]})
+
+# Wöchentlicher Zustands-Tick: Arbeitslast kostet Energie und erzeugt Stress.
+func _tick_player_week() -> void:
+	var p: Dictionary = state.player
+	var workload := state.clients.size() * 1.0 + state.productions.size() * 0.5 + state.castings.size() * 0.25
+	p.energy = clampf(float(p.energy) + 9.0 - workload * 1.1, 0.0, 100.0)
+	p.stress = clampf(float(p.stress) - 4.0 + workload * 0.8 + (4.0 if state.agency.cash < 0 else 0.0), 0.0, 100.0)
+
+# Monatlicher Spielfigur-Abschluss: läuft im _month_close VOR dem
+# Ledger-Monatsabschluss, damit Gehalt/Tantieme im richtigen Monat landen.
+func _tick_player_month(events: Array) -> void:
+	var p: Dictionary = state.player
+	# Gehalt & Erfolgstantieme: Die Agentur zahlt, der Manager kassiert.
+	var salary := player_salary()
+	var provisions := float(live_month(mi()).byCat.get("provision", 0.0))
+	var royalty := roundf(maxf(provisions, 0.0) * PLAYER_ROYALTY)
+	book(-(salary + royalty), "gehalt", "Gehalt & Tantieme der Spielfigur (%s)" % str(career_def().name))
+	player_book(salary, "Gehalt (%s)" % str(career_def().name))
+	if royalty > 0.0:
+		player_book(royalty, "Erfolgstantieme (%d %% der Provisionen)" % roundi(PLAYER_ROYALTY * 100.0))
+	# Lebensstil: wächst mit der Karrierestufe, geht immer ab.
+	player_book(-player_living_cost(), "Lebenshaltung (%s-Lebensstil)" % str(career_def().name))
+	# Privatschulden: negatives Privatvermögen kostet Zinsen.
+	if float(p.cash) < 0.0:
+		var interest := roundf(float(p.cash) * 0.02)
+		player_book(interest, "Zinsen auf Privatschulden")
+		log_msg("Privat in den Miesen: %s Schulden drücken." % fmt_money(-float(p.cash)), "bad")
+	# Gesundheit folgt dem Dauerstress.
+	if float(p.stress) >= 70.0:
+		p.health = clampf(float(p.health) - (float(p.stress) - 60.0) * 0.25, 5.0, 100.0)
+	else:
+		p.health = clampf(float(p.health) + 1.5, 5.0, 100.0)
+	# Burnout: ausgebrannt UND überreizt — Fehlentscheidungen häufen sich.
+	if float(p.energy) < 20.0 and float(p.stress) > 75.0 and not p.monthFlags.has("burnout"):
+		p.monthFlags["burnout"] = true
+		state.instinct = clampi(int(state.instinct) - 2, 5, 100)
+		log_msg("Ausgebrannt: Du triffst müde Entscheidungen (Instinkt −2).", "bad")
+		events.append({"title": "Ausgebrannt", "text": "Zu viele Nächte im Büro, zu viele Krisen. Dein Bauchgefühl lässt nach (Instinkt −2).\n\nGönn dir eine Auszeit — oder delegiere weniger wichtige Klienten.", "choices": [{"label": "Weiter"}]})
+	# Zusammenbruch: die Klinik ist teuer, öffentlich und unvermeidbar.
+	if float(p.health) <= 15.0 and not p.monthFlags.has("collapse"):
+		p.monthFlags["collapse"] = true
+		player_book(-roundf(800.0 * infl(state.year)), "Klinikaufenthalt nach Zusammenbruch")
+		p.health = 45.0
+		p.energy = 60.0
+		p.stress = clampf(float(p.stress) - 35.0, 0.0, 100.0)
+		p.pubRep = clampf(float(p.pubRep) - 4.0, 0.0, 100.0)
+		log_msg("Zusammenbruch — eine Woche Klinik, die Kolumnen schreiben darüber.", "bad")
+		events.append({"title": "Zusammenbruch", "text": "Dein Körper zieht die Notbremse: Klinikaufenthalt, Diskretion unmöglich.\n\nGesundheit stabilisiert, aber die Öffentlichkeit hat es mitbekommen.", "choices": [{"label": "Weiter"}]})
+	# Ruf & Einfluss driften ihren Zielwerten entgegen.
+	p.indRep = clampf(float(p.indRep) + (float(state.agency.rep) - float(p.indRep)) * 0.15, 0.0, 100.0)
+	p.pubRep = clampf(float(p.pubRep) + (float(p.indRep) * 0.9 - float(p.pubRep)) * 0.1, 0.0, 100.0)
+	var infl_target := clampf(int(p.career) * 14.0 + state.favors.size() * 4.0 + (float(state.agency.rep) - 50.0) * 0.2, 0.0, 100.0)
+	p.influence = clampf(float(p.influence) + (infl_target - float(p.influence)) * 0.2, 0.0, 100.0)
+	p.discretion = clampf(float(p.discretion) + (50.0 - float(p.discretion)) * 0.05, 0.0, 100.0)
+	_check_promotion(events)
+	p.monthFlags = {}
+
+# ---------- Persönliche Aktionen (je 1× pro Monat) ----------
+func player_can_act(flag: String) -> bool:
+	return state != null and not state.player.monthFlags.has(flag)
+
+func player_vacation() -> void:
+	if not player_can_act("vacation"):
+		return
+	var p: Dictionary = state.player
+	p.monthFlags["vacation"] = true
+	player_book(-roundf(220.0 * infl(state.year)), "Wochenende in Palm Springs")
+	p.energy = clampf(float(p.energy) + 18.0, 0.0, 100.0)
+	p.stress = clampf(float(p.stress) - 22.0, 0.0, 100.0)
+	p.health = clampf(float(p.health) + 3.0, 0.0, 100.0)
+	log_msg("Auszeit in Palm Springs — der Kopf ist wieder frei.", "info")
+
+func player_checkup() -> void:
+	if not player_can_act("checkup"):
+		return
+	var p: Dictionary = state.player
+	p.monthFlags["checkup"] = true
+	player_book(-roundf(150.0 * infl(state.year)), "Arzt-Checkup in Beverly Hills")
+	p.health = clampf(float(p.health) + 10.0, 0.0, 100.0)
+	log_msg("Checkup beim Arzt — Befund solide, Rechnung saftig.", "info")
+
+# Privatentnahme: 1 Monatsgehalt zusätzlich aus der Agenturkasse.
+func player_draw() -> void:
+	if not player_can_act("draw"):
+		return
+	var amount := player_salary()
+	if float(state.agency.cash) < amount:
+		return
+	state.player.monthFlags["draw"] = true
+	book(-amount, "gehalt", "Privatentnahme der Spielfigur")
+	player_book(amount, "Privatentnahme aus der Agentur")
+	log_msg("Privatentnahme: %s wandern vom Agentur- aufs Privatkonto." % fmt_money(amount), "info")
+
+# Privateinlage: eigenes Geld rettet (oder päppelt) die Agentur.
+func player_inject(amount: float) -> void:
+	var p: Dictionary = state.player
+	if amount <= 0.0 or float(p.cash) < amount:
+		return
+	player_book(-amount, "Privateinlage in die Agentur")
+	book(amount, "sonstiges", "Privateinlage der Spielfigur")
+	log_msg("Du schießt privat %s in die Agentur ein." % fmt_money(amount), "info")
+
 func next_id() -> int:
 	state.nextId = int(state.nextId) + 1
 	return int(state.nextId) - 1
@@ -552,6 +788,9 @@ func log_msg(text: String, type: String = "info") -> void:
 	state.log.push_front({"y": state.year, "m": state.month, "text": text, "type": type})
 	if state.log.size() > 300:
 		state.log.pop_back()
+	# Jede Krise nagt auch am Manager persönlich.
+	if type == "bad" and state.has("player") and state.player is Dictionary:
+		state.player.stress = clampf(float(state.player.get("stress", 20.0)) + 2.0, 0.0, 100.0)
 
 func press_event(cat: String, text_s: String) -> void:
 	if state == null:
@@ -1975,6 +2214,9 @@ func end_week() -> Array:
 	var events: Array = []
 	var strike: bool = int(state.strikeMonths) > 0
 
+	# Spielfigur: Arbeitslast der Woche wirkt auf Energie & Stress
+	_tick_player_week()
+
 	# Wochenplaner: die geplante Woche wirkt VOR den Ereignissen
 	_apply_planner(events)
 
@@ -2027,6 +2269,9 @@ func _month_close(events: Array) -> void:
 	book(-float(base_cost), "buero", "Büro, Personal & Fixkosten")
 	if perk_cost > 0:
 		book(-float(perk_cost), "perks", "Klienten-Perks (%d Klienten)" % state.clients.size())
+	# Spielfigur: Gehalt, Lebensstil, Zustand & Karriere — vor dem
+	# Ledger-Abschluss, damit die Buchungen im ablaufenden Monat landen.
+	_tick_player_month(events)
 	_close_ledger_month(mi())
 	state.month = int(state.month) + 1
 	if state.month > 12:
@@ -2568,6 +2813,8 @@ func load_game() -> bool:
 		state["identityLastTop"] = []
 	if not state.has("powerFigures"):
 		state["powerFigures"] = []
+	# Migration Spielfigur-Cluster
+	ensure_player()
 	# Migration Simulations- & Verhandlungs-Cluster
 	if not state.has("instinct"):
 		state["instinct"] = 20
