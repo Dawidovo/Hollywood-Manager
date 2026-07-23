@@ -21,6 +21,14 @@ var ERAS: Array = []
 var BACKSTORIES: Array = []
 var EVENTS: Array = []
 var ETHNICITIES: Dictionary = {}
+var CAREER_LEVELS: Array = []
+var REPUTATION_TITLES: Dictionary = {}
+var LOCATIONS: Array = []
+var LOCATION_BY_ID: Dictionary = {}
+var CONTACT_ROLES: Dictionary = {}
+var CONTACT_PERSONS: Dictionary = {}
+var CONTACT_CHANNELS: Dictionary = {}
+var CONTACT_START_ROSTER: Array = []
 
 
 func _init() -> void:
@@ -49,3 +57,16 @@ func reload() -> void:
 		{"cd": 6, "weight": {}, "conditions": {}, "choices": [], "followup_only": false},
 		["id", "title", "text"])
 	ETHNICITIES = DataLoader.load_dict("ethnicities")
+	CAREER_LEVELS = DataLoader.load_entries("career", ["id"],
+		{"salary": 600, "living": 350, "req": {}}, ["id", "name"])
+	REPUTATION_TITLES = DataLoader.load_dict("reputation")
+	LOCATIONS = DataLoader.load_entries("locations", ["id"],
+		{"cost": 0, "energy": 0, "desc": "", "icon": "📍", "weekly": {}, "action": null}, ["id", "name"])
+	LOCATION_BY_ID = {}
+	for loc in LOCATIONS:
+		LOCATION_BY_ID[str(loc.id)] = loc
+	var contacts := DataLoader.load_dict("contacts")
+	CONTACT_ROLES = contacts.get("roles", {})
+	CONTACT_PERSONS = contacts.get("persons", {})
+	CONTACT_CHANNELS = contacts.get("channels", {})
+	CONTACT_START_ROSTER = contacts.get("start_roster", [])

@@ -4,21 +4,21 @@
 		"cd": 8,
 		"weight": {"base": 0.7},
 		"conditions": {"requires_studio": true},
-		"title": "Ein Gefallen",
-		"text": "{studio} bittet um einen Gefallen: ein Klient soll unbezahlt bei einer Galapremiere auftreten.",
+		"title": "A favor",
+		"text": "{studio} asks for a favor: a client should appear unpaid at a gala premiere.",
 		"choices": [
 			{
-				"label": "Einwilligen",
+				"label": "Agree",
 				"effects": [
 					{"op": "studio_rel", "amount": 8},
 					{"op": "favor_grant", "kind": "extraAudition|billing|scriptAccess", "from": "studio"}
 				],
-				"outcome": "{studio} wird sich erinnern — und steht jetzt offiziell in deiner Schuld. Beziehungen sind die harte Währung dieser Stadt."
+				"outcome": "{studio} will remember — and is now officially in your debt. Relationships are the hard currency of this town."
 			},
 			{
-				"label": "Ablehnen",
+				"label": "Decline",
 				"effects": [{"op": "studio_rel", "amount": -3}],
-				"outcome": "Man verzichtet höflich. Das Studio nimmt es zur Kenntnis."
+				"outcome": "They politely let it go. The studio takes note."
 			}
 		]
 	},
@@ -27,22 +27,22 @@
 		"cd": 8,
 		"weight": {"base": 0.7},
 		"conditions": {"requires_client": true},
-		"title": "Presse-Coup",
-		"text": "Ein großes Magazin bietet eine Titelgeschichte über {client} an — gegen exklusiven Zugang.",
+		"title": "Press coup",
+		"text": "A big magazine offers a cover story about {client} — in exchange for exclusive access.",
 		"choices": [
 			{
-				"label": "Zusagen",
+				"label": "Say yes",
 				"effects": [
 					{"op": "heat", "amount": 4},
 					{"op": "fame", "amount": 2},
 					{"op": "dna", "key": "popular", "amount": 3}
 				],
-				"outcome": "Die Ausgabe verkauft sich glänzend. {client} ist heißer denn je."
+				"outcome": "The issue sells brilliantly. {client} is hotter than ever."
 			},
 			{
-				"label": "Ablehnen",
+				"label": "Decline",
 				"effects": [],
-				"outcome": "Man verzichtet. Privatsphäre ist auch etwas wert."
+				"outcome": "You pass. Privacy is worth something too."
 			}
 		]
 	},
@@ -54,66 +54,66 @@
 			"mods": [{"if": {"min_year": 1935}, "add": 0.3}]
 		},
 		"conditions": {"min_year": 1929, "min_rep": 15, "requires_client": {"min_fame": 30}, "requires_studio": true},
-		"title": "Post vom Finanzamt",
-		"text": "[i]„Wir hätten da ein paar Fragen zu den Spesenabrechnungen …“[/i]\n\nEin Prüfer interessiert sich für die Ausgaben rund um {client}. {studio} wird nervös — niemand mag Beamte am Set.",
+		"title": "Mail from the tax office",
+		"text": "[i]“We would have a few questions about the expense reports …”[/i]\n\nAn auditor is interested in the spending around {client}. {studio} is getting nervous — nobody likes officials on set.",
 		"choices": [
 			{
-				"label": "Anwälte einschalten ({money_fmt:8000})",
+				"label": "Bring in the lawyers ({money_fmt:8000})",
 				"requirements": {"min_cash": 8000},
 				"success_chance": 0.7,
 				"effects": [
-					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Steuerkanzlei"},
+					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Tax law firm"},
 					{"op": "rep", "amount": 1}
 				],
 				"effects_fail": [
-					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Steuerkanzlei"},
+					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Tax law firm"},
 					{"op": "followup", "event": "steuer_nachspiel", "delay_weeks": 6}
 				],
-				"outcome": "Die Kanzlei erledigt das diskret. Ein Aktenordner wechselt den Schrank, und der Prüfer findet: nichts.",
-				"outcome_fail": "Die Kanzlei kassiert — doch der Prüfer beißt sich fest. Das war noch nicht das Ende."
+				"outcome": "The firm handles it discreetly. One binder changes cabinets, and the auditor finds: nothing.",
+				"outcome_fail": "The firm cashes in — but the auditor digs in. That was not the end of it."
 			},
 			{
-				"label": "Gefallen einlösen: Ein Anruf genügt",
+				"label": "Call in a favor: one phone call is enough",
 				"requirements": {"has_favor": "suppressStory"},
 				"effects": [{"op": "favor_consume", "kind": "suppressStory"}],
-				"outcome": "Der Prüfer wird versetzt — nach Sacramento, heißt es. Hollywood bleibt Hollywood."
+				"outcome": "The auditor gets transferred — to Sacramento, they say. Hollywood stays Hollywood."
 			},
 			{
-				"label": "Aussitzen",
+				"label": "Sit it out",
 				"effects": [
 					{"op": "trust", "amount": -4},
-					{"op": "rumor", "text": "{client} soll Ärger mit dem Finanzamt haben.", "truth": true, "topic": "skandal", "belief": 25}
+					{"op": "rumor", "text": "{client} is said to be in trouble with the tax office.", "truth": true, "topic": "skandal", "belief": 25}
 				],
-				"outcome": "Du tust nichts — und genau das spricht sich herum. {client} findet, du hättest anrufen können."
+				"outcome": "You do nothing — and exactly that gets around. {client} thinks you could have made a call."
 			}
 		]
 	},
 	{
 		"id": "steuer_nachspiel",
 		"followup_only": true,
-		"title": "Die Prüfung zieht Kreise",
-		"text": "Der Fall {client} liegt jetzt bei der Bezirksstaatsanwaltschaft. Ein Vergleich ist möglich — oder ein öffentliches Verfahren.",
+		"title": "The audit spreads",
+		"text": "The {client} case is now with the district attorney. A settlement is possible — or a public trial.",
 		"choices": [
 			{
-				"label": "Vergleich zahlen ({money_fmt:15000})",
+				"label": "Pay the settlement ({money_fmt:15000})",
 				"requirements": {"min_cash": 15000},
 				"effects": [
-					{"op": "money", "amount": -15000, "inflate": true, "cat": "pr_recht", "label": "Steuervergleich"},
+					{"op": "money", "amount": -15000, "inflate": true, "cat": "pr_recht", "label": "Tax settlement"},
 					{"op": "mood", "amount": 4}
 				],
-				"outcome": "Teuer, leise, endgültig. {client} schickt eine Kiste Zigarren als Dank."
+				"outcome": "Expensive, quiet, final. {client} sends a box of cigars as thanks."
 			},
 			{
-				"label": "Auf ein Verfahren ankommen lassen",
+				"label": "Let it go to trial",
 				"success_chance": 0.5,
 				"effects": [{"op": "rep", "amount": 2}, {"op": "trust", "amount": 3}],
 				"effects_fail": [
 					{"op": "rep", "amount": -3},
 					{"op": "fame", "amount": -4},
-					{"op": "rumor", "text": "Das Steuerverfahren gegen {client} füllt die Spalten.", "truth": true, "topic": "skandal", "belief": 45}
+					{"op": "rumor", "text": "The tax trial against {client} fills the columns.", "truth": true, "topic": "skandal", "belief": 45}
 				],
-				"outcome": "Freispruch! Die Zeitungen feiern {client} als Opfer übereifriger Beamter — und dich als die Agentur mit den Nerven aus Stahl.",
-				"outcome_fail": "Die Verhandlung wird zum Spießrutenlauf. Die Schlagzeilen bleiben kleben."
+				"outcome": "Acquittal! The papers celebrate {client} as the victim of overzealous officials — and you as the agency with nerves of steel.",
+				"outcome_fail": "The trial becomes a gauntlet. The headlines stick."
 			}
 		]
 	}

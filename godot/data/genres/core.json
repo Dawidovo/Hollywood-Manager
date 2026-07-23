@@ -1,35 +1,13 @@
 {
-	"action": {
-		"de": "Action"
-	},
-	"adventure": {
-		"de": "Abenteuer"
-	},
-	"comedy": {
-		"de": "Komödie"
-	},
-	"crime": {
-		"de": "Krimi"
-	},
-	"drama": {
-		"de": "Drama"
-	},
-	"horror": {
-		"de": "Horror"
-	},
-	"musical": {
-		"de": "Musical"
-	},
-	"romance": {
-		"de": "Romanze"
-	},
-	"scifi": {
-		"de": "Science-Fiction"
-	},
-	"thriller": {
-		"de": "Thriller"
-	},
-	"western": {
-		"de": "Western"
-	}
+	"action": {"label": "Action"},
+	"adventure": {"label": "Adventure"},
+	"comedy": {"label": "Comedy"},
+	"crime": {"label": "Crime"},
+	"drama": {"label": "Drama"},
+	"horror": {"label": "Horror"},
+	"musical": {"label": "Musical"},
+	"romance": {"label": "Romance"},
+	"scifi": {"label": "Science fiction"},
+	"thriller": {"label": "Thriller"},
+	"western": {"label": "Western"}
 }

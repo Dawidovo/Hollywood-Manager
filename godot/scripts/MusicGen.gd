@@ -10,9 +10,9 @@ extends Node
 # der historischen Aufnahmen gegenüber den modernen Produktionen aus.
 const TRACKS := {
 	"ragtime": {"path": "res://assets/music/era_ragtime.ogg", "db": 0.0,
-		"title": "Scott Joplin — Maple Leaf Rag (Pianola-Aufnahme, 1916 · gemeinfrei)"},
+		"title": "Scott Joplin — Maple Leaf Rag (piano roll recording, 1916 · public domain)"},
 	"noir": {"path": "res://assets/music/era_noir.ogg", "db": 2.0,
-		"title": "Gershwin & Paul Whiteman Orch. — Rhapsody in Blue (Erstaufnahme, 1924 · gemeinfrei)"},
+		"title": "Gershwin & Paul Whiteman Orch. — Rhapsody in Blue (first recording, 1924 · public domain)"},
 	"synth": {"path": "res://assets/music/era_synth.ogg", "db": -3.0,
 		"title": "Loyalty Freak Music — One Cool Minute (CC0)"},
 	"modern": {"path": "res://assets/music/era_modern.ogg", "db": -3.0,
@@ -92,7 +92,7 @@ func current_title() -> String:
 		return ""
 	if _cache.has(_current_key) and bool(_cache[_current_key][2]):
 		return str(TRACKS[_current_key].title)
-	return "Generierte Epochen-Musik"
+	return "Generated era music"
 
 func set_volume(v: float) -> void:
 	volume = v

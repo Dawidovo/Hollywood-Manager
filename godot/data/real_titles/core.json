@@ -45,7 +45,7 @@
 			"drama",
 			"romance"
 		],
-		"t": "Flügel aus Stahl",
+		"t": "Wings",
 		"y": 1927
 	},
 	{
@@ -69,14 +69,14 @@
 			"musical",
 			"drama"
 		],
-		"t": "Der Jazzsänger",
+		"t": "The Jazz Singer",
 		"y": 1927
 	},
 	{
 		"g": [
 			"drama"
 		],
-		"t": "Die Büchse der Pandora",
+		"t": "Pandora's Box",
 		"y": 1929
 	},
 	{
@@ -84,7 +84,7 @@
 			"comedy",
 			"romance"
 		],
-		"t": "Lichter der Großstadt",
+		"t": "City Lights",
 		"y": 1931
 	},
 	{
@@ -114,7 +114,7 @@
 			"adventure",
 			"horror"
 		],
-		"t": "King Kong und die weiße Frau",
+		"t": "King Kong",
 		"y": 1933
 	},
 	{
@@ -130,7 +130,7 @@
 			"crime",
 			"comedy"
 		],
-		"t": "Der dünne Mann",
+		"t": "The Thin Man",
 		"y": 1934
 	},
 	{
@@ -233,7 +233,7 @@
 			"drama",
 			"comedy"
 		],
-		"t": "Ist das Leben nicht schön?",
+		"t": "It's a Wonderful Life",
 		"y": 1946
 	},
 	{
@@ -248,7 +248,7 @@
 		"g": [
 			"western"
 		],
-		"t": "Faustrecht der Prärie",
+		"t": "My Darling Clementine",
 		"y": 1946
 	},
 	{
@@ -280,14 +280,14 @@
 			"drama",
 			"thriller"
 		],
-		"t": "Boulevard der Dämmerung",
+		"t": "Sunset Boulevard",
 		"y": 1950
 	},
 	{
 		"g": [
 			"drama"
 		],
-		"t": "Alles über Eva",
+		"t": "All About Eve",
 		"y": 1950
 	},
 	{
@@ -310,7 +310,7 @@
 			"western",
 			"thriller"
 		],
-		"t": "Zwölf Uhr mittags",
+		"t": "High Noon",
 		"y": 1952
 	},
 	{
@@ -319,7 +319,7 @@
 			"comedy",
 			"romance"
 		],
-		"t": "Du sollst mein Glücksstern sein",
+		"t": "Singin' in the Rain",
 		"y": 1952
 	},
 	{
@@ -372,7 +372,7 @@
 			"drama",
 			"crime"
 		],
-		"t": "Die zwölf Geschworenen",
+		"t": "12 Angry Men",
 		"y": 1957
 	},
 	{
@@ -381,7 +381,7 @@
 			"drama",
 			"action"
 		],
-		"t": "Die Brücke am Kwai",
+		"t": "The Bridge on the River Kwai",
 		"y": 1957
 	},
 	{
@@ -398,7 +398,7 @@
 			"romance",
 			"musical"
 		],
-		"t": "Manche mögen's heiß",
+		"t": "Some Like It Hot",
 		"y": 1959
 	},
 	{
@@ -439,7 +439,7 @@
 			"romance",
 			"comedy"
 		],
-		"t": "Frühstück bei Tiffany",
+		"t": "Breakfast at Tiffany's",
 		"y": 1961
 	},
 	{
@@ -463,7 +463,7 @@
 		"g": [
 			"drama"
 		],
-		"t": "Wer die Nachtigall stört",
+		"t": "To Kill a Mockingbird",
 		"y": 1962
 	},
 	{
@@ -513,7 +513,7 @@
 			"musical",
 			"drama"
 		],
-		"t": "Meine Lieder – meine Träume",
+		"t": "The Sound of Music",
 		"y": 1965
 	},
 	{
@@ -537,7 +537,7 @@
 			"drama",
 			"romance"
 		],
-		"t": "Die Reifeprüfung",
+		"t": "The Graduate",
 		"y": 1967
 	},
 	{
@@ -616,14 +616,14 @@
 			"horror",
 			"adventure"
 		],
-		"t": "Der weiße Hai",
+		"t": "Jaws",
 		"y": 1975
 	},
 	{
 		"g": [
 			"drama"
 		],
-		"t": "Einer flog über das Kuckucksnest",
+		"t": "One Flew Over the Cuckoo's Nest",
 		"y": 1975
 	},
 	{
@@ -706,7 +706,7 @@
 			"adventure",
 			"action"
 		],
-		"t": "Das Imperium schlägt zurück",
+		"t": "The Empire Strikes Back",
 		"y": 1980
 	},
 	{
@@ -714,7 +714,7 @@
 			"adventure",
 			"action"
 		],
-		"t": "Jäger des verlorenen Schatzes",
+		"t": "Raiders of the Lost Ark",
 		"y": 1981
 	},
 	{
@@ -731,7 +731,7 @@
 			"drama",
 			"adventure"
 		],
-		"t": "E.T. – Der Außerirdische",
+		"t": "E.T. the Extra-Terrestrial",
 		"y": 1982
 	},
 	{
@@ -748,7 +748,7 @@
 			"comedy",
 			"romance"
 		],
-		"t": "Zeit der Zärtlichkeit",
+		"t": "Terms of Endearment",
 		"y": 1983
 	},
 	{
@@ -782,7 +782,7 @@
 			"comedy",
 			"adventure"
 		],
-		"t": "Zurück in die Zukunft",
+		"t": "Back to the Future",
 		"y": 1985
 	},
 	{
@@ -888,7 +888,7 @@
 			"horror",
 			"crime"
 		],
-		"t": "Das Schweigen der Lämmer",
+		"t": "The Silence of the Lambs",
 		"y": 1991
 	},
 	{
@@ -1107,7 +1107,7 @@
 			"adventure",
 			"action"
 		],
-		"t": "Der Herr der Ringe: Die Gefährten",
+		"t": "The Lord of the Rings: The Fellowship of the Ring",
 		"y": 2001
 	},
 	{
@@ -1199,7 +1199,7 @@
 		"g": [
 			"drama"
 		],
-		"t": "Das Streben nach Glück",
+		"t": "The Pursuit of Happyness",
 		"y": 2006
 	},
 	{
@@ -1233,7 +1233,7 @@
 			"drama",
 			"romance"
 		],
-		"t": "Slumdog Millionär",
+		"t": "Slumdog Millionaire",
 		"y": 2008
 	},
 	{
@@ -1386,7 +1386,7 @@
 			"drama",
 			"western"
 		],
-		"t": "The Revenant – Der Rückkehrer",
+		"t": "The Revenant",
 		"y": 2015
 	},
 	{

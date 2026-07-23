@@ -4,50 +4,50 @@
 		"cd": 24,
 		"weight": {"base": 0.45, "mods": [{"if": {"min_year": 1950}, "add": 0.15}]},
 		"conditions": {"requires_client": {"min_fame": 35, "free": true}, "requires_studio": true},
-		"title": "Die Rolle verlangt alles",
-		"text": "{studio} bietet {client} eine Prestige-Rolle an. Die Regie verlangt eine sichtbare Verwandlung: zehn Kilogramm leichter oder schwerer bis zur Premiere.",
+		"title": "The role demands everything",
+		"text": "{studio} offers {client} a prestige role. The director demands a visible transformation: ten kilograms lighter or heavier by the premiere.",
 		"choices": [
 			{
-				"label": "Zusagen: zehn Kilo abnehmen",
+				"label": "Agree: lose ten kilos",
 				"effects": [
 					{"op": "exhaustion", "amount": 7},
 					{"op": "trust", "amount": 2},
 					{"op": "followup", "event": "rollen_transformation_abnahme", "delay_weeks": 12}
 				],
-				"outcome": "{client} nimmt die Herausforderung an. Trainer, Kostümproben und strenge Wochenpläne bestimmen fortan den Alltag."
+				"outcome": "{client} takes on the challenge. Trainers, costume fittings and strict weekly plans now rule the days."
 			},
 			{
-				"label": "Zusagen: zehn Kilo zunehmen",
+				"label": "Agree: gain ten kilos",
 				"effects": [
 					{"op": "exhaustion", "amount": 7},
 					{"op": "trust", "amount": 2},
 					{"op": "followup", "event": "rollen_transformation_zunahme", "delay_weeks": 12}
 				],
-				"outcome": "{client} sagt zu. Die Verwandlung wird zum Gesprächsthema am Set, lange bevor eine Kamera läuft."
+				"outcome": "{client} says yes. The transformation becomes the talk of the set long before a camera rolls."
 			},
 			{
-				"label": "Double und Kostüm verhandeln",
+				"label": "Negotiate a double and costume work",
 				"effects": [
 					{"op": "studio_rel", "amount": -6},
 					{"op": "trust", "amount": 1}
 				],
-				"outcome": "Das Kostümdepartement findet einen Weg. {client} ist erleichtert, doch {studio} hält die Lösung für einen teuren Kompromiss."
+				"outcome": "The costume department finds a way. {client} is relieved, but {studio} considers the solution an expensive compromise."
 			},
 			{
-				"label": "Die Rolle ablehnen",
+				"label": "Turn down the role",
 				"effects": [{"op": "studio_rel", "amount": -2}],
-				"outcome": "Die Rolle geht weiter. Niemand ist begeistert, aber die Grenze war klar."
+				"outcome": "The role moves on. Nobody is thrilled, but the line was clear."
 			}
 		]
 	},
 	{
 		"id": "rollen_transformation_abnahme",
 		"followup_only": true,
-		"title": "Premiere: Die Verwandlung",
-		"text": "Zwölf anstrengende Wochen liegen hinter {client}. Die Premiere entscheidet, ob Publikum und Kritik die körperliche Verwandlung als große Leistung sehen.",
+		"title": "Premiere: the transformation",
+		"text": "Twelve grueling weeks lie behind {client}. The premiere decides whether audience and critics see the physical transformation as a great achievement.",
 		"choices": [
 			{
-				"label": "Bis zur Premiere durchziehen",
+				"label": "See it through to the premiere",
 				"success_chance": 0.65,
 				"effects": [
 					{"op": "weight", "amount": -10},
@@ -61,28 +61,28 @@
 					{"op": "mood", "amount": -5},
 					{"op": "fame", "amount": 1}
 				],
-				"outcome": "Die Premiere wird zum Triumph. Die Verwandlung bringt {client} neue Bewunderung und einen kräftigen Ruhmschub.",
-				"outcome_fail": "Die Leistung wird respektiert, der Film aber nicht. Zurück bleiben zehn verlorene Kilo und tiefe Erschöpfung."
+				"outcome": "The premiere becomes a triumph. The transformation earns {client} new admiration and a hefty fame boost.",
+				"outcome_fail": "The effort is respected, the film is not. What remains: ten lost kilos and deep exhaustion."
 			},
 			{
-				"label": "Die Verwandlung vorzeitig abbrechen",
+				"label": "Abort the transformation early",
 				"effects": [
 					{"op": "weight", "amount": -4},
 					{"op": "studio_rel", "amount": -7},
 					{"op": "mood", "amount": 3}
 				],
-				"outcome": "{client} steigt aus dem strengen Programm aus. {studio} schäumt, doch der Alltag wird sofort leichter."
+				"outcome": "{client} quits the strict program. {studio} fumes, but everyday life gets easier immediately."
 			}
 		]
 	},
 	{
 		"id": "rollen_transformation_zunahme",
 		"followup_only": true,
-		"title": "Premiere: Die Verwandlung",
-		"text": "Zwölf anstrengende Wochen liegen hinter {client}. Die Premiere entscheidet, ob Publikum und Kritik die körperliche Verwandlung als große Leistung sehen.",
+		"title": "Premiere: the transformation",
+		"text": "Twelve grueling weeks lie behind {client}. The premiere decides whether audience and critics see the physical transformation as a great achievement.",
 		"choices": [
 			{
-				"label": "Bis zur Premiere durchziehen",
+				"label": "See it through to the premiere",
 				"success_chance": 0.65,
 				"effects": [
 					{"op": "weight", "amount": 10},
@@ -96,17 +96,17 @@
 					{"op": "mood", "amount": -5},
 					{"op": "fame", "amount": 1}
 				],
-				"outcome": "Die Premiere wird zum Triumph. Die Verwandlung bringt {client} neue Bewunderung und einen kräftigen Ruhmschub.",
-				"outcome_fail": "Die Leistung wird respektiert, der Film aber nicht. Zurück bleiben zehn zusätzliche Kilo und tiefe Erschöpfung."
+				"outcome": "The premiere becomes a triumph. The transformation earns {client} new admiration and a hefty fame boost.",
+				"outcome_fail": "The effort is respected, the film is not. What remains: ten extra kilos and deep exhaustion."
 			},
 			{
-				"label": "Die Verwandlung vorzeitig abbrechen",
+				"label": "Abort the transformation early",
 				"effects": [
 					{"op": "weight", "amount": 4},
 					{"op": "studio_rel", "amount": -7},
 					{"op": "mood", "amount": 3}
 				],
-				"outcome": "{client} steigt aus dem strengen Programm aus. {studio} schäumt, doch der Alltag wird sofort leichter."
+				"outcome": "{client} quits the strict program. {studio} fumes, but everyday life gets easier immediately."
 			}
 		]
 	},
@@ -115,36 +115,36 @@
 		"cd": 18,
 		"weight": {"base": 0.65},
 		"conditions": {"requires_client": {"min_fame": 20, "weight_dev_min": 8}},
-		"title": "Die Figur in den Schlagzeilen",
-		"text": "Ein Klatschblatt spottet über die veränderte Figur von {client}. Die Bilder sind gehässig gewählt, die Überschrift noch schlimmer.",
+		"title": "The figure in the headlines",
+		"text": "A tabloid mocks {client}'s changed figure. The pictures are chosen cruelly, the headline is worse.",
 		"choices": [
 			{
-				"label": "Mit einer PR-Kampagne kontern ({money_fmt:6000})",
+				"label": "Counter with a PR campaign ({money_fmt:6000})",
 				"requirements": {"min_cash": 6000},
 				"effects": [
-					{"op": "money", "amount": -6000, "inflate": true, "cat": "pr_recht", "label": "Figur-PR für {client}"},
+					{"op": "money", "amount": -6000, "inflate": true, "cat": "pr_recht", "label": "Figure PR for {client}"},
 					{"op": "trust", "amount": 2},
 					{"op": "rep", "amount": 1}
 				],
-				"outcome": "Die Kampagne dreht den Ton: Aus Häme wird eine Debatte über Rollenbilder. {client} weiß, wer den Rücken freigehalten hat."
+				"outcome": "The campaign turns the tone: spite becomes a debate about role models. {client} knows who had their back."
 			},
 			{
-				"label": "Das Gerede aussitzen",
+				"label": "Sit out the talk",
 				"effects": [
 					{"op": "mood", "amount": -4},
-					{"op": "rumor", "text": "Die Boulevardpresse zerreißt die veränderte Figur von {client}.", "truth": false, "topic": "skandal", "belief": 28}
+					{"op": "rumor", "text": "The tabloids tear into {client}'s changed figure.", "truth": false, "topic": "skandal", "belief": 28}
 				],
-				"outcome": "Nach einigen Tagen verschwinden die Bilder von der Titelseite. Bei {client} sitzt der Spott tiefer."
+				"outcome": "After a few days the pictures vanish from the front page. For {client}, the mockery sits deeper."
 			},
 			{
-				"label": "Eine Diät-Story inszenieren",
+				"label": "Stage a diet story",
 				"effects": [
 					{"op": "weight", "amount": -2},
 					{"op": "exhaustion", "amount": 5},
 					{"op": "heat", "amount": 2},
 					{"op": "dna", "key": "popular", "amount": 2}
 				],
-				"outcome": "Das Magazin bekommt Trainingsfotos und einen exklusiven Plan. Die Geschichte verkauft sich – und {client} zahlt mit Kraft und Nerven."
+				"outcome": "The magazine gets training photos and an exclusive plan. The story sells — and {client} pays with strength and nerves."
 			}
 		]
 	}

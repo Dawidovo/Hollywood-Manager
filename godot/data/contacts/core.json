@@ -1,0 +1,30 @@
+{
+  "roles": {
+    "produzent": "Producer",
+    "regisseur": "Director",
+    "kolumnist": "Columnist",
+    "journalist": "Journalist",
+    "studio": "Studio Boss"
+  },
+  "persons": {
+    "kolumnist": ["Columnist R. Hopper", "Gossip columnist L. Parson", "Columnist S. Skolsky"],
+    "journalist": ["Reporter E. Crane", "Journalist P. Lane", "Tabloid reporter W. Falk"],
+    "regisseur": ["Director V. Malone", "Director D. Whitfield", "Director R. Kessler"],
+    "produzent": ["Producer H. Barrow", "Producer G. Mercer", "Producer M. Quinn"]
+  },
+  "start_roster": ["produzent", "produzent", "regisseur", "kolumnist", "journalist"],
+  "channels": {
+    "call": {"name": "Phone call", "icon": "📞", "ap": 1, "energy": 2.0, "cost": 0.0, "rel_min": 2, "rel_max": 5,
+      "desc": "Fast, direct, fairly discreet — but with no time to think, gaffes happen."},
+    "meet": {"name": "Meeting/Dinner", "icon": "🤝", "ap": 2, "energy": 6.0, "cost": 40.0, "rel_min": 5, "rel_max": 9,
+      "desc": "Strongest relationship effect — costs time, travel, and a good restaurant."},
+    "note": {"name": "Message", "icon": "✉", "ap": 0, "energy": 1.0, "cost": 5.0, "rel_min": 1, "rel_max": 2,
+      "desc": "Precise and asynchronous — but it can be forwarded or leaked."},
+    "gift": {"name": "Gift", "icon": "🎁", "ap": 0, "energy": 1.0, "cost": 120.0, "rel_min": 3, "rel_max": 7,
+      "desc": "Personal and effective — with a cool contact it quickly feels inappropriate."},
+    "aide": {"name": "Send assistant", "icon": "🧑‍💼", "ap": 0, "energy": 0.0, "cost": 15.0, "rel_min": 1, "rel_max": 3,
+      "desc": "Saves your time — but people remember that you did not come yourself."},
+    "club": {"name": "Private club", "icon": "🥃", "ap": 2, "energy": 5.0, "cost": 90.0, "rel_min": 4, "rel_max": 8,
+      "desc": "Confidential: favors, tips and promises are born here — and rumors about you."}
+  }
+}

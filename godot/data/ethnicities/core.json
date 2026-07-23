@@ -1,10 +1,10 @@
 {
-	"white": "Weiß",
-	"black": "Schwarz",
+	"white": "White",
+	"black": "Black",
 	"latino": "Latino",
-	"asian": "Asiatisch",
-	"jewish": "Jüdisch",
-	"native": "Indigen",
-	"mena": "Nahöstlich",
-	"mixed": "Gemischt"
+	"asian": "Asian",
+	"jewish": "Jewish",
+	"native": "Indigenous",
+	"mena": "Middle Eastern",
+	"mixed": "Mixed"
 }

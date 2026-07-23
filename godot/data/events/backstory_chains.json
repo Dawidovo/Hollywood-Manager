@@ -4,47 +4,47 @@
 		"cd": 60,
 		"weight": {"base": 1.3},
 		"conditions": {"backstory": "ex_studio_junior", "requires_studio": true, "min_rep": 10},
-		"title": "Der alte Chef ruft an",
-		"text": "[i]„Na, wen haben wir denn da — mein bester Laufbursche macht jetzt Karrieren?“[/i]\n\nDein früherer Vorgesetzter sitzt heute im Vorstand von {studio}. Er hätte da ein Projekt in Schieflage — inoffiziell, versteht sich.",
+		"title": "The old boss calls",
+		"text": "[i]“Well, look who it is — my best errand boy makes careers now?”[/i]\n\nYour former superior sits on the board of {studio} these days. He has a project gone sideways — unofficially, of course.",
 		"choices": [
 			{
-				"label": "Aushelfen — für die alte Zeit",
+				"label": "Help out — for old times' sake",
 				"effects": [
 					{"op": "studio_rel", "amount": 6},
 					{"op": "followup", "event": "junior_gegenleistung", "delay_weeks": 8}
 				],
-				"outcome": "Du löst das Problem lautlos. Er nickt nur — aber in dieser Stadt ist ein Nicken von ganz oben mehr wert als ein Vertrag."
+				"outcome": "You solve the problem silently. He only nods — but in this town, a nod from the very top is worth more than a contract."
 			},
 			{
-				"label": "Einen Preis nennen",
+				"label": "Name a price",
 				"success_chance": 0.6,
-				"effects": [{"op": "money", "amount": 6000, "inflate": true, "cat": "events", "label": "Diskrete Aushilfe für den alten Chef"}],
+				"effects": [{"op": "money", "amount": 6000, "inflate": true, "cat": "events", "label": "Discreet help for the old boss"}],
 				"effects_fail": [{"op": "studio_rel", "amount": -5}],
-				"outcome": "Er lacht — und zahlt. „Du hast doch was gelernt bei uns.“",
-				"outcome_fail": "„Ich dachte, wir wären Freunde.“ Das Gespräch ist kurz, der Nachgeschmack lang."
+				"outcome": "He laughs — and pays. “You did learn something with us.”",
+				"outcome_fail": "“I thought we were friends.” The call is short, the aftertaste long."
 			},
 			{
-				"label": "Die alten Zeiten ruhen lassen",
+				"label": "Let the old days rest",
 				"effects": [],
-				"outcome": "Du legst höflich auf. Manche Türen schließt man besser selbst."
+				"outcome": "You hang up politely. Some doors are best closed by yourself."
 			}
 		]
 	},
 	{
 		"id": "junior_gegenleistung",
 		"followup_only": true,
-		"title": "Die Gegenleistung",
-		"text": "Der alte Chef vergisst nichts — im Guten wie im Schlechten. Ein Bote bringt einen Umschlag: eine Einladung, dazu eine Notiz. [i]„Für damals. Such dir was aus.“[/i]",
+		"title": "The return favor",
+		"text": "The old boss forgets nothing — for better or worse. A courier brings an envelope: an invitation, plus a note. [i]“For back then. Pick something.”[/i]",
 		"choices": [
 			{
-				"label": "Die Einladung annehmen",
+				"label": "Accept the invitation",
 				"effects": [{"op": "favor_grant", "kind": "galaInvite"}],
-				"outcome": "Eine geschlossene Veranstaltung, handverlesene Gäste — genau die Sorte Abend, auf dem Karrieren gemacht werden."
+				"outcome": "A closed event, hand-picked guests — exactly the kind of evening careers are made on."
 			},
 			{
-				"label": "Stattdessen um Drehbuch-Zugang bitten",
+				"label": "Ask for script access instead",
 				"effects": [{"op": "favor_grant", "kind": "scriptAccess"}],
-				"outcome": "„Leseratte, wie immer.“ Ab sofort liegen die Skripte einen Tick früher auf deinem Tisch."
+				"outcome": "“Bookworm, as always.” From now on the scripts land on your desk a beat earlier."
 			}
 		]
 	},
@@ -53,50 +53,50 @@
 		"cd": 60,
 		"weight": {"base": 1.3},
 		"conditions": {"backstory": "kolumnist", "requires_client": true},
-		"title": "Die alte Quelle",
-		"text": "[i]„Ich hab da was gehört. Früher hättest du mir dafür ein Steak spendiert.“[/i]\n\nDeine beste Quelle aus Kolumnistenzeiten sitzt im Diner und schiebt dir eine Serviette mit drei Sätzen über {client} zu — brisant, unbestätigt, druckreif.",
+		"title": "The old source",
+		"text": "[i]“I heard something. Back in the day you'd have bought me a steak for this.”[/i]\n\nYour best source from your columnist days sits in the diner and slides you a napkin with three sentences about {client} — explosive, unconfirmed, ready to print.",
 		"choices": [
 			{
-				"label": "Das Steak spendieren ({money_fmt:500})",
+				"label": "Buy the steak ({money_fmt:500})",
 				"requirements": {"min_cash": 500},
 				"effects": [
-					{"op": "money", "amount": -500, "inflate": true, "cat": "events", "label": "Ein Steak für die alte Quelle"},
+					{"op": "money", "amount": -500, "inflate": true, "cat": "events", "label": "A steak for the old source"},
 					{"op": "followup", "event": "kolumnist_quelle_folge", "delay_weeks": 6}
 				],
-				"outcome": "Sie erzählt dir alles — und verspricht, sich zu melden, wenn mehr auftaucht. Alte Netzwerke rosten nicht."
+				"outcome": "She tells you everything — and promises to call when more surfaces. Old networks don't rust."
 			},
 			{
-				"label": "Die Serviette verschwinden lassen",
+				"label": "Make the napkin disappear",
 				"effects": [{"op": "trust", "amount": 6}],
-				"outcome": "Du verbrennst die Notiz im Aschenbecher. {client} erfährt davon — und vergisst es nie."
+				"outcome": "You burn the note in the ashtray. {client} hears about it — and never forgets."
 			},
 			{
-				"label": "Höflich ablehnen — du schreibst nicht mehr",
+				"label": "Decline politely — you don't write anymore",
 				"effects": [],
-				"outcome": "„Schade. Du warst der Beste.“ Sie zahlt ihr Kaffee selbst und geht."
+				"outcome": "“A shame. You were the best.” She pays for her own coffee and leaves."
 			}
 		]
 	},
 	{
 		"id": "kolumnist_quelle_folge",
 		"followup_only": true,
-		"title": "Die Quelle liefert",
-		"text": "Der Anruf kommt nachts: Deine alte Quelle hat Material über einen Konkurrenten — hart genug, um eine Karriere zu beschädigen. [i]„Was machen wir damit, Chef?“[/i]",
+		"title": "The source delivers",
+		"text": "The call comes at night: your old source has material on a competitor — hard enough to damage a career. [i]“What do we do with it, boss?”[/i]",
 		"choices": [
 			{
-				"label": "Als Druckmittel zurücklegen",
+				"label": "Keep it as leverage",
 				"effects": [{"op": "favor_grant", "kind": "suppressStory"}],
-				"outcome": "Wissen ist die einzige Währung, die nie an Wert verliert. Du legst die Mappe in den Safe."
+				"outcome": "Knowledge is the only currency that never loses value. You put the folder in the safe."
 			},
 			{
-				"label": "An die Presse durchstechen",
+				"label": "Leak it to the press",
 				"effects": [{"op": "rep", "amount": 2}, {"op": "instinct", "amount": 2}],
-				"outcome": "Die Schlagzeile schlägt ein. Niemand kann sie zu dir zurückverfolgen — aber die Stadt weiß wieder, dass man dich nicht unterschätzt."
+				"outcome": "The headline lands. Nobody can trace it back to you — but the town remembers not to underestimate you."
 			},
 			{
-				"label": "Das Material vernichten",
+				"label": "Destroy the material",
 				"effects": [{"op": "rep", "amount": 1}],
-				"outcome": "Manche Geschäfte macht man nicht. Deine Quelle versteht es nicht — dein Spiegelbild schon."
+				"outcome": "Some deals you don't make. Your source doesn't understand — your reflection does."
 			}
 		]
 	},
@@ -105,16 +105,16 @@
 		"cd": 60,
 		"weight": {"base": 1.3},
 		"conditions": {"backstory": "anwalt", "requires_client": true, "requires_studio": true},
-		"title": "Die alte Akte",
-		"text": "[i]„Sie haben damals den Vertrag aufgesetzt. Sie wissen, was in Paragraf 12 steht.“[/i]\n\nEin Anwalt von {studio} taucht mit einer Akte auf, die deine Handschrift trägt — und die dem Studio gegen {client} nützen würde. Man bittet um deine „Auslegung“.",
+		"title": "The old file",
+		"text": "[i]“You drew up that contract back then. You know what paragraph 12 says.”[/i]\n\nA lawyer from {studio} shows up with a file bearing your handwriting — one that would help the studio against {client}. They ask for your “interpretation”.",
 		"choices": [
 			{
-				"label": "Die Lücke aufzeigen, die du damals eingebaut hast",
+				"label": "Point out the loophole you built in back then",
 				"effects": [{"op": "trust", "amount": 8}, {"op": "studio_rel", "amount": -4}],
-				"outcome": "Du hast schon damals für alle Fälle vorgesorgt. Paragraf 12 hat einen Absatz b — und der gehört deinem Klienten. {studio} zieht mit zusammengebissenen Zähnen zurück."
+				"outcome": "You planned ahead even then. Paragraph 12 has a subsection b — and it belongs to your client. {studio} backs off through gritted teeth."
 			},
 			{
-				"label": "Dem Studio zuarbeiten — diskret",
+				"label": "Work with the studio — discreetly",
 				"success_chance": 0.55,
 				"effects": [
 					{"op": "studio_rel", "amount": 8},
@@ -122,37 +122,37 @@
 				],
 				"effects_fail": [
 					{"op": "trust", "amount": -10},
-					{"op": "rumor", "text": "{client} soll vom eigenen Agenten hintergangen worden sein.", "truth": true, "topic": "skandal", "belief": 35},
+					{"op": "rumor", "text": "{client} is said to have been betrayed by their own agent.", "truth": true, "topic": "skandal", "belief": 35},
 					{"op": "followup", "event": "anwalt_akte_folgen", "delay_weeks": 5}
 				],
-				"outcome": "Das Studio bekommt seine Auslegung, du bekommst offene Türen. Niemand muss davon wissen.",
-				"outcome_fail": "Jemand redet. In dieser Stadt redet immer jemand."
+				"outcome": "The studio gets its interpretation, you get open doors. Nobody has to know.",
+				"outcome_fail": "Somebody talks. In this town, somebody always talks."
 			},
 			{
-				"label": "Befangenheit erklären und schweigen",
+				"label": "Declare a conflict of interest and stay silent",
 				"effects": [{"op": "rep", "amount": 1}],
-				"outcome": "„Ich vertrete heute die andere Seite.“ Sauber, korrekt, langweilig — und genau richtig."
+				"outcome": "“I represent the other side today.” Clean, correct, boring — and exactly right."
 			}
 		]
 	},
 	{
 		"id": "anwalt_akte_folgen",
 		"followup_only": true,
-		"title": "Die Akte spricht",
-		"text": "Die Geschichte vom Agenten, der gegen den eigenen Klienten gearbeitet haben soll, hält sich hartnäckig. Dein Telefon klingelt seltener.",
+		"title": "The file talks",
+		"text": "The story of the agent who allegedly worked against his own client refuses to die. Your phone rings less often.",
 		"choices": [
 			{
-				"label": "Mit einer Verleumdungsklage drohen",
+				"label": "Threaten a libel suit",
 				"success_chance": 0.6,
 				"effects": [{"op": "rep", "amount": 1}],
 				"effects_fail": [{"op": "rep", "amount": -2}],
-				"outcome": "Nichts bringt eine Redaktion schneller zum Schweigen als ein Anwalt, der den Streitwert kennt.",
-				"outcome_fail": "Die Drohung wirkt dünnhäutig — und macht die Geschichte erst recht interessant."
+				"outcome": "Nothing silences a newsroom faster than a lawyer who knows the damages.",
+				"outcome_fail": "The threat comes across thin-skinned — and makes the story all the more interesting."
 			},
 			{
-				"label": "Aussitzen",
+				"label": "Sit it out",
 				"effects": [],
-				"outcome": "Du lässt die Sache verebben. Es dauert — aber Hollywood hat ein kurzes Gedächtnis."
+				"outcome": "You let the matter ebb away. It takes time — but Hollywood has a short memory."
 			}
 		]
 	},
@@ -161,40 +161,40 @@
 		"cd": 60,
 		"weight": {"base": 1.3},
 		"conditions": {"backstory": "gescheitert", "requires_client": {"free": true}, "requires_studio": true},
-		"title": "Die Rolle, die dir gehörte",
-		"text": "[i]„Wir besetzen den Stoff neu. Sie kennen ihn ja — Sie waren damals in der engeren Auswahl.“[/i]\n\n{studio} verfilmt ausgerechnet das Projekt, an dem deine eigene Schauspielkarriere zerbrach. Der Regisseur fragt, ob {client} Interesse hätte.",
+		"title": "The role that was yours",
+		"text": "[i]“We're recasting the property. You know it, after all — you were on the shortlist back then.”[/i]\n\n{studio} is filming the very project your own acting career broke on. The director asks whether {client} would be interested.",
 		"choices": [
 			{
-				"label": "{client} mit allem vorbereiten, was du damals gelernt hast",
+				"label": "Prepare {client} with everything you learned back then",
 				"effects": [
 					{"op": "flag_set", "key": "prepFit", "value": 12},
 					{"op": "trust", "amount": 5},
 					{"op": "followup", "event": "gescheitert_premiere", "delay_weeks": 10}
 				],
-				"outcome": "Du kennst jede Zeile, jede Falle, jeden Regieeinfall dieses Stoffs. {client} bekommt die beste Vorbereitung, die es für Geld nicht zu kaufen gibt."
+				"outcome": "You know every line, every trap, every directorial whim of this material. {client} gets the best preparation money can't buy."
 			},
 			{
-				"label": "Das Projekt meiden — zu viele Geister",
+				"label": "Avoid the project — too many ghosts",
 				"effects": [{"op": "mood", "amount": -2}],
-				"outcome": "Manche Wunden näht man besser nicht wieder auf. {client} versteht es nicht ganz — du schon."
+				"outcome": "Some wounds are better left unopened. {client} doesn't quite understand — you do."
 			}
 		]
 	},
 	{
 		"id": "gescheitert_premiere",
 		"followup_only": true,
-		"title": "Premiere mit Geistern",
-		"text": "Der Film ist abgedreht, die Premiere steht an. Auf der Gästeliste: alle, die damals zugesehen haben, wie du gescheitert bist.",
+		"title": "A premiere with ghosts",
+		"text": "The film has wrapped, the premiere is coming. On the guest list: everyone who watched you fail back then.",
 		"choices": [
 			{
-				"label": "Hingehen — erhobenen Hauptes",
+				"label": "Go — head held high",
 				"effects": [{"op": "rep", "amount": 2}, {"op": "instinct", "amount": 2}],
-				"outcome": "Du sitzt in Reihe drei, wo damals dein Name auf dem Stuhl klebte. Als das Licht angeht, applaudieren sie deinem Klienten — und ein paar nicken dir zu. Das reicht."
+				"outcome": "You sit in row three, where your name once taped to the chair. When the lights come up, they applaud your client — and a few nod at you. That is enough."
 			},
 			{
-				"label": "Fernbleiben und arbeiten",
-				"effects": [{"op": "money", "amount": 1500, "inflate": true, "cat": "provision", "label": "Nachtschicht statt Premiere"}],
-				"outcome": "Während die Stadt feiert, telefonierst du zwei neue Deals fest. Rache kann auch ein Kontoauszug sein."
+				"label": "Stay away and work",
+				"effects": [{"op": "money", "amount": 1500, "inflate": true, "cat": "provision", "label": "Night shift instead of a premiere"}],
+				"outcome": "While the town celebrates, you lock down two new deals by phone. Revenge can also be a bank statement."
 			}
 		]
 	},
@@ -203,52 +203,52 @@
 		"cd": 60,
 		"weight": {"base": 1.3},
 		"conditions": {"backstory": "aufsteiger", "min_year": 1900},
-		"title": "Ein Gläubiger von früher",
-		"text": "[i]„Ohne mich würdest du noch Zeitungen austragen. Zeit, dass sich das auszahlt.“[/i]\n\nDer Mann, der dir vor Jahren das erste Geld lieh, steht im Büro — mit einem Lächeln, das keins ist.",
+		"title": "A creditor from the old days",
+		"text": "[i]“Without me you'd still be delivering newspapers. Time for that to pay off.”[/i]\n\nThe man who lent you your first money years ago stands in the office — with a smile that isn't one.",
 		"choices": [
 			{
-				"label": "Auszahlen — mit Zinsen ({money_fmt:12000})",
+				"label": "Pay him off — with interest ({money_fmt:12000})",
 				"requirements": {"min_cash": 12000},
-				"effects": [{"op": "money", "amount": -12000, "inflate": true, "cat": "sonstiges", "label": "Alte Schulden beglichen"}],
-				"outcome": "Du zählst die Scheine auf den Tisch, ohne die Miene zu verziehen. „Wir sind quitt.“ Und diesmal stimmt es."
+				"effects": [{"op": "money", "amount": -12000, "inflate": true, "cat": "sonstiges", "label": "Old debts settled"}],
+				"outcome": "You count the bills onto the table without moving a muscle. “We're even.” And this time it's true."
 			},
 			{
-				"label": "Ihm etwas Besseres anbieten: Zugang",
+				"label": "Offer him something better: access",
 				"effects": [
 					{"op": "favor_owe", "kind": "galaInvite"},
 					{"op": "followup", "event": "aufsteiger_glaeubiger_kommt", "delay_weeks": 12}
 				],
-				"outcome": "„Geld hab ich genug. Aber auf so eine Premiere hat mich noch nie jemand mitgenommen …“ Du schuldest ihm jetzt einen Abend in der ersten Reihe."
+				"outcome": "“I have enough money. But nobody has ever taken me to a premiere like that …” You now owe him an evening in the front row."
 			},
 			{
-				"label": "Hinauswerfen lassen",
+				"label": "Have him thrown out",
 				"effects": [
-					{"op": "rumor", "text": "Der Aufstieg von {agency} soll auf geliehenem Geld gebaut sein.", "truth": true, "topic": "skandal", "belief": 30},
+					{"op": "rumor", "text": "The rise of {agency} is said to be built on borrowed money.", "truth": true, "topic": "skandal", "belief": 30},
 					{"op": "followup", "event": "aufsteiger_glaeubiger_kommt", "delay_weeks": 6}
 				],
-				"outcome": "Er geht ohne Widerstand. An der Tür dreht er sich um: „Du weißt, dass ich Geschichten kenne, oder?“"
+				"outcome": "He leaves without resistance. At the door he turns around: “You know that I know stories, right?”"
 			}
 		]
 	},
 	{
 		"id": "aufsteiger_glaeubiger_kommt",
 		"followup_only": true,
-		"title": "Der Gläubiger meldet sich wieder",
-		"text": "Er hat Geduld — das war schon immer seine gefährlichste Eigenschaft. Jetzt will er eine Antwort.",
+		"title": "The creditor returns",
+		"text": "He has patience — that was always his most dangerous quality. Now he wants an answer.",
 		"choices": [
 			{
-				"label": "Endgültig auszahlen ({money_fmt:15000})",
+				"label": "Pay him off for good ({money_fmt:15000})",
 				"requirements": {"min_cash": 15000},
-				"effects": [{"op": "money", "amount": -15000, "inflate": true, "cat": "sonstiges", "label": "Alte Schulden — Schlussstrich"}],
-				"outcome": "Diesmal mit Quittung, Zeugen und Handschlag. Das Kapitel ist geschlossen."
+				"effects": [{"op": "money", "amount": -15000, "inflate": true, "cat": "sonstiges", "label": "Old debts — final line"}],
+				"outcome": "This time with a receipt, witnesses and a handshake. The chapter is closed."
 			},
 			{
-				"label": "Ihn ins Geschäft holen — stiller Teilhaber",
+				"label": "Bring him into the business — a silent partner",
 				"effects": [
-					{"op": "money", "amount": 20000, "inflate": true, "cat": "investition", "label": "Einlage eines stillen Teilhabers"},
+					{"op": "money", "amount": 20000, "inflate": true, "cat": "investition", "label": "A silent partner's stake"},
 					{"op": "rep", "amount": -2}
 				],
-				"outcome": "Frisches Kapital, keine Fragen — und ein Schatten mehr im Rücken. Die feine Gesellschaft rümpft die Nase."
+				"outcome": "Fresh capital, no questions — and one more shadow at your back. Polite society wrinkles its nose."
 			}
 		]
 	}

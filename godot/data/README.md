@@ -1,43 +1,45 @@
-# Hollywood Manager — Datenbanken
+# Hollywood Manager — Data
 
-Alle Spieldaten liegen hier als JSON und werden beim Start automatisch geladen.
-**Neue Datenbanken einspielen = einfach eine weitere `.json`-Datei in den passenden
-Ordner legen.** Kein Code nötig.
+All game content lives here as JSON and is loaded automatically at startup.
+**Adding new data = just drop another `.json` file into the matching folder.**
+No code needed.
 
-## Ordner
+## Folders
 
-| Ordner | Inhalt | Format | Schlüssel |
+| Folder | Content | Format | Key |
 |---|---|---|---|
-| `actors/` | Schauspieler | Liste | `id` |
-| `studios/` | Studios/Unternehmen | Liste | `id` |
-| `genres/` | Genres | Objekt | Genre-Kürzel |
-| `titles/` | Prozedurale Titelbausteine | Objekt | Genre-Kürzel |
-| `real_titles/` | Reale Filmtitel für Castings | Liste | `t` + `y` |
-| `names/` | NPC-Namenspools | Objekt | `first_m`/`first_f`/`last` |
-| `history/` | Historische Makro-Ereignisse | Liste | `year` + `month` |
-| `eras/` | Wählbare Start-Ären | Liste | `year` |
-| `events/` | Spiel-Events & Eventketten | Liste | `id` |
-| `backstories/` | Wählbare Spieler-Backstories | Liste | `id` |
-| `ethnicities/` | Anzeige-Namen für Ethnien | Objekt | Ethnie-Kürzel |
+| `actors/` | Actors | List | `id` |
+| `studios/` | Studios/companies | List | `id` |
+| `genres/` | Genres | Object | genre code |
+| `titles/` | Procedural title building blocks | Object | genre code |
+| `real_titles/` | Real film titles for castings | List | `t` + `y` |
+| `names/` | NPC name pools | Object | `first_m`/`first_f`/`last` |
+| `history/` | Historical macro events | List | `year` + `month` |
+| `eras/` | Selectable start eras | List | `year` |
+| `events/` | Game events & event chains | List | `id` |
+| `backstories/` | Selectable player backstories | List | `id` |
+| `ethnicities/` | Display names for ethnicities | Object | ethnicity code |
+| `career/` | Career ladder (Junior → Mogul) | List | `id` |
+| `reputation/` | Earned reputation titles | Object | identity key |
+| `locations/` | Node map (places, travel, actions) | List | `id` |
+| `contacts/` | Contact roles, persons, channels | Object | — |
 
-## Merge-Regeln
+## Merge rules
 
-- Alle `*.json` eines Ordners werden **alphabetisch** geladen und zusammengeführt.
-- **Gleicher Schlüssel** (z. B. gleiche Actor-`id`) ⇒ die spätere Datei
-  **überschreibt Feld für Feld** und kann Felder **ergänzen** — so funktionieren
-  z. B. `actors/ethnicity_core.json` und `actors/filmography_core.json`: sie
-  tragen nur `id` + das Zusatzfeld und reichern `actors/core.json` an.
-- **Neuer Schlüssel** ⇒ der Eintrag wird angehängt (so fügt man neue
-  Schauspieler, Studios, Events usw. hinzu).
-- Listen-Dateien sind ein JSON-Array `[{...}, {...}]` (oder `{"entries":[...]}`).
-- **Mods:** Dateien unter `user://data/<ordner>/` (im Godot-Benutzerverzeichnis,
-  unter Windows `%APPDATA%\Godot\app_userdata\Hollywood Manager\data\`) werden
-  NACH den mitgelieferten geladen und gewinnen bei Konflikten — funktioniert
-  auch mit der exportierten .exe.
-- Fehlerhafte Einträge werden mit einer Warnung in der Konsole übersprungen,
-  das Spiel startet trotzdem.
+- All `*.json` in a folder are loaded **alphabetically** and merged.
+- **Same key** (e.g. same actor `id`) ⇒ the later file **overrides field by
+  field** and can **add** fields — that is how e.g. `actors/body_core.json`
+  enriches `actors/core.json` by carrying only `id` + the extra field.
+- **New key** ⇒ the entry is appended (this is how you add new actors, studios,
+  events, and so on).
+- List files are a JSON array `[{...}, {...}]` (or `{"entries":[...]}`).
+- **Mods:** files under `user://data/<folder>/` (in the Godot user directory,
+  on Windows `%APPDATA%\Godot\app_userdata\Hollywood Manager\data\`) are loaded
+  AFTER the bundled ones and win on conflicts — this also works with the
+  exported `.exe`.
+- Malformed entries are skipped with a console warning; the game still starts.
 
-## Schauspieler-Schema
+## Actor schema
 
 ```json
 {
@@ -52,39 +54,50 @@ Ordner legen.** Kein Code nötig.
 }
 ```
 
-Pflichtfelder: `id`, `name`, `birth`, `g` (`"m"`/`"f"`), `debut`, `talent`,
-`peak`, `peakFame`. Optional: `death` (Jahr oder `null`; wird dem Spieler NIE
-angezeigt, wirkt aber in der Simulation), `ethnicity` (Standard `"white"`,
-Kürzel siehe `ethnicities/core.json`), `films` (reale Filmografie, im
-Talentpool als „Bekannt aus“ sichtbar), `ego`, `genres`.
+Required fields: `id`, `name`, `birth`, `g` (`"m"`/`"f"`), `debut`, `talent`,
+`peak`, `peakFame`. Optional: `death` (year or `null`; never shown to the
+player, but active in the simulation), `ethnicity` (default `"white"`, codes in
+`ethnicities/core.json`), `films` (real filmography, shown as "Known for" in the
+talent pool), `ego`, `genres`.
 
-`height_cm` (Größe in Zentimetern) und `weight_kg` (Basisgewicht in
-Kilogramm) sind optional und haben den Standardwert `0`. Bei `0` bestimmt das
-Spiel einen plausiblen, je Schauspieler-ID deterministischen Wert. Positive
-JSON-Werte gewinnen immer. Das Anreicherungspaket `actors/body_core.json`
-enthält Körperdaten für rund 40 bekannte Schauspieler und kann durch weitere
-Actor-Pakete feldweise ergänzt oder überschrieben werden.
-Bei Klienten wird daraus `weightKg` als veränderliches Karrieregewicht; der
-Actor-Datensatz und der Talentpool behalten stets den unveränderten Basiswert.
+`height_cm` and `weight_kg` are optional and default to `0`. At `0` the game
+picks a plausible value that is deterministic per actor id. Positive JSON values
+always win.
 
-Hinweis zu `ethnicity`: Best-Effort-Daten mit Standardwert — Korrekturen sind
-ausdrücklich erwünscht und gehören in eine eigene JSON-Datei (wie
-`ethnicity_core.json`), nicht in den Code.
+## Events schema
 
-## Events-Schema
+See `events/core.json` — a declarative format with `conditions`, `weight`,
+`choices` (each with `requirements`, `effects`, `outcome`) and event chains via
+the effect `{"op": "followup", "event": "<id>", "delay_weeks": N}`. Chain links
+carry `"followup_only": true` and never appear in the random pool.
 
-Siehe `events/core.json` — deklaratives Format mit `conditions`, `weight`,
-`choices` (je mit `requirements`, `effects`, `outcome`) und Eventketten über
-den Effekt `{"op": "followup", "event": "<id>", "delay_weeks": N}`.
-Kettenglieder tragen `"followup_only": true` und erscheinen nie im Zufallspool.
-`requires_client` unterstützt `weight_dev_min` als Mindestabweichung vom
-Basisgewicht in Kilogramm. Der Effekt `{"op": "weight", "amount": N}` ändert
-das aktuelle Klientengewicht um `N` kg; die zentrale Grenze von ±25 % des
-Basisgewichts gilt auch für Eventeffekte.
+## Career, reputation, locations & contacts (manager systems)
 
-## Kern-Dateien regenerieren
+These four categories drive the "manager as a person" systems and are fully
+moddable:
 
-`tools/ExportData.gd` schreibt die geladenen Daten neu formatiert zurück:
+- **`career/core.json`** — a list of career levels with `id`, `name`, monthly
+  `salary` and `living` cost (1925 dollars, inflation-scaled), and a `req` block
+  (`rep`, `films`, `clients`, `indRep`, `influence`, `wealth`) for the promotion
+  to that level. Order in the list is the ladder order.
+- **`reputation/titles.json`** — maps the moral-identity keys
+  (`kuenstlerisch`, `kommerziell`, `skrupellos`, `diskret`, `studiotreu`,
+  `klientenorientiert`) to the earned reputation title shown to the player.
+- **`locations/core.json`** — the node map. Each place has `id`, `name`, `icon`,
+  travel `cost`, `energy`, an optional `months` array (season window), a
+  `weekly` effect block, and an optional `action` block with `effects` and
+  optional `lucky`/`risk` branches. Effect keys: `pubRep`, `indRep`,
+  `influence`, `discretion`, `stress`, `energy`, `health`, `instinct`, `cash`,
+  `book`, `identity`, plus `casting` (spawn N castings). `la` is the home base.
+- **`contacts/core.json`** — `roles` (type → display name), `persons` (type →
+  name pool the game draws contacts and favor partners from), `start_roster`
+  (which roles the starting contact book is built from), and `channels` (each
+  with `name`, `icon`, `ap` = contact-time cost, `energy`, `cost`, and a
+  `rel_min`/`rel_max` relationship gain range).
+
+## Regenerating the core files
+
+`tools/ExportData.gd` writes the loaded data back, freshly formatted:
 
 ```
 Godot_v4.7.1-stable_win64.exe --headless --path godot --script tools/ExportData.gd

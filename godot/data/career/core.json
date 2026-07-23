@@ -1,0 +1,10 @@
+{
+  "entries": [
+    {"id": "junior", "name": "Junior Agent", "salary": 600, "living": 350, "req": {}},
+    {"id": "established", "name": "Established Agent", "salary": 1000, "living": 550, "req": {"rep": 25, "films": 3}},
+    {"id": "senior", "name": "Senior Agent", "salary": 1600, "living": 900, "req": {"rep": 40, "films": 10, "clients": 3}},
+    {"id": "partner", "name": "Partner", "salary": 2600, "living": 1500, "req": {"rep": 55, "films": 20, "indRep": 50}},
+    {"id": "chief", "name": "Head of Agency", "salary": 4000, "living": 2400, "req": {"rep": 70, "films": 35, "influence": 40}},
+    {"id": "mogul", "name": "Hollywood Mogul", "salary": 6500, "living": 4000, "req": {"rep": 85, "films": 60, "influence": 70, "wealth": 250000}}
+  ]
+}

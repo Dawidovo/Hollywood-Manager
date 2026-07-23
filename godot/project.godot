@@ -22,6 +22,7 @@ Newspaper="*res://scripts/Newspaper.gd"
 Ev="*res://scripts/Events.gd"
 EvEngine="*res://scripts/EventEngine.gd"
 Jukebox="*res://scripts/MusicGen.gd"
+Persona="*res://scripts/Persona.gd"
 
 [debug]
 

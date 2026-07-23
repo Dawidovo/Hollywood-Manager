@@ -3,91 +3,91 @@
 		"effect": "talkies",
 		"market": 1.15,
 		"month": 10,
-		"text": "„Der Jazzsänger“ läuft an — der Tonfilm ist da! Das Publikum strömt in die Kinos. Stummfilm-Veteranen bangen um ihre Stimmen.",
+		"text": "“The Jazz Singer” opens — the talkies are here! Audiences stream into the theaters. Silent-film veterans fear for their voices.",
 		"year": 1927
 	},
 	{
 		"market": 0.7,
 		"month": 10,
-		"text": "Börsencrash an der Wall Street. Die Budgets der Studios brechen ein, Gagen stehen unter Druck.",
+		"text": "Stock market crash on Wall Street. Studio budgets collapse, fees come under pressure.",
 		"year": 1929
 	},
 	{
 		"market": 0.95,
 		"month": 7,
-		"text": "Der Hays Code wird durchgesetzt. Skandale sind jetzt gefährlicher denn je.",
+		"text": "The Hays Code is enforced. Scandals are now more dangerous than ever.",
 		"year": 1934
 	},
 	{
 		"market": 0.9,
 		"month": 9,
-		"text": "Krieg in Europa. Die Auslandsmärkte brechen weg.",
+		"text": "War in Europe. The foreign markets fall away.",
 		"year": 1939
 	},
 	{
 		"market": 1.25,
 		"month": 1,
-		"text": "Nachkriegsboom! Nie zuvor gingen so viele Amerikaner ins Kino.",
+		"text": "Post-war boom! Never before have so many Americans gone to the movies.",
 		"year": 1946
 	},
 	{
 		"market": 0.85,
 		"month": 5,
-		"text": "Das Paramount-Urteil zerschlägt das Studiosystem — und das Fernsehen erobert die Wohnzimmer.",
+		"text": "The Paramount decree smashes the studio system — and television conquers the living rooms.",
 		"year": 1948
 	},
 	{
 		"market": 1.1,
 		"month": 9,
-		"text": "CinemaScope! Breitbild soll das Publikum vom Fernseher zurückholen.",
+		"text": "CinemaScope! Widescreen is meant to win audiences back from the TV set.",
 		"year": 1953
 	},
 	{
 		"market": 1.05,
 		"month": 8,
-		"text": "„Bonnie und Clyde“ schockiert und begeistert: New Hollywood beginnt. Junge Charakterköpfe sind gefragt.",
+		"text": "“Bonnie and Clyde” shocks and thrills: New Hollywood begins. Young character actors are in demand.",
 		"year": 1967
 	},
 	{
 		"market": 1.2,
 		"month": 6,
-		"text": "„Der weiße Hai“ erfindet den Blockbuster. Der Sommer gehört jetzt dem Kino.",
+		"text": "“Jaws” invents the blockbuster. Summer now belongs to the movies.",
 		"year": 1975
 	},
 	{
 		"market": 1.15,
 		"month": 5,
-		"text": "„Krieg der Sterne“ sprengt alle Rekorde. Franchise-Potenzial wird zur Währung.",
+		"text": "“Star Wars” shatters every record. Franchise potential becomes a currency.",
 		"year": 1977
 	},
 	{
 		"market": 1.1,
 		"month": 3,
-		"text": "„Matrix“ und das DVD-Geschäft: Hollywood schwimmt im Geld.",
+		"text": "“The Matrix” and the DVD business: Hollywood is swimming in money.",
 		"year": 1999
 	},
 	{
 		"market": 0.85,
 		"month": 11,
-		"text": "Autorenstreik legt Hollywood lahm — und ein Versandhändler namens Netflix beginnt zu streamen.",
+		"text": "A writers' strike paralyzes Hollywood — and a mail-order company called Netflix starts streaming.",
 		"year": 2007
 	},
 	{
 		"market": 1.1,
 		"month": 1,
-		"text": "Streaming-Boom und Superhelden-Ära: Content ist König.",
+		"text": "Streaming boom and the superhero era: content is king.",
 		"year": 2012
 	},
 	{
 		"market": 0.45,
 		"month": 3,
-		"text": "Pandemie. Die Kinos schließen weltweit. Produktionen liegen auf Eis.",
+		"text": "Pandemic. Theaters close worldwide. Productions are on ice.",
 		"year": 2020
 	},
 	{
 		"market": 0.9,
 		"month": 6,
-		"text": "Die Kinos öffnen wieder — aber das Publikum kommt nur zögerlich zurück.",
+		"text": "The theaters reopen — but the audience returns only hesitantly.",
 		"year": 2021
 	}
 ]

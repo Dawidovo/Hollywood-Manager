@@ -1,24 +1,24 @@
 [
 	{
-		"desc": "Hollywood ist jung, die Bilder sind stumm, die Stars sind Götter. Aber der Tonfilm wirft seine Schatten voraus …",
-		"name": "Die Stummfilm-Ära",
+		"desc": "Hollywood is young, the pictures are silent, the stars are gods. But the talkies are casting their shadow …",
+		"name": "The Silent Era",
 		"title": "1925",
 		"year": 1925
 	},
 	{
-		"desc": "Das Studiosystem auf dem Höhepunkt — doch das Fernsehen lauert, und eine neue Generation Method-Actors klopft an.",
-		"name": "Das Goldene Zeitalter",
+		"desc": "The studio system at its peak — but television lurks, and a new generation of method actors is knocking.",
+		"name": "The Golden Age",
 		"title": "1950",
 		"year": 1950
 	},
 	{
-		"desc": "Nach New Hollywood kommt das große Geld: Sommerkino, Sequels und Gagen, von denen man 1925 nicht mal träumte.",
-		"name": "Blockbuster-Hollywood",
+		"desc": "After New Hollywood comes the big money: summer movies, sequels and paychecks nobody dreamed of in 1925.",
+		"name": "Blockbuster Hollywood",
 		"title": "1980",
 		"year": 1980
 	},
 	{
-		"desc": "Superhelden dominieren, Streamer drängen auf den Markt, und Ruhm wird in Followern gemessen.",
+		"desc": "Superheroes dominate, streamers push into the market, and fame is measured in followers.",
 		"name": "Franchise & Streaming",
 		"title": "2010",
 		"year": 2010

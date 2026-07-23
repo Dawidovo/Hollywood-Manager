@@ -130,7 +130,7 @@ func _ready() -> void:
 
 	# 9. Gerüchte wandern; Wahrheit und Lüge wirken ab derselben Schwelle
 	var fame_before_rumor: float = confidante.fame
-	var false_rumor := Game.add_rumor(int(confidante.id), "Man behauptet, Monroe wolle die Agentur verlassen.", false, "wechsel", ["Journalisten"], 59.0, true)
+	var false_rumor := Game.add_rumor(int(confidante.id), "Man behauptet, Monroe wolle die Agentur verlassen.", false, "wechsel", ["Journalists"], 59.0, true)
 	var rumor_events: Array = []
 	Game.tick_rumors(rumor_events, true)
 	check(false_rumor.holders.size() > 1, "Gerücht wandert zu einem weiteren Trägertyp")
@@ -274,7 +274,7 @@ func _ready() -> void:
 	var blind_text := ""
 	for headline in issue.headlines:
 		categories[str(headline.cat)] = true
-		if str(headline.cat) == "Blind Item":
+		if str(headline.cat) == "Blind item":
 			blind_text = str(headline.text)
 	check(categories.size() >= 4, "Zeitung erzeugt mindestens 4 Kategorien aus Sim-Daten (%d)" % categories.size())
 	check(blind_text != "" and not blind_text.contains("Marilyn") and not blind_text.contains("Monroe"), "Blind Item bleibt ohne Klarnamen")
@@ -288,7 +288,7 @@ func _ready() -> void:
 	var narrative_client: Dictionary = Game.state.clients[0]
 	check(Game.narrative_candidate_types(narrative_client).has("action_prestige"), "Action→Prestige-Narrativ erkannt")
 	var narrative_result := Game.declare_narrative(int(narrative_client.id), "action_prestige")
-	check(str(narrative_client.narrative.status) == "aktiv" and narrative_result.contains("Pressemappe"), "Narrativ ausgerufen und PR-Budget gebucht")
+	check(str(narrative_client.narrative.status) == "aktiv" and narrative_result.contains("press kit"), "Narrativ ausgerufen und PR-Budget gebucht")
 	narrative_client.narrative.progress = 45.0
 	var prestige_prod := {"title":"Das zweite Gesicht", "genre":"drama", "prestige":3}
 	var prestige_role := {"type":"lead"}
@@ -317,7 +317,7 @@ func _ready() -> void:
 	Game.record_identity("kuenstlerisch", 12.0)
 	Game.record_identity("klientenorientiert", 8.0)
 	var score_artistic := Game.evaluate_offer(identity_offer)
-	check(float(Game.state.identity.kuenstlerisch) == 12.0 and Game.identity_top_labels().has("künstlerisch"), "Identität zählt konkrete Verhaltensmuster")
+	check(float(Game.state.identity.kuenstlerisch) == 12.0 and Game.identity_top_labels().has("artistic"), "Identität zählt konkrete Verhaltensmuster")
 	check(score_artistic > score_neutral + 3.0, "Künstlerische Identität verbessert Angebot für Ausnahmetalent")
 	Game.nego = null
 
@@ -407,7 +407,7 @@ func _ready() -> void:
 	var ledger_before: int = Game.state.ledger.size()
 	Game.release_film(ps_prod)
 	Game.state.productions.clear()
-	var ps_entries: Array = Game.state.ledger.filter(func(e): return str(e.text).contains("Gewinnbeteiligung"))
+	var ps_entries: Array = Game.state.ledger.filter(func(e): return str(e.text).contains("Profit share"))
 	check(Game.state.ledger.size() > ledger_before, "Release schreibt ins Ledger")
 	check(ps_entries.size() == 1 and float(ps_entries[0].amount) > 0.0, "Gewinnbeteiligung gebucht: %s" % (ps_entries[0].text if ps_entries.size() else "—"))
 
@@ -504,9 +504,9 @@ func _ready() -> void:
 	var pred_n0: int = Game.state.predictions.size()
 	var mark_msg := Game.coverage_mark(0, "schwach")
 	check(Game.state.predictions.size() == pred_n0 + 1 and str(Game.state.predictions[-1].type) == "coverage", "Marker legt Coverage-Prognose an")
-	check(mark_msg.contains("Marker gesetzt"), "Marker-Setzen bestätigt")
+	check(mark_msg.contains("Marker set"), "Marker-Setzen bestätigt")
 	Game.coverage_mark(1, "sicher")
-	check(Game.coverage_mark(2, "prestige").contains("Keine Marker"), "Marker-Kontingent begrenzt (%d)" % int(sheet.markersMax))
+	check(Game.coverage_mark(2, "prestige").contains("No markers left"), "Marker-Kontingent begrenzt (%d)" % int(sheet.markersMax))
 	# Auflösung beim Release: richtig +3, falsch fällt nie unter 5
 	var cov_fake := {"id": 4242, "title": "Testfilm", "genre": "drama", "prestige": 1, "budget": 1000.0,
 		"qualityMod": 0.0, "signals": [], "studioId": str(Game.active_studios()[0].id),
@@ -574,7 +574,7 @@ func _ready() -> void:
 	check(board_client.careerBoard.slots.is_empty() and int(board_client.careerBoard.completed) == 1, "Komplettes Brett wird abgeräumt und gewürdigt")
 	check(float(board_client.fame) >= fame0b + 4.0, "Abschluss: Ruhm +4 (+%0.1f)" % (float(board_client.fame) - fame0b))
 	check(float(board_client.dna.unikat) >= unikat0 + 6.0, "Transformations-Bonus: Einzigartig +6")
-	check(Game.state.pressFeed.any(func(p): return str(p.text).contains("Neuerfindung")), "Titelstory „Die Neuerfindung des …“ im Pressespiegel")
+	check(Game.state.pressFeed.any(func(p): return str(p.text).contains("reinvention")), "Titelstory „Die Neuerfindung des …“ im Pressespiegel")
 	# Typecasting-Sog: dreimal dasselbe Profil
 	Game.board_slot_add(int(board_client.id), "action", "lead", 1)
 	Game.board_slot_add(int(board_client.id), "action", "lead", 1)
@@ -709,11 +709,11 @@ func _ready() -> void:
 	var best_key := str(chem_ranked[0].key)
 	var best_result := Game.resolve_chem_read(best_key)
 	check(str(best_result.outcome) == "best" and chem_casting.roles[0].filled != null and chem_casting.roles[1].filled != null, "Beste Paarung gewinnt bei festem deterministischem Seed")
-	check(chem_casting.get("signals", []).any(func(s): return str(s.t) == "Die Chemie stimmt"), "Beste Paarung merkt das Set-Signal „Die Chemie stimmt“ vor")
+	check(chem_casting.get("signals", []).any(func(s): return str(s.t) == "The chemistry is right"), "Beste Paarung merkt das Set-Signal „Die Chemie stimmt“ vor")
 	var pos_signal := Game.chemistry_signal(7, false, "test_pos")
 	var neg_signal := Game.chemistry_signal(-7, false, "test_neg")
-	check(int(pos_signal.sign) > 0 and (str(pos_signal.text).contains("vervollständigen") or str(pos_signal.text).contains("Takt")), "Positive Signal-Prosa passt zum Vorzeichen des screen-Werts")
-	check(int(neg_signal.sign) < 0 and (str(neg_signal.text).contains("weicht") or str(neg_signal.text).contains("Abstand")), "Negative Signal-Prosa passt zum Vorzeichen des screen-Werts")
+	check(int(pos_signal.sign) > 0 and (str(pos_signal.text).contains("finish each other") or str(pos_signal.text).contains("beat")), "Positive Signal-Prosa passt zum Vorzeichen des screen-Werts")
+	check(int(neg_signal.sign) < 0 and (str(neg_signal.text).contains("avoids") or str(neg_signal.text).contains("distance")), "Negative Signal-Prosa passt zum Vorzeichen des screen-Werts")
 
 	# Schlechteste Wahl: neuer Castinglauf, mindestens ein eigener Name bleibt sicher drin.
 	Game.new_game("Chemie-Rückweg", 1950)
@@ -894,7 +894,7 @@ func _ready() -> void:
 	var ee_fu: Dictionary = Game.state.followups[-1]
 	check(str(ee_fu.type) == "json" and int(ee_fu.due) == Game.mi() + 1, "EvEngine: Kette terminiert (4 Wochen ⇒ +1 Monat)")
 	var ee_chain = EvEngine.build_by_id(str(ee_fu.event), ee_fu.ctx)
-	check(ee_chain != null and str(ee_chain.title) == "Die Prüfung zieht Kreise", "EvEngine: Kettenglied per id+ctx gebaut")
+	check(ee_chain != null and str(ee_chain.title) == "The audit spreads", "EvEngine: Kettenglied per id+ctx gebaut")
 	var ee_fail := {"success_chance": 0.0, "effects": [{"op": "rep", "amount": 5}],
 		"effects_fail": [{"op": "rep", "amount": -1}], "outcome": "gut", "outcome_fail": "schlecht"}
 	var ee_out: String = EvEngine._choice_fn(ee_fail, {}).call()
@@ -935,121 +935,144 @@ func _ready() -> void:
 	Game.new_game("Managertest", 1950)
 	var pl: Dictionary = Game.state.player
 	check(float(pl.cash) > 0.0, "Spielfigur startet mit privatem Erspartem (%s)" % Game.fmt_money(pl.cash))
-	check(int(pl.career) == 0 and str(Game.career_def().name) == "Junior-Agent", "Karriere beginnt als Junior-Agent")
-	check(Game.player_title() == "Noch ohne Profil", "Ruf-Titel ist anfangs unerspielt")
+	check(int(pl.career) == 0 and str(Persona.career_def().name) == "Junior Agent", "Karriere beginnt als Junior-Agent")
+	check(Persona.title() == "No reputation yet", "Ruf-Titel ist anfangs unerspielt")
 	var pl_cash0 := float(pl.cash)
 	var ag_cash0 := float(Game.state.agency.cash)
 	var pl_events: Array = []
 	Game.state.week = 4
 	Game._month_close(pl_events)
 	check(float(pl.cash) != pl_cash0, "Monatsabschluss bucht Gehalt & Lebenshaltung privat")
-	var pl_gehalt := float(Game.player_salary())
-	var pl_leben := float(Game.player_living_cost())
+	var pl_gehalt := float(Persona.salary())
+	var pl_leben := float(Persona.living_cost())
 	check(pl_gehalt > pl_leben, "Junior-Gehalt liegt über der Lebenshaltung")
 	check(float(Game.state.agency.cash) < ag_cash0, "Agentur zahlt das Gehalt (getrennte Kassen)")
 	check(pl.ledger.size() >= 3, "Privat-Ledger führt Einzelbuchungen")
 	# Aktionen mit Monats-Cooldown
 	var pl_energy0 := float(pl.energy)
-	Game.player_vacation()
+	Persona.vacation()
 	check(float(pl.energy) > pl_energy0, "Auszeit erhöht Energie")
-	check(not Game.player_can_act("vacation"), "Auszeit nur 1× pro Monat")
+	check(not Persona.can_act("vacation"), "Auszeit nur 1× pro Monat")
 	var pl_agency1 := float(Game.state.agency.cash)
-	Game.player_draw()
+	Persona.draw()
 	check(absf(float(Game.state.agency.cash) - (pl_agency1 - pl_gehalt)) < 0.01, "Privatentnahme belastet die Agenturkasse")
 	var pl_priv1 := float(pl.cash)
-	Game.player_inject(1000.0)
+	Persona.inject(1000.0)
 	check(absf(float(pl.cash) - (pl_priv1 - 1000.0)) < 0.01, "Privateinlage verlässt das Privatkonto")
 	# Beförderung, sobald die Bedingungen erfüllt sind
 	Game.state.agency.rep = 30
 	for i in 3:
 		Game.state.released.append({"title": "Testfilm %d" % i})
 	var promo_events: Array = []
-	Game._check_promotion(promo_events)
+	Persona._check_promotion(promo_events)
 	check(int(pl.career) == 1 and promo_events.size() == 1, "Beförderung zum Etablierten Agenten gefeuert")
-	check(Game.promotion_requirements().any(func(r): return not r.met), "Nächste Stufe (Senior) noch gesperrt")
+	check(Persona.promotion_requirements().any(func(r): return not r.met), "Nächste Stufe (Senior) noch gesperrt")
 	# Save-Migration: alte Stände ohne player-Feld bekommen die Spielfigur nachgerüstet
 	Game.state.erase("player")
-	Game.ensure_player()
+	Persona.ensure_player()
 	check(Game.state.has("player") and int(Game.state.player.career) == 1, "ensure_player rüstet nach und leitet Karrierestufe her")
 
 	# 23. Kontakte & Versprechen: Kanäle, Gedächtnis, Kontaktzeit
 	Game.new_game("Kontakttest", 1950)
 	check(Game.state.contacts.size() >= 5, "Kontaktbuch initialisiert (%d Personen)" % Game.state.contacts.size())
-	check(int(Game.state.contactAP) == Game.CONTACT_AP_PER_WEEK, "Kontaktzeit startet mit %d Punkten" % Game.CONTACT_AP_PER_WEEK)
+	check(int(Game.state.contactAP) == Persona.AP_PER_WEEK, "Kontaktzeit startet mit %d Punkten" % Persona.AP_PER_WEEK)
 	var kt: Dictionary = Game.state.contacts[0]
 	var kt_rel0 := float(kt.rel)
 	var kt_cash0 := float(Game.state.player.cash)
-	var kt_res: Dictionary = Game.contact_interact(int(kt.id), "meet")
+	var kt_res: Dictionary = Persona.contact_interact(int(kt.id), "meet")
 	check(bool(kt_res.ok), "Persönliches Treffen durchgeführt")
-	check(int(Game.state.contactAP) == Game.CONTACT_AP_PER_WEEK - 2, "Treffen kostet 2 Kontaktzeit")
+	check(int(Game.state.contactAP) == Persona.AP_PER_WEEK - 2, "Treffen kostet 2 Kontaktzeit")
 	check(float(Game.state.player.cash) < kt_cash0, "Treffen geht vom Privatkonto ab")
 	check(float(kt.rel) > kt_rel0, "Beziehung steigt durch das Treffen")
 	check(kt.log.size() >= 1, "Kontakt erinnert sich an die Begegnung")
-	var kt_res2: Dictionary = Game.contact_interact(int(kt.id), "call")
+	var kt_res2: Dictionary = Persona.contact_interact(int(kt.id), "call")
 	check(not bool(kt_res2.ok), "Gleiche Woche, gleiche Person: gesperrt")
 	var kt2: Dictionary = Game.state.contacts[1]
-	Game.contact_interact(int(kt2.id), "aide")
-	check(kt2.log.any(func(entry): return str(entry.text).contains("Assistent")), "Assistenten-Besuch bleibt im Gedächtnis")
+	Persona.hire_assistant()
+	Persona.contact_interact(int(kt2.id), "aide")
+	check(kt2.log.any(func(entry): return str(entry.text).contains("assistant")), "Assistenten-Besuch bleibt im Gedächtnis")
 	# Versprechen brechen: Frist in die Vergangenheit legen
-	Game.state.promises.append({"id": 9999, "to": str(kt.name), "madeMi": Game.mi() - 5, "dueMi": Game.mi() - 1, "text": "Testzusage", "status": "offen"})
+	Game.state.promises.append({"id": 9999, "to": str(kt.name), "madeMi": Game.mi() - 5, "dueMi": Game.mi() - 1, "text": "Testzusage", "status": "open"})
 	var kt_events: Array = []
-	Game._tick_contacts_month(kt_events)
-	check(str(Game.state.promises.back().status) == "gebrochen", "Überfällige Zusage gilt als gebrochen")
+	Persona._tick_contacts_month(kt_events)
+	check(str(Game.state.promises.back().status) == "broken", "Überfällige Zusage gilt als gebrochen")
 	# Halten: neues Versprechen, dann Kontaktaufnahme in einer neuen Woche
-	Game.state.promises.append({"id": 10000, "to": str(kt2.name), "madeMi": Game.mi(), "dueMi": Game.mi() + 3, "text": "Testzusage 2", "status": "offen"})
+	Game.state.promises.append({"id": 10000, "to": str(kt2.name), "madeMi": Game.mi(), "dueMi": Game.mi() + 3, "text": "Testzusage 2", "status": "open"})
 	Game.state.week = 2
 	Game.state.contactAP = 3
-	Game.contact_interact(int(kt2.id), "call")
-	check(str(Game.state.promises.back().status) == "gehalten", "Kontaktaufnahme hält offene Zusage")
+	Persona.contact_interact(int(kt2.id), "call")
+	check(str(Game.state.promises.back().status) == "kept", "Kontaktaufnahme hält offene Zusage")
 	# Verfall bei Vernachlässigung
 	var kt3: Dictionary = Game.state.contacts[2]
 	var kt3_rel0 := float(kt3.rel)
 	kt3.lastMi = Game.mi() - 6
-	Game._tick_contacts_month(kt_events)
+	Persona._tick_contacts_month(kt_events)
 	check(float(kt3.rel) < kt3_rel0, "Vernachlässigte Kontakte kühlen ab")
-	check(kt3.log.any(func(entry): return str(entry.text).contains("Lebenszeichen")), "Warten wird im Gedächtnis vermerkt")
+	check(kt3.log.any(func(entry): return str(entry.text).contains("hear from you")), "Warten wird im Gedächtnis vermerkt")
 	# Migration alter Stände
 	Game.state.erase("contacts")
 	Game.state.erase("promises")
-	Game.ensure_contacts()
+	Persona.ensure_contacts()
 	check(Game.state.contacts.size() >= 5 and Game.state.promises.is_empty(), "ensure_contacts rüstet alte Stände nach")
 
 	# 24. Orte: Reisen, Anwesenheit, Saison, Ortsaktionen
 	Game.new_game("Reisetest", 1950)
-	check(Game.player_location() == "la" and not Game.is_away(), "Start in Los Angeles")
-	check(Game.travel_blocked_reason("cannes") != "", "Cannes im Januar gesperrt (Saison Mai)")
+	check(Persona.location_id() == "la" and not Persona.is_away(), "Start in Los Angeles")
+	check(Persona.travel_blocked_reason("cannes") != "", "Cannes im Januar gesperrt (Saison Mai)")
 	var tr_cash0 := float(Game.state.agency.cash)
-	check(Game.travel_to("ny"), "Reise nach New York")
-	check(Game.is_away() and int(Game.state.contactAP) == 0, "Anreise frisst die Kontaktzeit der Woche")
+	check(Persona.travel_to("ny"), "Reise nach New York")
+	check(Persona.is_away() and int(Game.state.contactAP) == 0, "Anreise frisst die Kontaktzeit der Woche")
 	check(float(Game.state.agency.cash) < tr_cash0, "Agentur zahlt die Reisespesen")
 	var tr_kt: Dictionary = Game.state.contacts[0]
-	check(not bool(Game.contact_interact(int(tr_kt.id), "meet").ok), "Treffen aus der Ferne unmöglich")
+	check(not bool(Persona.contact_interact(int(tr_kt.id), "meet").ok), "Treffen aus der Ferne unmöglich")
 	Game.state.contactAP = 3  # neue Woche simulieren: Anreise hatte die Kontaktzeit gefressen
-	check(Game.contact_blocked_reason(tr_kt, "call") == "", "Telefonat bleibt aus der Ferne möglich")
+	check(Persona.contact_blocked_reason(tr_kt, "call") == "", "Telefonat bleibt aus der Ferne möglich")
 	# Abwesenheits-Drift bei Klienten
 	Game.state.agency.rep = 100
 	Game.start_negotiation("monroe")
 	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
 	var tr_c: Dictionary = Game.state.clients[0]
 	var tr_trust0 := float(tr_c.trust)
-	Game._tick_player_week()
+	Persona.tick_week()
 	check(float(tr_c.trust) < tr_trust0, "Klienten-Vertrauen sinkt, solange du weg bist")
 	# Ortsaktion mit Wochen-Cooldown
 	var tr_pub0 := float(Game.state.player.pubRep)
-	check(Game.location_action_available(), "Ortsaktion in New York verfügbar")
-	check(Game.do_location_action() != "", "Pressetermine durchgeführt")
+	check(Persona.location_action_available(), "Ortsaktion in New York verfügbar")
+	check(Persona.do_location_action() != "", "Pressetermine durchgeführt")
 	check(float(Game.state.player.pubRep) > tr_pub0, "Öffentlicher Ruf steigt durch Pressetermine")
-	check(not Game.location_action_available(), "Ortsaktion nur 1× pro Woche")
+	check(not Persona.location_action_available(), "Ortsaktion nur 1× pro Woche")
 	# Saison-Auto-Rückreise: Cannes im Mai, Monatswechsel wirft zurück
 	Game.state.month = 5
-	check(Game.travel_to("cannes"), "Cannes zur Festivalsaison erreichbar")
+	check(Persona.travel_to("cannes"), "Cannes zur Festivalsaison erreichbar")
 	Game.state.month = 6
-	Game._tick_location_month()
-	check(Game.player_location() == "la", "Nach der Saison automatisch zurück in L.A.")
+	Persona._tick_location_month()
+	check(Persona.location_id() == "la", "Nach der Saison automatisch zurück in L.A.")
 	# Migration alter Stände
 	Game.state.player.erase("location")
-	Game.ensure_player()
-	check(Game.player_location() == "la", "ensure_player rüstet den Ort nach")
+	Persona.ensure_player()
+	check(Persona.location_id() == "la", "ensure_player rüstet den Ort nach")
+
+	# 25. Assistant & delegation (Feature 4)
+	Game.new_game("Assistant test", 1950)
+	check(not Persona.has_assistant(), "No assistant at the start")
+	check(Persona.contact_blocked_reason(Game.state.contacts[0], "aide") != "", "Send-assistant channel blocked without an assistant")
+	Persona.hire_assistant()
+	check(Persona.has_assistant() and Persona.assistant_wage() > 0.0, "Assistant hired with a wage")
+	check(Persona.rule("upkeep") and Persona.rule("briefing"), "Delegation rules on by default")
+	check(Persona.contact_blocked_reason(Game.state.contacts[0], "aide") == "", "Send-assistant channel available with an assistant")
+	# Upkeep keeps a neglected contact warm
+	var as_ct: Dictionary = Game.state.contacts[2]
+	as_ct.lastMi = Game.mi() - 3
+	var as_rel0 := float(as_ct.rel)
+	Game.state.contactAP = 3
+	Persona.tick_week()
+	check(Game.state.contacts.any(func(ct): return float(ct.rel) > as_rel0 and ct.log.any(func(e): return str(e.text).contains("checked in"))), "Upkeep rule keeps a neglected contact warm")
+	# Morning briefing surfaces a due promise
+	Game.state.promises.append({"id": 8888, "to": str(Game.state.contacts[0].name), "madeMi": Game.mi(), "dueMi": Game.mi(), "text": "x", "status": "open"})
+	var brief: Dictionary = Persona.assistant_briefing()
+	check(not brief.is_empty() and str(brief.title).contains("morning note"), "Assistant briefing surfaces open items")
+	Persona.fire_assistant()
+	check(not Persona.has_assistant(), "Assistant can be let go")
 
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.

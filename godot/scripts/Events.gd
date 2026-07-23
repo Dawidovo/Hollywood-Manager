@@ -75,32 +75,32 @@ func _b_call3am() -> Dictionary:
 	var c = Game.pick(_free_clients().filter(func(x): return x.fame >= 30))
 	var studio = Game.pick(Game.active_studios())
 	var fee = roundi(Game.ask_fee(c.fame, Game.state.year) * 1.1)
-	return {"title": "Der Anruf um drei Uhr morgens",
-		"text": "[i]„Unser Hauptdarsteller liegt im Krankenhaus. Drehbeginn ist übermorgen. Kann %s einspringen? Ja oder nein — jetzt.“[/i]\n\n%s bietet eine Hauptrolle. Gage: ca. %s. Aber: keine Vorbereitung, sofortiger Drehbeginn." % [_nm(c), studio.name, _fmt(fee)],
+	return {"title": "The three a.m. phone call",
+		"text": "[i]“Our lead is in the hospital. Shooting starts the day after tomorrow. Can %s step in? Yes or no — now.”[/i]\n\n%s offers a lead role. Fee: ca. %s. But: no preparation, shooting starts immediately." % [_nm(c), studio.name, _fmt(fee)],
 		"choices": [
-			{"label": "Sofort zusagen", "fn": func():
+			{"label": "Say yes immediately", "fn": func():
 				var r = Game.quick_production(c, {"studio": studio, "feeMult": 1.1})
 				c.exhaustion = clampf(c.exhaustion + 30.0, 0.0, 100.0)
 				c.heat = clampf(c.heat + 4.0, -10.0, 10.0)
 				_dna(c, "verlass", 6.0)
 				if Game.chance(0.7):
 					c.fame = clampf(c.fame + 3.0, 5.0, 100.0)
-					return "%s steht 36 Stunden später vor der Kamera. Die Branche redet über diesen Einsatz. (+%s Provision, Erschöpfung steigt stark)" % [_nm(c), _fmt(r.income)]
+					return "%s is in front of the camera 36 hours later. The industry talks about this save. (+%s commission, exhaustion rises sharply)" % [_nm(c), _fmt(r.income)]
 				c.mood = clampf(c.mood - 6.0, 0.0, 100.0)
-				return "%s springt ein, wirkt aber sichtlich unvorbereitet. Das Geld stimmt (%s Provision), der Glanz weniger." % [_nm(c), _fmt(r.income)]},
-			{"label": "Höhere Gage verlangen", "fn": func():
+				return "%s steps in but looks visibly unprepared. The money is right (%s commission), the shine less so." % [_nm(c), _fmt(r.income)]},
+			{"label": "Demand a higher fee", "fn": func():
 				if Game.chance(0.55):
 					var r = Game.quick_production(c, {"studio": studio, "feeMult": 1.6})
 					c.exhaustion = clampf(c.exhaustion + 30.0, 0.0, 100.0)
 					c.heat = clampf(c.heat + 5.0, -10.0, 10.0)
 					c.fame = clampf(c.fame + 3.0, 5.0, 100.0)
-					return "„In Ordnung, verdammt. Aber der Wagen steht in einer Stunde vor der Tür.“ — %s Gage, %s Provision. Ein Coup." % [_fmt(r.fee), _fmt(r.income)]
+					return "“Fine, damn it. But the car is at the door in one hour.” — %s fee, %s commission. A coup." % [_fmt(r.fee), _fmt(r.income)]
 				_rel(studio.id, -2)
-				return "Schweigen am anderen Ende. Dann: „Wir haben jemand anderen.“ Die Chance ist vertan."},
-			{"label": "Ablehnen", "fn": func():
+				return "Silence on the other end. Then: “We have somebody else.” The chance is gone."},
+			{"label": "Decline", "fn": func():
 				_rel(studio.id, -4)
 				c.mood = clampf(c.mood + 4.0, 0.0, 100.0)
-				return "%s schläft weiter. %s vergisst so etwas nicht — aber dein Klient weiß, dass du ihn nicht verheizt." % [_nm(c), studio.name]},
+				return "%s keeps sleeping. %s won't forget this — but your client knows you don't burn them out." % [_nm(c), studio.name]},
 		]}
 
 # ---------- 1. Das geleakte Vorsprechen ----------
@@ -112,31 +112,31 @@ func _b_leak() -> Dictionary:
 	var cost = roundi(12000.0 * Game.infl(Game.state.year))
 	var has_pr: bool = c.perks.has("pr")
 	var choices: Array = [
-		{"label": "Juristisch vorgehen (%s)" % _fmt(cost), "fn": func():
-			Game.book(-float(cost), "pr_recht", "Anwälte: Leak-Band einkassieren (%s)" % _nm(c))
+		{"label": "Go legal (%s)" % _fmt(cost), "fn": func():
+			Game.book(-float(cost), "pr_recht", "Lawyers: confiscate the leaked tape (%s)" % _nm(c))
 			c.mood = clampf(c.mood + 5.0, 0.0, 100.0)
-			return "Die Anwälte kassieren jede Kopie ein. Teuer, aber das Image ist geschützt."},
-		{"label": "Selbstironisch veröffentlichen", "fn": func():
+			return "The lawyers collect every copy. Expensive, but the image is protected."},
+		{"label": "Publish it with self-irony", "fn": func():
 			if Game.chance(0.75 if has_pr else 0.55):
 				c.heat = clampf(c.heat + 4.0, -10.0, 10.0)
 				c.fame = clampf(c.fame + 2.0, 5.0, 100.0)
 				_dna(c, "familie", 4.0)
-				return "Der Gag zündet: %s gilt plötzlich als nahbar und humorvoll. Die Stadt liebt es." % _nm(c)
+				return "The gag lands: %s is suddenly seen as approachable and funny. The town loves it." % _nm(c)
 			c.fame = clampf(c.fame - (1.0 if has_pr else 3.0), 5.0, 100.0)
-			return "Der Humor kommt nicht überall an. Ein paar Spötter bleiben — halb so wild, aber unschön."},
-		{"label": "Ignorieren", "fn": func():
+			return "The humor doesn't land everywhere. A few mockers remain — not a disaster, but not pretty."},
+		{"label": "Ignore it", "fn": func():
 			if Game.chance(0.85 if has_pr else 0.65):
-				return "Nach zwei Wochen redet niemand mehr darüber. Richtig gepokert."
+				return "Two weeks later nobody talks about it anymore. Well played."
 			c.heat = clampf(c.heat - 2.0, -10.0, 10.0)
-			return "Das Band hält sich hartnäckiger als gedacht. %s verliert etwas Momentum." % _nm(c)},
+			return "The tape sticks around longer than expected. %s loses some momentum." % _nm(c)},
 	]
 	if Game.has_favor("suppressStory"):
-		choices.insert(0, {"label": "Gefallen einlösen: Das Band verschwinden lassen", "fn": func():
+		choices.insert(0, {"label": "Call in a favor: make the tape disappear", "fn": func():
 			Game.consume_favor("suppressStory")
 			c.mood = clampf(c.mood + 4.0, 0.0, 100.0)
-			return "Ein Anruf bei einem alten Freund aus der Klatschspalte — und alle Kopien des Bands verschwinden. Die Stadt lacht schon über etwas anderes."})
-	return {"title": "Das geleakte Vorsprechen",
-		"text": "[i]„Haben Sie das Band gesehen? Ganz Hollywood lacht.“[/i]\n\nEine peinliche Aufnahme vom Vorsprechen von %s kursiert in der Branche.%s" % [_nm(c), " Deine PR-Betreuung dämpft den Schaden bereits." if has_pr else ""],
+			return "One call to an old friend from the gossip column — and every copy of the tape vanishes. The town is already laughing about something else."})
+	return {"title": "The leaked audition",
+		"text": "[i]“Have you seen the tape? All of Hollywood is laughing.”[/i]\n\nAn embarrassing recording of %s's audition is circulating in the industry.%s" % [_nm(c), " Your PR handling is already softening the damage." if has_pr else ""],
 		"choices": choices}
 
 # ---------- 2. Ein neuer Name für einen neuen Star ----------
@@ -147,25 +147,25 @@ func _w_rename() -> float:
 func _b_rename() -> Dictionary:
 	var c = Game.random_client(func(x): return x.fame < 50)
 	var cost = roundi(8000.0 * Game.infl(Game.state.year))
-	return {"title": "Ein neuer Name für einen neuen Star",
-		"text": "[i]„%s? Das kann doch kein Mensch aussprechen. Wir dachten an etwas … Verkäuflicheres.“[/i]\n\nDas Studio hält den Namen deines Klienten für schwer vermarktbar." % _nm(c),
+	return {"title": "A new name for a new star",
+		"text": "[i]“%s? No human being can pronounce that. We were thinking of something … more sellable.”[/i]\n\nThe studio considers your client's name hard to market." % _nm(c),
 		"choices": [
-			{"label": "Umbenennung akzeptieren", "fn": func():
+			{"label": "Accept the renaming", "fn": func():
 				c.fame = clampf(c.fame + 4.0, 5.0, 100.0)
 				c.mood = clampf(c.mood - 10.0, 0.0, 100.0)
 				_dna(c, "unikat", -6.0)
-				return "Der neue Name prangt bald auf Plakaten. Die Vermarktung greift — aber %s fühlt sich wie eine Ware." % _nm(c)},
-			{"label": "Den Namen verteidigen", "fn": func():
+				return "The new name soon shines on posters. The marketing works — but %s feels like merchandise." % _nm(c)},
+			{"label": "Defend the name", "fn": func():
 				c.loyalty = clampf(c.loyalty + 10.0, 0.0, 100.0)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 2, 0, 100)
 				_dna(c, "unikat", 5.0)
 				_rel(Game.pick(Game.active_studios()).id, -4)
-				return "„Der Name bleibt.“ %s wird dir das nie vergessen — das Studio schon eher." % _nm(c)},
-			{"label": "Kompromiss: Künstlername (%s PR)" % _fmt(cost), "fn": func():
-				Game.book(-float(cost), "pr_recht", "PR-Kampagne: Künstlername für %s" % _nm(c))
+				return "“The name stays.” %s will never forget this — the studio will, sooner." % _nm(c)},
+			{"label": "Compromise: a stage name (%s PR)" % _fmt(cost), "fn": func():
+				Game.book(-float(cost), "pr_recht", "PR campaign: stage name for %s" % _nm(c))
 				c.fame = clampf(c.fame + 2.0, 5.0, 100.0)
 				c.mood = clampf(c.mood - 3.0, 0.0, 100.0)
-				return "Ein Künstlername für die Plakate, der echte Name für die Freunde. Alle können damit leben."},
+				return "A stage name for the posters, the real name for friends. Everyone can live with it."},
 		]}
 
 # ---------- 3. Der Regisseur will deinen Klienten loswerden ----------
@@ -178,42 +178,42 @@ func _b_director() -> Dictionary:
 	var prod = hit.prod
 	var fee = hit.role.filled.get("fee", 100000)
 	var choices: Array = [
-		{"label": "Klienten öffentlich verteidigen", "fn": func():
+		{"label": "Defend the client publicly", "fn": func():
 			c.loyalty = clampf(c.loyalty + 12.0, 0.0, 100.0)
 			_rel(prod.studioId, -6)
 			prod.qualityMod = prod.get("qualityMod", 0.0) - 3.0
 			_dna(c, "verlass", -4.0)
-			return "Du stellst dich vor die Presse und hinter deinen Klienten. %s bleibt — die Stimmung am Set bleibt frostig." % _nm(c)},
-		{"label": "Hinter verschlossenen Türen vermitteln", "fn": func():
+			return "You face the press and stand behind your client. %s stays — the mood on set stays frosty." % _nm(c)},
+		{"label": "Mediate behind closed doors", "fn": func():
 			var p = clampf(0.35 + Game.state.agency.rep / 200.0 + minf(0.15, Game.state.favors.size() * 0.03), 0.2, 0.9)
 			if Game.chance(p):
 				c.loyalty = clampf(c.loyalty + 5.0, 0.0, 100.0)
 				prod.qualityMod = prod.get("qualityMod", 0.0) + 3.0
-				Game.grant_favor("scriptAccess", {"type": "regisseur", "name": str(Game.pick(Game.FAVOR_CONTACTS.regisseur))})
-				return "Zwei Stunden, eine Flasche Whiskey, ein Handschlag. Der Dreh geht weiter — besser als zuvor. Und der Regisseur schuldet dir jetzt etwas."
+				Game.grant_favor("scriptAccess", {"type": "regisseur", "name": str(Game.pick(Data.CONTACT_PERSONS.regisseur))})
+				return "Two hours, a bottle of whiskey, a handshake. The shoot continues — better than before. And the director owes you now."
 			c.mood = clampf(c.mood - 5.0, 0.0, 100.0)
-			return "Der Waffenstillstand hält, aber die Atmosphäre bleibt vergiftet. Immerhin: Der Film wird fertig."},
-		{"label": "Vertragsauflösung zustimmen", "fn": func():
+			return "The ceasefire holds, but the atmosphere stays poisoned. At least the film gets finished."},
+		{"label": "Agree to dissolve the contract", "fn": func():
 			var sev = roundi(fee * 0.5)
-			Game.book(float(roundi(sev * c.commission / 100.0)), "abfindung", "Abfindung Vertragsauflösung: %s („%s“)" % [_nm(c), prod.title])
+			Game.book(float(roundi(sev * c.commission / 100.0)), "abfindung", "Severance, contract dissolved: %s (“%s”)" % [_nm(c), prod.title])
 			c.fame = clampf(c.fame - 4.0, 5.0, 100.0)
 			c.busyUntil = Game.mi()
 			c.mood = clampf(c.mood - 8.0, 0.0, 100.0)
 			_dna(c, "verlass", -8.0)
 			for r in prod.roles:
 				if r.filled != null and r.filled.get("clientId") != null and int(r.filled.clientId) == int(c.id):
-					r.filled = {"npc": true, "name": "Ersatzbesetzung", "talent": 55, "fame": 30}
-			return "Abfindung: %s (deine Provision: %s). %s ist wieder frei — aber die Branche registriert den Rauswurf." % [_fmt(sev), _fmt(sev * c.commission / 100.0), _nm(c)]},
+					r.filled = {"npc": true, "name": "Replacement cast", "talent": 55, "fame": 30}
+			return "Severance: %s (your commission: %s). %s is free again — but the industry registers the ouster." % [_fmt(sev), _fmt(sev * c.commission / 100.0), _nm(c)]},
 	]
 	if Game.has_favor("extraAudition") or Game.has_favor("scriptAccess"):
-		choices.insert(1, {"label": "Gefallen einfordern: Der Regisseur lenkt ein", "fn": func():
+		choices.insert(1, {"label": "Call in a favor: the director relents", "fn": func():
 			if Game.consume_favor("scriptAccess") or Game.consume_favor("extraAudition"):
 				c.loyalty = clampf(c.loyalty + 6.0, 0.0, 100.0)
 				prod.qualityMod = prod.get("qualityMod", 0.0) + 3.0
-				return "Eine gemeinsame Vergangenheit ist in dieser Stadt eine stolze Währung. Der Regisseur lächelt, entschuldigt sich bei %s — der Dreh läuft weiter." % _nm(c)
-			return "Der passende Gefallen war bereits verbraucht."})
-	return {"title": "Der Regisseur will deinen Klienten loswerden",
-		"text": "[i]„Entweder %s verlässt mein Set, oder ich.“[/i]\n\nNach einem heftigen Streit bei „%s“ fordert der Regisseur eine Neubesetzung." % [_nm(c), prod.title],
+				return "A shared past is a proud currency in this town. The director smiles, apologizes to %s — the shoot goes on." % _nm(c)
+			return "The matching favor was already spent."})
+	return {"title": "The director wants your client gone",
+		"text": "[i]“Either %s leaves my set, or I do.”[/i]\n\nAfter a fierce argument on “%s”, the director demands a recasting." % [_nm(c), prod.title],
 		"choices": choices}
 
 # ---------- 4. Die Abwerbung ----------
@@ -232,22 +232,22 @@ func _b_poach() -> Dictionary:
 	var c = sorted[0]
 	var rival = Game.pick_poach_rival()
 	var rival_id := str(rival.id) if rival != null else ""
-	var rival_name := str(rival.name) if rival != null else "eine große Konkurrenz-Agentur"
+	var rival_name := str(rival.name) if rival != null else "a big rival agency"
 	var prepared := Game.has_mitigated_secret(c, "wechselabsicht")
 	var cost = roundi(c.fame * (540.0 if prepared else 900.0) * Game.infl(Game.state.year))
-	return {"title": "Die Abwerbung",
-		"text": "[i]„Bei uns wären Sie kein Klient. Sie wären DER Klient.“[/i]\n\n%s umgarnt deinen wertvollsten Namen: %s (Loyalität %d/100).%s" % [rival_name, _nm(c), roundi(c.loyalty), "\n\n[color=#7da05c]Du wusstest von den Wechselgedanken. Vertrag, Argumente und Budget liegen bereits bereit.[/color]" if prepared else ""],
+	return {"title": "The poaching attempt",
+		"text": "[i]“With us you wouldn't be a client. You would be THE client.”[/i]\n\n%s is courting your most valuable name: %s (loyalty %d/100).%s" % [rival_name, _nm(c), roundi(c.loyalty), "\n\n[color=#7da05c]You knew about the thoughts of leaving. Contract, arguments and budget are already prepared.[/color]" if prepared else ""],
 		"choices": [
-			{"label": "Finanziell übertreffen (%s)" % _fmt(cost), "fn": func():
-				Game.book(-float(cost), "bonus", "Loyalitäts-Prämie: %s" % _nm(c))
+			{"label": "Outbid them financially (%s)" % _fmt(cost), "fn": func():
+				Game.book(-float(cost), "bonus", "Loyalty bonus: %s" % _nm(c))
 				c.loyalty = clampf(c.loyalty + 15.0, 0.0, 100.0)
 				c.mood = clampf(c.mood + 5.0, 0.0, 100.0)
 				Game.change_trust(c, 6.0 if prepared else 3.0)
 				if rival != null:
 					rival.grudge = clampf(float(rival.grudge) + 14.0, 0.0, 100.0)
 					rival.rel = clampf(float(rival.rel) - 8.0, -100.0, 100.0)
-				return "Ein besseres Auto, eine bessere Suite, ein besserer Vertrag. %s bleibt – Loyalität kann man mieten." % _nm(c)},
-			{"label": "Mit Erfolgen und Loyalität argumentieren", "fn": func():
+				return "A better car, a better suite, a better contract. %s stays — loyalty can be rented." % _nm(c)},
+			{"label": "Argue with successes and loyalty", "fn": func():
 				var wins = c.films.filter(func(f): return f.verdict == "Hit" or f.verdict == "Blockbuster").size()
 				var p = clampf(c.loyalty / 100.0 + wins * 0.08 + Game.state.agency.rep / 300.0 + (0.28 if prepared else 0.0), 0.2, 0.98)
 				if Game.chance(p):
@@ -256,22 +256,22 @@ func _b_poach() -> Dictionary:
 					if rival != null:
 						rival.grudge = clampf(float(rival.grudge) + 18.0, 0.0, 100.0)
 						rival.rel = clampf(float(rival.rel) - 10.0, -100.0, 100.0)
-					return "„Ich weiß, wem ich meine Karriere verdanke.“ %s sagt ab — aus Überzeugung." % _nm(c)
+					return "“I know who I owe my career to.” %s declines — out of conviction." % _nm(c)
 				if rival_id != "":
 					Game.rival_poach_client(rival_id, c)
 				else:
 					Game.state.clients.erase(c)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 4, 0, 100)
-				Game.log_msg("%s wechselt zu %s." % [_nm(c), rival_name], "bad")
-				return "Die Argumente reichen nicht. %s unterschreibt woanders — ein schwerer Schlag." % _nm(c)},
-			{"label": "Ziehen lassen", "fn": func():
+				Game.log_msg("%s moves to %s." % [_nm(c), rival_name], "bad")
+				return "The arguments are not enough. %s signs elsewhere — a heavy blow." % _nm(c)},
+			{"label": "Let them go", "fn": func():
 				if rival_id != "":
 					Game.rival_poach_client(rival_id, c)
 				else:
 					Game.state.clients.erase(c)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 3, 0, 100)
-				Game.log_msg("%s verlässt die Agentur Richtung %s." % [_nm(c), rival_name], "info")
-				return "Kein Bieterkrieg. Man trennt sich höflich — der Ruf leidet ein wenig, die Kasse nicht."},
+				Game.log_msg("%s leaves the agency for %s." % [_nm(c), rival_name], "info")
+				return "No bidding war. You part politely — the reputation suffers a little, the till does not."},
 		]}
 
 # ---------- 5. Zwei Klienten, eine Rolle ----------
@@ -289,27 +289,27 @@ func _b_tworoles() -> Dictionary:
 	duo.sort_custom(func(a, b): return a.fame > b.fame)
 	var star = duo[0]
 	var up = duo[duo.size() - 1]
-	return {"title": "Zwei Klienten, eine Rolle",
-		"text": "Ein Studio sucht die Hauptrolle für einen großen Film — und sowohl %s (Ruhm %d) als auch %s (Ruhm %d) sind im Gespräch. Beide erwarten deine volle Unterstützung." % [_nm(star), roundi(star.fame), _nm(up), roundi(up.fame)],
+	return {"title": "Two clients, one role",
+		"text": "A studio is casting the lead for a big picture — and both %s (fame %d) and %s (fame %d) are in the running. Both expect your full support." % [_nm(star), roundi(star.fame), _nm(up), roundi(up.fame)],
 		"choices": [
-			{"label": "%s unterstützen (sicher)" % _nm(star), "fn": func():
+			{"label": "Back %s (safe)" % _nm(star), "fn": func():
 				var r = Game.quick_production(star, {})
 				up.loyalty = clampf(up.loyalty - 8.0, 0.0, 100.0)
 				up.mood = clampf(up.mood - 8.0, 0.0, 100.0)
-				return "%s bekommt die Rolle (%s Provision). %s lächelt beim nächsten Treffen etwas dünner." % [_nm(star), _fmt(r.income), _nm(up)]},
-			{"label": "%s fördern (riskant)" % _nm(up), "fn": func():
+				return "%s gets the role (%s commission). %s smiles a little thinner at the next meeting." % [_nm(star), _fmt(r.income), _nm(up)]},
+			{"label": "Champion %s (risky)" % _nm(up), "fn": func():
 				star.mood = clampf(star.mood - 6.0, 0.0, 100.0)
 				if Game.chance(0.6):
 					var r = Game.quick_production(up, {})
 					up.fame = clampf(up.fame + 5.0, 5.0, 100.0)
 					up.loyalty = clampf(up.loyalty + 14.0, 0.0, 100.0)
-					return "Du kämpfst für den Nachwuchs — und gewinnst. %s bekommt die Rolle (%s Provision) und wird dir das nie vergessen." % [_nm(up), _fmt(r.income)]
+					return "You fight for the newcomer — and win. %s gets the role (%s commission) and will never forget it." % [_nm(up), _fmt(r.income)]
 				up.loyalty = clampf(up.loyalty + 6.0, 0.0, 100.0)
-				return "Das Studio besetzt am Ende extern. Kein Deal — aber %s hat gesehen, dass du an ihn glaubst." % _nm(up)},
-			{"label": "Neutral bleiben", "fn": func():
+				return "In the end the studio casts externally. No deal — but %s saw that you believe in them." % _nm(up)},
+			{"label": "Stay neutral", "fn": func():
 				star.mood = clampf(star.mood - 4.0, 0.0, 100.0)
 				up.mood = clampf(up.mood - 4.0, 0.0, 100.0)
-				return "Du hältst dich raus, das Studio entscheidet extern. Fair — aber beide hätten sich mehr Einsatz gewünscht."},
+				return "You stay out of it; the studio decides externally. Fair — but both would have wished for more effort."},
 		]}
 
 # ---------- 6. Die Rolle wurde herausgeschnitten ----------
@@ -321,27 +321,27 @@ func _b_cutrole() -> Dictionary:
 	var c = hit.c
 	var prod = hit.prod
 	var fee = hit.role.filled.get("fee", 100000)
-	return {"title": "Die Rolle wurde herausgeschnitten",
-		"text": "Nach einer desaströsen Testvorführung von „%s“ fällt fast die gesamte Rolle von %s der Schere zum Opfer." % [prod.title, _nm(c)],
+	return {"title": "The role got cut",
+		"text": "After a disastrous test screening of “%s”, almost the entire role of %s falls victim to the scissors." % [prod.title, _nm(c)],
 		"choices": [
-			{"label": "Nachdrehs verlangen", "fn": func():
+			{"label": "Demand reshoots", "fn": func():
 				var p = clampf(c.fame / 120.0 + int(c.get("awards", 0)) * 0.1 + Game.state.studioRel[prod.studioId] / 250.0, 0.15, 0.85)
 				if Game.chance(p):
 					prod.qualityMod = prod.get("qualityMod", 0.0) + 4.0
 					prod.weeksLeft = int(prod.weeksLeft) + 4
-					return "Das Studio knickt ein: Nachdrehs werden angesetzt. Die Rolle bleibt — der Film wird sogar besser."
+					return "The studio caves: reshoots are scheduled. The role stays — the film even gets better."
 				c.mood = clampf(c.mood - 5.0, 0.0, 100.0)
-				return "„Der Schnitt steht.“ Immerhin hast du es versucht — %s weiß das." % _nm(c)},
-			{"label": "Zusätzliche Vergütung aushandeln", "fn": func():
+				return "“The cut stands.” At least you tried — %s knows that." % _nm(c)},
+			{"label": "Negotiate extra compensation", "fn": func():
 				var extra = roundi(fee * 0.3)
-				Game.book(float(roundi(extra * c.commission / 100.0)), "provision", "Nachschlag Schnitt-Konflikt: %s („%s“)" % [_nm(c), prod.title])
+				Game.book(float(roundi(extra * c.commission / 100.0)), "provision", "Top-up after the cut conflict: %s (“%s”)" % [_nm(c), prod.title])
 				c.mood = clampf(c.mood - 3.0, 0.0, 100.0)
-				return "Geld statt Sichtbarkeit: %s Nachschlag (%s Provision). Kein Ruhm, aber Ruhe." % [_fmt(extra), _fmt(extra * c.commission / 100.0)]},
-			{"label": "Den Konflikt öffentlich machen", "fn": func():
+				return "Money instead of visibility: %s extra (%s commission). No fame, but peace." % [_fmt(extra), _fmt(extra * c.commission / 100.0)]},
+			{"label": "Take the conflict public", "fn": func():
 				c.heat = clampf(c.heat + 3.0, -10.0, 10.0)
 				_rel(prod.studioId, -8)
 				_dna(c, "familie", -4.0)
-				return "„Studio verstümmelt Film!“ — Die Presse liebt den Streit, %s ist Stadtgespräch. Das Studio tobt." % _nm(c)},
+				return "“Studio mutilates film!” — The press loves the fight, %s is the talk of the town. The studio rages." % _nm(c)},
 		]}
 
 # ---------- 7. Der gefährliche Stunt ----------
@@ -355,30 +355,30 @@ func _b_stunt() -> Dictionary:
 	var hit = _in_production()
 	var c = hit.c
 	var prod = hit.prod
-	return {"title": "Der gefährliche Stunt",
-		"text": "[i]„Das Publikum merkt den Unterschied. Wir wollen, dass %s selbst springt.“[/i]\n\nDie Produktion von „%s“ verlangt einen riskanten Stunt ohne Double." % [_nm(c), prod.title],
+	return {"title": "The dangerous stunt",
+		"text": "[i]“The audience notices the difference. We want %s to do the jump.”[/i]\n\nThe production of “%s” demands a risky stunt without a double." % [_nm(c), prod.title],
 		"choices": [
-			{"label": "Zustimmen", "fn": func():
+			{"label": "Agree", "fn": func():
 				if Game.chance(0.7):
 					c.heat = clampf(c.heat + 3.0, -10.0, 10.0)
 					c.fame = clampf(c.fame + 2.0, 5.0, 100.0)
 					prod.qualityMod = prod.get("qualityMod", 0.0) + 2.0
-					return "Der Stunt sitzt beim ersten Take. Die Set-Fotos gehen um die Welt."
+					return "The stunt lands on the first take. The set photos travel around the world."
 				c.exhaustion = clampf(c.exhaustion + 25.0, 0.0, 100.0)
 				prod.weeksLeft = int(prod.weeksLeft) + 4
-				return "Der Sprung geht schief — Prellungen, Drehpause, Schrecken. %s erholt sich, aber der Plan wackelt." % _nm(c)},
-			{"label": "Stuntdouble verlangen", "fn": func():
+				return "The jump goes wrong — bruises, a break in shooting, a scare. %s recovers, but the schedule wobbles." % _nm(c)},
+			{"label": "Demand a stunt double", "fn": func():
 				_rel(prod.studioId, -2)
 				Game.record_identity("klientenorientiert", 2.0)
-				return "Das Double übernimmt. Der Regisseur murrt, dein Klient bleibt heil. Genau dafür wirst du bezahlt."},
-			{"label": "Gefahrenzulage & Versicherung aushandeln", "fn": func():
+				return "The double takes over. The director grumbles, your client stays in one piece. That is exactly what you are paid for."},
+			{"label": "Negotiate hazard pay & insurance", "fn": func():
 				var extra = roundi(Game.ask_fee(c.fame, Game.state.year) * 0.2)
-				Game.book(float(roundi(extra * c.commission / 100.0)), "provision", "Gefahrenzulage: %s („%s“)" % [_nm(c), prod.title])
+				Game.book(float(roundi(extra * c.commission / 100.0)), "provision", "Hazard pay: %s (“%s”)" % [_nm(c), prod.title])
 				c.exhaustion = clampf(c.exhaustion + 10.0, 0.0, 100.0)
 				if Game.consume_favor("billing") or Game.consume_favor("extraAudition"):
-					return "%s springt — gegen %s Zulage. Ein eingelöster Gefallen beim Produktionsleiter glättet die Wogen." % [_nm(c), _fmt(extra)]
+					return "%s jumps — for %s hazard pay. A favor called in with the line producer smooths the waters." % [_nm(c), _fmt(extra)]
 				_rel(prod.studioId, -2)
-				return "%s springt — gegen %s Zulage. Das harte Feilschen hinterlässt beim Studio einen säuerlichen Nachgeschmack." % [_nm(c), _fmt(extra)]},
+				return "%s jumps — for %s hazard pay. The hard haggling leaves a sour aftertaste at the studio." % [_nm(c), _fmt(extra)]},
 		]}
 
 # ---------- 8. Die Franchise-Falle ----------
@@ -389,11 +389,11 @@ func _w_franchise() -> float:
 func _b_franchise() -> Dictionary:
 	var c = Game.pick(_free_clients().filter(func(x): return x.fame >= 55 and not x.flags.get("typecast", false)))
 	var fee = roundi(Game.ask_fee(c.fame, Game.state.year) * 2.0)
-	return {"title": "Die Franchise-Falle",
-		"text": "[i]„Fünf Filme. Eine Figur. Ihr Klient wird unsterblich — als genau diese eine Rolle.“[/i]\n\nEin Studio bietet %s einen Vertrag über fünf Fortsetzungen. Vorab-Garantie: %s." % [_nm(c), _fmt(fee)],
+	return {"title": "The franchise trap",
+		"text": "[i]“Five films. One character. Your client becomes immortal — as exactly this one role.”[/i]\n\nA studio offers %s a contract for five sequels. Advance guarantee: %s." % [_nm(c), _fmt(fee)],
 		"choices": [
-			{"label": "Sofort unterschreiben", "fn": func():
-				Game.book(float(roundi(fee * c.commission / 100.0)), "provision", "Franchise-Vorabgarantie: %s" % _nm(c))
+			{"label": "Sign immediately", "fn": func():
+				Game.book(float(roundi(fee * c.commission / 100.0)), "provision", "Franchise advance guarantee: %s" % _nm(c))
 				c.fame = clampf(c.fame + 6.0, 5.0, 100.0)
 				c.heat = clampf(c.heat + 4.0, -10.0, 10.0)
 				c.flags["typecast"] = true
@@ -401,22 +401,22 @@ func _b_franchise() -> Dictionary:
 				_dna(c, "unikat", -12.0)
 				_dna(c, "popular", 8.0)
 				Game.record_identity("kommerziell", 2.0)
-				return "Unterschrift, Scheck, Schlagzeile: %s Provision sofort. Aber von nun an sehen alle nur noch die eine Figur (Typecasting)." % _fmt(fee * c.commission / 100.0)},
-			{"label": "Weniger Filme, höhere Gage fordern", "fn": func():
+				return "Signature, check, headline: %s commission right away. But from now on everyone sees only the one character (typecasting)." % _fmt(fee * c.commission / 100.0)},
+			{"label": "Demand fewer films, higher fee", "fn": func():
 				if Game.chance(0.5):
 					var f2 = roundi(fee * 0.75)
-					Game.book(float(roundi(f2 * c.commission / 100.0)), "provision", "Franchise-Deal (3 Filme): %s" % _nm(c))
+					Game.book(float(roundi(f2 * c.commission / 100.0)), "provision", "Franchise deal (3 films): %s" % _nm(c))
 					c.fame = clampf(c.fame + 5.0, 5.0, 100.0)
 					c.heat = clampf(c.heat + 3.0, -10.0, 10.0)
 					c.busyUntil = Game.mi() + 4
 					_dna(c, "popular", 5.0)
-					return "Drei Filme statt fünf, dafür fürstlich bezahlt: %s (%s Provision) — ohne Typecasting-Klausel. Meisterhaft verhandelt." % [_fmt(f2), _fmt(f2 * c.commission / 100.0)]
-				return "Das Studio winkt ab: „Fünf oder keiner.“ Der Deal platzt — aber niemand verliert das Gesicht."},
-			{"label": "Ablehnen", "fn": func():
+					return "Three films instead of five, but royally paid: %s (%s commission) — without the typecasting clause. Masterfully negotiated." % [_fmt(f2), _fmt(f2 * c.commission / 100.0)]
+				return "The studio waves it off: “Five or none.” The deal collapses — but nobody loses face."},
+			{"label": "Decline", "fn": func():
 				c.loyalty = clampf(c.loyalty + 6.0, 0.0, 100.0)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 2, 0, 100)
 				_dna(c, "unikat", 4.0)
-				return "„Mein Klient ist Schauspieler, keine Actionfigur.“ Die Branche nickt anerkennend."},
+				return "“My client is an actor, not an action figure.” The industry nods with respect."},
 		]}
 
 # ---------- 9. Das Herzensprojekt ----------
@@ -426,29 +426,29 @@ func _w_passion() -> float:
 func _b_passion() -> Dictionary:
 	var c = Game.pick(_free_clients())
 	var invest = roundi(30000.0 * Game.infl(Game.state.year))
-	return {"title": "Das Herzensprojekt",
-		"text": "[i]„Es zahlt fast nichts, ich weiß. Aber dieses Drehbuch — so etwas kommt einmal im Leben.“[/i]\n\n%s will unbedingt in einem kleinen, künstlerischen Film mitspielen." % _nm(c),
+	return {"title": "The passion project",
+		"text": "[i]“It pays almost nothing, I know. But this script — something like this comes once in a lifetime.”[/i]\n\n%s desperately wants to be in a small, artistic film." % _nm(c),
 		"choices": [
-			{"label": "Unterstützen", "fn": func():
+			{"label": "Support it", "fn": func():
 				Game.quick_production(c, {"feeMult": 0.15, "prestige": 3, "genre": "drama"})
 				c.loyalty = clampf(c.loyalty + 12.0, 0.0, 100.0)
 				c.mood = clampf(c.mood + 10.0, 0.0, 100.0)
 				Game.record_identity("kuenstlerisch", 2.0)
 				Game.record_identity("klientenorientiert", 1.0)
-				return "Kaum Gage, viel Herz. %s strahlt — und Prestige-Filme haben schon manche Karriere neu erfunden." % _nm(c)},
-			{"label": "Davon abraten", "fn": func():
+				return "Barely a fee, plenty of heart. %s beams — and prestige films have reinvented more than one career." % _nm(c)},
+			{"label": "Advise against it", "fn": func():
 				c.mood = clampf(c.mood - 8.0, 0.0, 100.0)
-				return "„Kunst zahlt keine Provision.“ %s fügt sich — mit hörbarem Zähneknirschen." % _nm(c)},
-			{"label": "Als Agentur mitfinanzieren (%s)" % _fmt(invest), "fn": func():
-				Game.book(-float(invest), "investition", "Beteiligung Herzensprojekt: %s" % _nm(c))
+				return "“Art doesn't pay commission.” %s complies — with audible teeth-grinding." % _nm(c)},
+			{"label": "Co-finance it as the agency (%s)" % _fmt(invest), "fn": func():
+				Game.book(-float(invest), "investition", "Stake in the passion project: %s" % _nm(c))
 				Game.quick_production(c, {"feeMult": 0.15, "prestige": 3, "genre": "drama", "qualityMod": 5.0})
 				Game.record_identity("kuenstlerisch", 3.0)
 				c.loyalty = clampf(c.loyalty + 15.0, 0.0, 100.0)
 				if Game.chance(0.35):
-					Game.book(float(invest * 4), "investition", "Rückfluss Herzensprojekt: %s" % _nm(c))
+					Game.book(float(invest * 4), "investition", "Return from the passion project: %s" % _nm(c))
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 4, 0, 100)
-					return "Du steigst als Produzent ein — und der Film wird ein Phänomen: %s Rückfluss plus Prestige." % _fmt(invest * 4)
-				return "Du steigst als Produzent ein. Ob sich das rechnet, zeigt die Premiere — %s jedenfalls ist dir treu ergeben." % _nm(c)},
+					return "You step in as a producer — and the film becomes a phenomenon: %s in returns plus prestige." % _fmt(invest * 4)
+				return "You step in as a producer. Whether it pays off, the premiere will show — %s, at least, is devoted to you." % _nm(c)},
 		]}
 
 # ---------- 11. Der Paketdeal ----------
@@ -461,29 +461,29 @@ func _b_package() -> Dictionary:
 	var star = Game.pick(_free_clients().filter(func(c): return c.fame >= 60))
 	var up = Game.pick(_free_clients().filter(func(c): return c.fame < 40))
 	var studio = Game.pick(Game.active_studios())
-	return {"title": "Der Paketdeal",
-		"text": "%s will unbedingt %s für einen großen Film. Deine Chance, auch den unbekannten %s im Gepäck unterzubringen — oder mehr zu fordern." % [studio.name, _nm(star), _nm(up)],
+	return {"title": "The package deal",
+		"text": "%s desperately wants %s for a big picture. Your chance to place the unknown %s in the bargain — or to demand more." % [studio.name, _nm(star), _nm(up)],
 		"choices": [
-			{"label": "Beide als Paket anbieten", "fn": func():
+			{"label": "Offer both as a package", "fn": func():
 				_rel(studio.id, -3)
 				if Game.chance(0.7):
 					var r1 = Game.quick_production(star, {"studio": studio})
 					var r2 = Game.quick_production(up, {"studio": studio, "roleType": "support"})
 					up.fame = clampf(up.fame + 6.0, 5.0, 100.0)
-					return "Das Studio schluckt die Kröte: beide sind besetzt (%s Provision gesamt). %s bekommt die Bühne seines Lebens." % [_fmt(r1.income + r2.income), _nm(up)]
+					return "The studio swallows the toad: both are cast (%s commission in total). %s gets the stage of a lifetime." % [_fmt(r1.income + r2.income), _nm(up)]
 				var r1 = Game.quick_production(star, {"studio": studio})
-				return "„Den Star nehmen wir. Den Anhang nicht.“ Immerhin: %s ist besetzt (%s Provision)." % [_nm(star), _fmt(r1.income)]},
-			{"label": "Nur den Star vermitteln", "fn": func():
+				return "“We'll take the star. Not the entourage.” At least %s is cast (%s commission)." % [_nm(star), _fmt(r1.income)]},
+			{"label": "Place only the star", "fn": func():
 				var r = Game.quick_production(star, {"studio": studio})
-				return "Sauberer, sicherer Abschluss: %s Gage, %s Provision. Kein Risiko, kein Bonus." % [_fmt(r.fee), _fmt(r.income)]},
-			{"label": "Zusätzlich kreative Kontrolle fordern", "fn": func():
+				return "A clean, safe close: %s fee, %s commission. No risk, no bonus." % [_fmt(r.fee), _fmt(r.income)]},
+			{"label": "Also demand creative control", "fn": func():
 				if Game.chance(0.35):
 					var r = Game.quick_production(star, {"studio": studio, "feeMult": 1.7, "qualityMod": 5.0})
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 5, 0, 100)
 					Game.grant_favor("billing", {"type": "studio", "name": str(studio.name), "studioId": str(studio.id)})
-					return "Final Cut, Casting-Veto, %s Gage — ein Jahrhundert-Deal. Die Branche spricht mit neuem Respekt über deine Agentur, und %s schuldet dir etwas." % [_fmt(r.fee), studio.name]
+					return "Final cut, casting veto, %s fee — a deal of the century. The industry speaks of your agency with new respect, and %s owes you." % [_fmt(r.fee), studio.name]
 				_rel(studio.id, -3)
-				return "„Kreative Kontrolle? Für einen Agenten?“ Das Studio legt auf. Der Deal ist geplatzt."},
+				return "“Creative control? For an agent?” The studio hangs up. The deal is dead."},
 		]}
 
 # ---------- 12. Die vorgetäuschte Romanze ----------
@@ -492,24 +492,24 @@ func _w_romance() -> float:
 
 func _b_romance() -> Dictionary:
 	var c = Game.random_client()
-	return {"title": "Die vorgetäuschte Romanze",
-		"text": "[i]„Zwei Stars, ein Restaurant, ein zufällig anwesender Fotograf. Die Schlagzeilen schreiben sich von selbst.“[/i]\n\nEin PR-Berater schlägt eine inszenierte Beziehung zwischen %s und einem Co-Star vor." % _nm(c),
+	return {"title": "The staged romance",
+		"text": "[i]“Two stars, one restaurant, one photographer who happens to be present. The headlines write themselves.”[/i]\n\nA PR consultant proposes a staged relationship between %s and a co-star." % _nm(c),
 		"choices": [
-			{"label": "Kampagne akzeptieren", "fn": func():
+			{"label": "Accept the campaign", "fn": func():
 				c.heat = clampf(c.heat + 5.0, -10.0, 10.0)
 				c.fame = clampf(c.fame + 2.0, 5.0, 100.0)
 				_dna(c, "romantik", 5.0)
 				if Game.chance(0.25):
 					Game.state.followups.append({"type": "romanceLeak", "cid": int(c.id), "due": Game.mi() + Game.rndi(3, 7)})
-				return "Die „Beziehung“ dominiert die Klatschspalten. %s ist überall — solange niemand nachfragt, wie echt das alles ist." % _nm(c)},
-			{"label": "Ablehnen", "fn": func():
+				return "The “relationship” dominates the gossip columns. %s is everywhere — as long as nobody asks how real it all is." % _nm(c)},
+			{"label": "Decline", "fn": func():
 				c.loyalty = clampf(c.loyalty + 4.0, 0.0, 100.0)
-				return "Kein Theater. %s schätzt, dass du das Privatleben nicht verkaufst." % _nm(c)},
-			{"label": "Vorschlag an die Presse leaken", "fn": func():
+				return "No theater. %s appreciates that you don't sell their private life." % _nm(c)},
+			{"label": "Leak the proposal to the press", "fn": func():
 				c.heat = clampf(c.heat + 2.0, -10.0, 10.0)
 				for s in Game.active_studios().slice(0, 2):
 					_rel(s.id, -3)
-				return "„PR-Berater wollte Romanze faken!“ — Ein kurzer Lacher auf Kosten der Studios. Die merken sich das."},
+				return "“PR consultant tried to fake a romance!” — A short laugh at the studios' expense. They remember that."},
 		]}
 
 # ---------- 13. Fotos aus der Vergangenheit ----------
@@ -520,41 +520,41 @@ func _b_photos() -> Dictionary:
 	var c = Game.random_client(func(x): return x.fame >= 40)
 	var cost = roundi((20000.0 + c.fame * 400.0) * Game.infl(Game.state.year))
 	var choices: Array = [
-		{"label": "Exklusivrechte kaufen (%s)" % _fmt(cost), "fn": func():
-			Game.book(-float(cost), "pr_recht", "Exklusivrechte: alte Fotos von %s" % _nm(c))
+		{"label": "Buy the exclusive rights (%s)" % _fmt(cost), "fn": func():
+			Game.book(-float(cost), "pr_recht", "Exclusive rights: old photos of %s" % _nm(c))
 			c.flags["photosSecured"] = true
 			c.loyalty = clampf(c.loyalty + 8.0, 0.0, 100.0)
-			return "Die Negative wandern in deinen Safe. Teuer — aber Kontrolle ist unbezahlbar."},
-		{"label": "Mit ehrlichem Interview vorwegnehmen", "fn": func():
+			return "The negatives move into your safe. Expensive — but control is priceless."},
+		{"label": "Preempt it with an honest interview", "fn": func():
 			c.flags["photosSecured"] = true
 			if Game.chance(0.55):
 				c.heat = clampf(c.heat + 3.0, -10.0, 10.0)
 				c.fame = clampf(c.fame + 1.0, 5.0, 100.0)
 				_dna(c, "unikat", 3.0)
-				return "„Ja, das war ich. Und?“ — Die Offenheit entwaffnet alle. Die Fotos sind wertlos geworden."
+				return "“Yes, that was me. So?” — The candor disarms everyone. The photos have become worthless."
 			c.fame = clampf(c.fame - 3.0, 5.0, 100.0)
 			_dna(c, "familie", -4.0)
-			return "Das Interview gerät holprig, ein paar Schlagzeilen bleiben hässlich. Aber das Thema ist durch — endgültig."},
-		{"label": "Gerichtliche Verfügung beantragen", "fn": func():
+			return "The interview turns bumpy, a few headlines stay ugly. But the subject is done — for good."},
+		{"label": "Request a court injunction", "fn": func():
 			var p = clampf(0.3 + Game.state.agency.rep / 200.0 + minf(0.12, Game.state.favors.size() * 0.04), 0.2, 0.85)
 			if Game.chance(p):
 				c.flags["photosSecured"] = true
-				return "Der Richter untersagt die Veröffentlichung. Deine Anwälte sind die besten der Stadt."
+				return "The judge forbids publication. Your lawyers are the best in town."
 			Game.state.followups.append({"type": "photosReturn", "cid": int(c.id), "due": Game.mi() + Game.rndi(3, 8)})
-			return "Der Antrag wird abgewiesen. Die Zeitung wartet ab — die Fotos schweben weiter wie ein Damoklesschwert."},
-		{"label": "Aufschub erbitten (du schuldest danach einen Gefallen)", "fn": func():
+			return "The request is denied. The paper bides its time — the photos keep hovering like a sword of Damocles."},
+		{"label": "Ask for a delay (you will owe a favor)", "fn": func():
 			Game.owe_favor("suppressStory", Game.favor_contact_for("suppressStory"))
 			c.flags["photosSecured"] = true
-			return "Die Zeitung legt die Fotos auf Eis — als Investition in eure künftige Freundschaft. Irgendwann wird der Gefallen eingefordert."},
+			return "The paper puts the photos on ice — as an investment in your future friendship. One day the favor will be called in."},
 	]
 	if Game.has_favor("suppressStory"):
-		choices.insert(0, {"label": "Gefallen einlösen: Die Redaktion beerdigt die Story", "fn": func():
+		choices.insert(0, {"label": "Call in a favor: the newsroom buries the story", "fn": func():
 			Game.consume_favor("suppressStory")
 			c.flags["photosSecured"] = true
 			c.loyalty = clampf(c.loyalty + 6.0, 0.0, 100.0)
-			return "Ein Anruf bei einem alten Freund im Verlag. Die Negative bleiben in der Schublade — für immer."})
-	return {"title": "Fotos aus der Vergangenheit",
-		"text": "[i]„Diese Aufnahmen passen nicht zum sauberen Image Ihres Klienten. Wir dachten, Sie wollen sie zuerst sehen.“[/i]\n\nEine Zeitung besitzt kompromittierende alte Fotos von %s." % _nm(c),
+			return "One call to an old friend at the publisher. The negatives stay in the drawer — forever."})
+	return {"title": "Photos from the past",
+		"text": "[i]“These pictures don't fit your client's clean image. We thought you'd want to see them first.”[/i]\n\nA newspaper owns compromising old photos of %s." % _nm(c),
 		"choices": choices}
 
 # ---------- 14. Die Oscar-Kampagne (Nov–Jan) ----------
@@ -570,32 +570,32 @@ func _b_oscar() -> Dictionary:
 	var c = Game.random_client(_has_oscar_candidate)
 	var cost = roundi(50000.0 * Game.infl(Game.state.year))
 	var choices: Array = [
-		{"label": "Große Kampagne finanzieren (%s)" % _fmt(cost), "fn": func():
-			Game.book(-float(cost), "pr_recht", "Oscar-Kampagne: %s" % _nm(c))
+		{"label": "Fund a big campaign (%s)" % _fmt(cost), "fn": func():
+			Game.book(-float(cost), "pr_recht", "Oscar campaign: %s" % _nm(c))
 			c.campaign = 25.0
-			return "Anzeigen, Screenings, Galas: Ganz Hollywood weiß jetzt, wen es zu nominieren gilt."},
-		{"label": "Gefallen einfordern (Academy-Kontakte)", "fn": func():
+			return "Ads, screenings, galas: all of Hollywood now knows who is to be nominated."},
+		{"label": "Call in a favor (Academy contacts)", "fn": func():
 			if Game.consume_favor("galaInvite") or Game.consume_favor("billing"):
 				c.campaign = 18.0
-				return "Ein paar Anrufe bei alten Freunden in der Academy. Keine Rechnung — nur ein gelöschter Gefallen."
-			return "Niemand Passendes schuldet dir (mehr) etwas. Vielleicht reicht der Film ja für sich."},
-		{"label": "Auf Kredit kampagnen (du schuldest danach einen Gefallen)", "fn": func():
+				return "A few calls to old friends at the Academy. No invoice — just a favor crossed off."
+			return "Nobody suitable owes you (anymore). Maybe the film is enough on its own."},
+		{"label": "Campaign on credit (you will owe a favor)", "fn": func():
 			Game.owe_favor("galaInvite", Game.favor_contact_for("suppressStory"))
 			c.campaign = 12.0
-			return "Eine PR-Legende spannt ihre Kontakte an — auf Kredit. Irgendwann klingelt das Telefon, und jemand fordert eine Gegenleistung."},
-		{"label": "Auf den Film vertrauen", "fn": func():
+			return "A PR legend leans on her contacts — on credit. One day the phone rings, and somebody demands a return."},
+		{"label": "Trust the film", "fn": func():
 			c.campaign = 5.0
-			return "Qualität setzt sich durch — manchmal. Im Februar weißt du mehr."},
+			return "Quality prevails — sometimes. In February you will know more."},
 	]
 	if Game.state.favors.size() > 0:
 		var sid: String = str(Game.state.released[0].studioId) if Game.state.released.size() else str(Game.pick(Game.active_studios()).id)
-		choices.insert(2, {"label": "Gefallen dem Studio überlassen (Beziehung +)", "fn": func():
+		choices.insert(2, {"label": "Pass a favor to the studio (relations +)", "fn": func():
 			if Game.pass_any_favor_to_studio(sid):
 				c.campaign = 8.0
-				return "Du überlässt deine Kontakte dem Studio — ganz Hollywood sieht, wer hier wen kennt. Die Beziehung wächst spürbar."
-			return "Du hast keine offenen Gefallen, die du weitergeben könntest."})
-	return {"title": "Die Oscar-Kampagne",
-		"text": "%s hat mit der letzten Leistung echte Chancen auf eine Nominierung — aber ohne Kampagne sieht die Academy gern woanders hin." % _nm(c),
+				return "You hand your contacts to the studio — all of Hollywood sees who knows whom here. The relationship grows noticeably."
+			return "You have no open favors to pass along."})
+	return {"title": "The Oscar campaign",
+		"text": "%s has a real shot at a nomination with that last performance — but without a campaign, the Academy likes to look elsewhere." % _nm(c),
 		"choices": choices}
 
 # ---------- 15. Der Zusammenbruch ----------
@@ -620,31 +620,31 @@ func _b_breakdown() -> Dictionary:
 	var c = hit.c
 	var prod = hit.prod
 	var cost = roundi(15000.0 * Game.infl(Game.state.year))
-	return {"title": "Der Zusammenbruch",
-		"text": "[i]„%s ist heute nicht am Set erschienen. Das Hotel sagt, die Tür bleibt zu.“[/i]\n\nDein Klient ist am Ende der Kräfte (Erschöpfung %d/100). Die Produktion von „%s“ steht still." % [_nm(c), roundi(c.exhaustion), prod.title],
+	return {"title": "The breakdown",
+		"text": "[i]“%s did not show up on set today. The hotel says the door stays shut.”[/i]\n\nYour client is at the end of their strength (exhaustion %d/100). The production of “%s” has stopped." % [_nm(c), roundi(c.exhaustion), prod.title],
 		"choices": [
-			{"label": "Produktion unterbrechen lassen", "fn": func():
+			{"label": "Have the production paused", "fn": func():
 				prod.weeksLeft = int(prod.weeksLeft) + 4
 				_rel(prod.studioId, -4)
 				c.exhaustion = clampf(c.exhaustion - 35.0, 0.0, 100.0)
 				c.loyalty = clampf(c.loyalty + 10.0, 0.0, 100.0)
 				Game.change_trust(c, 6.0)
 				Game.record_identity("klientenorientiert", 2.0)
-				return "Du stellst dich vor deinen Klienten: zwei Wochen Pause, keine Diskussion. Das Studio zürnt, %s atmet auf." % _nm(c)},
-			{"label": "Diskreten Arzt organisieren (%s)" % _fmt(cost), "fn": func():
+				return "You stand in front of your client: two weeks off, no discussion. The studio fumes, %s breathes again." % _nm(c)},
+			{"label": "Arrange a discreet doctor (%s)" % _fmt(cost), "fn": func():
 				Game.record_identity("diskret", 1.5)
-				Game.book(-float(cost), "events", "Diskreter Arzt: %s" % _nm(c))
+				Game.book(-float(cost), "events", "Discreet doctor: %s" % _nm(c))
 				c.exhaustion = clampf(c.exhaustion - 45.0, 0.0, 100.0)
 				c.mood = clampf(c.mood + 6.0, 0.0, 100.0)
-				return "Ein Arzt, der keine Fragen stellt. Nach drei Tagen steht %s wieder am Set — erholt." % _nm(c)},
-			{"label": "Zur Arbeit drängen", "fn": func():
+				return "A doctor who asks no questions. Three days later %s is back on set — recovered." % _nm(c)},
+			{"label": "Push them back to work", "fn": func():
 				c.exhaustion = clampf(c.exhaustion + 10.0, 0.0, 100.0)
 				c.loyalty = clampf(c.loyalty - 12.0, 0.0, 100.0)
 				_dna(c, "verlass", -8.0)
 				if Game.chance(0.35):
 					prod.weeksLeft = int(prod.weeksLeft) + 8
-					return "%s schleppt sich ans Set — und bricht dort erst recht zusammen. Jetzt steht alles still, und du bist schuld." % _nm(c)
-				return "Die Show geht weiter. Der Zeitplan hält — aber %s wird dir diesen Anruf lange übelnehmen." % _nm(c)},
+					return "%s drags themselves to the set — and collapses there for real. Now everything stands still, and it is your fault." % _nm(c)
+				return "The show goes on. The schedule holds — but %s will resent this phone call for a long time." % _nm(c)},
 		]}
 
 # ---------- 16. Streik in Hollywood ----------
@@ -659,25 +659,25 @@ func _w_strike() -> float:
 
 func _b_strike() -> Dictionary:
 	Game.state.strikeMonths = Game.rndi(2, 3)
-	return {"title": "Streik in Hollywood",
-		"text": "Ein Arbeitskampf legt die Traumfabrik lahm: Für %d Monate ruhen Castings und Drehs. Wie positioniert sich deine Agentur?" % int(Game.state.strikeMonths),
+	return {"title": "Strike in Hollywood",
+		"text": "A labor dispute paralyzes the dream factory: castings and shoots rest for %d months. How does your agency position itself?" % int(Game.state.strikeMonths),
 		"choices": [
-			{"label": "Streikende öffentlich unterstützen", "fn": func():
+			{"label": "Publicly support the strikers", "fn": func():
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 4, 0, 100)
 				for s in Game.active_studios():
 					_rel(s.id, -4)
 				for c in Game.state.clients:
 					c.loyalty = clampf(c.loyalty + 5.0, 0.0, 100.0)
-				return "Du stellst dich an die Seite der Kreativen. Die Studios kochen — deine Klienten applaudieren."},
-			{"label": "Neutral bleiben", "fn": func():
-				return "Kein Statement, keine Feinde. Du wartest ab, bis sich der Staub legt."},
-			{"label": "Ausnahmeregelungen für eigene Produktionen suchen", "fn": func():
+				return "You side with the creatives. The studios boil — your clients applaud."},
+			{"label": "Stay neutral", "fn": func():
+				return "No statement, no enemies. You wait until the dust settles."},
+			{"label": "Seek exemptions for your own productions", "fn": func():
 				Game.state.strikeExempt = true
 				Game.record_identity("studiotreu", 2.0)
 				if Game.chance(0.4):
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 3, 0, 100)
-					return "Deine Drehs laufen weiter — aber „Streikbrecher-Agentur“ steht trotzdem in einer Kolumne."
-				return "Diskrete Anwälte, wasserdichte Alt-Verträge: Deine Produktionen laufen weiter, und niemand schreibt darüber."},
+					return "Your shoots keep running — but “strikebreaker agency” appears in a column anyway."
+				return "Discreet lawyers, watertight old contracts: your productions keep running, and nobody writes about it."},
 		]}
 
 # ---------- 17. Der Tonfilm-Test (1927–1932) ----------
@@ -690,27 +690,27 @@ func _w_talkie() -> float:
 func _b_talkie() -> Dictionary:
 	var c = Game.random_client(func(x): return Game.actor_by_id[x.aid].debut <= 1926)
 	var cost = roundi(8000.0 * Game.infl(Game.state.year))
-	return {"title": "Der Tonfilm-Test",
-		"text": "[i]„Das Gesicht kennen wir. Jetzt wollen wir die Stimme hören.“[/i]\n\nDas Studio verlangt einen Sprach- und Stimmtest von %s — der Tonfilm sortiert gerade ganz Hollywood neu." % _nm(c),
+	return {"title": "The talkie test",
+		"text": "[i]“We know the face. Now we want to hear the voice.”[/i]\n\nThe studio demands a speech and voice test from %s — the talkies are reshuffling all of Hollywood right now." % _nm(c),
 		"choices": [
-			{"label": "Intensives Sprachtraining buchen (%s)" % _fmt(cost), "fn": func():
-				Game.book(-float(cost), "events", "Sprachtraining Tonfilm: %s" % _nm(c))
+			{"label": "Book intensive voice training (%s)" % _fmt(cost), "fn": func():
+				Game.book(-float(cost), "events", "Talkie voice training: %s" % _nm(c))
 				if Game.chance(0.85):
 					c.fame = clampf(c.fame + 4.0, 5.0, 100.0)
-					return "Wochen mit dem besten Sprachlehrer der Westküste zahlen sich aus: Die Stimme trägt."
+					return "Weeks with the best voice coach on the West Coast pay off: the voice carries."
 				c.fame = clampf(c.fame - 3.0, 5.0, 100.0)
-				return "Trotz allem Training bleibt der Test durchwachsen. Aber der Wille wurde registriert."},
-			{"label": "Den Test sofort absolvieren", "fn": func():
+				return "Despite all the training the test is mixed. But the effort was noted."},
+			{"label": "Take the test right away", "fn": func():
 				if Game.chance(0.55):
 					c.fame = clampf(c.fame + 4.0, 5.0, 100.0)
-					return "Volltreffer: Die Stimme sitzt, das Studio jubelt. %s gehört zu den Gewinnern der Ton-Revolution." % _nm(c)
+					return "Bullseye: the voice lands, the studio cheers. %s is among the winners of the sound revolution." % _nm(c)
 				c.fame = clampf(c.fame - 7.0, 5.0, 100.0)
 				c.mood = clampf(c.mood - 8.0, 0.0, 100.0)
-				return "Die Aufnahme ist ein Desaster. „Vielleicht … mit Untertiteln?“, spottet ein Techniker."},
-			{"label": "Auf Stummfilm & Auslandsmärkte setzen", "fn": func():
+				return "The recording is a disaster. “Maybe … with subtitles?”, a technician sneers."},
+			{"label": "Bet on silents & foreign markets", "fn": func():
 				c.fame = clampf(c.fame - 3.0, 5.0, 100.0)
 				c.mood = clampf(c.mood + 3.0, 0.0, 100.0)
-				return "Keine Blamage, aber ein Rückzugsgefecht: In Europa gibt es noch Arbeit — die Frage ist, wie lange."},
+				return "No embarrassment, but a rearguard action: there is still work in Europe — the question is for how long."},
 		]}
 
 # ---------- 18. Die Zensurbehörde (1934–1954) ----------
@@ -723,30 +723,30 @@ func _b_censor() -> Dictionary:
 	var c = hit.c
 	var prod = hit.prod
 	var cost = roundi(25000.0 * Game.infl(Game.state.year))
-	return {"title": "Die Zensurbehörde beanstandet das Drehbuch",
-		"text": "Das Hays Office verlangt Änderungen an „%s“ — mehrere Szenen mit %s dürfen so nicht gezeigt werden." % [prod.title, _nm(c)],
+	return {"title": "The censorship office objects to the script",
+		"text": "The Hays Office demands changes to “%s” — several scenes with %s cannot be shown as they are." % [prod.title, _nm(c)],
 		"choices": [
-			{"label": "Drehbuch entschärfen", "fn": func():
+			{"label": "Defuse the script", "fn": func():
 				prod.qualityMod = prod.get("qualityMod", 0.0) - 5.0
-				return "Die Schere schneidet alles Anstößige heraus. Der Film wird glatter — und ein Stück belangloser."},
-			{"label": "Mit Andeutungen und Umschreibungen arbeiten", "fn": func():
+				return "The scissors cut out everything objectionable. The film gets smoother — and a bit more inconsequential."},
+			{"label": "Work with hints and paraphrases", "fn": func():
 				var p = clampf(0.35 + Game.state.agency.rep / 150.0, 0.25, 0.8)
 				if Game.chance(p):
 					prod.qualityMod = prod.get("qualityMod", 0.0) + 5.0
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 2, 0, 100)
-					return "Ein Blick, ein Schatten, eine geschlossene Tür: Die Zensoren finden nichts, das Publikum versteht alles."
+					return "A glance, a shadow, a closed door: the censors find nothing, the audience understands everything."
 				prod.qualityMod = prod.get("qualityMod", 0.0) - 2.0
-				return "Ein paar Andeutungen überleben, andere fallen doch der Schere zum Opfer. Ein Teilerfolg."},
-			{"label": "Unabhängige Veröffentlichung versuchen (%s)" % _fmt(cost), "fn": func():
-				Game.book(-float(cost), "events", "Unabhängige Veröffentlichung „%s“" % prod.title)
+				return "A few hints survive, others fall to the scissors after all. A partial success."},
+			{"label": "Attempt an independent release (%s)" % _fmt(cost), "fn": func():
+				Game.book(-float(cost), "events", "Independent release “%s”" % prod.title)
 				if Game.chance(0.3):
 					prod.qualityMod = prod.get("qualityMod", 0.0) + 10.0
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 4, 0, 100)
 					_dna(c, "unikat", 5.0)
-					return "Ohne Code-Siegel in ausgewählte Häuser — und die Kritiker feiern den Mut. Ein Skandalerfolg im besten Sinne."
+					return "Into selected houses without the code seal — and the critics celebrate the courage. A succès de scandale in the best sense."
 				prod.qualityMod = prod.get("qualityMod", 0.0) - 6.0
 				_rel(prod.studioId, -5)
-				return "Viele Kinos weigern sich, den Film ohne Siegel zu zeigen. Ein teures, riskantes Experiment."},
+				return "Many theaters refuse to show the film without the seal. An expensive, risky experiment."},
 		]}
 
 # ---------- 19. Blacklisting-Ära (1947–1956, nur ab 4 Klienten) ----------
@@ -760,10 +760,10 @@ func _b_blacklist() -> Dictionary:
 	var candidates: Array = Game.state.clients.filter(func(c): return not Game.has_mitigated_secret(c, "politik"))
 	var warned: Array = candidates.filter(func(c): return Game.secret_of(c, "politik") != null)
 	var c = Game.pick(warned if warned.size() else candidates)
-	return {"title": "Verdacht auf unamerikanische Umtriebe",
-		"text": "[i]„Das Komitee lädt %s vor. Man interessiert sich für … frühere Bekanntschaften.“[/i]\n\nDie Schwarze Liste greift um sich. Wie du jetzt handelst, definiert deine Agentur für Jahre." % _nm(c),
+	return {"title": "Suspicion of un-American activities",
+		"text": "[i]“The committee summons %s. They are interested in … earlier acquaintances.”[/i]\n\nThe blacklist is spreading. How you act now defines your agency for years." % _nm(c),
 		"choices": [
-			{"label": "Klienten öffentlich verteidigen", "fn": func():
+			{"label": "Defend the client publicly", "fn": func():
 				c.loyalty = clampf(c.loyalty + 18.0, 0.0, 100.0)
 				Game.change_trust(c, 12.0)
 				for cl in Game.state.clients:
@@ -774,24 +774,24 @@ func _b_blacklist() -> Dictionary:
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 8, 0, 100)
 					for s in Game.active_studios():
 						_rel(s.id, -8)
-					return "Deine Erklärung ist mutig — und teuer. Studios legen auf. Aber jeder Klient weiß jetzt, dass du niemanden opferst."
+					return "Your statement is brave — and expensive. Studios hang up. But every client now knows you sacrifice nobody."
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 5, 0, 100)
-				return "Du sprichst als Einziger Klartext — und kommst durch. In dunklen Zeiten ist Rückgrat die seltenste Währung."},
-			{"label": "Unter Pseudonym im Ausland arbeiten lassen", "fn": func():
+				return "You alone speak plainly — and get through. In dark times, spine is the rarest currency."},
+			{"label": "Have them work abroad under a pseudonym", "fn": func():
 				c.busyUntil = Game.mi() + 6
 				c.fame = clampf(c.fame - 5.0, 5.0, 100.0)
 				c.loyalty = clampf(c.loyalty + 8.0, 0.0, 100.0)
 				Game.change_trust(c, 7.0)
-				return "%s dreht unter falschem Namen in Europa. Die Karriere friert ein, aber sie stirbt nicht." % _nm(c)},
-			{"label": "Vertrag beenden", "fn": func():
+				return "%s shoots in Europe under a false name. The career freezes, but it does not die." % _nm(c)},
+			{"label": "End the contract", "fn": func():
 				Game.state.clients.erase(c)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 5, 0, 100)
 				for cl in Game.state.clients:
 					cl.loyalty = clampf(cl.loyalty - 12.0, 0.0, 100.0)
 				for s in Game.active_studios():
 					_rel(s.id, 4)
-				Game.log_msg("%s wurde in der Blacklist-Ära fallen gelassen." % _nm(c), "bad")
-				return "Die Agentur ist sicher, die Studios sind zufrieden. Aber in den Augen deiner übrigen Klienten liest du eine Frage: „Wäre ich der Nächste gewesen?“"},
+				Game.log_msg("%s was dropped in the blacklist era." % _nm(c), "bad")
+				return "The agency is safe, the studios are pleased. But in the eyes of your remaining clients you read one question: “Would I have been next?”"},
 		]}
 
 # ---------- 20. Das Fernsehen klopft an (1948–1965) ----------
@@ -804,27 +804,27 @@ func _w_tv() -> float:
 func _b_tv() -> Dictionary:
 	var c = Game.pick(_free_clients().filter(func(x): return x.fame >= 40 and x.fame <= 75))
 	var monthly = roundi(9000.0 * Game.infl(Game.state.year) * (c.fame / 50.0) * c.commission / 100.0)
-	return {"title": "Das Fernsehen klopft an",
-		"text": "[i]„Vergessen Sie das Kino. In fünf Jahren steht in jedem Wohnzimmer ein Apparat — und wir brauchen Gesichter.“[/i]\n\nEin Sender bietet %s eine eigene Serie: 12 Monate garantiertes Einkommen (%s/Monat Provision), aber das Film-Establishment rümpft die Nase." % [_nm(c), _fmt(monthly)],
+	return {"title": "Television comes knocking",
+		"text": "[i]“Forget the movies. In five years there will be a set in every living room — and we need faces.”[/i]\n\nA network offers %s a series of their own: 12 months of guaranteed income (%s/month in commission), but the film establishment wrinkles its nose." % [_nm(c), _fmt(monthly)],
 		"choices": [
-			{"label": "Angebot annehmen", "fn": func():
+			{"label": "Accept the offer", "fn": func():
 				c.flags["tvIncome"] = {"monthly": monthly, "months": 12}
 				c.heat = clampf(c.heat + 3.0, -10.0, 10.0)
 				c.busyUntil = Game.mi() + 3
 				_dna(c, "popular", 8.0)
 				_dna(c, "unikat", -4.0)
-				return "%s wird Fernsehstar: verlässliches Geld jeden Monat. Das Kino-Prestige bröckelt etwas — aber Millionen kennen jetzt dieses Gesicht." % _nm(c)},
-			{"label": "Nur Gastauftritte aushandeln", "fn": func():
+				return "%s becomes a television star: reliable money every month. The film prestige crumbles a little — but millions now know this face." % _nm(c)},
+			{"label": "Negotiate guest appearances only", "fn": func():
 				if Game.chance(0.5):
-					Game.book(float(monthly * 3), "tv", "TV-Gastauftritte: %s" % _nm(c))
+					Game.book(float(monthly * 3), "tv", "TV guest appearances: %s" % _nm(c))
 					c.heat = clampf(c.heat + 2.0, -10.0, 10.0)
-					return "Der Kompromiss gelingt: einzelne Auftritte, volle Gage (%s), kein Exklusivvertrag." % _fmt(monthly * 3)
-				return "Der Sender will alles oder nichts. Der Deal zerschlägt sich — aber die Tür bleibt einen Spalt offen."},
-			{"label": "Fernsehen grundsätzlich zurückweisen", "fn": func():
+					return "The compromise works: individual appearances, full fee (%s), no exclusive contract." % _fmt(monthly * 3)
+				return "The network wants all or nothing. The deal falls apart — but the door stays ajar."},
+			{"label": "Reject television on principle", "fn": func():
 				c.mood = clampf(c.mood + 2.0, 0.0, 100.0)
 				c.loyalty = clampf(c.loyalty + 3.0, 0.0, 100.0)
 				_dna(c, "unikat", 2.0)
-				return "„Mein Klient ist ein Filmstar.“ Das klassische Image bleibt makellos — ob das in zehn Jahren noch klug aussieht, weiß niemand."},
+				return "“My client is a movie star.” The classic image stays immaculate — whether that still looks smart in ten years, nobody knows."},
 		]}
 
 # ---------- Folge-Ereignisse ----------
@@ -836,68 +836,68 @@ func build_followup(fu: Dictionary) -> Variant:
 				return null
 			var cost = roundi((12000.0 + c.fame * 200.0) * Game.infl(Game.state.year))
 			var choices: Array = [
-				{"label": "Jetzt kaufen (%s)" % _fmt(cost), "fn": func():
-					Game.book(-float(cost), "pr_recht", "Boulevard-Fotos gekauft: %s" % _nm(c))
+				{"label": "Buy them now (%s)" % _fmt(cost), "fn": func():
+					Game.book(-float(cost), "pr_recht", "Tabloid photos bought: %s" % _nm(c))
 					c.flags["photosSecured"] = true
-					return "Diesmal zögerst du nicht. Die Sache ist endgültig vom Tisch."},
-				{"label": "Aussitzen", "fn": func():
+					return "This time you don't hesitate. The matter is off the table for good."},
+				{"label": "Sit it out", "fn": func():
 					c.fame = clampf(c.fame - 3.0, 5.0, 100.0)
 					c.flags["photosSecured"] = true
 					_dna(c, "familie", -5.0)
-					return "Drei unangenehme Wochen, dann ist die Empörung verraucht. Narben bleiben."},
+					return "Three unpleasant weeks, then the outrage burns out. Scars remain."},
 			]
 			if Game.has_favor("suppressStory"):
-				choices.insert(0, {"label": "Gefallen einlösen: Die Story killen", "fn": func():
+				choices.insert(0, {"label": "Call in a favor: kill the story", "fn": func():
 					Game.consume_favor("suppressStory")
 					c.flags["photosSecured"] = true
-					return "Ein Wort beim Herausgeber genügt. Das Boulevardblatt druckt stattdessen etwas über einen Kongressabgeordneten."})
-			return {"title": "Die Fotos tauchen wieder auf",
-				"text": "Wie befürchtet: Die alten Aufnahmen von %s sind wieder im Umlauf — diesmal bei einem Boulevardblatt." % _nm(c),
+					return "One word with the publisher is enough. The tabloid prints something about a congressman instead."})
+			return {"title": "The photos resurface",
+				"text": "As feared: the old pictures of %s are circulating again — this time with a tabloid." % _nm(c),
 				"choices": choices}
 		"romanceLeak":
 			var c2 = Game.client(fu.cid)
 			if c2 == null:
 				return null
 			var choices2: Array = [
-				{"label": "Zugeben und lachen", "fn": func():
+				{"label": "Admit it and laugh", "fn": func():
 					if Game.chance(0.6):
 						c2.heat = clampf(c2.heat + 2.0, -10.0, 10.0)
-						return "„Natürlich war das Show — willkommen in Hollywood.“ Die Stadt lacht mit. Glück gehabt."
+						return "“Of course it was show — welcome to Hollywood.” The town laughs along. Lucky."
 					c2.fame = clampf(c2.fame - 3.0, 5.0, 100.0)
 					_dna(c2, "familie", -4.0)
-					return "Ein Teil des Publikums fühlt sich betrogen. Der Glanz bekommt Kratzer."},
-				{"label": "Dementieren", "fn": func():
+					return "Part of the audience feels cheated. The shine takes scratches."},
+				{"label": "Deny it", "fn": func():
 					c2.heat = clampf(c2.heat - 2.0, -10.0, 10.0)
-					return "Das Dementi glaubt niemand so recht, aber die Geschichte verliert an Fahrt."},
+					return "Nobody quite believes the denial, but the story loses steam."},
 			]
 			if Game.has_favor("suppressStory"):
-				choices2.insert(0, {"label": "Gefallen einlösen: Die Kolumne verschwinden lassen", "fn": func():
+				choices2.insert(0, {"label": "Call in a favor: make the column disappear", "fn": func():
 					Game.consume_favor("suppressStory")
-					return "Der Kolumnist findet die Geschichte plötzlich „nicht mehr druckreif“. Was in Hollywood zählt, ist, was gedruckt wird — oder eben nicht."})
-			return {"title": "Die Romanze fliegt auf",
-				"text": "Ein Kolumnist enthüllt: Die große Liebesgeschichte von %s war eine PR-Inszenierung." % _nm(c2),
+					return "The columnist suddenly finds the story “no longer fit to print”. What counts in Hollywood is what gets printed — or doesn't."})
+			return {"title": "The romance is exposed",
+				"text": "A columnist reveals: %s's great love story was a PR staging." % _nm(c2),
 				"choices": choices2}
 		"homevideo":
 			# Heimvideo-Ära (1980+): Flops können nachträglich Geld einspielen (Feature 14)
 			var income := roundi(float(fu.get("budget", 0)) * Game.rndf(0.08, 0.16) * float(Game.state.market))
 			var hvsid := str(fu.get("studioId", ""))
-			var hv_studio := "Das Studio"
+			var hv_studio := "The studio"
 			if hvsid != "" and Game.state.studioRel.has(hvsid):
 				hv_studio = Game._studio(hvsid).name
-			return {"title": "Zweites Leben auf Video",
-				"text": "„%s“ — damals ein Flop — führt auf Heimvideo ein stilles Eigenleben: Videotheken bestellen nach, Mitternachtsvorstellungen füllen sich, eine kleine Fangemeinde schreibt Briefe. %s bietet eine nachträgliche Beteiligung an." % [str(fu.get("title", "Der Film")), hv_studio],
+			return {"title": "A second life on video",
+				"text": "“%s” — a flop back then — leads a quiet life of its own on home video: rental stores reorder, midnight screenings fill up, a small fan base writes letters. %s offers a retroactive participation." % [str(fu.get("title", "The film")), hv_studio],
 				"choices": [
-					{"label": "Beteiligung annehmen (+%s)" % _fmt(income), "fn": func():
-						Game.book(float(income), "sonstiges", "Heimvideo-Zweitauswertung: „%s“" % str(fu.get("title", "")))
+					{"label": "Accept the participation (+%s)" % _fmt(income), "fn": func():
+						Game.book(float(income), "sonstiges", "Home video second run: “%s”" % str(fu.get("title", "")))
 						if hvsid != "" and Game.state.studioRel.has(hvsid):
 							_rel(hvsid, 2)
-						return "Die Videotheken-Schecks trudeln ein. Manche Filme brauchen einfach ein zweites Leben. (+%s)" % _fmt(income)},
-					{"label": "Auf Kultstatus pokern", "fn": func():
+						return "The video store checks trickle in. Some films simply need a second life. (+%s)" % _fmt(income)},
+					{"label": "Gamble on cult status", "fn": func():
 						if Game.chance(0.5):
 							var more := roundi(income * 1.7)
-							Game.book(float(more), "sonstiges", "Heimvideo-Kultstatus: „%s“" % str(fu.get("title", "")))
-							return "Guter Instinkt: Der Film wird zum Mitternachts-Kult — die spätere Einigung fällt deutlich besser aus. (+%s)" % _fmt(more)
-						return "Du wartest auf bessere Konditionen — doch der Moment verfliegt. Die Videotheken räumen das Regal um."},
+							Game.book(float(more), "sonstiges", "Home video cult status: “%s”" % str(fu.get("title", "")))
+							return "Good instinct: the film becomes a midnight cult — the later settlement turns out much better. (+%s)" % _fmt(more)
+						return "You wait for better terms — but the moment passes. The rental stores rearrange the shelf."},
 				]}
 	return null
 
@@ -917,27 +917,27 @@ func _b_power_figure() -> Dictionary:
 	var director_cost := roundi(20000.0 * Game.infl(Game.state.year))
 	var producer_cost := roundi(35000.0 * Game.infl(Game.state.year))
 	var choices: Array = [
-		{"label":"Den Regiestuhl vorbereiten (%s)" % _fmt(director_cost), "fn":func():
+		{"label":"Prepare the director's chair (%s)" % _fmt(director_cost), "fn":func():
 			if float(Game.state.agency.cash) < float(director_cost):
-				return "Die Finanzierung steht nicht. Der Regiestuhl muss warten."
-			Game.book(-float(director_cost), "investition", "Regiedebüt: %s" % _nm(c))
+				return "The financing isn't there. The director's chair has to wait."
+			Game.book(-float(director_cost), "investition", "Directing debut: %s" % _nm(c))
 			Game.record_identity("kuenstlerisch", 2.0)
 			Game.record_identity("klientenorientiert", 1.0)
 			return Game.become_power_figure(cid, "director", true)},
-		{"label":"Eine Produktionsfirma aufbauen (%s)" % _fmt(producer_cost), "fn":func():
+		{"label":"Build a production company (%s)" % _fmt(producer_cost), "fn":func():
 			if float(Game.state.agency.cash) < float(producer_cost):
-				return "Ohne Kapital gibt es keine Produktionsfirma. Noch nicht."
-			Game.book(-float(producer_cost), "investition", "Produktionsdebüt: %s" % _nm(c))
+				return "Without capital there is no production company. Not yet."
+			Game.book(-float(producer_cost), "investition", "Producing debut: %s" % _nm(c))
 			Game.record_identity("kommerziell", 1.0)
 			Game.record_identity("klientenorientiert", 1.0)
 			return Game.become_power_figure(cid, "producer", true)},
 	]
 	if fractured:
-		choices.append({"label":"Ohne Beteiligung ziehen lassen", "fn":func(): return Game.become_power_figure(cid, "producer", false, true)})
+		choices.append({"label":"Let them go without a stake", "fn":func(): return Game.become_power_figure(cid, "producer", false, true)})
 	else:
-		choices.append({"label":"Noch vor der Kamera bleiben", "fn":func(): return "[i]„Noch habe ich Rollen zu spielen.“[/i] Der Machtwechsel wird vertagt — ohne Nachteil."})
-	return {"title":"Die andere Seite der Kamera",
-		"text":"[i]„Ich habe lange genug auf Markierungen gestanden. Vielleicht ist es Zeit, selbst ‚Action‘ zu rufen.“[/i]\n\n%s ist bereit für den nächsten Machtkreis Hollywoods.%s" % [_nm(c), " Die Beziehung ist allerdings so zerrüttet, dass bereits von einem eigenen Konkurrenzhaus die Rede ist." if fractured else ""],
+		choices.append({"label":"Stay in front of the camera for now", "fn":func(): return "[i]“I still have roles to play.”[/i] The power shift is postponed — at no cost."})
+	return {"title":"The other side of the camera",
+		"text":"[i]“I have stood on marks long enough. Maybe it is time to call ‘action’ myself.”[/i]\n\n%s is ready for Hollywood's next circle of power.%s" % [_nm(c), " The relationship, however, is so fractured that people already talk about a rival house of their own." if fractured else ""],
 		"choices":choices}
 
 # ---------- 21. Der Gefallen wird eingefordert ----------
@@ -947,16 +947,16 @@ func _w_favor_called() -> float:
 func _b_favor_called() -> Dictionary:
 	var debt = Game.pick(Game.state.debts)
 	var did = int(debt.id)
-	var creditor: String = str(debt["from"].get("name", "Ein alter Bekannter"))
+	var creditor: String = str(debt["from"].get("name", "An old acquaintance"))
 	var sid: String = str(debt["from"].get("studioId", ""))
 	var demand: String = Game.pick(["gala", "pitch", "cameo"])
 	var demands := {
-		"gala": "einen deiner Klienten als Star-Gast für eine Charity-Gala — unbezahlt, aber sehr öffentlich",
-		"pitch": "deinen Verzicht, einen deiner Klienten für eine begehrte Rolle ins Rennen zu schicken",
-		"cameo": "einen Gratis-Cameo-Auftritt in einem Freundschaftsprojekt",
+		"gala": "one of your clients as the star guest of a charity gala — unpaid, but very public",
+		"pitch": "that you refrain from entering one of your clients for a coveted role",
+		"cameo": "a free cameo appearance in a friend's project",
 	}
 	var choices: Array = [
-		{"label": "Einlösen und erfüllen", "fn": func():
+		{"label": "Honor it and deliver", "fn": func():
 			Game.remove_debt(did)
 			var msg := ""
 			match demand:
@@ -966,40 +966,40 @@ func _b_favor_called() -> Dictionary:
 						c.heat = clampf(c.heat + 3.0, -10.0, 10.0)
 						c.exhaustion = clampf(c.exhaustion + 10.0, 0.0, 100.0)
 						c.mood = clampf(c.mood - 4.0, 0.0, 100.0)
-						msg = "%s strahlt für die gute Sache in die Blitzlichter (+Heat, etwas Erschöpfung)." % _nm(c)
+						msg = "%s beams into the flashbulbs for the good cause (+heat, some exhaustion)." % _nm(c)
 					else:
-						msg = "Du persönlich schneidest das Band durch — immerhin ein Foto in der Lokalzeitung."
+						msg = "You cut the ribbon yourself — at least a photo in the local paper."
 				"pitch":
 					Game.state.agency.rep = clampi(int(Game.state.agency.rep) + 1, 0, 100)
-					msg = "Du hältst dich beim Casting zurück. Die Branche registriert deinen Anstand (Ruf +1)."
+					msg = "You hold back at the casting. The industry registers your decency (reputation +1)."
 				"cameo":
 					var c2 = Game.random_client()
 					if c2 != null:
 						c2.exhaustion = clampf(c2.exhaustion + 8.0, 0.0, 100.0)
 						c2.fame = clampf(c2.fame + 1.0, 5.0, 100.0)
-						msg = "%s liefert einen charmanten Kurzauftritt ab — unbezahlt, aber nicht unbemerkt." % _nm(c2)
+						msg = "%s delivers a charming cameo — unpaid, but not unnoticed." % _nm(c2)
 					else:
-						msg = "Du organisierst den Cameo über Umwege. Es kostet Nerven, aber keinen Ruhm."
+						msg = "You arrange the cameo through detours. It costs nerves, but no fame."
 			if Game.chance(0.3):
 				var kind_s: String = Game.pick(["extraAudition", "billing", "scriptAccess"])
 				Game.grant_favor(kind_s, debt["from"])
-				msg += " Und weil du so unkompliziert warst, steht %s nun selbst in deiner Schuld." % creditor
-			return "Die Schuld ist beglichen — %s ist quitt mit dir. %s" % [creditor, msg]},
-		{"label": "Ablehnen (kostet Ansehen)", "fn": func():
+				msg += " And because you were so easy about it, %s is now in your debt themselves." % creditor
+			return "The debt is settled — %s is even with you. %s" % [creditor, msg]},
+		{"label": "Refuse (costs standing)", "fn": func():
 			Game.remove_debt(did)
 			if sid != "" and Game.state.studioRel.has(sid):
 				_rel(sid, -6)
-				return "%s vermerkt die Absage kühl. Die Beziehung zu %s leidet." % [creditor, Game._studio(sid).name]
+				return "%s notes the refusal coolly. The relationship with %s suffers." % [creditor, Game._studio(sid).name]
 			Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 2, 0, 100)
-			return "Die Absage macht die Runde. Manche nicken verständnisvoll — andere nicht. (Ruf −2)"},
+			return "The refusal makes the rounds. Some nod with understanding — others don't. (Reputation −2)"},
 	]
 	if Game.state.favors.size() > 0:
-		choices.insert(1, {"label": "Einen eigenen Gefallen dagegenhalten (verbraucht 1 Gefallen)", "fn": func():
+		choices.insert(1, {"label": "Counter with a favor of your own (spends 1 favor)", "fn": func():
 			Game.consume_any_favor()
 			Game.remove_debt(did)
-			return "Ein Gefallen gegen einen Gefallen — die klassische Währung dieser Stadt. Ihr seid quitt, und niemand hat das Gesicht verloren."})
-	return {"title": "Der Gefallen wird eingefordert",
-		"text": "[i]„Sie erinnern sich doch — damals habe ich Ihnen einen Gefallen getan. Jetzt brauche ich etwas.“[/i]\n\n%s fordert ein: %s." % [creditor, demands[demand]],
+			return "A favor against a favor — the classic currency of this town. You are even, and nobody lost face."})
+	return {"title": "The favor is called in",
+		"text": "[i]“You remember, don't you — back then I did you a favor. Now I need something.”[/i]\n\n%s calls it in: %s." % [creditor, demands[demand]],
 		"choices": choices}
 
 # ---------- 22. Die exklusive Einladung ----------
@@ -1011,27 +1011,27 @@ func _b_gala() -> Dictionary:
 	var studio = Game.pick(Game.active_studios())
 	var c = Game.random_client(func(x): return Game.is_free(x))
 	var choices: Array = [
-		{"label": "Kontakte knüpfen", "fn": func():
+		{"label": "Make connections", "fn": func():
 			var f1 = Game.grant_favor(Game.pick(["extraAudition", "billing", "scriptAccess", "suppressStory"]))
-			var msg := "Zwei Stunden, drei Handschläge, ein versprochenes Mittagessen: %s schuldet dir jetzt etwas." % str(f1["from"].get("name", "Jemand Wichtiges"))
+			var msg := "Two hours, three handshakes, one promised lunch: %s now owes you something." % str(f1["from"].get("name", "Somebody important"))
 			if Game.chance(0.5):
 				var f2 = Game.grant_favor(Game.pick(["galaInvite", "extraAudition", "billing"]))
-				msg += " Und %s lässt ebenfalls etwas für dich liegen." % str(f2["from"].get("name", "ein Produzent"))
+				msg += " And %s leaves something on the table for you too." % str(f2["from"].get("name", "a producer"))
 			return msg},
-		{"label": "Einen Gefallen dem Hausherrn überlassen", "fn": func():
+		{"label": "Leave a favor to the host", "fn": func():
 			Game.record_identity("studiotreu", 1.5)
 			if Game.pass_any_favor_to_studio(studio.id):
-				return "Du lässt %s spüren, dass du auf deine Trümpfe verzichten kannst. Die Beziehung vertieft sich sichtbar." % studio.name
+				return "You let %s feel that you can afford to give up your trump cards. The relationship visibly deepens." % studio.name
 			_rel(studio.id, 2)
-			return "Du hast keine Gefallen auf der Hand — aber der Abend selbst wirkt als Geste."},
+			return "You have no favors in hand — but the evening itself works as a gesture."},
 	]
 	if c != null:
-		choices.insert(1, {"label": "Deal anbahnen: %s in Szene setzen" % _nm(c), "fn": func():
+		choices.insert(1, {"label": "Set up a deal: showcase %s" % _nm(c), "fn": func():
 			var r = Game.quick_production(c, {"studio": studio, "feeMult": 1.2})
 			c.heat = clampf(c.heat + 3.0, -10.0, 10.0)
-			return "Zwischen Champagner und Zedernholz wird gehandelt: %s unterschreibt für „%s“ (%s Provision)." % [_nm(c), r.title, _fmt(r.income)]})
-	return {"title": "Die exklusive Einladung",
-		"text": "Die eingelöste Einladung führt dich auf eine geschlossene Veranstaltung bei %s — Smoking, Gelächter, und in jeder Ecke jemand, der etwas zu vergeben hat." % studio.name,
+			return "Between champagne and cedar wood, business is done: %s signs for “%s” (%s commission)." % [_nm(c), r.title, _fmt(r.income)]})
+	return {"title": "The exclusive invitation",
+		"text": "The invitation, called in, takes you to a closed event at %s — tuxedos, laughter, and in every corner somebody with something to give away." % studio.name,
 		"choices": choices}
 
 
@@ -1052,46 +1052,46 @@ func _b_sequel_crisis() -> Dictionary:
 	var sid := str(due.get("studioId", ""))
 	var old_fee := int(due.get("fee", 0))
 	var fair_fee := roundi(Game.ask_fee(c.fame, Game.state.year) * 1.4)
-	var studio_name := "Das Studio"
+	var studio_name := "The studio"
 	if sid != "" and Game.state.studioRel.has(sid):
 		studio_name = Game._studio(sid).name
-	var film_t := str(due.get("title", "Der Film"))
+	var film_t := str(due.get("title", "The film"))
 	var bonus := roundi(fair_fee * 0.35 * float(c.commission) / 100.0)
 	var lawyer := roundi(25000.0 * Game.infl(Game.state.year))
-	return {"title": "Die Fortsetzungs-Falle",
-		"text": "„%s“ wurde ein Blockbuster — und prompt holt %s die alte sequelOption-Klausel aus der Schublade: %s soll die Fortsetzung zur Gage des ersten Films drehen (%s statt marktüblicher %s).\n\n[i]„Das ist Diebstahl mit Unterschrift!“[/i] tobt %s am Telefon." % [film_t, studio_name, _nm(c), _fmt(old_fee), _fmt(fair_fee), _nm(c)],
+	return {"title": "The sequel trap",
+		"text": "“%s” became a blockbuster — and promptly %s pulls the old sequel-option clause out of the drawer: %s is to shoot the sequel at the first film's fee (%s instead of the market rate of %s).\n\n[i]“That is theft with a signature!”[/i] %s rages on the phone." % [film_t, studio_name, _nm(c), _fmt(old_fee), _fmt(fair_fee), _nm(c)],
 		"choices": [
-			{"label": "Hart neu verhandeln", "fn": func():
+			{"label": "Renegotiate hard", "fn": func():
 				c.flags.erase("sequelDue")
 				if Game.chance(0.55):
-					Game.book(float(bonus), "provision", "Sequel-Sonderbonus: %s („%s II“)" % [_nm(c), film_t])
+					Game.book(float(bonus), "provision", "Sequel special bonus: %s (“%s II”)" % [_nm(c), film_t])
 					Game.change_trust(c, 4.0)
 					if sid != "" and Game.state.studioRel.has(sid):
 						_rel(sid, -4)
-					return "Nach zwei zähen Wochen knickt das Studio ein: Sonderbonus statt Alt-Gage. %s atmet auf — bei %s hat man sich das gemerkt. (+%s Provision)" % [_nm(c), studio_name, _fmt(bonus)]
+					return "After two grinding weeks the studio caves: a special bonus instead of the old fee. %s breathes again — at %s they took note. (+%s commission)" % [_nm(c), studio_name, _fmt(bonus)]
 				c.mood = clampf(c.mood - 8.0, 0.0, 100.0)
 				if sid != "" and Game.state.studioRel.has(sid):
 					_rel(sid, -8)
-				return "Das Studio bleibt stur und beruft sich auf den Vertrag. %s wird die Fortsetzung zur Alt-Gage drehen müssen — mit entsprechender Laune." % _nm(c)},
-			{"label": "Klienten zur Vertragstreue überreden", "fn": func():
+				return "The studio stays stubborn and points at the contract. %s will have to shoot the sequel at the old fee — with a mood to match." % _nm(c)},
+			{"label": "Talk the client into honoring the contract", "fn": func():
 				c.flags.erase("sequelDue")
 				Game.change_trust(c, -6.0)
 				Game.record_identity("studiotreu", 1.0)
 				if sid != "" and Game.state.studioRel.has(sid):
 					_rel(sid, 4)
-				return "„Ein Vertrag ist ein Vertrag.“ %s schluckt es — schweigend. %s registriert deine Loyalität wohlwollend." % [_nm(c), studio_name]},
-			{"label": "Klage androhen (%s Anwaltskosten)" % _fmt(lawyer), "fn": func():
+				return "“A contract is a contract.” %s swallows it — silently. %s registers your loyalty favorably." % [_nm(c), studio_name]},
+			{"label": "Threaten a lawsuit (%s legal fees)" % _fmt(lawyer), "fn": func():
 				c.flags.erase("sequelDue")
-				Game.book(-float(lawyer), "pr_recht", "Anwälte: sequelOption angefochten (%s)" % _nm(c))
+				Game.book(-float(lawyer), "pr_recht", "Lawyers: sequel option contested (%s)" % _nm(c))
 				if Game.chance(0.5):
 					var win := roundi(fair_fee * 0.5 * float(c.commission) / 100.0)
-					Game.book(float(win), "provision", "Vergleich „%s II“: %s" % [film_t, _nm(c)])
+					Game.book(float(win), "provision", "Settlement “%s II”: %s" % [film_t, _nm(c)])
 					Game.change_trust(c, 6.0)
-					return "Vergleich vor den Toren des Gerichtssaals: saftige Abfindung, neue Gage. %s triumphiert. (−%s Anwalt, +%s Vergleich)" % [_nm(c), _fmt(lawyer), _fmt(win)]
+					return "A settlement at the courtroom gates: a juicy payout, a new fee. %s triumphs. (−%s lawyer, +%s settlement)" % [_nm(c), _fmt(lawyer), _fmt(win)]
 				if sid != "" and Game.state.studioRel.has(sid):
 					_rel(sid, -10)
 				c.fame = clampf(c.fame - 3.0, 5.0, 100.0)
-				return "Die Klage verpufft — und die Presse liebt die Geschichte vom „undankbaren Star“. %s dreht zur Alt-Gage, mit Demut." % _nm(c)},
+				return "The lawsuit fizzles — and the press loves the story of the “ungrateful star”. %s shoots at the old fee, with humility." % _nm(c)},
 		]}
 
 # ---------- escalator: Zögern an der Gagen-Leiter ----------
@@ -1102,21 +1102,21 @@ func _b_escalator_balk() -> Dictionary:
 	var c = Game.pick(_clients_with_clause("escalator"))
 	var studio = Game.pick(Game.active_studios())
 	var buyout := roundi(Game.ask_fee(c.fame, Game.state.year) * 0.8 * float(c.commission) / 100.0)
-	return {"title": "Zögern an der Gagen-Leiter",
-		"text": "%s will %s erneut besetzen — doch die escalator-Klausel treibt die Gage mit jedem Film nach oben. Die Buchhaltung schlägt Alarm: Entweder fällt die Klausel, oder die Rolle geht an ein billigeres Gesicht.\n\nMan bietet dir einen Klausel-Buy-out: einmalig %s." % [studio.name, _nm(c), _fmt(buyout)],
+	return {"title": "Hesitation on the fee ladder",
+		"text": "%s wants to cast %s again — but the escalator clause pushes the fee up with every film. Accounting sounds the alarm: either the clause goes, or the role goes to a cheaper face.\n\nThey offer you a clause buy-out: a one-time %s." % [studio.name, _nm(c), _fmt(buyout)],
 		"choices": [
-			{"label": "Buy-out annehmen (+%s, Klausel fällt weg)" % _fmt(buyout), "fn": func():
+			{"label": "Accept the buy-out (+%s, clause is dropped)" % _fmt(buyout), "fn": func():
 				c.clauses.erase("escalator")
-				Game.book(float(buyout), "provision", "Escalator-Buy-out: %s" % _nm(c))
+				Game.book(float(buyout), "provision", "Escalator buy-out: %s" % _nm(c))
 				Game.change_trust(c, -3.0)
-				return "Das Geld stimmt, die Geste nicht: %s verliert die Gagen-Leiter — und wird sich daran erinnern. (+%s)" % [_nm(c), _fmt(buyout)]},
-			{"label": "Klausel verteidigen", "fn": func():
+				return "The money is right, the gesture is not: %s loses the fee ladder — and will remember. (+%s)" % [_nm(c), _fmt(buyout)]},
+			{"label": "Defend the clause", "fn": func():
 				Game.change_trust(c, 3.0)
 				_rel(studio.id, -3)
 				if Game.chance(0.6):
-					return "%s schluckt die Leiter — der Star ist die Sorge wert. %s strahlt: Genau dafür zahlt er dir Provision." % [studio.name, _nm(c)]
+					return "%s swallows the ladder — the star is worth the trouble. %s beams: this is exactly what they pay you commission for." % [studio.name, _nm(c)]
 				c.heat = clampf(c.heat - 2.0, -10.0, 10.0)
-				return "%s zieht zurück und besetzt billiger. Die Klausel bleibt — aber sie hängt nun wie ein Preisschild an %s." % [studio.name, _nm(c)]},
+				return "%s pulls back and casts cheaper. The clause stays — but it now hangs on %s like a price tag." % [studio.name, _nm(c)]},
 		]}
 
 # ---------- creativeApproval: Der Klient sagt Nein ----------
@@ -1129,31 +1129,31 @@ func _b_creative_veto() -> Dictionary:
 	var genre: String = Game.pick(Data.GENRES.keys())
 	var proj := Game.project_title(genre)
 	var fee := roundi(Game.ask_fee(c.fame, Game.state.year))
-	return {"title": "Das kreative Veto",
-		"text": "%s bietet %s die Hauptrolle in „%s“ (%s) — ein solider Zahltag (%s). Doch die creativeApproval-Klausel gibt %s ein Mitspracherecht, und das Urteil fällt vernichtend aus:\n\n[i]„Dieses Drehbuch beerdigt meine Karriere. Ich mache das nicht.“[/i]" % [studio.name, _nm(c), proj, Data.GENRES[genre]["de"], _fmt(fee), _nm(c)],
+	return {"title": "The creative veto",
+		"text": "%s offers %s the lead in “%s” (%s) — a solid payday (%s). But the creative-approval clause gives %s a say, and the verdict is devastating:\n\n[i]“This script buries my career. I am not doing it.”[/i]" % [studio.name, _nm(c), proj, Data.GENRES[genre]["label"], _fmt(fee), _nm(c)],
 		"choices": [
-			{"label": "Das Veto respektieren", "fn": func():
+			{"label": "Respect the veto", "fn": func():
 				Game.change_trust(c, 4.0)
 				_rel(studio.id, -2)
 				_dna(c, "unikat", 4.0)
-				return "Du stellst dich hinter deinen Klienten. %s verlässt das Gespräch aufrecht — %s streicht dich vorerst von der Weihnachtsliste." % [_nm(c), studio.name]},
-			{"label": "Umstimmen — das Geld ist zu gut", "fn": func():
+				return "You stand behind your client. %s leaves the meeting upright — %s strikes you off the Christmas list for now." % [_nm(c), studio.name]},
+			{"label": "Talk them around — the money is too good", "fn": func():
 				if Game.chance(0.6):
 					var r = Game.quick_production(c, {"studio": studio, "feeMult": 1.0})
 					Game.change_trust(c, -5.0)
 					c.mood = clampf(c.mood - 6.0, 0.0, 100.0)
-					return "%s lässt sich breitschlagen und unterschreibt für „%s“ (%s Provision). Im Spiegel des Anhängers herrscht fortan Funkstille." % [_nm(c), r.title, _fmt(r.income)]
+					return "%s lets themselves be worn down and signs for “%s” (%s commission). Radio silence in the trailer from now on." % [_nm(c), r.title, _fmt(r.income)]
 				Game.change_trust(c, -3.0)
 				_rel(studio.id, -4)
-				return "Ein Streit, zwei aufgebrachte Parteien — und am Ende kein Vertrag. %s ist beleidigt, %s ebenfalls." % [_nm(c), studio.name]},
-			{"label": "Drehbuch-Nachbesserung aushandeln", "fn": func():
+				return "One argument, two furious parties — and no contract in the end. %s is offended, %s likewise." % [_nm(c), studio.name]},
+			{"label": "Negotiate script revisions", "fn": func():
 				if Game.chance(0.55):
 					var r2 = Game.quick_production(c, {"studio": studio, "feeMult": 0.9})
 					Game.change_trust(c, 3.0)
 					_dna(c, "unikat", 2.0)
-					return "Drei neue Autoren, zwei Wochen Überarbeitung: „%s“ wird tragbar. Alle retten das Gesicht (%s Provision)." % [r2.title, _fmt(r2.income)]
+					return "Three new writers, two weeks of rework: “%s” becomes bearable. Everyone saves face (%s commission)." % [r2.title, _fmt(r2.income)]
 				_rel(studio.id, -3)
-				return "%s ist nicht bereit, noch einmal ins Drehbuch zu investieren. Das Projekt verstaubt in der Schublade." % studio.name},
+				return "%s is not willing to invest in the script again. The project gathers dust in the drawer." % studio.name},
 		]}
 
 # ---------- moralClause: Der Sittenparagraph ----------
@@ -1184,38 +1184,38 @@ func _b_moral_exit() -> Dictionary:
 	var role = mc["role"]
 	var prod: Dictionary = mc["prod"]
 	var sid := str(prod.studioId)
-	var studio_name := "Ein Studio"
+	var studio_name := "A studio"
 	if Game.state.studioRel.has(sid):
 		studio_name = Game._studio(sid).name
 	var lawyer := roundi(30000.0 * Game.infl(Game.state.year))
 	var kick := func():
-		role.filled = {"npc": true, "name": "Neubesetzung", "talent": 55, "fame": 30}
+		role.filled = {"npc": true, "name": "Recast", "talent": 55, "fame": 30}
 		c.busyUntil = Game.mi()
-	return {"title": "Der Sittenparagraph",
-		"text": "Das Gerücht über %s hat die Glaubensschwelle geknackt — und %s zückt die moralClause aus dem Vertrag von „%s“: Der Vertrag wird per Sittenparagraph aufgelöst, straffrei, sofort. Eine Neubesetzung wird schon angefragt.\n\n[i]„%s“[/i]" % [_nm(c), studio_name, str(prod.title), str(rumor.get("text", ""))],
+	return {"title": "The morality clause",
+		"text": "The rumor about %s has cracked the credibility threshold — and %s pulls the morality clause from the contract of “%s”: the contract is dissolved via the morals paragraph, penalty-free, immediately. A recast is already being sounded out.\n\n[i]“%s”[/i]" % [_nm(c), studio_name, str(prod.title), str(rumor.get("text", ""))],
 		"choices": [
-			{"label": "Anwälte einschalten (%s)" % _fmt(lawyer), "fn": func():
-				Game.book(-float(lawyer), "pr_recht", "moralClause-Prozess: %s" % _nm(c))
+			{"label": "Bring in the lawyers (%s)" % _fmt(lawyer), "fn": func():
+				Game.book(-float(lawyer), "pr_recht", "Morality clause trial: %s" % _nm(c))
 				if Game.chance(0.5):
 					_rel(sid, -3)
-					return "Die Anwälte zerpflücken die Klausel: „Skandal“ sei nicht bewiesen, nur Gerede. Der Vertrag hält — knapp. (−%s)" % _fmt(lawyer)
+					return "The lawyers pick the clause apart: a “scandal” is not proven, only talk. The contract holds — barely. (−%s)" % _fmt(lawyer)
 				kick.call()
 				c.fame = clampf(c.fame - 2.0, 5.0, 100.0)
-				return "Das Gericht sieht es anders. %s ist raus aus dem Film — und der Prozess hat die Geschichte erst richtig groß gemacht. (−%s)" % [_nm(c), _fmt(lawyer)]},
-			{"label": "Hinnehmen und Schaden begrenzen", "fn": func():
+				return "The court sees it differently. %s is out of the film — and the trial made the story truly big. (−%s)" % [_nm(c), _fmt(lawyer)]},
+			{"label": "Accept it and limit the damage", "fn": func():
 				kick.call()
 				c.fame = clampf(c.fame - 4.0, 5.0, 100.0)
 				Game.change_trust(c, 2.0)
-				return "Du ziehst %s ruhig aus der Schusslinie. Der Film geht weiter — ohne deinen Star, aber ohne Schlammschlacht." % _nm(c)},
-			{"label": "Gegendarstellung in der Presse", "fn": func():
+				return "You quietly pull %s out of the line of fire. The film goes on — without your star, but without a mud fight." % _nm(c)},
+			{"label": "A rebuttal in the press", "fn": func():
 				var cost := roundi(15000.0 * Game.infl(Game.state.year))
-				Game.book(-float(cost), "pr_recht", "Gegendarstellung: %s" % _nm(c))
+				Game.book(-float(cost), "pr_recht", "Rebuttal: %s" % _nm(c))
 				rumor["belief"] = clampf(float(rumor.belief) - 25.0, 0.0, 100.0)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 1, 0, 100)
 				if float(rumor.belief) < 60.0 and Game.chance(0.7):
-					return "Die Gegendarstellung läuft überall. Der Glaube an das Gerücht bröckelt — %s lässt die Kündigung erst einmal ruhen." % studio_name
+					return "The rebuttal runs everywhere. Belief in the rumor crumbles — %s lets the termination rest for now." % studio_name
 				kick.call()
-				return "Die Gegendarstellung verpufft. Am Ende steht nur eine Schlagzeile mehr — und eine Neubesetzung. (−%s)" % _fmt(cost)},
+				return "The rebuttal fizzles. In the end there is just one more headline — and a recast. (−%s)" % _fmt(cost)},
 		]}
 
 # ---------- likenessRights: Das digitale Abbild (ab 2015) ----------
@@ -1229,37 +1229,37 @@ func _b_likeness() -> Dictionary:
 	var studio = Game.pick(Game.active_studios())
 	var payment := roundi(Game.ask_fee(c.fame, Game.state.year) * 0.9 * float(c.commission) / 100.0)
 	if Game.chance(0.5):
-		return {"title": "Das digitale Double",
-			"text": "Ein aufmerksamer Fan entdeckt es zuerst: In „%s“ läuft %s durchs Bild — obwohl %s nie vor dieser Kamera stand. %s hat das digitale Abbild aus dem Archiv geholt und weiterverwendet. Die likenessRights-Klausel verlangt Zustimmung. Es gab keine." % [Game.project_title(Game.pick(Data.GENRES.keys())), _nm(c), _nm(c), studio.name],
+		return {"title": "The digital double",
+			"text": "An attentive fan spots it first: in “%s”, %s walks through the frame — although %s never stood in front of this camera. %s pulled the digital likeness from the archive and reused it. The likeness-rights clause requires consent. There was none." % [Game.project_title(Game.pick(Data.GENRES.keys())), _nm(c), _nm(c), studio.name],
 			"choices": [
-				{"label": "Klage einreichen", "fn": func():
+				{"label": "File a lawsuit", "fn": func():
 					var cost := roundi(40000.0 * Game.infl(Game.state.year))
-					Game.book(-float(cost), "pr_recht", "Likeness-Klage: %s" % _nm(c))
+					Game.book(-float(cost), "pr_recht", "Likeness lawsuit: %s" % _nm(c))
 					if Game.chance(0.6):
 						var win := roundi(float(payment) * 2.5)
-						Game.book(float(win), "provision", "Likeness-Vergleich: %s" % _nm(c))
+						Game.book(float(win), "provision", "Likeness settlement: %s" % _nm(c))
 						_rel(studio.id, -6)
 						Game.change_trust(c, 5.0)
-						return "Der Vergleich setzt einen Präzedenzfall für ganz Hollywood: Das Abbild gehört dem Menschen. (−%s Anwalt, +%s Vergleich)" % [_fmt(cost), _fmt(win)]
+						return "The settlement sets a precedent for all of Hollywood: the likeness belongs to the person. (−%s lawyer, +%s settlement)" % [_fmt(cost), _fmt(win)]
 					_rel(studio.id, -8)
-					return "Jahrelange Gutachten, Experten, Pixelzählerei — am Ende weist man die Klage ab. Das Gesetz hinkt der Technik hinterher. (−%s)" % _fmt(cost)},
-				{"label": "Lizenz nachträglich verkaufen (+%s)" % _fmt(payment), "fn": func():
-					Game.book(float(payment), "provision", "Likeness-Lizenz: %s" % _nm(c))
+					return "Years of expert reports, specialists, pixel counting — in the end the suit is dismissed. The law limps behind the technology. (−%s)" % _fmt(cost)},
+				{"label": "Sell the license retroactively (+%s)" % _fmt(payment), "fn": func():
+					Game.book(float(payment), "provision", "Likeness license: %s" % _nm(c))
 					Game.change_trust(c, -4.0)
-					return "Statt Ärger ein Scheck. %s ist nicht begeistert, dass du sein Gesicht nachträglich vermietest — aber die Provision stimmt. (+%s)" % [_nm(c), _fmt(payment)]},
+					return "A check instead of trouble. %s is not thrilled that you rent out their face after the fact — but the commission is right. (+%s)" % [_nm(c), _fmt(payment)]},
 			]}
-	return {"title": "Das Angebot aus dem Computer",
-		"text": "%s will das digitale Abbild von %s lizenzieren: Werbung, Games, virtuelle Auftritte — %s muss nie wieder vor einer Kamera stehen und kassiert trotzdem. Angebot für die Agentur: %s.\n\n[i]„Also ich finde das gruselig“[/i], sagt %s." % [studio.name, _nm(c), _nm(c), _fmt(payment), _nm(c)],
+	return {"title": "The offer from the computer",
+		"text": "%s wants to license the digital likeness of %s: advertising, games, virtual appearances — %s never has to stand in front of a camera again and still gets paid. Offer for the agency: %s.\n\n[i]“Well, I find it creepy”[/i], says %s." % [studio.name, _nm(c), _nm(c), _fmt(payment), _nm(c)],
 		"choices": [
-			{"label": "Verkaufen (+%s)" % _fmt(payment), "fn": func():
-				Game.book(float(payment), "provision", "Digital-Double-Lizenz: %s" % _nm(c))
+			{"label": "Sell (+%s)" % _fmt(payment), "fn": func():
+				Game.book(float(payment), "provision", "Digital double license: %s" % _nm(c))
 				Game.change_trust(c, -3.0)
 				c.heat = clampf(c.heat + 2.0, -10.0, 10.0)
-				return "Das Double arbeitet ab jetzt rund um die Uhr — der Mensch dazu hat plötzlich viel freie Zeit und gemischte Gefühle. (+%s)" % _fmt(payment)},
-			{"label": "Ablehnen — der Klient hat Vetorecht", "fn": func():
+				return "The double now works around the clock — the human attached suddenly has a lot of free time and mixed feelings. (+%s)" % _fmt(payment)},
+			{"label": "Decline — the client has veto power", "fn": func():
 				Game.change_trust(c, 4.0)
 				_dna(c, "unikat", 2.0)
-				return "Du respektierst das Unbehagen. %s bleibt aus Fleisch und Blut — und vertraut dir ein Stück mehr." % _nm(c)},
+				return "You respect the unease. %s stays flesh and blood — and trusts you a bit more." % _nm(c)},
 		]}
 
 # ---------- endorsement: Werbe-Pflichttermin ----------
@@ -1269,25 +1269,25 @@ func _w_endorsement() -> float:
 func _b_endorsement() -> Dictionary:
 	var c = Game.pick(_clients_with_clause("endorsement"))
 	var pay := roundi((1200.0 + float(c.fame) * 45.0) * Game.infl(Game.state.year) * float(c.commission) / 100.0)
-	var product: String = Game.pick(["einen Rasierwasser-Spot", "eine Uhren-Kampagne", "einen Softdrink-Werbefilm", "eine Zigaretten-Anzeige", "eine Auto-Werbeserie"])
-	return {"title": "Der Werbe-Pflichttermin",
-		"text": "Die endorsement-Klausel ruft: %s soll %s drehen — drei Tage Studio, ein breites Grinsen, null künstlerischer Ehrgeiz. Die Agentur verdient mit, aber %s verdreht trotzdem die Augen." % [_nm(c), product, _nm(c)],
+	var product: String = Game.pick(["an aftershave spot", "a watch campaign", "a soft-drink commercial", "a cigarette ad", "a car ad series"])
+	return {"title": "The mandatory endorsement gig",
+		"text": "The endorsement clause calls: %s is to shoot %s — three days of studio, a wide grin, zero artistic ambition. The agency earns along, but %s rolls their eyes anyway." % [_nm(c), product, _nm(c)],
 		"choices": [
-			{"label": "Termin quetschen (+%s)" % _fmt(pay), "fn": func():
-				Game.book(float(pay), "provision", "Werbeverpflichtung: %s" % _nm(c))
+			{"label": "Squeeze the gig in (+%s)" % _fmt(pay), "fn": func():
+				Game.book(float(pay), "provision", "Endorsement obligation: %s" % _nm(c))
 				c.exhaustion = clampf(c.exhaustion + 8.0, 0.0, 100.0)
 				Game.change_trust(c, -2.0)
 				_dna(c, "familie", 2.0)
-				return "Drei Tage Lächeln auf Knopfdruck. Das Konto freut sich, %s weniger. (+%s, Erschöpfung steigt)" % [_nm(c), _fmt(pay)]},
-			{"label": "Termin absagen (Strafe)", "fn": func():
+				return "Three days of smiling on cue. The account is happy, %s less so. (+%s, exhaustion rises)" % [_nm(c), _fmt(pay)]},
+			{"label": "Cancel the gig (penalty)", "fn": func():
 				var fine := roundi(float(pay) * 0.5)
-				Game.book(-float(fine), "sonstiges", "Vertragsstrafe Werbetermin: %s" % _nm(c))
+				Game.book(-float(fine), "sonstiges", "Contract penalty, endorsement gig: %s" % _nm(c))
 				Game.change_trust(c, 2.0)
-				return "Du zahlst die Konventionalstrafe und schenkst deinem Klienten drei freie Tage. Manchmal ist das die bessere Investition. (−%s)" % _fmt(fine)},
-			{"label": "PR-Geschichte daraus machen", "fn": func():
+				return "You pay the penalty and give your client three free days. Sometimes that is the better investment. (−%s)" % _fmt(fine)},
+			{"label": "Turn it into a PR story", "fn": func():
 				var pr_pay := roundi(float(pay) * 0.7)
-				Game.book(float(pr_pay), "provision", "Werbeverpflichtung: %s" % _nm(c))
+				Game.book(float(pr_pay), "provision", "Endorsement obligation: %s" % _nm(c))
 				c.heat = clampf(c.heat + 2.0, -10.0, 10.0)
 				_dna(c, "popular", 2.0)
-				return "Du lässt die Kamera hinter der Kamera laufen: Der Spot wird zur Story, die Story zur Schlagzeile. Aus Pflicht wird PR. (+%s)" % _fmt(pr_pay)},
+				return "You let a camera roll behind the camera: the spot becomes a story, the story a headline. Duty turns into PR. (+%s)" % _fmt(pr_pay)},
 		]}
