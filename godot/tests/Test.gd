@@ -931,6 +931,47 @@ func _ready() -> void:
 	var bs_rumor := Game.add_rumor("agency", "Testgerücht aus dem Hinterzimmer.", false, "skandal")
 	check(bool(bs_rumor.knownToPlayer), "Kolumnist: Neues Gerücht ist sofort bekannt")
 
+	# 22. Spielfigur: getrennte Privat-/Agenturfinanzen, Zustand, Karriere
+	Game.new_game("Managertest", 1950)
+	var pl: Dictionary = Game.state.player
+	check(float(pl.cash) > 0.0, "Spielfigur startet mit privatem Erspartem (%s)" % Game.fmt_money(pl.cash))
+	check(int(pl.career) == 0 and str(Game.career_def().name) == "Junior-Agent", "Karriere beginnt als Junior-Agent")
+	check(Game.player_title() == "Noch ohne Profil", "Ruf-Titel ist anfangs unerspielt")
+	var pl_cash0 := float(pl.cash)
+	var ag_cash0 := float(Game.state.agency.cash)
+	var pl_events: Array = []
+	Game.state.week = 4
+	Game._month_close(pl_events)
+	check(float(pl.cash) != pl_cash0, "Monatsabschluss bucht Gehalt & Lebenshaltung privat")
+	var pl_gehalt := float(Game.player_salary())
+	var pl_leben := float(Game.player_living_cost())
+	check(pl_gehalt > pl_leben, "Junior-Gehalt liegt über der Lebenshaltung")
+	check(float(Game.state.agency.cash) < ag_cash0, "Agentur zahlt das Gehalt (getrennte Kassen)")
+	check(pl.ledger.size() >= 3, "Privat-Ledger führt Einzelbuchungen")
+	# Aktionen mit Monats-Cooldown
+	var pl_energy0 := float(pl.energy)
+	Game.player_vacation()
+	check(float(pl.energy) > pl_energy0, "Auszeit erhöht Energie")
+	check(not Game.player_can_act("vacation"), "Auszeit nur 1× pro Monat")
+	var pl_agency1 := float(Game.state.agency.cash)
+	Game.player_draw()
+	check(absf(float(Game.state.agency.cash) - (pl_agency1 - pl_gehalt)) < 0.01, "Privatentnahme belastet die Agenturkasse")
+	var pl_priv1 := float(pl.cash)
+	Game.player_inject(1000.0)
+	check(absf(float(pl.cash) - (pl_priv1 - 1000.0)) < 0.01, "Privateinlage verlässt das Privatkonto")
+	# Beförderung, sobald die Bedingungen erfüllt sind
+	Game.state.agency.rep = 30
+	for i in 3:
+		Game.state.released.append({"title": "Testfilm %d" % i})
+	var promo_events: Array = []
+	Game._check_promotion(promo_events)
+	check(int(pl.career) == 1 and promo_events.size() == 1, "Beförderung zum Etablierten Agenten gefeuert")
+	check(Game.promotion_requirements().any(func(r): return not r.met), "Nächste Stufe (Senior) noch gesperrt")
+	# Save-Migration: alte Stände ohne player-Feld bekommen die Spielfigur nachgerüstet
+	Game.state.erase("player")
+	Game.ensure_player()
+	check(Game.state.has("player") and int(Game.state.player.career) == 1, "ensure_player rüstet nach und leitet Karrierestufe her")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()

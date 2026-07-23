@@ -682,7 +682,7 @@ func _check_promotion(events: Array) -> void:
 # Wöchentlicher Zustands-Tick: Arbeitslast kostet Energie und erzeugt Stress.
 func _tick_player_week() -> void:
 	var p: Dictionary = state.player
-	var workload := state.clients.size() * 1.0 + state.productions.size() * 0.5 + state.castings.size() * 0.25
+	var workload: float = state.clients.size() * 1.0 + state.productions.size() * 0.5 + state.castings.size() * 0.25
 	p.energy = clampf(float(p.energy) + 9.0 - workload * 1.1, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) - 4.0 + workload * 0.8 + (4.0 if state.agency.cash < 0 else 0.0), 0.0, 100.0)
 

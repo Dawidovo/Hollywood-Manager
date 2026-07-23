@@ -113,6 +113,10 @@ func _ready() -> void:
 	elif args.has("--shot-2010"):
 		_on_era_selected(2010)
 		await _take_shot("2010")
+	elif args.has("--shot-privat"):
+		_on_era_selected(1950)
+		_switch_tab("privat")
+		await _take_shot("privat")
 	elif args.has("--shot-client"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
@@ -1060,6 +1064,98 @@ func _on_end_week() -> void:
 	if events.size():
 		modal_queue.append_array(events)
 		_show_next_modal()
+
+# ---------- Privat: die Spielfigur als eigenes System ----------
+# Führt eine Spielfigur-Aktion aus und rendert danach neu.
+func _player_action(action: Callable) -> void:
+	action.call()
+	render()
+
+func _stat_row(box: VBoxContainer, label: String, value: float, color: Color) -> void:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 8)
+	var l := _lbl("%s  %d/100" % [label, roundi(value)], 12, TEXT_C)
+	l.custom_minimum_size = Vector2(180 * font_scale, 0)
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	h.add_child(l)
+	var b := _bar(value, color)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(b)
+	box.add_child(h)
+
+func _render_privat() -> void:
+	var st = Game.state
+	var p: Dictionary = st.player
+	var grid := _grid(520.0)
+	content_box.add_child(grid)
+
+	# Karriere & erspielter Ruf-Titel
+	var cv = _card("Karriere", "🎩")
+	grid.add_child(cv[0])
+	cv[1].add_child(_lbl(str(Game.career_def().name), 24, ACC))
+	cv[1].add_child(_lbl("Ruf-Profil: %s — erspielt, nicht gewählt. Dein Verhalten prägt, wer anruft und welche Deals dich erreichen." % Game.player_title(), 12, DIM))
+	var reqs: Array = Game.promotion_requirements()
+	if reqs.is_empty():
+		cv[1].add_child(_lbl("Endstufe erreicht — Hollywood kennt keinen größeren Namen.", 13, GREEN))
+	else:
+		cv[1].add_child(_lbl("Nächste Stufe: %s" % str(Game.CAREER_LEVELS[int(p.career) + 1].name), 14, TEXT_C))
+		for r in reqs:
+			cv[1].add_child(_lbl(("✔ " if r.met else "✖ ") + str(r.label), 12, GREEN if r.met else DIM))
+		cv[1].add_child(_lbl("Beförderung erfolgt automatisch zum Monatsende, sobald alles erfüllt ist.", 11, DIM))
+
+	# Privatfinanzen — strikt getrennt von der Agenturkasse
+	var fv = _card("Privatfinanzen", "💼")
+	grid.add_child(fv[0])
+	var cash := float(p.cash)
+	fv[1].add_child(_lbl(("Privatvermögen: %s" if cash >= 0.0 else "Privatschulden: %s") % Game.fmt_money(absf(cash)), 17, GREEN if cash >= 0.0 else RED))
+	fv[1].add_child(_lbl("Gehalt: %s/Monat + %d %% Tantieme auf Provisionen" % [Game.fmt_money(Game.player_salary()), roundi(Game.PLAYER_ROYALTY * 100.0)], 12, DIM))
+	fv[1].add_child(_lbl("Lebenshaltung: %s/Monat — der Lebensstil wächst mit dem Titel" % Game.fmt_money(Game.player_living_cost()), 12, DIM))
+	if cash < 0.0:
+		fv[1].add_child(_lbl("⚠ Auf Privatschulden fallen monatlich 2 % Zinsen an.", 12, RED))
+	var draw := _btn("Privatentnahme: +%s aufs Privatkonto" % Game.fmt_money(Game.player_salary()), _player_action.bind(Game.player_draw), true)
+	draw.disabled = not Game.player_can_act("draw") or float(st.agency.cash) < Game.player_salary()
+	fv[1].add_child(draw)
+	fv[1].add_child(_lbl("Privateinlage in die Agentur:", 12, DIM))
+	var inj_row := HBoxContainer.new()
+	inj_row.add_theme_constant_override("separation", 6)
+	fv[1].add_child(inj_row)
+	for mult in [1, 3, 10]:
+		var amount: float = Game.player_salary() * float(mult)
+		var ib := _btn(Game.fmt_money(amount), _player_action.bind(Game.player_inject.bind(amount)))
+		ib.disabled = cash < amount
+		inj_row.add_child(ib)
+	var entries: Array = p.ledger.slice(maxi(0, p.ledger.size() - 6))
+	if not entries.is_empty():
+		fv[1].add_child(_lbl("Letzte Buchungen:", 12, DIM))
+		entries.reverse()
+		for e in entries:
+			var amt := float(e.amount)
+			fv[1].add_child(_lbl("%s%s — %s" % ["+" if amt >= 0.0 else "−", Game.fmt_money(absf(amt)), str(e.text)], 11, GREEN if amt >= 0.0 else RED))
+
+	# Zustand: Energie, Stress, Gesundheit + Erholungsaktionen
+	var zv = _card("Zustand", "🧘")
+	grid.add_child(zv[0])
+	_stat_row(zv[1], "🔋 Energie", float(p.energy), GREEN if float(p.energy) >= 25.0 else RED)
+	_stat_row(zv[1], "😰 Stress", float(p.stress), RED if float(p.stress) > 70.0 else AMBER)
+	_stat_row(zv[1], "❤ Gesundheit", float(p.health), GREEN if float(p.health) >= 40.0 else RED)
+	zv[1].add_child(_lbl("Arbeitslast kostet Energie, Krisen erzeugen Stress. Dauerstress frisst die Gesundheit — bis zur Klinik.", 11, DIM))
+	var vac := _btn("🌴 Auszeit in Palm Springs (−%s)" % Game.fmt_money(roundf(220.0 * Game.infl(st.year))), _player_action.bind(Game.player_vacation))
+	vac.disabled = not Game.player_can_act("vacation")
+	zv[1].add_child(vac)
+	var doc := _btn("🩺 Arzt-Checkup (−%s)" % Game.fmt_money(roundf(150.0 * Game.infl(st.year))), _player_action.bind(Game.player_checkup))
+	doc.disabled = not Game.player_can_act("checkup")
+	zv[1].add_child(doc)
+	zv[1].add_child(_lbl("Je 1× pro Monat.", 11, DIM))
+
+	# Ruf & Einfluss — der Manager hat ein eigenes Standing
+	var rv = _card("Ruf & Einfluss", "🌟")
+	grid.add_child(rv[0])
+	_stat_row(rv[1], "📰 Öffentlicher Ruf", float(p.pubRep), BLUE)
+	_stat_row(rv[1], "🏛 Branchenruf", float(p.indRep), ACC)
+	_stat_row(rv[1], "🤫 Diskretion", float(p.discretion), BLUE)
+	_stat_row(rv[1], "🧲 Einfluss", float(p.influence), AMBER)
+	rv[1].add_child(_lbl("Branchenruf folgt dem Agentur-Ruf, Einfluss wächst mit Karrierestufe und offenen Gefallen. Skandale treffen zuerst den öffentlichen Ruf.", 11, DIM))
 
 # ---------- Sidebar ----------
 func _render_sidebar() -> void:
