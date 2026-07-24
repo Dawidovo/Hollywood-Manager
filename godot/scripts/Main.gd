@@ -153,6 +153,19 @@ func _ready() -> void:
 		Mogul.invest_stake(int(Game.state.productions[0].id), "equity")
 		_switch_tab("invest")
 		await _take_shot("invest")
+	elif args.has("--shot-post"):
+		_on_era_selected(1950)
+		Dialogs.spawn_letter("studio_lunch", true)
+		Dialogs.spawn_letter("charity_ball", true)
+		Dialogs.spawn_letter("press_quote", true)
+		_switch_tab("post")
+		await _take_shot("post")
+	elif args.has("--shot-dialog"):
+		_on_era_selected(1950)
+		_switch_tab("kontakte")
+		Persona.begin_channel_dialog(int(Game.state.contacts[0].id), "meet")
+		_start_dialog("channel_meet", {"ctid": int(Game.state.contacts[0].id)})
+		await _take_shot("dialog")
 	elif args.has("--shot-chronik"):
 		_on_era_selected(1950)
 		Game.state.agency.rep = 100
@@ -1082,7 +1095,10 @@ func render() -> void:
 
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
-	var tabs := [["buero", "🏢 Agency"], ["privat", "🎩 Personal"], ["lifestyle", "🏠 Lifestyle"], ["invest", "📈 Investments"], ["kontakte", "📇 Contacts (%d⏱)" % int(st.contactAP)], ["orte", "🗺 Places"], ["klienten", "👥 Clients (%d)" % st.clients.size()], ["rumors", "🗣 Rumors (%d)" % known_rumors],
+	var tabs := [["buero", "🏢 Agency"], ["privat", "🎩 Personal"], ["lifestyle", "🏠 Lifestyle"], ["invest", "📈 Investments"],
+		["kontakte", "📇 Contacts (%d⏱)" % int(st.contactAP)],
+		["post", "%s %s (%d)" % [Dialogs.mail_icon(), Dialogs.mail_word(), Dialogs.open_letters().size()]],
+		["orte", "🗺 Places"], ["klienten", "👥 Clients (%d)" % st.clients.size()], ["rumors", "🗣 Rumors (%d)" % known_rumors],
 		["zeitung", "🗞 Newspaper"], ["pool", "🎭 Talent pool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Films"], ["planer", "🗓 Planner"], ["finanzen", "💰 Finances"], ["chronik", "📰 Chronicle"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
@@ -1094,6 +1110,7 @@ func render() -> void:
 		"lifestyle": _render_lifestyle()
 		"invest": _render_invest()
 		"kontakte": _render_kontakte()
+		"post": _render_post()
 		"orte": _render_orte()
 		"klienten": _render_klienten()
 		"rumors": _render_rumors()
@@ -1285,8 +1302,41 @@ func _render_privat() -> void:
 		var broken: int = st.backroom.filter(func(d): return str(d.status) in ["broken", "exposed"]).size()
 		em[1].add_child(_lbl("Your word in the back rooms: %d kept · %d broken or exposed." % [honored, broken], 11, DIM))
 
+# ---------- Dialog runner (Feature: Dialogsystem, data/dialogs) ----------
+func _start_dialog(id_s: String, ctx: Dictionary) -> void:
+	_render_dialog_view(Dialogs.start(id_s, ctx))
+
+func _dialog_choose(idx: int) -> void:
+	_render_dialog_view(Dialogs.choose(idx))
+
+func _render_dialog_view(view: Dictionary) -> void:
+	_open_modal()
+	modal_box.add_child(_lbl(str(view.title), 22, ACC))
+	modal_box.add_child(_rich(str(view.text), 14))
+	for line in view.get("lines", []):
+		modal_box.add_child(_rich("[color=#%s]▸ %s[/color]" % [AMBER.to_html(false), str(line)], 13))
+	if bool(view.get("done", false)):
+		modal_box.add_child(_btn("Continue", _modal_done, true))
+		return
+	for i in view.choices.size():
+		var ch: Dictionary = view.choices[i]
+		var b := _btn(str(ch.label), _dialog_choose.bind(i))
+		b.disabled = bool(ch.disabled)
+		if str(ch.get("reason", "")) != "":
+			b.tooltip_text = "⛔ " + str(ch.reason)
+		modal_box.add_child(b)
+
 # ---------- Contacts: relationships over real channels ----------
 func _on_contact_channel(cid: int, key: String) -> void:
+	# Wichtige Begegnungen (Dinner, Clubabend) laufen als echtes Gespräch —
+	# datengetrieben und modbar; ohne Dialogdefinition greift der alte Weg.
+	if (key == "meet" or key == "club") and Dialogs.has_dialog("channel_" + key):
+		var begin: Dictionary = Persona.begin_channel_dialog(cid, key)
+		if not bool(begin.ok):
+			_show_simple_modal("Not possible", str(begin.text))
+			return
+		_start_dialog("channel_" + key, {"ctid": cid})
+		return
 	var res: Dictionary = Persona.contact_interact(cid, key)
 	_open_modal()
 	modal_box.add_child(_lbl("Reaching out", 22, ACC))
@@ -1506,6 +1556,14 @@ func _render_kontakte() -> void:
 					irow.add_child(ib2)
 
 func _on_attend_gala() -> void:
+	# Der Abend als Gespräch (Feature 21 trifft Dialogsystem)
+	if Dialogs.has_dialog("gala_evening"):
+		var begin: Dictionary = Network.begin_gala()
+		if not bool(begin.ok):
+			_show_simple_modal("Not possible", str(begin.text))
+			return
+		_start_dialog("gala_evening", {})
+		return
 	var res: Dictionary = Network.attend_gala()
 	_open_modal()
 	modal_box.add_child(_lbl("🎟 The gala", 22, ACC))
@@ -1580,12 +1638,77 @@ func _open_backroom_picker(cid: int) -> void:
 	modal_box.add_child(_btn("Leave it", _modal_done))
 
 func _do_backroom(cid: int, deal_id: String) -> void:
-	var res: Dictionary = Mogul.propose_deal(cid, deal_id)
 	_close_modal()
+	# Absprachen entstehen aus Dialogen (Feature 8 trifft Dialogsystem)
+	if Dialogs.has_dialog("backroom_seal"):
+		var begin: Dictionary = Mogul.begin_deal_dialog(cid, deal_id)
+		if not bool(begin.ok):
+			_show_simple_modal("Not possible", str(begin.text))
+			return
+		_start_dialog("backroom_seal", {"ctid": cid, "dealId": deal_id})
+		return
+	var res: Dictionary = Mogul.propose_deal(cid, deal_id)
 	_open_modal()
 	modal_box.add_child(_lbl("Handshake" if res.ok else "No deal", 22, ACC))
 	modal_box.add_child(_rich(str(res.text), 14))
 	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+# ---------- Correspondence: the week's letters/e-mail (data/letters) ----------
+func _on_letter_choice(lid: int, idx: int) -> void:
+	var res: Dictionary = Dialogs.letter_choose(lid, idx)
+	# Ein Brief kann direkt in ein Gespräch münden
+	if bool(res.get("ok", false)) and res.has("dialog"):
+		_start_dialog(str(res.dialog), res.get("ctx", {}))
+		return
+	_open_modal()
+	modal_box.add_child(_lbl("%s The reply" % Dialogs.mail_icon() if res.get("ok", false) else "Not possible", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+func _render_post() -> void:
+	var st = Game.state
+	var head = _card("This week's %s" % Dialogs.mail_word().to_lower(), Dialogs.mail_icon())
+	content_box.add_child(head[0])
+	head[1].add_child(_lbl("Everything that reaches your desk lands here: invitations, requests, demands, opportunities. Most of it can wait — none of it forever.", 12, DIM))
+	head[1].add_child(_lbl("Contact time this week: %d⏱ — some replies cost time, all of them say something about you." % int(st.contactAP), 11, DIM))
+	var letters: Array = Dialogs.open_letters()
+	if letters.is_empty():
+		head[1].add_child(_lbl("The tray is empty. Enjoy it — it never lasts.", 13, DIM))
+	for letter in letters:
+		var lv = _card("%s — %s" % [letter["from"].get("name", "?"), str(letter.subject)], Dialogs.mail_icon())
+		content_box.add_child(lv[0])
+		lv[1].add_child(_lbl("Received %s · expires %s" % [Game.mi_str(letter.mi), "soon" if Game.wi() >= int(letter.expireWi) else "in %d week(s)" % (int(letter.expireWi) - Game.wi())], 11, DIM))
+		lv[1].add_child(_rich(str(letter.body), 14))
+		var def: Dictionary = Dialogs.letter_def(str(letter.tid))
+		var flow := HFlowContainer.new()
+		flow.add_theme_constant_override("h_separation", 6)
+		flow.add_theme_constant_override("v_separation", 6)
+		lv[1].add_child(flow)
+		var choices: Array = def.get("choices", [])
+		for i in choices.size():
+			var ch: Dictionary = choices[i]
+			var b := _btn(EvEngine.subst(str(ch.get("label", "…")), Dialogs._letter_ctx(letter)), _on_letter_choice.bind(int(letter.id), i))
+			var reason: String = Dialogs.letter_choice_blocked(letter, ch)
+			b.disabled = reason != ""
+			if reason != "":
+				b.tooltip_text = "⛔ " + reason
+			flow.add_child(b)
+	# Archiv: erledigte & verfallene Post der letzten Wochen
+	var archive: Array = st.inbox.filter(func(l): return str(l.status) != "open")
+	if not archive.is_empty():
+		var av = _card("Filed away", "🗄")
+		content_box.add_child(av[0])
+		archive.reverse()
+		for letter in archive.slice(0, 8):
+			var status := str(letter.status)
+			var color := GREEN if status == "done" else DIM
+			var line := "%s · %s — %s" % [Game.mi_str(letter.mi), letter["from"].get("name", "?"), str(letter.subject)]
+			if status == "expired":
+				line += "  (went unanswered)"
+			var al := _lbl(line, 12, color)
+			if str(letter.get("outcome", "")) != "":
+				al.tooltip_text = str(letter.outcome)
+			av[1].add_child(al)
 
 # ---------- Locations: the node map with presence ----------
 func _on_travel(id_s: String) -> void:

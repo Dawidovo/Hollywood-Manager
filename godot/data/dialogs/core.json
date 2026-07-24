@@ -1,0 +1,174 @@
+{
+  "entries": [
+    {"id": "channel_meet", "title": "🤝 Dinner with {contact}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["The maître d' knows you both. Over the first course, {contact} studies you: what is this dinner really about?",
+            "A corner table, no columnists in sight. {contact} leans back — your move."],
+          "choices": [
+            {"label": "Talk business — openly", "goto": "business", "effects": [{"op": "dims", "respect": 1}]},
+            {"label": "Keep it personal tonight", "goto": "personal", "effects": [{"op": "dims", "liking": 2, "closeness": 1}]},
+            {"label": "Steer toward a favor", "goto": "favor_try", "conditions": {"dims": {"liking": 40}}}
+          ]},
+        "business": {
+          "text": ["Contracts, casting boards, who is up and who is quietly done — the shop talk flows."],
+          "choices": [
+            {"label": "Pitch your clients' future", "check": {"skill": "negotiation", "dim": "respect", "base": 0.45, "success": "biz_win", "fail": "biz_flat"}},
+            {"label": "Ask what is moving in town", "goto": "info", "effects": [{"op": "rumor_reveal"}, {"op": "xp", "field": "networking", "amount": 1}]}
+          ]},
+        "biz_win": {
+          "text": ["{contact} sets down the fork and actually listens. By dessert, you are not a salesman anymore — you are a colleague."],
+          "effects": [{"op": "dims", "respect": 4, "trust": 2}, {"op": "xp", "field": "negotiation", "amount": 1}, {"op": "memory", "text": "Talked real business over dinner — impressive."}],
+          "choices": [{"label": "Call it a night on a high note", "goto": "end"}]},
+        "biz_flat": {
+          "text": ["The pitch lands like day-old bread. {contact} nods politely and refills the glasses."],
+          "effects": [{"op": "dims", "respect": 1, "irritation": 1}],
+          "choices": [{"label": "Change the subject, salvage the evening", "goto": "personal"}]},
+        "personal": {
+          "text": ["Family, old films, the town before the war — the business melts out of the conversation."],
+          "choices": [
+            {"label": "Listen more than you talk", "goto": "end_warm", "effects": [{"op": "dims", "closeness": 3, "liking": 2}, {"op": "xp", "field": "people", "amount": 1}, {"op": "memory", "text": "Actually listened. Rare, in this town."}]},
+            {"label": "Promise to stay close", "goto": "end_warm", "effects": [{"op": "promise"}]}
+          ]},
+        "info": {
+          "text": ["{contact} lowers the voice just enough. What you hear does not appear in any trade paper."],
+          "choices": [{"label": "Raise a glass to discretion", "goto": "end_warm", "effects": [{"op": "dims", "trust": 2}]}]},
+        "favor_try": {
+          "text": ["You circle the subject twice before naming it. {contact} hears the request underneath the anecdote."],
+          "choices": [
+            {"label": "Make the ask", "check": {"skill": "networking", "dim": "dependence", "base": 0.35, "success": "favor_win", "fail": "favor_flat"}},
+            {"label": "Let it rest — wrong evening", "goto": "personal"}
+          ]},
+        "favor_win": {
+          "text": ["A slow nod. \"Consider it handled.\" No paper, no witnesses — just a debt turned into a gesture."],
+          "effects": [{"op": "favor_grant", "kind": "extraAudition|billing|scriptAccess|suppressStory"}, {"op": "dims", "dependence": -5}],
+          "choices": [{"label": "Thank them — briefly", "goto": "end"}]},
+        "favor_flat": {
+          "text": ["\"Ask me another time,\" says {contact}, and means: not like this."],
+          "effects": [{"op": "dims", "irritation": 2}],
+          "choices": [{"label": "Smooth it over and pay the bill", "goto": "end_warm"}]},
+        "end_warm": {"end": true, "effects": [{"op": "dims", "liking": 2}],
+          "text": ["Coats, handshakes, the town glittering outside. Evenings like this are the actual currency of the business."]},
+        "end": {"end": true,
+          "text": ["The check comes, the evening ends. What remains is whatever you built at the table."]}
+      }},
+
+    {"id": "channel_club", "title": "🥃 A night at the club with {contact}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["Leather, smoke, a piano nobody listens to. {contact} orders without looking at the menu. The night is young."],
+          "choices": [
+            {"label": "Talk shop at the bar", "goto": "bar"},
+            {"label": "Join the back table", "goto": "backtable"},
+            {"label": "Just drink and let the night happen", "goto": "drift"}
+          ]},
+        "bar": {
+          "text": ["Between two whiskies the talk turns to money — who has it, who needs it, who pretends."],
+          "effects": [{"op": "tip"}],
+          "choices": [
+            {"label": "Push for details", "check": {"skill": "finance", "dim": "trust", "base": 0.45, "success": "bar_win", "fail": "bar_flat"}},
+            {"label": "File it away and change the subject", "goto": "end_night", "effects": [{"op": "dims", "closeness": 2}]}
+          ]},
+        "bar_win": {
+          "text": ["{contact} glances around, then gives you the part they left out. Now you know what the smart money knows."],
+          "effects": [{"op": "dims", "trust": 3}, {"op": "xp", "field": "finance", "amount": 1}],
+          "choices": [{"label": "Buy the next round", "goto": "end_night"}]},
+        "bar_flat": {
+          "text": ["Too many questions. {contact} smiles and orders water. The subject is closed."],
+          "effects": [{"op": "dims", "irritation": 1}],
+          "choices": [{"label": "Laugh it off", "goto": "end_night"}]},
+        "backtable": {
+          "text": ["The back table is where the town actually gets run. Tonight there is a chair for you."],
+          "effects": [{"op": "dims", "closeness": 3}, {"op": "rumor_reveal"}],
+          "choices": [
+            {"label": "Trade a small confidence of your own", "check": {"skill": "discretion", "dim": "closeness", "base": 0.5, "success": "conf_win", "fail": "conf_fail"}},
+            {"label": "Listen and keep your cards down", "goto": "end_night", "effects": [{"op": "xp", "field": "discretion", "amount": 1}]}
+          ]},
+        "conf_win": {
+          "text": ["Give a little, get a lot: the table opens up, and someone owes you by the time the ashtray is full."],
+          "effects": [{"op": "favor_grant", "kind": "extraAudition|suppressStory|galaInvite"}, {"op": "fact", "text": "can keep a confidence", "tone": 1}],
+          "choices": [{"label": "Leave while you are ahead", "goto": "end_night"}]},
+        "conf_fail": {
+          "text": ["You said one sentence too many — and the wrong ears were closest."],
+          "effects": [{"op": "player", "discretion": -3}],
+          "choices": [{"label": "Sign the tab and go", "goto": "end_night"}]},
+        "drift": {
+          "text": ["No agenda, no angles. For one evening the town is just a town, and the drink is just a drink."],
+          "effects": [{"op": "player", "stress": -6, "energy": -2}, {"op": "dims", "liking": 2, "closeness": 2}, {"op": "chance", "p": 0.12, "effects": [{"op": "meet_someone", "origin": "over a late glass at the club"}]}],
+          "choices": [{"label": "Last call", "goto": "end_night"}]},
+        "end_night": {"end": true,
+          "text": ["The doorman flags a cab. Whatever was said in there stays in there — mostly."]}
+      }},
+
+    {"id": "backroom_seal", "title": "🥃 The back room — sealing it with {contact}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["The door is shut, the glasses are full. You lay out the arrangement piece by piece. {contact} listens without blinking."],
+          "choices": [
+            {"label": "Make it friendly — leave them room", "check": {"skill": "networking", "dim": "liking", "base": 0.4, "success": "seal", "fail": "soft_no"}},
+            {"label": "Make it transactional — numbers first", "check": {"skill": "negotiation", "dim": "dependence", "base": 0.35, "success": "seal", "fail": "hard_no"}},
+            {"label": "Think better of it", "goto": "abort"}
+          ]},
+        "seal": {"end": true,
+          "text": ["A pause. Then the hand comes across the table."],
+          "effects": [{"op": "seal_deal"}]},
+        "soft_no": {"end": true,
+          "text": ["{contact} swirls the glass. \"Not this season.\" The door stays open — the deal does not."],
+          "effects": [{"op": "dims", "liking": -1}, {"op": "xp", "field": "negotiation", "amount": 1}]},
+        "hard_no": {"end": true,
+          "text": ["\"You mistake me for someone who needs this.\" The temperature in the room drops five degrees."],
+          "effects": [{"op": "dims", "irritation": 3}, {"op": "xp", "field": "negotiation", "amount": 1}]},
+        "abort": {"end": true,
+          "text": ["You talk about the weather instead. Some doors are better left unopened tonight."]}
+      }},
+
+    {"id": "gala_evening", "title": "🎟 The gala",
+      "start": "arrival",
+      "nodes": {
+        "arrival": {
+          "text": ["Chandeliers, an orchestra, and three hundred people pretending not to count who greets whom first. Where do you spend the evening?"],
+          "choices": [
+            {"label": "Work the producers' circle", "goto": "producers"},
+            {"label": "Charm the press table", "goto": "press"},
+            {"label": "Court the old money", "goto": "money"},
+            {"label": "Float, observe, be seen", "goto": "float"}
+          ]},
+        "producers": {
+          "text": ["Cigar smoke and casting talk. Projects are being born ten feet from the dance floor."],
+          "choices": [
+            {"label": "Pitch — gently, between toasts", "check": {"skill": "negotiation", "base": 0.5, "success": "prod_win", "fail": "prod_flat"}},
+            {"label": "Just collect faces and names", "goto": "finale", "effects": [{"op": "meet_someone", "origin": "at the gala"}]}
+          ]},
+        "prod_win": {
+          "text": ["By midnight there is a project with your fingerprints on it — and a producer who owes you a listen."],
+          "effects": [{"op": "casting_spawn", "amount": 1}, {"op": "favor_grant", "kind": "extraAudition|billing"}],
+          "choices": [{"label": "Quit while you are golden", "goto": "finale"}]},
+        "prod_flat": {
+          "text": ["Polite nods, empty promises. Not every gala pays out — but they saw your face."],
+          "effects": [{"op": "player", "pubRep": 1}, {"op": "xp", "field": "negotiation", "amount": 1}],
+          "choices": [{"label": "Move on", "goto": "finale"}]},
+        "press": {
+          "text": ["The press table knows everything an hour early and prints half of it."],
+          "effects": [{"op": "rumor_reveal"}],
+          "choices": [
+            {"label": "Trade a harmless quote for goodwill", "goto": "finale", "effects": [{"op": "player", "pubRep": 1}, {"op": "xp", "field": "media", "amount": 1}]},
+            {"label": "Stay off the record", "goto": "finale", "effects": [{"op": "player", "discretion": 2}]}
+          ]},
+        "money": {
+          "text": ["Quiet suits, quieter voices. Here nobody talks pictures — only returns."],
+          "effects": [{"op": "tip"}],
+          "choices": [{"label": "Exchange cards", "goto": "finale", "effects": [{"op": "meet_someone", "origin": "among the old money at the gala"}]}]},
+        "float": {
+          "text": ["You drift through the evening like a rumor: everywhere, briefly, memorably."],
+          "effects": [{"op": "meet_someone", "origin": "at the gala"}, {"op": "chance", "p": 0.4, "effects": [{"op": "promise"}]}],
+          "choices": [{"label": "One last round of the room", "goto": "finale"}]},
+        "finale": {"end": true,
+          "text": ["Coat check, cold night air, ears still ringing. Evenings like this pay out for years — one way or another."],
+          "effects": [{"op": "xp", "field": "networking", "amount": 2}, {"op": "memoir", "text": "An evening at the gala — new names, new promises, new debts."},
+            {"op": "chance", "p": 0.3, "effects": [{"op": "favor_grant", "kind": "galaInvite"}]}]}
+      }}
+  ]
+}

@@ -345,6 +345,33 @@ func contact_blocked_reason(ct: Dictionary, key: String) -> String:
 	return ""
 
 
+# Ein Kanal-Gespräch beginnen, das als Dialog (Feature: Dialogsystem)
+# weiterläuft: Kosten, Zeit, Energie & Versprechen laufen hier, die
+# eigentliche Unterhaltung übernimmt die Dialog-Engine.
+func begin_channel_dialog(cid, key: String) -> Dictionary:
+	var st := _st()
+	var ct := contact_by_id(cid)
+	if ct.is_empty() or not Data.CONTACT_CHANNELS.has(key):
+		return {"ok": false, "text": "Unknown contact."}
+	var reason := contact_blocked_reason(ct, key)
+	if reason != "":
+		return {"ok": false, "text": reason}
+	var ch: Dictionary = Data.CONTACT_CHANNELS[key]
+	var cost := channel_cost(key)
+	if cost > 0.0:
+		book(-cost, "%s %s — %s" % [str(ch.icon), str(ch.name), str(ct.name)])
+	st.contactAP = int(st.contactAP) - Mogul.channel_ap(key)
+	st.player.energy = clampf(float(st.player.energy) - float(ch.energy), 0.0, 100.0)
+	ct.lastActWeek = Game.wi()
+	ct.lastMi = Game.mi()
+	ct.waitNoted = false
+	_fulfill_promises(ct)
+	Mogul.grant_xp("networking", 1.0, "Kept a relationship alive")
+	if key == "meet":
+		Mogul.grant_xp("people", 1.0, "Face to face, you learn the most")
+	return {"ok": true}
+
+
 # Reaching out over a channel: costs, relationship effect, risks,
 # memory — and open promises to this person count as kept.
 func contact_interact(cid, key: String) -> Dictionary:

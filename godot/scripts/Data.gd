@@ -43,6 +43,8 @@ var SKILL_THRESHOLDS: Array = []
 var STOCKS: Array = []
 var BACKROOM_DEALS: Array = []
 var BACKROOM_BY_ID: Dictionary = {}
+var DIALOGS: Array = []
+var LETTERS: Array = []
 
 
 func _init() -> void:
@@ -111,3 +113,9 @@ func reload() -> void:
 	BACKROOM_BY_ID = {}
 	for d in BACKROOM_DEALS:
 		BACKROOM_BY_ID[str(d.id)] = d
+	DIALOGS = DataLoader.load_entries("dialogs", ["id"],
+		{"title": "Conversation", "start": "opening", "nodes": {}}, ["id"])
+	LETTERS = DataLoader.load_entries("letters", ["id"],
+		{"weight": 1, "conditions": {}, "from_type": "stranger", "subject": "…", "body": "",
+			"expire_weeks": 3, "choices": [], "expire_effects": []},
+		["id"])

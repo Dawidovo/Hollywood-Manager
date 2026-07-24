@@ -487,6 +487,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	Persona.init_contacts()
 	Mogul.init_state()
 	Network.init_state()
+	Dialogs.init_state()
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = rndi(20, 45)
 	book(float(roundi(120000.0 * infl(start_year))), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
@@ -2039,6 +2040,8 @@ func end_week() -> Array:
 	# Spielfigur: Arbeitslast der Woche wirkt auf Energie & Stress
 	Persona.tick_week()
 	Mogul.tick_week()
+	# Die Post der Woche: Briefe/E-Mails werden zugestellt, Liegengebliebenes verfällt
+	Dialogs.tick_week()
 
 	# Wochenplaner: die geplante Woche wirkt VOR den Ereignissen
 	_apply_planner(events)
@@ -2658,6 +2661,8 @@ func load_game() -> bool:
 	Mogul.ensure_all()
 	# Migration Netzwerk-Cluster (Features 10–15: Memoir, Dimensionen, Gatekeeper)
 	Network.ensure_network()
+	# Migration Korrespondenz (Dialogsystem & Posteingang)
+	Dialogs.ensure_inbox()
 	# Migration Simulations- & Verhandlungs-Cluster
 	if not state.has("instinct"):
 		state["instinct"] = 20

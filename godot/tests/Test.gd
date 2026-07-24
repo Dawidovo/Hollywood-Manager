@@ -1383,6 +1383,71 @@ func _ready() -> void:
 	check(Game.state.occasions.size() == occ_n, "Anlässe überleben Save/Load")
 	check(Game.state.contacts.any(func(ct): return ct.get("facts", []).size() > 0), "Subjektive Fakten überleben Save/Load")
 
+	# =========== Dialogsystem & Posteingang ===========
+	# 42. Dialog-Engine: Start, Auswahl, Effekte, Ende
+	Game.new_game("Dialog AG", 1950)
+	check(Data.DIALOGS.size() >= 4 and Dialogs.has_dialog("channel_meet"), "Dialogbäume aus data/dialogs geladen (%d)" % Data.DIALOGS.size())
+	check(Data.LETTERS.size() >= 6, "Briefvorlagen aus data/letters geladen (%d)" % Data.LETTERS.size())
+	var dlg_ct: Dictionary = Game.state.contacts[0]
+	var dlg_liking0 := Network.dim(dlg_ct, "liking")
+	var dlg_view := Dialogs.start("channel_meet", {"ctid": int(dlg_ct.id)})
+	check(not bool(dlg_view.done) and dlg_view.choices.size() == 3, "Dialog startet mit Auswahlmöglichkeiten")
+	check(str(dlg_view.title).contains(str(dlg_ct.name)), "Platzhalter {contact} wird ersetzt")
+	check(bool(dlg_view.choices[2].disabled), "Bedingte Antwort ist bei zu wenig Sympathie gesperrt")
+	dlg_view = Dialogs.choose(1)
+	check(Network.dim(dlg_ct, "liking") > dlg_liking0, "Antwort-Effekte wirken auf die Beziehungsdimensionen")
+	check(not bool(dlg_view.done) and dlg_view.choices.size() == 2, "Dialog wechselt in den Folgeknoten")
+	var dlg_close0 := Network.dim(dlg_ct, "closeness")
+	dlg_view = Dialogs.choose(0)
+	check(bool(dlg_view.done), "Endknoten beendet das Gespräch")
+	check(Network.dim(dlg_ct, "closeness") > dlg_close0, "Knoten-Effekte des Endwegs wirken")
+	check(Dialogs.run == null, "Dialog-Laufzeitzustand wird aufgeräumt")
+	var check_p := Dialogs.check_p({"skill": "negotiation", "base": 0.5})
+	check(check_p >= 0.05 and check_p <= 0.95, "Würfe bleiben im Wahrscheinlichkeitsfenster (%0.2f)" % check_p)
+
+	# 43. Posteingang: Zustellung, Antwort, Ablauf, Epochenwort
+	check(Dialogs.mail_word() == "Letters", "1950 kommt die Post als Brief")
+	var lt := Dialogs.spawn_letter("studio_lunch", true)
+	check(not lt.is_empty() and Dialogs.open_letters().size() == 1, "Brief zugestellt")
+	check(str(lt["from"].get("type", "")) == "studio" and lt["from"].has("ctid"), "Absender aus dem Kontaktbuch aufgelöst")
+	var lt_ct: Dictionary = Persona.contact_by_id(int(lt["from"].ctid))
+	var lt_close0 := Network.dim(lt_ct, "closeness")
+	Game.state.contactAP = 3
+	var lt_res := Dialogs.letter_choose(int(lt.id), 0)
+	check(bool(lt_res.ok) and str(lt.status) == "done", "Brief-Antwort ausgeführt und abgelegt")
+	check(Network.dim(lt_ct, "closeness") > lt_close0, "Brief-Effekte wirken auf den Absender-Kontakt")
+	check(int(Game.state.contactAP) == 2, "Brief-Antwort kostet Kontaktzeit")
+	var lt2 := Dialogs.spawn_letter("tax_audit", true)
+	lt2.expireWi = Game.wi() - 1
+	var lt_cash0 := float(Game.state.player.cash)
+	Dialogs.tick_week()
+	check(str(lt2.status) == "expired", "Liegengebliebene Post verfällt")
+	check(float(Game.state.player.cash) < lt_cash0, "Verfall mit Konsequenz: Säumniszuschlag gebucht")
+	check(Dialogs.open_letters().size() >= 1, "Wöchentliche Zustellung bringt neue Post")
+	Game.state.year = 2005
+	check(Dialogs.mail_word() == "E-mail", "Ab der Jahrtausendwende kommt die Post als E-Mail")
+	Game.state.year = 1950
+
+	# 44. Dialog-Einstiege & Save/Load
+	Game.state.contactAP = 3
+	Game.state.player.cash = 5000.0
+	dlg_ct.lastActWeek = Game.wi()
+	var bd := Persona.begin_channel_dialog(int(dlg_ct.id), "meet")
+	check(not bool(bd.ok), "Kanal-Dialog respektiert die Wochensperre (bereits kontaktiert)")
+	var dlg_ct2: Dictionary = Game.state.contacts[1]
+	var bd2 := Persona.begin_channel_dialog(int(dlg_ct2.id), "meet")
+	check(bool(bd2.ok) and int(Game.state.contactAP) == 1, "Kanal-Dialog bucht Zeit & Kosten vor dem Gespräch")
+	Game.grant_favor("galaInvite", Game.favor_contact_for("galaInvite"), true)
+	check(bool(Network.begin_gala().ok), "Gala-Dialog-Einstieg konsumiert die Einladung")
+	var inbox_n: int = Game.state.inbox.size()
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Dialog-Spielstand geladen")
+	check(Game.state.inbox.size() == inbox_n, "Posteingang überlebt Save/Load")
+	Game.state.erase("inbox")
+	Dialogs.ensure_inbox()
+	check(Game.state.has("inbox"), "ensure_inbox rüstet alte Stände nach")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()

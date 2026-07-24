@@ -820,6 +820,26 @@ func deal_def(deal_id: String) -> Dictionary:
 	return Data.BACKROOM_BY_ID.get(deal_id, {})
 
 
+# Dialog-Einstieg (Feature: Dialogsystem): prüft & bezahlt den Rahmen,
+# das Gespräch selbst führt die Dialog-Engine (backroom_seal).
+func begin_deal_dialog(cid, deal_id: String) -> Dictionary:
+	var st := _st()
+	var ct := Persona.contact_by_id(cid)
+	var def := deal_def(deal_id)
+	if ct.is_empty() or def.is_empty():
+		return {"ok": false, "text": "Unknown deal."}
+	if Persona.is_away():
+		return {"ok": false, "text": "You are not in Los Angeles."}
+	if int(st.contactAP) < 1:
+		return {"ok": false, "text": "No contact time left this week."}
+	var cost := roundf(float(def.get("cost", 0)) * Game.infl(st.year))
+	if float(_p().cash) < cost:
+		return {"ok": false, "text": "Privately short on cash — this deal needs %s up front." % Game.fmt_money(cost)}
+	st.contactAP = int(st.contactAP) - 1
+	_p().energy = clampf(float(_p().energy) - 3.0, 0.0, 100.0)
+	return {"ok": true}
+
+
 # Propose over drinks: costs contact time, can be declined.
 func propose_deal(cid, deal_id: String) -> Dictionary:
 	var st := _st()

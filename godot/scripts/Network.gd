@@ -791,6 +791,18 @@ func _meet_someone(origin: String) -> Dictionary:
 	return ct
 
 
+# Dialog-Einstieg (Feature: Dialogsystem): Einladung & Abend verbuchen,
+# den Verlauf des Abends erzählt die Dialog-Engine (gala_evening).
+func begin_gala() -> Dictionary:
+	if not can_gala():
+		return {"ok": false, "text": "No invitation, no gala — or you are simply not in town."}
+	var st := _st()
+	Game.consume_favor("galaInvite")
+	st.contactAP = int(st.contactAP) - 1
+	st.player.energy = clampf(float(st.player.energy) - 5.0, 0.0, 100.0)
+	return {"ok": true}
+
+
 func attend_gala() -> Dictionary:
 	if not can_gala():
 		return {"ok": false, "text": "No invitation, no gala — or you are simply not in town."}

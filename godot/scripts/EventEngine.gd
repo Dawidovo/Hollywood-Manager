@@ -180,6 +180,13 @@ func subst(s: String, ctx: Dictionary) -> String:
 			s = s.replace("{client}", Game.client_name(c))
 	if s.contains("{studio}") and ctx.has("sid"):
 		s = s.replace("{studio}", str(Game._studio(str(ctx.sid)).name))
+	# Dialog-/Brief-Kontext (Feature: Dialogsystem): {contact} & {sender}
+	if s.contains("{contact}") and ctx.has("ctid"):
+		var ct: Dictionary = Persona.contact_by_id(ctx.ctid)
+		if not ct.is_empty():
+			s = s.replace("{contact}", str(ct.name))
+	if s.contains("{sender}"):
+		s = s.replace("{sender}", str(ctx.get("sender", "an unknown hand")))
 	s = s.replace("{agency}", str(st.agency.name)).replace("{year}", str(int(st.year)))
 	for m in _money_re.search_all(s):
 		s = s.replace(m.get_string(0), Game.fmt_money(_money(float(m.get_string(1)))))
@@ -191,6 +198,15 @@ func _money(base: float) -> float:
 
 
 # ---------- Effekt-Interpreter ----------
+# lines sammelt menschenlesbare Rückmeldungen einzelner Ops — das
+# Dialogsystem leert und liest den Puffer rund um apply_effects().
+var lines: Array = []
+
+
+func _say(text_s: String, ctx: Dictionary) -> void:
+	lines.append(subst(text_s, ctx))
+
+
 func apply_effects(effects: Array, ctx: Dictionary) -> void:
 	for ef in effects:
 		if ef is Dictionary:
@@ -263,6 +279,82 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 			st.followups.append({"type": "json", "event": str(ef.get("event", "")),
 				"ctx": {"cid": ctx.get("cid"), "sid": ctx.get("sid")},
 				"due": Game.mi() + maxi(1, roundi(delay_w / 4.0))})
+		# ---------- Dialog-/Brief-Ops (Feature: Dialogsystem, alle moddbar) ----------
+		"chance":
+			# Zufallszweig: {"op":"chance","p":0.3,"effects":[...],"else":[...]}
+			if Game.chance(float(ef.get("p", 0.5))):
+				apply_effects(ef.get("effects", []), ctx)
+			else:
+				apply_effects(ef.get("else", []), ctx)
+		"dims":
+			# Beziehungsdimensionen des Kontakts im Kontext: {"op":"dims","trust":2,"liking":-1}
+			var ct: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			if not ct.is_empty():
+				var deltas := {}
+				for key in Network.DIMS:
+					if ef.has(key):
+						deltas[key] = float(ef[key])
+				Network.adjust(ct, deltas, bool(ef.get("spill", true)))
+		"fact":
+			var ct2: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			if not ct2.is_empty():
+				Network.add_fact(ct2, subst(str(ef.get("text", "")), ctx), int(ef.get("tone", 1)), float(ef.get("weight", 1.0)))
+		"memory":
+			var ct3: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			if not ct3.is_empty():
+				Persona._memory(ct3, subst(str(ef.get("text", "")), ctx))
+		"promise":
+			var ct4: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			if not ct4.is_empty():
+				_say(Persona._make_promise(ct4), ctx)
+		"xp":
+			Mogul.grant_xp(str(ef.get("field", "networking")), amount if amount > 0.0 else 1.0, subst(str(ef.get("why", "Learned by doing")), ctx))
+		"player":
+			# Spielfigur-Werte: {"op":"player","energy":-3,"stress":-5,"discretion":2,...}
+			var p: Dictionary = st.player
+			for key in ["energy", "stress", "health", "pubRep", "indRep", "discretion", "influence"]:
+				if ef.has(key):
+					p[key] = clampf(float(p[key]) + float(ef[key]), 5.0 if key == "health" else 0.0, 100.0)
+		"money_private":
+			var v2 := _money(amount) if bool(ef.get("inflate", false)) else amount
+			Persona.book(v2, subst(str(ef.get("label", "Correspondence")), ctx))
+		"tip":
+			var src: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			if src.is_empty() and Game.state.contacts.size():
+				src = Game.pick(Game.state.contacts)
+			var tip_line: String = Mogul.maybe_market_tip(src) if not src.is_empty() else ""
+			_say(tip_line if tip_line != "" else "The money talk stays vague tonight.", ctx)
+		"rumor_reveal":
+			var found := false
+			for rumor in st.rumors:
+				if not bool(rumor.knownToPlayer):
+					rumor.knownToPlayer = true
+					found = true
+					_say("A name is dropped — a story reaches you that you would never have heard otherwise.", ctx)
+					break
+			if not found:
+				_say("The town is quiet this week — even the gossips have nothing.", ctx)
+		"casting_spawn":
+			Game.spawn_castings(maxi(int(amount), 1))
+			_say("A project lands on your desk that was not public knowledge.", ctx)
+		"meet_someone":
+			var met: Dictionary = Network._meet_someone(subst(str(ef.get("origin", "at an evening among people")), ctx))
+			if not met.is_empty():
+				_say("A handshake becomes a name in your book: [b]%s[/b]." % str(met.name), ctx)
+			else:
+				_say("Familiar faces everywhere — no new names tonight.", ctx)
+		"seal_deal":
+			var ct5: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			var deal_def: Dictionary = Mogul.deal_def(str(ctx.get("dealId", "")))
+			if not ct5.is_empty() and not deal_def.is_empty():
+				_say(Mogul._accept_deal(ct5, deal_def), ctx)
+		"gate_rel":
+			var ct6: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			if not ct6.is_empty() and not Network.gate_of(ct6).is_empty():
+				var gate: Dictionary = Network.gate_of(ct6)
+				gate.rel = clampf(float(gate.rel) + amount, 0.0, 100.0)
+		"memoir":
+			Network.memoir(subst(str(ef.get("text", "")), ctx))
 		_:
 			push_warning("EvEngine: Unbekannte Effekt-Op „%s“ — übersprungen." % str(ef.get("op", "")))
 

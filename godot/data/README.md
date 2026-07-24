@@ -22,7 +22,13 @@ No code needed.
 | `career/` | Career ladder (Junior → Mogul) | List | `id` |
 | `reputation/` | Earned reputation titles | Object | identity key |
 | `locations/` | Node map (places, travel, actions) | List | `id` |
-| `contacts/` | Contact roles, persons, channels | Object | — |
+| `contacts/` | Contact roles, persons, channels, circles, notables | Object | — |
+| `estate/` | Homes & status purchases | Object | — |
+| `skills/` | Experience fields & unlockable abilities | Object | — |
+| `stocks/` | Tradable companies (era-gated) | List | `id` |
+| `backroom/` | Backroom deal templates | List | `id` |
+| `dialogs/` | Conversation trees for key interactions | List | `id` |
+| `letters/` | The weekly mail (letters/e-mail) | List | `id` |
 
 ## Merge rules
 
@@ -94,6 +100,63 @@ moddable:
   (which roles the starting contact book is built from), and `channels` (each
   with `name`, `icon`, `ap` = contact-time cost, `energy`, `cost`, and a
   `rel_min`/`rel_max` relationship gain range).
+
+## Dialogs & letters (shared effect language)
+
+Dialogs (`dialogs/`) and letters (`letters/`) use the **same declarative
+effect ops as `events/`** — one vocabulary for all three, fully moddable.
+
+**Dialog schema** — a tree of nodes:
+
+```json
+{"id": "channel_meet", "title": "🤝 Dinner with {contact}", "start": "opening",
+ "nodes": {
+   "opening": {"text": ["…variants…"], "effects": [], "choices": [
+     {"label": "Talk business", "goto": "business",
+      "effects": [{"op": "dims", "respect": 1}],
+      "conditions": {"dims": {"liking": 40}, "skill_level": {"negotiation": 2},
+                     "min_cash_private": 100, "has_favor": "galaInvite"}},
+     {"label": "Push your luck",
+      "check": {"skill": "negotiation", "dim": "respect", "base": 0.45,
+                "success": "win_node", "fail": "fail_node"}}
+   ]},
+   "end_warm": {"end": true, "text": ["…"], "effects": []}
+ }}
+```
+
+- `goto: "end"` (or a node with `"end": true` and no choices) ends the dialog.
+- `check` rolls: `base` + 0.06 × skill level + relationship dim / 300.
+- Node `effects` run on entry, choice `effects` on selection.
+- Placeholders: `{contact}`, `{sender}`, `{agency}`, `{year}`, `{money_fmt:N}`.
+- Dialog ids the game launches automatically: `channel_meet`, `channel_club`
+  (contact channels), `backroom_seal` (deal proposals), `gala_evening`.
+  Remove or override them in a mod and the built-in fallback logic runs.
+
+**Letter schema** — the weekly correspondence (letters before 1995, e-mail
+after):
+
+```json
+{"id": "studio_lunch", "weight": 3, "from_type": "studio",
+ "conditions": {"min_year": 0, "min_career": 0, "requires_contact_type": "studio", "chance": 1.0},
+ "subject": "…", "body": "…", "expire_weeks": 2,
+ "choices": [{"label": "Accept (1⏱)", "requirements": {"ap": 1, "min_cash_private": 0, "requires_assistant": false},
+              "success_chance": 0.85, "effects": [], "effects_fail": [],
+              "outcome": "…", "outcome_fail": "…", "dialog": "optional_dialog_id"}],
+ "expire_effects": []}
+```
+
+If a contact of `from_type` exists, the letter comes from them (and `dims`
+effects hit that relationship); otherwise a name is drawn from the pools.
+
+**Effect ops** (events, dialogs and letters alike): the classic set
+(`money`, `rep`, `fame`, `mood`, `trust`, `studio_rel`, `favor_grant`,
+`favor_owe`, `rumor`, `identity`, `log`, `followup`, …) plus the
+conversation ops: `dims` (relationship dimensions of the contact in
+context), `fact` (subjective-reputation fact), `memory`, `promise`, `xp`,
+`player` (energy/stress/health/pubRep/indRep/discretion/influence),
+`money_private`, `tip` (market whisper), `rumor_reveal`, `casting_spawn`,
+`meet_someone`, `seal_deal`, `gate_rel`, `memoir`, and `chance`
+(`{"op":"chance","p":0.3,"effects":[…],"else":[…]}`).
 
 ## Regenerating the core files
 

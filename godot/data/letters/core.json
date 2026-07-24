@@ -1,0 +1,123 @@
+{
+  "entries": [
+    {"id": "studio_lunch", "weight": 3, "from_type": "studio",
+      "conditions": {"requires_contact_type": "studio"},
+      "subject": "Lunch at the commissary",
+      "body": "{sender} writes: \"Come by the lot this week. Nothing formal — soup, sandwiches, and one or two things better said off the record.\"",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Accept the invitation (1⏱)", "requirements": {"ap": 1},
+          "effects": [{"op": "dims", "closeness": 4, "trust": 2}, {"op": "chance", "p": 0.4, "effects": [{"op": "casting_spawn", "amount": 1}]}],
+          "outcome": "Soup, sandwiches, and by coffee a name or two that will matter. Lot lunches are never just lunch."},
+        {"label": "Send polite regrets",
+          "effects": [{"op": "dims", "liking": -1}],
+          "outcome": "A courteous note goes back. Nobody is offended — and nobody remembers you were asked."}
+      ],
+      "expire_effects": [{"op": "dims", "irritation": 2}]},
+
+    {"id": "charity_ball", "weight": 2, "from_type": "gastgeberin",
+      "subject": "Invitation: Children's Hospital Benefit",
+      "body": "Gilt edges, heavy paper: {sender} requests the pleasure of your company — and, more importantly, of your checkbook.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Send a generous donation (−{money_fmt:150})", "requirements": {"min_cash_private": 150},
+          "effects": [{"op": "money_private", "amount": -150, "inflate": true, "label": "Charity donation"}, {"op": "player", "pubRep": 2}, {"op": "identity", "key": "klientenorientiert", "amount": 0.5}],
+          "outcome": "Your name appears on the patrons' list, tastefully high. Generosity, publicly performed, is never wasted in this town."},
+        {"label": "Attend in person (1⏱)", "requirements": {"ap": 1},
+          "effects": [{"op": "meet_someone", "origin": "at the charity ball"}, {"op": "player", "pubRep": 1, "energy": -3}],
+          "outcome": "Two hours of small talk in a good cause. The cause profits — and so does your address book."},
+        {"label": "Quietly toss it",
+          "effects": [],
+          "outcome": "The envelope lands in the wastebasket. Some absences are noticed; most are not."}
+      ]},
+
+    {"id": "fan_mail", "weight": 2, "from_type": "stranger",
+      "subject": "A sack of admirers' mail",
+      "body": "The office forwards a bundle of letters — admirers, hopefuls, one marriage proposal, two scripts, and a drawing of you that is either flattering or libelous.",
+      "expire_weeks": 3,
+      "choices": [
+        {"label": "Answer a few personally",
+          "effects": [{"op": "player", "energy": -2, "pubRep": 1}],
+          "outcome": "A dozen replies in your own hand. Somewhere out there, a dozen people will never say a bad word about you."},
+        {"label": "Let the assistant handle it", "requirements": {"requires_assistant": true},
+          "effects": [{"op": "player", "pubRep": 0.5}],
+          "outcome": "Form letters with a decent signature stamp. Efficient, invisible, forgotten by Friday."},
+        {"label": "Into the drawer with it",
+          "effects": [],
+          "outcome": "The drawer swallows another bundle. One day that drawer will be an archive — or a fire hazard."}
+      ]},
+
+    {"id": "tax_audit", "weight": 1, "from_type": "stranger",
+      "conditions": {"min_career": 2},
+      "subject": "Inquiry from the revenue office",
+      "body": "Dry language, official stamp: certain private expenditures have \"attracted attention.\" You are invited to clarify.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Pay the accountant to make it airtight (−{money_fmt:80})", "requirements": {"min_cash_private": 80},
+          "effects": [{"op": "money_private", "amount": -80, "inflate": true, "label": "Accountant: tax inquiry"}, {"op": "player", "discretion": 2}],
+          "outcome": "Three folders, one afternoon, zero findings. Expensive, boring, correct — exactly how you want your taxes."},
+        {"label": "Ignore it — they're fishing", "success_chance": 0.6,
+          "effects": [],
+          "outcome": "Weeks pass. Nothing. Sometimes the bureaucracy simply loses interest.",
+          "effects_fail": [{"op": "money_private", "amount": -250, "inflate": true, "label": "Back taxes & penalty"}, {"op": "player", "pubRep": -1}],
+          "outcome_fail": "The second letter is registered mail. The third has numbers in it. You pay — with penalty, and with a small paragraph in the trade press."}
+      ],
+      "expire_effects": [{"op": "money_private", "amount": -120, "inflate": true, "label": "Late penalty: revenue office"}]},
+
+    {"id": "press_quote", "weight": 2, "from_type": "journalist",
+      "conditions": {"requires_contact_type": "journalist"},
+      "subject": "Request for comment",
+      "body": "{sender} needs a quote for tomorrow's column — about the town, the business, and \"where it is all heading.\" Deadline: tonight.",
+      "expire_weeks": 1,
+      "choices": [
+        {"label": "Give them a good line", "success_chance": 0.85,
+          "effects": [{"op": "dims", "trust": 2}, {"op": "player", "pubRep": 1}, {"op": "xp", "field": "media", "amount": 1}],
+          "outcome": "Your sentence sits in print, sharp and quotable. The town reads it over breakfast — with your name attached.",
+          "effects_fail": [{"op": "player", "pubRep": -2}, {"op": "dims", "trust": 1}],
+          "outcome_fail": "The quote reads differently in print than it sounded on the phone. Lesson: there is no such thing as harmless."},
+        {"label": "\"No comment.\"",
+          "effects": [{"op": "player", "discretion": 2}],
+          "outcome": "Two words, correctly deployed, are also a statement. The column runs without you — this time."}
+      ]},
+
+    {"id": "script_in_mail", "weight": 1, "from_type": "stranger",
+      "subject": "An unsolicited screenplay",
+      "body": "Brown paper, typewritten label, no agency stamp: a script from nowhere. The first page is — surprisingly — not terrible.",
+      "expire_weeks": 3,
+      "choices": [
+        {"label": "Read it over the weekend (1⏱)", "requirements": {"ap": 1},
+          "effects": [{"op": "xp", "field": "talent", "amount": 2}, {"op": "chance", "p": 0.3, "effects": [{"op": "casting_spawn", "amount": 1}]}],
+          "outcome": "Most of it is apprentice work — but two scenes have teeth, and reading raw pages keeps your eye sharp."},
+        {"label": "Return to sender",
+          "effects": [],
+          "outcome": "Back in the mail with a printed courtesy slip. The town is full of first pages."}
+      ]},
+
+    {"id": "old_acquaintance", "weight": 1, "from_type": "stranger",
+      "subject": "\"You probably don't remember me…\"",
+      "body": "A name from years ago — someone from before the agency, before the title, before all of it. They are in town for a week and would like to see you.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Make time for them (1⏱)", "requirements": {"ap": 1},
+          "effects": [{"op": "meet_someone", "origin": "again, after all these years"}, {"op": "player", "stress": -4}],
+          "outcome": "Two hours with someone who knew you before you mattered. Cheaper than any doctor, and twice as honest."},
+        {"label": "Have the office send regrets",
+          "effects": [],
+          "outcome": "A polite note on agency paper. Some doors close so quietly you never hear it."}
+      ]},
+
+    {"id": "gala_invitation", "weight": 1, "from_type": "gastgeberin",
+      "conditions": {"min_career": 1, "chance": 0.6},
+      "subject": "You are expected",
+      "body": "{sender} writes, in a hand that assumes acceptance: \"Saturday. Everyone will be there. Do not disappoint me.\"",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Accept — of course",
+          "effects": [{"op": "favor_grant", "kind": "galaInvite"}],
+          "outcome": "The invitation goes into your breast pocket. Attend it from the Contacts desk when the evening comes."},
+        {"label": "Decline",
+          "effects": [{"op": "dims", "liking": -2}],
+          "outcome": "One does not decline {sender} twice. You may have just used your once."}
+      ]}
+  ]
+}
