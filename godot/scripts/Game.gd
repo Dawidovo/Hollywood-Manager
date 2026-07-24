@@ -1698,7 +1698,13 @@ func project_title(genre: String) -> String:
 
 func spawn_castings(count: int) -> void:
 	for i in count:
-		state.castings.append(_make_casting())
+		var cs := _make_casting()
+		# Chancen aus dem Netzwerk (Feature 20): ein Teil der Projekte wird
+		# nie öffentlich ausgeschrieben — nur ein guter Kontakt bringt sie dir.
+		if i > 0 and chance(0.45):
+			cs["hidden"] = true
+			cs["netSource"] = pick(["produzent", "regisseur", "studio"])
+		state.castings.append(cs)
 
 # Einzelnes Casting erzeugen (auch von der Coverage genutzt — die hält es
 # einen Monat verdeckt, bevor es regulär auf dem Markt erscheint).

@@ -425,6 +425,11 @@ func contact_interact(cid, key: String) -> Dictionary:
 				var tip_line: String = Mogul.maybe_market_tip(ct)
 				if tip_line != "":
 					lines.append(tip_line)
+			# Chance encounters (Feature 21): the bar introduces people
+			if Game.chance(0.12):
+				var enc: String = Network.club_encounter()
+				if enc != "":
+					lines.append(enc)
 			if Game.chance(0.15):
 				st.player.discretion = clampf(float(st.player.discretion) - 3.0, 0.0, 100.0)
 				lines.append("Someone with good ears sat at the next table (discretion −3).")
@@ -457,6 +462,7 @@ func _fulfill_promises(ct: Dictionary) -> void:
 			pr.status = "kept"
 			# Gehaltenes Wort zahlt vor allem auf Vertrauen ein (Feature 12)
 			Network.adjust(ct, {"trust": 5.0, "liking": 2.0}, false)
+			Network.add_fact(ct, "kept a promise to them", 1, 1.0)
 			_memory(ct, "You kept your word.")
 			Game.log_msg("Promise kept: %s appreciates it." % str(ct.name), "deal")
 
@@ -472,6 +478,7 @@ func _tick_contacts_month(events: Array) -> void:
 				if str(ct.name) == str(pr.to):
 					# Gebrochenes Wort: Vertrauen bricht, Ärger bleibt (Feature 12)
 					Network.adjust(ct, {"trust": -10.0, "liking": -4.0, "irritation": 8.0})
+					Network.add_fact(ct, "broke a promise to them", -1, 2.0)
 					_memory(ct, "You broke your promise.")
 			Network.memoir("Promise broken: %s waited in vain — people talk about things like that." % str(pr.to), [str(pr.to)])
 			Game.log_msg("Promise broken: %s waited in vain." % str(pr.to), "bad")
@@ -681,7 +688,7 @@ func hire_assistant() -> Dictionary:
 		return assistant()
 	var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.6) else Data.NPC_FIRST_M)
 	var cand := {"name": "%s %s" % [first, Game.pick(Data.NPC_LAST)], "skill": Game.rndi(35, 65),
-		"hiredMi": Game.mi(), "rules": {"upkeep": true, "briefing": true}}
+		"hiredMi": Game.mi(), "rules": {"upkeep": true, "briefing": true, "occasions": false}}
 	_st().assistant = cand
 	Game.log_msg("%s starts as your assistant — the front desk is finally covered." % str(cand.name), "deal")
 	return cand
@@ -690,8 +697,12 @@ func hire_assistant() -> Dictionary:
 func fire_assistant() -> void:
 	if not has_assistant():
 		return
-	Game.log_msg("%s leaves the agency. The phone rings unanswered again." % str(assistant().name), "info")
+	var a := assistant()
+	Game.log_msg("%s leaves the agency. The phone rings unanswered again." % str(a.name), "info")
 	_st().assistant = null
+	# NPC-Karrieren (Feature 22): die Stadt recycelt jeden — Ex-Angestellte
+	# tauchen als Produzenten oder Journalisten wieder auf.
+	Network.assistant_departs(a)
 
 
 func set_rule(rule: String, value: bool) -> void:

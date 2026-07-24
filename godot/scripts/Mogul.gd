@@ -985,8 +985,10 @@ func _deal_contact(rec: Dictionary, rel_delta: float, memo: String) -> void:
 			# Gehaltene Deals bauen Vertrauen, gebrochene hinterlassen Ärger (Feature 12)
 			if rel_delta >= 0.0:
 				Network.adjust(ct, {"trust": rel_delta * 0.7, "liking": rel_delta * 0.3}, false)
+				Network.add_fact(ct, "delivered on an arrangement", 1, 1.5)
 			else:
 				Network.adjust(ct, {"trust": rel_delta * 0.8, "irritation": -rel_delta * 0.7})
+				Network.add_fact(ct, "broke their word in a back room", -1, 2.0)
 			if memo != "":
 				Persona.touch_contact_person({"name": str(ct.name)}, 0.0, memo)
 			return

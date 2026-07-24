@@ -1289,6 +1289,100 @@ func _ready() -> void:
 	check(absf(float(Game.state.contacts[0].dims.liking) - liking_saved) < 0.01, "Beziehungsdimensionen überleben Save/Load")
 	check(Game.state.contacts.any(func(ct): return not Network.gate_of(ct).is_empty()), "Gatekeeper überleben Save/Load")
 
+	# =========== Netzwerkdynamik (Features 16–22) ===========
+	# 37. Kontaktpflege: Anlässe beantworten oder verpassen
+	Game.new_game("Pflege AG", 1950)
+	Game.state.player.cash = 5000.0
+	var oc_ct: Dictionary = Game.state.contacts[0]
+	Game.state.occasions.append({"id": 90001, "ctName": str(oc_ct.name), "kind": "crisis", "madeMi": Game.mi(), "dueMi": Game.mi() + 2, "status": "open"})
+	var oc_trust0 := Network.dim(oc_ct, "trust")
+	Game.state.contactAP = 3
+	var oc_res := Network.occasion_respond(90001)
+	check(bool(oc_res.ok) and Network.dim(oc_ct, "trust") > oc_trust0, "Persönliche Hilfe im Anlass baut Vertrauen")
+	check(Network.opinion_score(oc_ct) > 0.0, "Hilfe wird Teil ihres Bildes von dir (Fakt)")
+	var oc_ct2: Dictionary = Game.state.contacts[1]
+	Game.state.occasions.append({"id": 90002, "ctName": str(oc_ct2.name), "kind": "callback", "madeMi": Game.mi() - 3, "dueMi": Game.mi() - 1, "status": "open"})
+	var oc_irr0 := Network.dim(oc_ct2, "irritation")
+	Network._tick_occasions()
+	check(Network.dim(oc_ct2, "irritation") > oc_irr0, "Verpasster Rückruf erzeugt Verärgerung")
+	check(Game.state.occasions.any(func(o): return int(o.id) == 90002 and str(o.status) == "missed"), "Anlass als verpasst registriert")
+
+	# 38. Berufsspezifische Information & Wissensfluss
+	var press_ct = null
+	for ct in Game.state.contacts:
+		if str(ct.type) == "journalist":
+			press_ct = ct
+	press_ct.dims.trust = 75.0
+	press_ct.rel = Network.derived_rel(press_ct)
+	var info_rumor := Game.add_rumor(str(Game.available_actors()[0].id), "Ein Name macht in den Vorzimmern die Runde.", false, "skandal", ["Assistants"], 20.0, false)
+	Game.state.contactAP = 3
+	var info_res := Network.ask_info(int(press_ct.id))
+	check(bool(info_res.ok) and bool(info_rumor.knownToPlayer), "Journalist enthüllt ein unbekanntes Gerücht")
+	check(bool(Network.ask_info(int(press_ct.id)).ok) == false, "Informationszugang hat eine Abklingzeit")
+	Game.state.contactAP = 3
+	var dep0 := Network.dim(press_ct, "dependence")
+	var share_res := Network.share_story(int(press_ct.id))
+	check(bool(share_res.ok) and Network.dim(press_ct, "dependence") > dep0, "Story geteilt: die Presse schuldet dir")
+	check(bool(info_rumor.get("sharedByPlayer", false)) and info_rumor.holders.has("Journalists"), "Wissen wandert nachvollziehbar weiter")
+	Network.add_fact(press_ct, "testfakt wandert", -1, 1.0)
+	var spread_target := Network.contact_by_name(str(press_ct.links[0].to))
+	Network._spread_facts(true)
+	check(spread_target.get("facts", []).any(func(f): return str(f.text) == "testfakt wandert" and str(f.via) == str(press_ct.name)), "Fakten verbreiten sich über Verbindungen mit Quellenangabe")
+
+	# 39. Chancen aus dem Netzwerk: verdeckte Projekte über Kontakte
+	var net_cs := Game._make_casting()
+	net_cs["hidden"] = true
+	net_cs["netSource"] = "produzent"
+	Game.state.castings.append(net_cs)
+	var prod_ct = null
+	for ct in Game.state.contacts:
+		if str(ct.type) == "produzent":
+			prod_ct = ct
+	prod_ct.dims.liking = 70.0
+	prod_ct.dims.trust = 70.0
+	prod_ct.rel = Network.derived_rel(prod_ct)
+	Network._tick_reveal_castings(true)
+	check(not bool(net_cs.hidden), "Produzenten-Kontakt bringt das verdeckte Projekt auf den Tisch")
+	check(prod_ct.log.any(func(e): return str(e.text).contains("Tipped you off")), "Der Tipp bleibt im Gedächtnis des Kontakts")
+
+	# 40. Gala: Begegnungen hinterlassen dauerhafte Spuren
+	Game.grant_favor("galaInvite", {"type": "produzent", "name": str(prod_ct.name)}, true)
+	Game.state.contactAP = 3
+	var gl_n: int = Game.state.contacts.size()
+	var gl_res := Network.attend_gala()
+	check(bool(gl_res.ok) and Game.state.contacts.size() == gl_n + 1, "Gala: neue Bekanntschaft landet im Kontaktbuch")
+	check(Game.state.memoirs.any(func(m): return str(m.text).contains("gala")), "Der Gala-Abend landet im Karrieregedächtnis")
+
+	# 41. NPC-Karrieren: Aufstieg, Vorzimmer-Aufstieg, Ex-Assistent
+	var career_ct = press_ct
+	var old_ct_name := str(career_ct.name)
+	Network.add_fact(career_ct, "halfst ihnen früh im Aufstieg", 1, 2.0)
+	var dep_pre := Network.dim(career_ct, "dependence")
+	var new_ct_name := Network.promote_contact(career_ct)
+	check(str(career_ct.type) == "kolumnist" and new_ct_name != old_ct_name, "Journalist steigt zum Kolumnisten auf")
+	check(career_ct.circles.has("gesellschaft"), "Kreise folgen der neuen Position")
+	check(Network.dim(career_ct, "dependence") > dep_pre, "Frühe Freundlichkeit zahlt sich beim Aufstieg aus")
+	var gate_vip = null
+	for ct in Game.state.contacts:
+		if not Network.gate_of(ct).is_empty():
+			gate_vip = ct
+	gate_vip.gate.rel = 80.0
+	var rise_n: int = Game.state.contacts.size()
+	var risen := Network.gate_rises(gate_vip)
+	check(Game.state.contacts.size() == rise_n + 1 and float(risen.rel) > 20.0, "Das umgarnte Vorzimmer wird ein warmer Produzenten-Kontakt")
+	check(Network.opinion_score(risen) > 0.0, "Der Aufstieg erinnert sich an frühe Blumen")
+	Persona.hire_assistant()
+	var ex_name := str(Persona.assistant().name)
+	Network.assistant_departs(Persona.assistant(), true)
+	Game.state.assistant = null
+	check(Game.state.contacts.any(func(ct): return str(ct.name).contains(ex_name)), "Ex-Assistent taucht als Branchenkontakt wieder auf")
+	var occ_n: int = Game.state.occasions.size()
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Netzwerkdynamik-Spielstand geladen")
+	check(Game.state.occasions.size() == occ_n, "Anlässe überleben Save/Load")
+	check(Game.state.contacts.any(func(ct): return ct.get("facts", []).size() > 0), "Subjektive Fakten überleben Save/Load")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()

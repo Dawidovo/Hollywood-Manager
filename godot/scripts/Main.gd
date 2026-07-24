@@ -127,6 +127,10 @@ func _ready() -> void:
 		Persona.hire_assistant()
 		Persona.contact_interact(int(Game.state.contacts[0].id), "meet")
 		Persona.contact_interact(int(Game.state.contacts[1].id), "aide")
+		Game.state.occasions.append({"id": 99001, "ctName": str(Game.state.contacts[0].name), "kind": "crisis", "madeMi": Game.mi(), "dueMi": Game.mi() + 1, "status": "open"})
+		Game.state.occasions.append({"id": 99002, "ctName": str(Game.state.contacts[2].name), "kind": "birthday", "madeMi": Game.mi(), "dueMi": Game.mi() + 2, "status": "open"})
+		Game.grant_favor("galaInvite", Game.favor_contact_for("galaInvite"), true)
+		Network.add_fact(Game.state.contacts[0], "stood by them in a rough patch", 1, 2.0)
 		_switch_tab("kontakte")
 		await _take_shot("kontakte")
 	elif args.has("--shot-lifestyle"):
@@ -1220,6 +1224,8 @@ func _render_privat() -> void:
 		av[1].add_child(up)
 		var br := _btn(("☑ " if Persona.rule("briefing") else "☐ ") + "Morning note: weekly decision brief on promises, contacts & crises", _player_action.bind(Persona.set_rule.bind("briefing", not Persona.rule("briefing"))))
 		av[1].add_child(br)
+		var oc := _btn(("☑ " if Persona.rule("occasions") else "☐ ") + "Small gestures: handle birthdays & callbacks you let slip (weaker effect)", _player_action.bind(Persona.set_rule.bind("occasions", not Persona.rule("occasions"))))
+		av[1].add_child(oc)
 		av[1].add_child(_lbl("The “Send assistant” contact channel is only available while someone holds this desk.", 11, DIM))
 		av[1].add_child(_btn("Let %s go" % str(a.name), _player_action.bind(Persona.fire_assistant)))
 
@@ -1305,6 +1311,35 @@ func _render_kontakte() -> void:
 	content_box.add_child(head[0])
 	head[1].add_child(_lbl("Contact time this week: %d/%d ⏱ — personal appointments cost more time than a phone call. All costs come out of your private account (currently %s)." % [int(st.contactAP), Persona.ap_per_week(), Game.fmt_money(st.player.cash)], 13))
 	head[1].add_child(_lbl("People remember: whether you came yourself or sent the assistant, what you promised — and how long you kept them waiting.", 12, DIM))
+	# Gala nights (Feature 21): invitations become names, promises, debts
+	if Game.has_favor("galaInvite"):
+		var gala_b := _btn("🎟 Attend the gala (uses an invitation · 1⏱)", _on_attend_gala, true)
+		gala_b.disabled = not Network.can_gala()
+		gala_b.tooltip_text = "An evening among everyone who matters: new contacts, promises, favors, whispers — and the next invitation."
+		head[1].add_child(gala_b)
+
+	# Occasions (Feature 16): the small gestures that keep relationships alive
+	var open_occ: Array = Network.open_occasions()
+	if not open_occ.is_empty():
+		var ov = _card("Occasions", "💐")
+		content_box.add_child(ov[0])
+		ov[1].add_child(_lbl("Callbacks, congratulations, a hand when it counts — respond in time, or people will remember that too.", 11, DIM))
+		for occ in open_occ:
+			var odef: Dictionary = Network.OCCASION_KINDS[str(occ.kind)]
+			var orow := HBoxContainer.new()
+			orow.add_theme_constant_override("separation", 8)
+			ov[1].add_child(orow)
+			orow.add_child(_lbl_fill("%s %s — %s (respond by %s)" % [str(odef.icon), str(odef.name), str(occ.ctName), Game.mi_str(occ.dueMi)], 12, TEXT_C))
+			var ocost := roundf(float(odef.cost) * Game.infl(st.year))
+			var olabel := str(odef.act)
+			if ocost > 0.0:
+				olabel += " (−%s)" % Game.fmt_money(ocost)
+			if int(odef.ap) > 0:
+				olabel += " %d⏱" % int(odef.ap)
+			var ob := _btn(olabel, _on_occasion.bind(int(occ.id)))
+			ob.disabled = Network.occasion_blocked_reason(occ) != ""
+			ob.tooltip_text = Network.occasion_blocked_reason(occ)
+			orow.add_child(ob)
 
 	# Promise register: your own commitments + favor debts
 	var pv = _card("Promise register", "🤞")
@@ -1373,6 +1408,8 @@ func _render_kontakte() -> void:
 			for l in links.slice(0, 3):
 				link_parts.append("%s (%s)" % [str(l.to), str(Network.LINK_KINDS.get(str(l.kind), l.kind))])
 			box.add_child(_lbl("🕸 Connected: %s — how you treat one, the others hear about." % " · ".join(link_parts), 11, DIM))
+		# Subjective reputation (Feature 18): their own picture of you
+		box.add_child(_lbl("👁 %s" % Network.opinion_label(ct), 11, ACC_DIM))
 		# Social capital (Feature 13): what this contact is actually worth
 		var cap_line := ""
 		for cap in Network.capital_of(ct):
@@ -1411,6 +1448,19 @@ func _render_kontakte() -> void:
 			b.disabled = reason != ""
 			b.tooltip_text = str(ch.desc) + ("" if reason == "" else "\n⛔ " + reason)
 			flow.add_child(b)
+		# Berufsspezifischer Informationszugang (Feature 17)
+		var info_b := _btn("🔍 Ask for information (1⏱)", _on_ask_info.bind(int(ct.id)))
+		info_b.tooltip_text = "What they know comes with the job: press hears stories, producers see projects, lawyers see paper, financiers hear money."
+		info_b.disabled = Network.info_blocked_reason(ct) != ""
+		if Network.info_blocked_reason(ct) != "":
+			info_b.tooltip_text += "\n⛔ " + Network.info_blocked_reason(ct)
+		flow.add_child(info_b)
+		# Wissen weitergeben (Feature 19): ein Scoop für die Presse
+		if ["journalist", "kolumnist", "verleger"].has(str(ct.type)):
+			var sh_b := _btn("🗞 Share a story (1⏱)", _on_share_story.bind(int(ct.id)))
+			sh_b.tooltip_text = "Feed them a rumor from your notebook (never about your own clients): they owe you — and your fingerprints are on the story."
+			sh_b.disabled = Network.share_story_blocked_reason(ct) != ""
+			flow.add_child(sh_b)
 		# Gatekeeper pflegen (Feature 14): Freundlichkeit zum Vorzimmer zahlt sich aus
 		if not Network.gate_of(ct).is_empty():
 			var gb := _btn("🌷 Charm the anteroom (−%s)" % Game.fmt_money(Network.charm_cost()), _on_charm_gate.bind(int(ct.id)))
@@ -1454,6 +1504,34 @@ func _render_kontakte() -> void:
 					var ib2 := _btn("Ask %s for an introduction (1⏱)" % str(intro.name), _on_introduce.bind(str(n.name), int(intro.id)))
 					ib2.disabled = Network.introduce_blocked_reason(str(n.name)) != ""
 					irow.add_child(ib2)
+
+func _on_attend_gala() -> void:
+	var res: Dictionary = Network.attend_gala()
+	_open_modal()
+	modal_box.add_child(_lbl("🎟 The gala", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+func _on_occasion(occ_id: int) -> void:
+	var res: Dictionary = Network.occasion_respond(occ_id)
+	_open_modal()
+	modal_box.add_child(_lbl("💐 A gesture", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+func _on_ask_info(cid: int) -> void:
+	var res: Dictionary = Network.ask_info(cid)
+	_open_modal()
+	modal_box.add_child(_lbl("🔍 Information", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+func _on_share_story(cid: int) -> void:
+	var res: Dictionary = Network.share_story(cid)
+	_open_modal()
+	modal_box.add_child(_lbl("🗞 A story changes hands", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
 
 func _on_charm_gate(cid: int) -> void:
 	var res: Dictionary = Network.charm_gate(cid)
