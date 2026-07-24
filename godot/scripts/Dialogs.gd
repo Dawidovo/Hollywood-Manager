@@ -467,6 +467,17 @@ func tick_week() -> void:
 			if pool.is_empty():
 				break
 			spawn_letter(str(Game.pick(pool).id), true)
+	# Postfilter (Feature 32): der Assistent beantwortet Routinepost selbst —
+	# alles, wofür eine Vorlage eine Assistenten-Option vorsieht.
+	if Persona.has_assistant() and Persona.rule("mailfilter"):
+		for letter in open_letters():
+			var def := letter_def(str(letter.tid))
+			for i in def.get("choices", []).size():
+				var ch: Dictionary = def.choices[i]
+				if bool(ch.get("requirements", {}).get("requires_assistant", false)) and letter_choice_blocked(letter, ch) == "":
+					letter_choose(int(letter.id), i)
+					Game.log_msg("%s answered the %s from %s — routine, handled." % [str(Persona.assistant().name), mail_word().to_lower(), letter["from"].get("name", "?")], "info")
+					break
 	# Archiv kompakt halten
 	while st.inbox.size() > INBOX_MAX_OPEN + INBOX_ARCHIVE_MAX:
 		var oldest = null

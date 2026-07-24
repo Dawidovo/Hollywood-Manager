@@ -1580,6 +1580,93 @@ func _ready() -> void:
 	check(Game.load_game(), "Verpflichtungs-Spielstand geladen")
 	check(Game.state.promises.size() == promises_saved and Game.state.promises.back().has("witnesses"), "Erweitertes Versprechensregister überlebt Save/Load")
 
+	# =========== Assistent+, Mitarbeiter & Eskalation (Features 32–36) ===========
+	# 51. Assistent: Reise-Organisation, Postfilter, erweitertes Briefing
+	Game.new_game("Delegation AG", 1950)
+	Persona.hire_assistant()
+	Persona.set_rule("travel", true)
+	Game.state.agency.cash = 100000.0
+	check(Persona.travel_to("ny"), "Reise mit Reise-Organisation angetreten")
+	check(int(Game.state.contactAP) == 1, "Assistent rettet 1⏱ Kontaktzeit über die Anreise")
+	Persona.travel_to("la")
+	Persona.set_rule("mailfilter", true)
+	var mf_letter := Dialogs.spawn_letter("fan_mail", true)
+	Dialogs.tick_week()
+	check(str(mf_letter.status) == "done", "Postfilter: Routinepost wird vom Assistenten beantwortet")
+	Game.state.occasions.append({"id": 97001, "ctName": str(Game.state.contacts[0].name), "kind": "birthday", "madeMi": Game.mi(), "dueMi": Game.mi() + 1, "status": "open"})
+	var brief2: Dictionary = Persona.assistant_briefing()
+	check(not brief2.is_empty() and str(brief2.text).contains("gesture"), "Briefing erinnert an offene Anlässe")
+
+	# 52. Mitarbeiter: Anstellung, Empfehlung mit Unsicherheit & Eigeninteresse
+	var deal_staff := Staff.hire("deals")
+	check(not deal_staff.is_empty() and Game.state.staff.size() == 1, "Deal-Desk besetzt")
+	check(Staff.hire_blocked_reason("deals") != "", "Ein Desk wird nur einmal besetzt")
+	var conf := Staff.confidence(deal_staff)
+	check(conf >= 20 and conf <= 95, "Unsicherheit wird als Sicherheitswert beziffert (%d%%)" % conf)
+	check(Data.STAFF_TRAITS.has(str(deal_staff.trait)), "Mitarbeiter tragen ein (verdecktes) Eigeninteresse")
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	for cs in Game.state.castings:
+		for srole in cs.roles:
+			if srole.filled == null and str(srole.gender) == "f":
+				srole.minFame = 10
+				srole.ageMin = 18
+				srole.ageMax = 70
+	var rec_events: Array = []
+	deal_staff.mode = "propose"
+	Staff._work_deals(deal_staff, rec_events)
+	check(rec_events.size() == 1 and rec_events[0].choices.size() == 3, "Empfehlung mit Freigeben/Ablehnen/Selbst übernehmen")
+	check(str(rec_events[0].text).contains("certainty") or str(rec_events[0].text).contains("%"), "Empfehlung nennt Begründung und Unsicherheit")
+	rec_events[0].choices[0].fn.call()
+	var handled: bool = Game.state.castings.any(func(cs): return cs.roles.any(func(r): return r.filled != null and r.filled.get("clientId") != null)) or Game.state.castings.any(func(cs): return cs.roles.any(func(r): return r.rejected.size() > 0))
+	check(handled, "Freigabe: der Mitarbeiter führt den Pitch aus (Erfolg oder Absage)")
+
+	# 53. Eskalationsregeln & autonome Arbeit
+	Game.state.delegation.feeCap = 0
+	deal_staff.mode = "auto"
+	deal_staff.actsWeek = -99
+	var esc_events: Array = []
+	Staff._work_deals(deal_staff, esc_events)
+	if not esc_events.is_empty():
+		check(str(esc_events[0].title).contains("Escalation"), "Über dem Freigabelimit wird eskaliert statt gehandelt")
+	else:
+		check(true, "Kein offener Pitch mehr — Eskalationspfad ohne Ziel")
+	Game.state.delegation.feeCap = 50000
+	var care_staff := Staff.hire("care")
+	care_staff.mode = "auto"
+	var cold_ct: Dictionary = Game.state.contacts[0]
+	cold_ct.dims.liking = 5.0
+	cold_ct.dims.trust = 5.0
+	cold_ct.rel = Network.derived_rel(cold_ct)
+	var cold0 := Network.dim(cold_ct, "liking")
+	Staff._work_care(care_staff, [])
+	check(Network.dim(cold_ct, "liking") > cold0, "Autonome Kontaktpflege wärmt den kältesten Kontakt")
+	check(Game.state.weekDigest.any(func(d): return str(d).contains("warm")), "Autonome Arbeit landet im Wochen-Digest")
+	var crisis_staff := Staff.hire("crisis")
+	crisis_staff.mode = "auto"
+	var cr_rumor := Game.add_rumor("agency", "Eine laute Geschichte.", false, "skandal", ["Journalists"], 70.0, true)
+	var cr_events: Array = []
+	Staff._work_crisis(crisis_staff, cr_events)
+	check(cr_events.size() == 1 and str(cr_events[0].title).contains("Escalation"), "Laute Skandale eskalieren trotz Autonomie (Regel)")
+	Game.state.delegation.escalateScandal = false
+	cr_rumor.belief = 40.0
+	var cr_events2: Array = []
+	Staff._work_crisis(crisis_staff, cr_events2)
+	check(cr_events2.is_empty() and float(cr_rumor.belief) < 40.0, "Ohne Regel handelt der Krisen-Desk autonom (Gerücht gedämpft)")
+	var mw0: float = Game.state.agency.cash
+	Staff.tick_month()
+	check(float(Game.state.agency.cash) < mw0, "Monatsende bucht Mitarbeiter-Löhne")
+	var staff_n: int = Game.state.staff.size()
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Mitarbeiter-Spielstand geladen")
+	check(Game.state.staff.size() == staff_n and int(Game.state.delegation.feeCap) == 50000, "Mitarbeiter & Delegationsregeln überleben Save/Load")
+	Game.state.erase("staff")
+	Game.state.erase("delegation")
+	Staff.ensure_staff()
+	check(Game.state.has("staff") and Game.state.delegation.has("feeCap"), "ensure_staff rüstet alte Stände nach")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()

@@ -115,6 +115,9 @@ func _ready() -> void:
 		await _take_shot("2010")
 	elif args.has("--shot-privat"):
 		_on_era_selected(1950)
+		Persona.hire_assistant()
+		Staff.hire("deals")
+		Staff.hire("crisis")
 		_switch_tab("privat")
 		await _take_shot("privat")
 	elif args.has("--shot-orte"):
@@ -1141,6 +1144,10 @@ func _player_action(action: Callable) -> void:
 	action.call()
 	render()
 
+func _set_delegation(key: String, value) -> void:
+	Game.state.delegation[key] = value
+	render()
+
 func _stat_row(box: VBoxContainer, label: String, value: float, color: Color) -> void:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 8)
@@ -1243,8 +1250,65 @@ func _render_privat() -> void:
 		av[1].add_child(br)
 		var oc := _btn(("☑ " if Persona.rule("occasions") else "☐ ") + "Small gestures: handle birthdays & callbacks you let slip (weaker effect)", _player_action.bind(Persona.set_rule.bind("occasions", not Persona.rule("occasions"))))
 		av[1].add_child(oc)
+		var mf := _btn(("☑ " if Persona.rule("mailfilter") else "☐ ") + "Mail filter: answer routine correspondence without you", _player_action.bind(Persona.set_rule.bind("mailfilter", not Persona.rule("mailfilter"))))
+		av[1].add_child(mf)
+		var tv := _btn(("☑ " if Persona.rule("travel") else "☐ ") + "Travel desk: book trips — arrivals cost less energy and keep 1⏱", _player_action.bind(Persona.set_rule.bind("travel", not Persona.rule("travel"))))
+		av[1].add_child(tv)
 		av[1].add_child(_lbl("The “Send assistant” contact channel is only available while someone holds this desk.", 11, DIM))
 		av[1].add_child(_btn("Let %s go" % str(a.name), _player_action.bind(Persona.fire_assistant)))
+
+	# Staff & delegation (Features 33–36): from doing to managing people
+	var sf = _card("Staff & delegation rules", "🗂")
+	grid.add_child(sf[0])
+	if st.staff.is_empty():
+		sf[1].add_child(_lbl("Nobody but you works the files. Staffers take over deals, research, contact care or crises — proposing first, acting autonomously once you trust them.", 12, DIM))
+	for s in st.staff:
+		var fdef: Dictionary = Data.STAFF_FOCI.get(str(s.focus), {})
+		var srow := VBoxContainer.new()
+		srow.add_theme_constant_override("separation", 2)
+		sf[1].add_child(srow)
+		var skill_s := str(int(s.skill)) if Mogul.level("leadership") >= 2 else Game.grade_range(float(s.skill), 8.0, "staff" + str(s.id))
+		var trait_s: String = str(Data.STAFF_TRAITS.get(str(s.trait), {}).get("name", "?")) if Staff.bias_visible() else "character: unclear"
+		srow.add_child(_lbl("%s %s — %s · skill %s · %s · wages %s/mo" % [str(fdef.get("icon", "🗂")), str(s.name), str(fdef.get("name", s.focus)), skill_s, trait_s, Game.fmt_money(Staff.wage(s))], 13, TEXT_C))
+		if Staff.bias_visible():
+			srow.add_child(_lbl("Your read: %s." % str(Data.STAFF_TRAITS.get(str(s.trait), {}).get("hint", "")), 11, DIM))
+		var brow := HBoxContainer.new()
+		brow.add_theme_constant_override("separation", 6)
+		srow.add_child(brow)
+		brow.add_child(_btn("Mode: %s" % str(Staff.MODE_LABELS.get(str(s.mode), s.mode)), _player_action.bind(Staff.cycle_mode.bind(int(s.id)))))
+		brow.add_child(_btn("Let go", _player_action.bind(Staff.fire.bind(int(s.id)))))
+	var hire_flow := HFlowContainer.new()
+	hire_flow.add_theme_constant_override("h_separation", 6)
+	hire_flow.add_theme_constant_override("v_separation", 6)
+	sf[1].add_child(hire_flow)
+	for focus in Data.STAFF_FOCI:
+		var hb2 := _btn("Hire: %s %s" % [str(Data.STAFF_FOCI[focus].icon), str(Data.STAFF_FOCI[focus].name)], _player_action.bind(Staff.hire.bind(str(focus))))
+		var hreason: String = Staff.hire_blocked_reason(str(focus))
+		hb2.disabled = hreason != ""
+		hb2.tooltip_text = str(Data.STAFF_FOCI[focus].desc) + ("" if hreason == "" else "\n⛔ " + hreason)
+		hire_flow.add_child(hb2)
+	# Delegationsregeln (Feature 35): was automatisch läuft, was vorgelegt wird
+	sf[1].add_child(_lbl("Standing rules — what autonomous staff may decide, and what always reaches your desk:", 12, DIM))
+	var cap_row := HBoxContainer.new()
+	cap_row.add_theme_constant_override("separation", 6)
+	sf[1].add_child(cap_row)
+	var cap_l := _lbl("Approval cap:", 12, TEXT_C)
+	cap_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	cap_row.add_child(cap_l)
+	for cap in [5000, 15000, 50000]:
+		var cb2 := _btn(("● " if int(st.delegation.feeCap) == cap else "○ ") + Game.fmt_money(roundf(cap * Game.infl(st.year))), _set_delegation.bind("feeCap", cap))
+		cap_row.add_child(cb2)
+	var vip_row := HBoxContainer.new()
+	vip_row.add_theme_constant_override("separation", 6)
+	sf[1].add_child(vip_row)
+	var vip_l := _lbl("Always my call: clients from fame", 12, TEXT_C)
+	vip_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	vip_row.add_child(vip_l)
+	for vf in [50, 70, 90]:
+		var vb2 := _btn(("● " if int(st.delegation.vipFame) == vf else "○ ") + str(vf), _set_delegation.bind("vipFame", vf))
+		vip_row.add_child(vb2)
+	var sc_btn := _btn(("☑ " if bool(st.delegation.escalateScandal) else "☐ ") + "Loud scandals always escalate to me", _set_delegation.bind("escalateScandal", not bool(st.delegation.escalateScandal)))
+	sf[1].add_child(sc_btn)
 
 	# Experience & specializations (Feature 6): abilities, not % boni
 	var sk = _card("Experience & abilities", "🎓")

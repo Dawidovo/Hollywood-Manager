@@ -26,6 +26,7 @@ Persona="*res://scripts/Persona.gd"
 Mogul="*res://scripts/Mogul.gd"
 Network="*res://scripts/Network.gd"
 Dialogs="*res://scripts/Dialogs.gd"
+Staff="*res://scripts/Staff.gd"
 
 [debug]
 

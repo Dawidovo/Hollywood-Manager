@@ -488,6 +488,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	Mogul.init_state()
 	Network.init_state()
 	Dialogs.init_state()
+	Staff.init_state()
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = rndi(20, 45)
 	book(float(roundi(120000.0 * infl(start_year))), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
@@ -2089,6 +2090,9 @@ func end_week() -> Array:
 
 	maybe_fire_event(events)
 
+	# Mitarbeiter (Features 33–36): Vorschläge, autonome Arbeit, Eskalationen
+	Staff.tick_week(events)
+
 	# Assistant: the weekly decision note (delegation, Feature 4)
 	var brief: Dictionary = Persona.assistant_briefing()
 	if not brief.is_empty():
@@ -2126,6 +2130,8 @@ func _month_close(events: Array) -> void:
 	Mogul.tick_month(events)
 	# Netzwerk-Cluster (Features 10–15): Kapital zahlt aus, Ärger kühlt ab
 	Network.tick_month()
+	# Mitarbeiter: Löhne & Lernen (Features 32–36)
+	Staff.tick_month()
 	_close_ledger_month(mi())
 	state.month = int(state.month) + 1
 	if state.month > 12:
@@ -2679,6 +2685,8 @@ func load_game() -> bool:
 	Network.ensure_network()
 	# Migration Korrespondenz (Dialogsystem & Posteingang)
 	Dialogs.ensure_inbox()
+	# Migration Mitarbeiter & Delegation (Features 32–36)
+	Staff.ensure_staff()
 	# Migration Simulations- & Verhandlungs-Cluster
 	if not state.has("instinct"):
 		state["instinct"] = 20

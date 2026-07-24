@@ -198,6 +198,18 @@ context), `fact` (subjective-reputation fact), `memory`, `promise`, `xp`,
 `meet_someone`, `seal_deal`, `gate_rel`, `memoir`, and `chance`
 (`{"op":"chance","p":0.3,"effects":[…],"else":[…]}`).
 
+## Staff & delegation (`staff/core.json`)
+
+`foci` defines the desks staff can run (deal-making, research, contact care,
+crisis — each with name, icon, description), `traits` the personalities that
+color their recommendations (`confidence` shifts the certainty they claim,
+`fee` how much money they leave on the table, `risk` their appetite; `hint`
+is what a leadership-trained player reads about them). Every staffer runs in
+one of three modes: paused, proposing (recommendations with reasoning and a
+confidence number), or autonomous (acts alone, reports in the weekly digest —
+except when your standing rules force an escalation: approval cap, VIP-client
+fame line, loud scandals).
+
 ## Regenerating the core files
 
 `tools/ExportData.gd` writes the loaded data back, freshly formatted:

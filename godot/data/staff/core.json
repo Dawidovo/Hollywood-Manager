@@ -1,0 +1,22 @@
+{
+  "foci": {
+    "deals": {"name": "Deal desk", "icon": "🤝",
+      "desc": "Pitches roles and haggles fees for the roster — the bread and butter."},
+    "research": {"name": "Research & coverage", "icon": "🔎",
+      "desc": "Reads scripts, digs up unannounced projects, keeps the coverage flowing."},
+    "care": {"name": "Client & contact care", "icon": "💐",
+      "desc": "Keeps people warm — flowers, calls, courtesies — so you don't have to."},
+    "crisis": {"name": "Crisis desk", "icon": "🚨",
+      "desc": "Rumors, leaks, damage control. Sleeps badly so you don't have to."}
+  },
+  "traits": {
+    "ehrgeizig": {"name": "Ambitious", "confidence": 12, "risk": 0.1, "fee": 0.0,
+      "hint": "wants wins on the résumé — confidence numbers run hot"},
+    "vorsichtig": {"name": "Cautious", "confidence": -10, "risk": -0.1, "fee": 0.0,
+      "hint": "understates everything — no recommendation ever feels safe"},
+    "studiotreu": {"name": "Studio-friendly", "confidence": 4, "risk": 0.0, "fee": -0.08,
+      "hint": "leans toward whatever keeps the studios smiling — fees suffer"},
+    "eigennuetzig": {"name": "Self-serving", "confidence": 6, "risk": 0.05, "fee": -0.04,
+      "hint": "recommendations tend to polish their own standing first"}
+  }
+}

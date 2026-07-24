@@ -658,10 +658,15 @@ func travel_to(id_s: String) -> bool:
 	var cost := travel_cost(id_s)
 	if cost > 0.0:
 		Game.book(-cost, "reisen", "Trip to %s" % str(loc.name))
-	st.player.energy = clampf(float(st.player.energy) - float(loc.energy) * Mogul.travel_energy_mult(), 0.0, 100.0)
-	st.contactAP = 0
+	# Reiseorganisation (Feature 32): der Assistent bucht, packt, plant —
+	# die Anreise kostet weniger Substanz und frisst nicht die ganze Woche.
+	var organized := rule("travel")
+	st.player.energy = clampf(float(st.player.energy) - float(loc.energy) * Mogul.travel_energy_mult() * (0.7 if organized else 1.0), 0.0, 100.0)
+	st.contactAP = 1 if organized else 0
 	st.player.location = id_s
 	st.player.awayNoted = false
+	if organized:
+		Game.log_msg("%s handled tickets, hotel and telegrams — you arrive with the week half intact." % str(assistant().name), "info")
 	Mogul.grant_xp("networking", 1.0, "Showed your face out of town")
 	Game.log_msg("You travel to %s — the week belongs to the journey." % str(loc.name), "info")
 	return true
@@ -765,7 +770,7 @@ func hire_assistant() -> Dictionary:
 		return assistant()
 	var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.6) else Data.NPC_FIRST_M)
 	var cand := {"name": "%s %s" % [first, Game.pick(Data.NPC_LAST)], "skill": Game.rndi(35, 65),
-		"hiredMi": Game.mi(), "rules": {"upkeep": true, "briefing": true, "occasions": false}}
+		"hiredMi": Game.mi(), "rules": {"upkeep": true, "briefing": true, "occasions": false, "mailfilter": false, "travel": true}}
 	_st().assistant = cand
 	Game.log_msg("%s starts as your assistant — the front desk is finally covered." % str(cand.name), "deal")
 	return cand
@@ -843,6 +848,12 @@ func assistant_briefing() -> Dictionary:
 	for cs in st.castings:
 		if int(cs.deadline) <= 2 and not bool(cs.get("hidden", false)):
 			items.append("🎬 “%s” casts in %d week(s) — open roles are waiting." % [str(cs.title), int(cs.deadline)])
+	# Anlässe & liegengebliebene Post (Feature 32): der Assistent erinnert
+	for occ in Network.open_occasions():
+		items.append("💐 %s (%s) — a gesture before %s would land well." % [str(Network.OCCASION_KINDS[str(occ.kind)].name), str(occ.ctName), Game.mi_str(occ.dueMi)])
+	for letter in Dialogs.open_letters():
+		if Game.wi() >= int(letter.expireWi) - 1:
+			items.append("%s The %s from %s expires — answer it or lose it." % [Dialogs.mail_icon(), Dialogs.mail_word().to_lower(), letter["from"].get("name", "?")])
 	# Empire desk (Features 5–9): due deals, maturing tips, opening stakes
 	items.append_array(Mogul.briefing_items())
 	if items.is_empty():

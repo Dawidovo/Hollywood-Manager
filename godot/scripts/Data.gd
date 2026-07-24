@@ -46,6 +46,8 @@ var BACKROOM_DEALS: Array = []
 var BACKROOM_BY_ID: Dictionary = {}
 var DIALOGS: Array = []
 var LETTERS: Array = []
+var STAFF_FOCI: Dictionary = {}
+var STAFF_TRAITS: Dictionary = {}
 
 
 func _init() -> void:
@@ -121,3 +123,6 @@ func reload() -> void:
 		{"weight": 1, "manual": false, "conditions": {}, "from_type": "stranger", "subject": "…", "body": "",
 			"expire_weeks": 3, "choices": [], "expire_effects": []},
 		["id"])
+	var staff := DataLoader.load_dict("staff")
+	STAFF_FOCI = staff.get("foci", {})
+	STAFF_TRAITS = staff.get("traits", {})
