@@ -807,6 +807,7 @@ func begin_gala() -> Dictionary:
 	Game.consume_favor("galaInvite")
 	st.contactAP = int(st.contactAP) - 1
 	st.player.energy = clampf(float(st.player.energy) - 5.0, 0.0, 100.0)
+	Dialogs.note_scene()
 	return {"ok": true}
 
 
@@ -823,7 +824,7 @@ func attend_gala() -> Dictionary:
 		lines.append("A handshake by the bar becomes a name in your book: [b]%s[/b] takes your calls now." % str(met.name))
 	if Game.chance(0.4) and st.contacts.size() > 0:
 		var pr_ct: Dictionary = Game.pick(st.contacts)
-		lines.append(Persona._make_promise(pr_ct))
+		lines.append(Persona._make_promise(pr_ct, "", Game.rndi(0, 2)))
 	if Game.chance(0.35):
 		var kind: String = Game.pick(["extraAudition", "billing", "scriptAccess", "suppressStory"])
 		var fav := Game.grant_favor(kind, Game.favor_contact_for(kind))
@@ -997,3 +998,18 @@ func tick_month() -> void:
 			Game.remove_debt(debt.id)
 			Game.log_msg("%s makes an old obligation disappear — cleanly, on paper, forever." % str(ct.name), "deal")
 			break
+	# Gefallen sind Verpflichtungen (Feature 31): alte Schulden werden
+	# eingefordert — höflich, per Brief, genau einmal.
+	for debt in st.debts:
+		if Game.mi() - int(debt.gainedMi) < 6 or bool(debt.get("called", false)) or not Game.chance(0.35):
+			continue
+		debt["called"] = true
+		var creditor := contact_by_name(str(debt["from"].get("name", "")))
+		var letter := Dialogs.spawn_letter_for("debt_called", creditor)
+		if letter.is_empty():
+			break
+		if creditor.is_empty():
+			letter["from"] = {"name": str(debt["from"].get("name", "?")), "type": str(debt["from"].get("type", "stranger"))}
+			letter.subject = str(letter.subject)
+		Game.log_msg("An old debt stirs: %s reminds you, courteously, of what you owe." % str(debt["from"].get("name", "?")), "info")
+		break

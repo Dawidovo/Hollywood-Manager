@@ -1361,6 +1361,10 @@ func _render_kontakte() -> void:
 	content_box.add_child(head[0])
 	head[1].add_child(_lbl("Contact time this week: %d/%d ⏱ — personal appointments cost more time than a phone call. All costs come out of your private account (currently %s)." % [int(st.contactAP), Persona.ap_per_week(), Game.fmt_money(st.player.cash)], 13))
 	head[1].add_child(_lbl("People remember: whether you came yourself or sent the assistant, what you promised — and how long you kept them waiting.", 12, DIM))
+	# Kommunikationsbudget (Feature 29): wenige große Szenen pro Woche
+	var scenes: int = int(st.get("weekScenes", 0))
+	var scene_col := DIM if scenes <= Dialogs.SCENES_PER_WEEK else RED
+	head[1].add_child(_lbl("Big scenes this week: %d/%d — dinners, club nights, back rooms and galas take substance. More than that means something is burning." % [scenes, Dialogs.SCENES_PER_WEEK], 11, scene_col))
 	# Gala nights (Feature 21): invitations become names, promises, debts
 	if Game.has_favor("galaInvite"):
 		var gala_b := _btn("🎟 Attend the gala (uses an invitation · 1⏱)", _on_attend_gala, true)
@@ -1402,7 +1406,14 @@ func _render_kontakte() -> void:
 		var status := str(pr.status)
 		var color := AMBER if status == "open" else (GREEN if status == "kept" else RED)
 		var suffix := " — due by %s" % Game.mi_str(pr.dueMi) if status == "open" else " (%s)" % status
-		pv[1].add_child(_lbl("%s %s%s" % ["⏳" if status == "open" else ("✔" if status == "kept" else "✖"), str(pr.text), suffix], 12, color))
+		# Register mit Substanz (Feature 30): Art, Zeugen, Schriftform
+		var pk: Dictionary = Data.CONTACT_PROMISE_KINDS.get(str(pr.get("kind", "callback")), {})
+		var meta := " · " + ("written" if bool(pr.get("written", false)) else "oral")
+		if int(pr.get("witnesses", 0)) > 0:
+			meta += " · %d👁" % int(pr.witnesses)
+		var pl := _lbl("%s %s %s%s%s" % ["⏳" if status == "open" else ("✔" if status == "kept" else "✖"), str(pk.get("icon", "🤞")), str(pr.text), suffix, meta], 12, color)
+		pl.tooltip_text = "Kept: trust +%d%s. Broken: trust −%d, anger — and word spreads%s." % [5 + int(pr.get("witnesses", 0)) * 2, ", standing rises" if int(pr.get("witnesses", 0)) > 0 else "", 10 + int(pr.get("witnesses", 0)) * 2, "; a written promise can surface as evidence" if bool(pr.get("written", false)) else ""]
+		pv[1].add_child(pl)
 	for d in st.debts:
 		pv[1].add_child(_lbl("⚠ Favor owed to %s: %s" % [d["from"].get("name", "?"), str(d.get("note", ""))], 12, AMBER))
 

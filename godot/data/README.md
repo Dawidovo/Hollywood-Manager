@@ -166,6 +166,28 @@ through the placeholders and only change the world through the effect ops
 listed below. Unknown ops or placeholders are reported as warnings at load —
 generated text cannot invent contracts, contacts or promises.
 
+**Conversation memory & repetition control**: dialogs with a contact in
+context open with a *recall* — the person concretely brings up broken
+promises, missed occasions, help given or word kept (each grievance is
+voiced once; phrased facts have a cooldown). Text variants in dialog nodes
+are tracked, so no line repeats until all variants have been used.
+
+**Weekly scene budget**: only a few big scenes (dinner, club night, back
+room, gala) fit into a normal week — beyond that the manager pays with
+stress, and the log notes that weeks like this mean crisis.
+
+**Promises** (`contacts/core.json` → `promise_kinds`): each promise has a
+kind (with icon, text and due window), participants, witness count and an
+oral/written flag. Kept in front of witnesses ⇒ more trust and standing;
+broken in front of witnesses ⇒ louder damage; broken *written* promises can
+surface as evidence in the press. The `promise` effect op accepts `kind`,
+`witnesses` and `written`.
+
+**Favors are obligations, not coins**: calling one in cools the relationship
+a touch and sometimes creates a counter-debt; debts you owe get called in by
+letter after months (`letters/debt_called`) — settle in kind, settle with
+money, or refuse and be known as someone who forgets help.
+
 **Effect ops** (events, dialogs and letters alike): the classic set
 (`money`, `rep`, `fame`, `mood`, `trust`, `studio_rel`, `favor_grant`,
 `favor_owe`, `rumor`, `identity`, `log`, `followup`, …) plus the

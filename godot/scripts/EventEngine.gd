@@ -306,7 +306,7 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 		"promise":
 			var ct4: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
 			if not ct4.is_empty():
-				_say(Persona._make_promise(ct4), ctx)
+				_say(Persona._make_promise(ct4, str(ef.get("kind", "")), int(ef.get("witnesses", 0)), bool(ef.get("written", false))), ctx)
 		"xp":
 			Mogul.grant_xp(str(ef.get("field", "networking")), amount if amount > 0.0 else 1.0, subst(str(ef.get("why", "Learned by doing")), ctx))
 		"player":
@@ -355,8 +355,44 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 				gate.rel = clampf(float(gate.rel) + amount, 0.0, 100.0)
 		"memoir":
 			Network.memoir(subst(str(ef.get("text", "")), ctx))
+		# Gefallen als Verpflichtungen (Feature 31): eingeforderte Schulden
+		"settle_debt":
+			var debt := _debt_from_sender(ctx)
+			if not debt.is_empty():
+				if str(ef.get("pay", "favor")) == "cash":
+					Persona.book(-_money(float(ef.get("amount", 120))), "An old debt, settled")
+				else:
+					Game.consume_any_favor()
+				Game.remove_debt(debt.id)
+				var ct7: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+				if not ct7.is_empty():
+					Network.adjust(ct7, {"trust": 5.0, "liking": 3.0}, false)
+					Network.add_fact(ct7, "honors their debts", 1, 1.5)
+				_say("The ledger between you is even again — and everyone involved knows it.", ctx)
+		"refuse_debt":
+			var debt2 := _debt_from_sender(ctx)
+			if not debt2.is_empty():
+				Game.remove_debt(debt2.id)
+			var ct8: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+			if not ct8.is_empty():
+				Network.adjust(ct8, {"trust": -6.0, "irritation": 8.0})
+				Network.add_fact(ct8, "does not honor their debts", -1, 2.0)
+			Game.record_identity("skrupellos", 1.0)
+			if Game.chance(0.4):
+				Game.add_rumor("agency", "They say %s takes help gladly — and forgets it just as gladly." % st.agency.name, true, "skandal", ["Party guests"], 20.0, true)
+			_say("Refused debts do not disappear in this town. They compound — in whispers.", ctx)
 		_:
 			push_warning("EvEngine: Unbekannte Effekt-Op „%s“ — übersprungen." % str(ef.get("op", "")))
+
+
+# Älteste Schuld gegenüber dem Brief-Absender im Kontext finden.
+func _debt_from_sender(ctx: Dictionary) -> Dictionary:
+	var best := {}
+	for d in Game.state.debts:
+		if str(d["from"].get("name", "")) == str(ctx.get("sender", "")):
+			if best.is_empty() or int(d.gainedMi) < int(best.gainedMi):
+				best = d
+	return best
 
 
 # "a|b|c" ⇒ zufällige Auswahl, sonst der Wert selbst

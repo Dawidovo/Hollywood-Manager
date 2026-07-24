@@ -807,9 +807,13 @@ func _ready() -> void:
 	Game.quick_production(wt_c, {"genre": "drama", "prestige": 1})
 	var wt_prod: Dictionary = Game.state.productions[-1]
 	wt_prod.weeksLeft = 2
+	# Ein zufällig gefeuertes Streik-Event würde den Countdown anhalten —
+	# für den Takt-Test wird der Arbeitsfrieden erzwungen.
+	Game.state.strikeMonths = 0
 	Game.end_week()
 	check(int(wt_prod.weeksLeft) == 1, "Produktion zählt in Wochen herunter")
 	var wt_rel: int = Game.state.released.size()
+	Game.state.strikeMonths = 0
 	Game.end_week()
 	check(Game.state.released.size() == wt_rel + 1, "Release nach Ablauf der Wochen")
 
@@ -1508,6 +1512,73 @@ func _ready() -> void:
 	Game.state = null
 	check(Game.load_game(), "Staffelungs-Spielstand geladen")
 	check(Game.state.seenKinds.size() == tiers_saved.size() and Game.state.has("outMail"), "Neuigkeitszähler & Ausgangspost überleben Save/Load")
+
+	# =========== Erinnerungen, Budget, Versprechen & Verpflichtungen (27–31) ===========
+	# 48. Gesprächserinnerungen & Wiederholungskontrolle
+	Game.new_game("Gedächtnis AG", 1950)
+	var rc_ct: Dictionary = Game.state.contacts[0]
+	Game.state.promises.append({"id": 95001, "to": str(rc_ct.name), "kind": "callback", "madeMi": Game.mi() - 3,
+		"dueMi": Game.mi() - 1, "witnesses": 0, "written": false, "text": "x", "status": "broken"})
+	var rc := Dialogs.recall_for(rc_ct)
+	check(str(rc.get("text", "")).contains("your word"), "Gebrochene Zusagen werden konkret angesprochen")
+	check(bool(Game.state.promises.back().recalled), "Jeder Vorwurf wird nur einmal ausgesprochen")
+	Network.add_fact(rc_ct, "stood by them in a rough patch", 1, 2.0)
+	var rc2 := Dialogs.recall_for(rc_ct)
+	check(str(rc2.get("text", "")).contains("stood by them"), "Frühere Hilfe wird dankbar erinnert")
+	check(Dialogs.recall_for(rc_ct).is_empty(), "Erinnerungen haben eine Abklingzeit")
+	var pick1 := Dialogs._pick_text(["Variante A", "Variante B"])
+	var pick2 := Dialogs._pick_text(["Variante A", "Variante B"])
+	check(pick1 != pick2, "Formulierungen wiederholen sich erst, wenn alle Varianten durch sind")
+
+	# 49. Kommunikationsbudget: wenige große Szenen pro Woche
+	var stress0 := float(Game.state.player.stress)
+	Dialogs.note_scene()
+	Dialogs.note_scene()
+	check(int(Game.state.weekScenes) == 2 and float(Game.state.player.stress) == stress0, "Zwei große Szenen sind eine normale Woche")
+	Dialogs.note_scene()
+	check(float(Game.state.player.stress) > stress0, "Die dritte Szene signalisiert Krise (Stress steigt)")
+	Dialogs.tick_week()
+	check(int(Game.state.weekScenes) == 0 and not bool(Game.state.weekScenesNoted), "Das Budget beginnt jede Woche frisch")
+
+	# 50. Versprechensregister & Gefallen als Verpflichtungen
+	Game.state.contactAP = 3
+	var pr_ct2: Dictionary = Game.state.contacts[1]
+	Persona._make_promise(pr_ct2, "dinner", 2, false)
+	var pr_new: Dictionary = Game.state.promises.back()
+	check(str(pr_new.kind) == "dinner" and int(pr_new.witnesses) == 2, "Zusagen tragen Inhalt, Frist und Zeugen")
+	var pr_trust0 := Network.dim(pr_ct2, "trust")
+	Persona._fulfill_promises(pr_ct2)
+	check(str(pr_new.status) == "kept" and Network.dim(pr_ct2, "trust") - pr_trust0 >= 7.9, "Vor Zeugen gehaltenes Wort zahlt stärker auf Vertrauen ein")
+	var wr_ct: Dictionary = Game.state.contacts[2]
+	Persona._make_promise(wr_ct, "intro", 0, true)
+	var pr_wr: Dictionary = Game.state.promises.back()
+	check(bool(pr_wr.written), "Schriftliche Zusagen werden als solche registriert")
+	# Gefallen: Einfordern kühlt und erzeugt manchmal Gegenschulden
+	Game.grant_favor("suppressStory", {"type": str(rc_ct.type), "name": str(rc_ct.name)}, true)
+	var rc_liking := Network.dim(rc_ct, "liking")
+	check(Game.consume_favor("suppressStory"), "Gefallen eingefordert")
+	check(Network.dim(rc_ct, "liking") < rc_liking, "Einfordern kühlt die Beziehung einen Hauch ab")
+	# Schulden werden per Brief eingefordert; Ops begleichen oder verweigern
+	Game.owe_favor("galaInvite", {"type": str(rc_ct.type), "name": str(rc_ct.name)})
+	var dc_letter := Dialogs.spawn_letter_for("debt_called", rc_ct)
+	check(not dc_letter.is_empty(), "Schuld-Brief zugestellt")
+	Game.state.player.cash = 5000.0
+	var debts0: int = Game.state.debts.size()
+	Game.state.contactAP = 3
+	check(bool(Dialogs.letter_choose(int(dc_letter.id), 1).ok), "Schuld großzügig mit Geld beglichen")
+	check(Game.state.debts.size() < debts0, "settle_debt räumt die Verpflichtung aus dem Register")
+	var refuse_ct: Dictionary = Game.state.contacts[3]
+	Game.owe_favor("scriptAccess", {"type": str(refuse_ct.type), "name": str(refuse_ct.name)})
+	var dc2 := Dialogs.spawn_letter_for("debt_called", refuse_ct)
+	var refuse_irr0 := Network.dim(refuse_ct, "irritation")
+	Dialogs.letter_choose(int(dc2.id), 2)
+	check(Network.dim(refuse_ct, "irritation") > refuse_irr0, "Verweigerte Schulden hinterlassen Verärgerung")
+	check(Network.opinion_score(refuse_ct) < 0.0, "»Vergisst Hilfe« wird Teil des Bildes von dir")
+	var promises_saved: int = Game.state.promises.size()
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Verpflichtungs-Spielstand geladen")
+	check(Game.state.promises.size() == promises_saved and Game.state.promises.back().has("witnesses"), "Erweitertes Versprechensregister überlebt Save/Load")
 
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.

@@ -33,6 +33,7 @@ var CONTACT_CIRCLES: Dictionary = {}
 var CONTACT_CIRCLE_NAMES: Dictionary = {}
 var CONTACT_VIP_TYPES: Array = []
 var CONTACT_NOTABLES: Array = []
+var CONTACT_PROMISE_KINDS: Dictionary = {}
 var ESTATE_HOMES: Array = []
 var ESTATE_PURCHASES: Array = []
 var ESTATE_HOME_BY_ID: Dictionary = {}
@@ -90,6 +91,7 @@ func reload() -> void:
 	CONTACT_CIRCLE_NAMES = contacts.get("circle_names", {})
 	CONTACT_VIP_TYPES = contacts.get("vip_types", [])
 	CONTACT_NOTABLES = contacts.get("notables", [])
+	CONTACT_PROMISE_KINDS = contacts.get("promise_kinds", {})
 	var estate := DataLoader.load_dict("estate")
 	ESTATE_HOMES = estate.get("homes", [])
 	ESTATE_PURCHASES = estate.get("purchases", [])

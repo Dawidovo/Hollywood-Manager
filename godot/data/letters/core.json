@@ -134,6 +134,23 @@
           "outcome": "A polite refusal. Whatever it was, someone else will hear it first now."}
       ]},
 
+    {"id": "debt_called", "weight": 0, "manual": true, "from_type": "stranger",
+      "subject": "An old debt, courteously recalled",
+      "body": "{sender} writes — friendly, and only once: \"You will remember that I helped you when it mattered. It would mean something to me if that were not forgotten.\"",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Repay in kind (uses one of your favors)", "requirements": {"has_favor": true},
+          "effects": [{"op": "settle_debt", "pay": "favor"}],
+          "outcome": "One call, one favor redirected, one ledger balanced. This is how the town keeps its books."},
+        {"label": "Settle it generously (−{money_fmt:120})", "requirements": {"min_cash_private": 120},
+          "effects": [{"op": "settle_debt", "pay": "cash", "amount": 120}],
+          "outcome": "Money is the bluntest way to pay a social debt — but paid is paid, and generosity is remembered."},
+        {"label": "Let them wait",
+          "effects": [{"op": "refuse_debt"}],
+          "outcome": "No reply. In this town, unpaid debts do not disappear — they compound, in whispers."}
+      ],
+      "expire_effects": [{"op": "refuse_debt"}]},
+
     {"id": "gala_invitation", "weight": 1, "from_type": "gastgeberin",
       "conditions": {"min_career": 1, "chance": 0.6},
       "subject": "You are expected",

@@ -24,7 +24,7 @@ const KNOWN_OPS := ["money", "rep", "instinct", "fame", "mood", "heat", "exhaust
 	"loyalty", "trust", "dna", "flag_set", "studio_rel", "favor_grant", "favor_consume",
 	"favor_owe", "rumor", "identity", "log", "followup", "chance", "dims", "fact", "memory",
 	"promise", "xp", "player", "money_private", "tip", "rumor_reveal", "casting_spawn",
-	"meet_someone", "seal_deal", "gate_rel", "memoir"]
+	"meet_someone", "seal_deal", "gate_rel", "memoir", "settle_debt", "refuse_debt"]
 const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio"]
 
 # Laufender Dialog (nur zur Laufzeit, wird nie gespeichert).
@@ -50,6 +50,9 @@ func init_state() -> void:
 	st["weekDigest"] = []
 	st["seenKinds"] = {}
 	st["outMail"] = []
+	st["usedLines"] = []
+	st["weekScenes"] = 0
+	st["weekScenesNoted"] = false
 
 
 func ensure_inbox() -> void:
@@ -66,6 +69,12 @@ func ensure_inbox() -> void:
 		st["seenKinds"] = {}
 	if not st.has("outMail") or not (st.outMail is Array):
 		st["outMail"] = []
+	if not st.has("usedLines") or not (st.usedLines is Array):
+		st["usedLines"] = []
+	if not st.has("weekScenes"):
+		st["weekScenes"] = 0
+	if not st.has("weekScenesNoted"):
+		st["weekScenesNoted"] = false
 
 
 # =====================================================================
@@ -169,8 +178,70 @@ func start(id_s: String, ctx: Dictionary = {}) -> Dictionary:
 	if def.is_empty():
 		return {"done": true, "title": "…", "text": "Silence.", "lines": [], "choices": []}
 	run = {"def": def, "node": str(def.get("start", "opening")), "ctx": ctx.duplicate(true), "lines": []}
+	# Gesprächserinnerung (Feature 27): das Gegenüber spricht Vergangenes
+	# konkret an — Hilfe, Vernachlässigung, gebrochene Zusagen.
+	var recall := recall_for(Persona.contact_by_id(ctx.get("ctid", -1)))
+	if not recall.is_empty():
+		run.lines.append(str(recall.text))
+		Network.adjust(Persona.contact_by_id(ctx.get("ctid", -1)), recall.get("dims", {}), false)
 	_enter_node()
 	return view()
+
+
+# =====================================================================
+# Feature 27 — Gesprächserinnerungen: Menschen sprechen Dinge an.
+# Feature 28 — jede Erinnerung hat eine Abklingzeit, nichts wird zweimal
+# in derselben Tonlage vorgehalten.
+# =====================================================================
+const RECALL_COOLDOWN_WEEKS := 12
+
+
+func recall_for(ct: Dictionary) -> Dictionary:
+	if ct.is_empty():
+		return {}
+	var st := _st()
+	# 1) Gebrochene Zusagen wiegen am schwersten — und werden genau einmal
+	#    ins Gesicht gesagt.
+	for pr in st.promises:
+		if str(pr.status) == "broken" and str(pr.to) == str(ct.name) and not bool(pr.get("recalled", false)):
+			pr["recalled"] = true
+			return {"text": "»You gave me your word, back in %s,« says %s — not angry, just precise. The sentence stays at the table for a while." % [Game.mi_str(pr.madeMi), str(ct.name)],
+				"dims": {"irritation": 2.0}}
+	# 2) Verpasste Anlässe: das Schweigen über den nie erfolgten Rückruf.
+	for occ in st.get("occasions", []):
+		if str(occ.status) == "missed" and str(occ.ctName) == str(ct.name) and not bool(occ.get("recalled", false)):
+			occ["recalled"] = true
+			return {"text": "There is half a beat of silence — the call you never returned sits between you like a third guest.",
+				"dims": {"irritation": 1.0}}
+	# 3) Fakten, gute wie schlechte — mit Abklingzeit pro Formulierung.
+	for f in ct.get("facts", []):
+		if Game.wi() - int(f.get("recalledWi", -999)) < RECALL_COOLDOWN_WEEKS:
+			continue
+		f["recalledWi"] = Game.wi()
+		if int(f.tone) < 0:
+			return {"text": "%s brings up, almost casually, that you %s. Almost casually." % [str(ct.name), str(f.text)],
+				"dims": {"irritation": 1.0}}
+		return {"text": "»I haven't forgotten that you %s,« says %s, and raises the glass an inch." % [str(f.text), str(ct.name)],
+			"dims": {"liking": 1.0, "trust": 1.0}}
+	return {}
+
+
+# =====================================================================
+# Feature 29 — Kommunikationsbudget: nur wenige große Szenen pro Woche.
+# Wer mehr führt, ist im Krisenmodus — und zahlt mit Substanz.
+# =====================================================================
+const SCENES_PER_WEEK := 2
+
+
+func note_scene() -> void:
+	var st := _st()
+	if st == null or not st.has("weekScenes"):
+		return
+	st.weekScenes = int(st.weekScenes) + 1
+	if int(st.weekScenes) > SCENES_PER_WEEK and not bool(st.weekScenesNoted):
+		st.weekScenesNoted = true
+		st.player.stress = clampf(float(st.player.stress) + 3.0, 0.0, 100.0)
+		Game.log_msg("A week of wall-to-wall meetings — weeks like this mean something is burning (stress +3).", "bad")
 
 
 func _node() -> Dictionary:
@@ -183,6 +254,22 @@ func _enter_node() -> void:
 	EvEngine.apply_effects(node.get("effects", []), run.ctx)
 	run.lines.append_array(EvEngine.lines)
 	EvEngine.lines.clear()
+
+
+# Wiederholungskontrolle (Feature 28): schon verwendete Formulierungen
+# bekommen eine Abklingzeit — erst wenn alle Varianten durch sind, darf
+# sich ein Satz wiederholen.
+func _pick_text(texts: Array) -> String:
+	if texts.is_empty():
+		return ""
+	var st := _st()
+	var used: Array = st.get("usedLines", [])
+	var fresh: Array = texts.filter(func(t): return not used.has(Game.hashs(str(t))))
+	var chosen := str(Game.pick(fresh if fresh.size() else texts))
+	used.append(Game.hashs(chosen))
+	while used.size() > 60:
+		used.pop_front()
+	return chosen
 
 
 # Warum eine Antwort gerade nicht wählbar ist ("" = frei).
@@ -254,7 +341,7 @@ func view() -> Dictionary:
 	var node := _node()
 	var done: bool = run.node == "end" or (bool(node.get("end", false)) and node.get("choices", []).is_empty())
 	var texts: Array = node.get("text", []) if node.get("text") is Array else [node.get("text", "")]
-	var text_s := EvEngine.subst(str(Game.pick(texts)) if texts.size() else "", run.ctx)
+	var text_s := EvEngine.subst(_pick_text(texts), run.ctx)
 	var out := {"done": done, "title": EvEngine.subst(str(run.def.get("title", "Conversation")), run.ctx),
 		"text": text_s, "lines": run.lines.duplicate(), "choices": []}
 	if not done:
@@ -349,6 +436,9 @@ func tick_week() -> void:
 	var st := _st()
 	if st == null or not st.has("inbox"):
 		return
+	# Neues Kommunikationsbudget (Feature 29): die Woche beginnt ruhig.
+	st.weekScenes = 0
+	st.weekScenesNoted = false
 	# Ablauf: Liegengebliebenes verfällt — manchmal mit Konsequenzen.
 	for letter in st.inbox:
 		if str(letter.status) == "open" and Game.wi() > int(letter.expireWi):
@@ -411,6 +501,8 @@ func letter_choice_blocked(_letter: Dictionary, ch: Dictionary) -> String:
 		return "Privately short on cash"
 	if bool(reqs.get("requires_assistant", false)) and not Persona.has_assistant():
 		return "You employ no assistant"
+	if bool(reqs.get("has_favor", false)) and _st().favors.is_empty():
+		return "Nobody owes you anything right now"
 	return ""
 
 

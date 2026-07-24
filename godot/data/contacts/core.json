@@ -41,6 +41,16 @@
     "gesellschaft": "High society"
   },
   "vip_types": ["studio", "financier", "verleger"],
+  "promise_kinds": {
+    "callback": {"name": "Stay in touch", "icon": "📞", "months_min": 2, "months_max": 4,
+      "text": "You promised {contact} to be in touch again soon."},
+    "dinner": {"name": "A dinner owed", "icon": "🍽", "months_min": 1, "months_max": 3,
+      "text": "You promised {contact} a proper dinner — soon, and in person."},
+    "intro": {"name": "An introduction", "icon": "🪜", "months_min": 2, "months_max": 3,
+      "text": "You promised {contact} to open a door to someone in your circle."},
+    "first_look": {"name": "A first look", "icon": "🎬", "months_min": 2, "months_max": 4,
+      "text": "You promised {contact} a first look when something worthwhile crosses your desk."}
+  },
   "notables": [
     {"name": "Financier A. Rothmere", "type": "financier",
       "desc": "Old money with a taste for pictures — half a slate can hang on his nod."},

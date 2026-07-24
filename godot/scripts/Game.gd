@@ -1337,6 +1337,9 @@ func consume_favor(kind: String) -> bool:
 		return false
 	state.favors.erase(best)
 	log_msg("Favor called in: %s (%s)." % [FAVOR_KINDS[kind].name, best["from"].get("name", "?")], "info")
+	# Gefallen sind Verpflichtungen, keine Münzen (Feature 31): wer
+	# einfordert, kühlt die Beziehung — und schuldet manchmal bald selbst.
+	_favor_reciprocity(best)
 	return true
 
 # Ältesten Gefallen beliebiger Art verbrauchen.
@@ -1349,7 +1352,18 @@ func consume_any_favor() -> bool:
 			best = f
 	state.favors.erase(best)
 	log_msg("Favor called in: %s (%s)." % [FAVOR_KINDS[str(best.kind)].name, best["from"].get("name", "?")], "info")
+	_favor_reciprocity(best)
 	return true
+
+
+# Feature 31: Eingeforderte Gefallen sind erfüllte Verpflichtungen — die
+# Beziehung kühlt einen Hauch ab, und manchmal steht bald ein Gegenwunsch
+# im Raum. Nichts in dieser Stadt ist umsonst.
+func _favor_reciprocity(fav: Dictionary) -> void:
+	Persona.touch_contact_person(fav["from"], -2.0, "You called in the favor. Fair — and noted.")
+	if chance(0.25):
+		owe_favor(str(pick(FAVOR_KINDS.keys())), fav["from"])
+		log_msg("Nothing in this town is free: %s will remember this the next time THEY need something." % fav["from"].get("name", "?"), "info")
 
 func has_favor(kind: String) -> bool:
 	for f in state.favors:

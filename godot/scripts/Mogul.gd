@@ -837,6 +837,7 @@ func begin_deal_dialog(cid, deal_id: String) -> Dictionary:
 		return {"ok": false, "text": "Privately short on cash — this deal needs %s up front." % Game.fmt_money(cost)}
 	st.contactAP = int(st.contactAP) - 1
 	_p().energy = clampf(float(_p().energy) - 3.0, 0.0, 100.0)
+	Dialogs.note_scene()
 	return {"ok": true}
 
 

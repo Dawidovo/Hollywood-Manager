@@ -380,6 +380,8 @@ func begin_channel_dialog(cid, key: String) -> Dictionary:
 	Mogul.grant_xp("networking", 1.0, "Kept a relationship alive")
 	if key == "meet":
 		Mogul.grant_xp("people", 1.0, "Face to face, you learn the most")
+	# Kommunikationsbudget (Feature 29): große Szenen zählen
+	Dialogs.note_scene()
 	return {"ok": true}
 
 
@@ -464,7 +466,8 @@ func contact_interact(cid, key: String) -> Dictionary:
 						lines.append("A name drops in passing — a rumor reaches you that you'd never have heard otherwise.")
 						break
 			if Game.chance(0.3):
-				lines.append(_make_promise(ct))
+				# Club-Zusagen haben Ohren am Nebentisch (Feature 30)
+				lines.append(_make_promise(ct, "", 1))
 			# Market whispers (Feature 7): the club is where tips are born
 			if Game.chance(0.2):
 				var tip_line: String = Mogul.maybe_market_tip(ct)
@@ -489,27 +492,43 @@ func contact_interact(cid, key: String) -> Dictionary:
 	return {"ok": true, "text": head + "\n\n" + "\n".join(lines)}
 
 
-# ---------- Promise register ----------
-func _make_promise(ct: Dictionary) -> String:
-	var due := Game.mi() + Game.rndi(2, 4)
-	_st().promises.append({"id": Game.next_id(), "to": str(ct.name), "madeMi": Game.mi(), "dueMi": due,
-		"text": "You promised %s to be in touch again soon." % str(ct.name), "status": "open"})
+# ---------- Promise register (Feature 30) ----------
+# Jede Zusage hat Inhalt (kind), Frist, Beteiligte, Zeugen und eine
+# Schriftform — und daraus abgeleitete Folgen bei Erfüllung und Bruch.
+func _make_promise(ct: Dictionary, kind: String = "", witnesses: int = 0, written: bool = false) -> String:
+	var kinds := Data.CONTACT_PROMISE_KINDS
+	if kind == "" or not kinds.has(kind):
+		kind = str(Game.pick(kinds.keys())) if kinds.size() else "callback"
+	var def: Dictionary = kinds.get(kind, {"name": "Stay in touch", "icon": "🤞", "months_min": 2, "months_max": 4,
+		"text": "You promised {contact} to be in touch again soon."})
+	var due := Game.mi() + Game.rndi(int(def.get("months_min", 2)), int(def.get("months_max", 4)))
+	_st().promises.append({"id": Game.next_id(), "to": str(ct.name), "kind": kind,
+		"madeMi": Game.mi(), "dueMi": due, "witnesses": witnesses, "written": written,
+		"text": str(def.text).replace("{contact}", str(ct.name)), "status": "open"})
 	while _st().promises.size() > PROMISES_MAX:
 		_st().promises.pop_front()
-	_memory(ct, "Remembers your promise.")
-	return "On parting you make a promise: be in touch again soon. %s will remember it." % str(ct.name)
+	_memory(ct, "Remembers your promise: %s." % str(def.name).to_lower())
+	var suffix := ""
+	if witnesses > 0:
+		suffix = " %d other(s) heard it." % witnesses
+	elif written:
+		suffix = " It is in writing."
+	return "On parting you make a promise: %s. %s will remember it.%s" % [str(def.name).to_lower(), str(ct.name), suffix]
 
 
-# Any contact keeps open promises to that person.
+# Any contact keeps open promises to that person. Witnesses multiply
+# the payoff — word kept in front of people is worth more (Feature 30).
 func _fulfill_promises(ct: Dictionary) -> void:
 	for pr in _st().promises:
 		if str(pr.status) == "open" and str(pr.to) == str(ct.name):
 			pr.status = "kept"
-			# Gehaltenes Wort zahlt vor allem auf Vertrauen ein (Feature 12)
-			Network.adjust(ct, {"trust": 5.0, "liking": 2.0}, false)
-			Network.add_fact(ct, "kept a promise to them", 1, 1.0)
+			var w := int(pr.get("witnesses", 0))
+			Network.adjust(ct, {"trust": 5.0 + 1.5 * w, "liking": 2.0}, false)
+			Network.add_fact(ct, "kept a promise to them", 1, 1.0 + 0.5 * w)
+			if w > 0:
+				player().indRep = clampf(float(player().indRep) + 0.5 * w, 0.0, 100.0)
 			_memory(ct, "You kept your word.")
-			Game.log_msg("Promise kept: %s appreciates it." % str(ct.name), "deal")
+			Game.log_msg("Promise kept: %s appreciates it%s." % [str(ct.name), " — and the witnesses noticed too" if w > 0 else ""], "deal")
 
 
 # Monthly tick: broken promises, relationship decay, relationship perks.
@@ -519,13 +538,19 @@ func _tick_contacts_month(events: Array) -> void:
 		if str(pr.status) == "open" and Game.mi() > int(pr.dueMi):
 			pr.status = "broken"
 			st.player.stress = clampf(float(st.player.stress) + 3.0, 0.0, 100.0)
+			var w := int(pr.get("witnesses", 0))
 			for ct in st.contacts:
 				if str(ct.name) == str(pr.to):
-					# Gebrochenes Wort: Vertrauen bricht, Ärger bleibt (Feature 12)
-					Network.adjust(ct, {"trust": -10.0, "liking": -4.0, "irritation": 8.0})
-					Network.add_fact(ct, "broke a promise to them", -1, 2.0)
+					# Gebrochenes Wort: Vertrauen bricht, Ärger bleibt — vor
+					# Zeugen gebrochen bricht es lauter (Feature 30)
+					Network.adjust(ct, {"trust": -10.0 - 2.0 * w, "liking": -4.0, "irritation": 8.0})
+					Network.add_fact(ct, "broke a promise to them", -1, 2.0 + 1.0 * w)
 					_memory(ct, "You broke your promise.")
-			Network.memoir("Promise broken: %s waited in vain — people talk about things like that." % str(pr.to), [str(pr.to)])
+			# Schriftliche Zusagen hinterlassen Beweise, bezeugte Gerede.
+			if bool(pr.get("written", false)) and Game.chance(0.5):
+				st.player.pubRep = clampf(float(st.player.pubRep) - 2.0, 0.0, 100.0)
+				Game.add_rumor("agency", "%s is said to break written promises — and someone kept the letter." % str(st.agency.name), true, "skandal", ["Journalists"], 25.0, true)
+			Network.memoir("Promise broken: %s waited in vain%s." % [str(pr.to), " — in front of witnesses" if w > 0 else ""], [str(pr.to)])
 			Game.log_msg("Promise broken: %s waited in vain." % str(pr.to), "bad")
 	# Neglected contacts cool off — and note it exactly once.
 	for ct in st.contacts:
@@ -580,6 +605,13 @@ func ensure_contacts() -> void:
 	for pr in st.promises:
 		if status_map.has(str(pr.status)):
 			pr.status = status_map[str(pr.status)]
+		# Migration Feature 30: Altbestand wird zur mündlichen Rückruf-Zusage
+		if not pr.has("kind"):
+			pr["kind"] = "callback"
+		if not pr.has("witnesses"):
+			pr["witnesses"] = 0
+		if not pr.has("written"):
+			pr["written"] = false
 
 
 # =====================================================================
