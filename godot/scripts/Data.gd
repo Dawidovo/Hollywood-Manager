@@ -116,6 +116,6 @@ func reload() -> void:
 	DIALOGS = DataLoader.load_entries("dialogs", ["id"],
 		{"title": "Conversation", "start": "opening", "nodes": {}}, ["id"])
 	LETTERS = DataLoader.load_entries("letters", ["id"],
-		{"weight": 1, "conditions": {}, "from_type": "stranger", "subject": "…", "body": "",
+		{"weight": 1, "manual": false, "conditions": {}, "from_type": "stranger", "subject": "…", "body": "",
 			"expire_weeks": 3, "choices": [], "expire_effects": []},
 		["id"])

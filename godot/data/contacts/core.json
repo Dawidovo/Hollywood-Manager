@@ -55,16 +55,25 @@
   ],
   "channels": {
     "call": {"name": "Phone call", "icon": "📞", "ap": 1, "energy": 2.0, "cost": 0.0, "rel_min": 2, "rel_max": 5,
+      "profile": {"liking": 0.7, "closeness": 0.3},
       "desc": "Fast, direct, fairly discreet — but with no time to think, gaffes happen."},
     "meet": {"name": "Meeting/Dinner", "icon": "🤝", "ap": 2, "energy": 6.0, "cost": 40.0, "rel_min": 5, "rel_max": 9,
+      "profile": {"liking": 0.35, "closeness": 0.4, "trust": 0.25},
       "desc": "Strongest relationship effect — costs time, travel, and a good restaurant."},
     "note": {"name": "Message", "icon": "✉", "ap": 0, "energy": 1.0, "cost": 5.0, "rel_min": 1, "rel_max": 2,
+      "profile": {"respect": 0.6, "liking": 0.4},
       "desc": "Precise and asynchronous — but it can be forwarded or leaked."},
+    "letter": {"name": "Letter", "icon": "🖋", "ap": 0, "energy": 1.0, "cost": 8.0, "rel_min": 3, "rel_max": 5,
+      "profile": {"respect": 0.5, "trust": 0.3, "closeness": 0.2}, "delay_weeks": 1,
+      "desc": "Slow and formal — arrives days later, but a considered page outweighs ten wires."},
     "gift": {"name": "Gift", "icon": "🎁", "ap": 0, "energy": 1.0, "cost": 120.0, "rel_min": 3, "rel_max": 7,
+      "profile": {"liking": 0.8, "closeness": 0.2},
       "desc": "Personal and effective — with a cool contact it quickly feels inappropriate."},
     "aide": {"name": "Send assistant", "icon": "🧑‍💼", "ap": 0, "energy": 0.0, "cost": 15.0, "rel_min": 1, "rel_max": 3,
+      "profile": {"respect": 0.6, "liking": 0.4},
       "desc": "Saves your time — but people remember that you did not come yourself."},
     "club": {"name": "Private club", "icon": "🥃", "ap": 2, "energy": 5.0, "cost": 90.0, "rel_min": 4, "rel_max": 8,
+      "profile": {"closeness": 0.45, "trust": 0.3, "liking": 0.25},
       "desc": "Confidential: favors, tips and promises are born here — and rumors about you."}
   }
 }

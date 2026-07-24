@@ -16,8 +16,24 @@ const INBOX_MAX_OPEN := 4
 const INBOX_ARCHIVE_MAX := 16
 const LETTER_COOLDOWN_WEEKS := 10
 
+# Strikte Trennung von Simulation und Text (Feature 26): Text darf nur
+# über bekannte Ops und Platzhalter auf die Simulation zugreifen —
+# nichts erfinden, nichts direkt verändern. Alles andere wird beim
+# Laden angemeckert.
+const KNOWN_OPS := ["money", "rep", "instinct", "fame", "mood", "heat", "exhaustion", "weight",
+	"loyalty", "trust", "dna", "flag_set", "studio_rel", "favor_grant", "favor_consume",
+	"favor_owe", "rumor", "identity", "log", "followup", "chance", "dims", "fact", "memory",
+	"promise", "xp", "player", "money_private", "tip", "rumor_reveal", "casting_spawn",
+	"meet_someone", "seal_deal", "gate_rel", "memoir"]
+const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio"]
+
 # Laufender Dialog (nur zur Laufzeit, wird nie gespeichert).
 var run = null
+
+
+func _ready() -> void:
+	for warning in validate_defs():
+		push_warning("Dialogs: %s" % warning)
 
 
 func _st() -> Dictionary:
@@ -31,6 +47,9 @@ func init_state() -> void:
 	var st := _st()
 	st["inbox"] = []
 	st["inboxSeen"] = {}
+	st["weekDigest"] = []
+	st["seenKinds"] = {}
+	st["outMail"] = []
 
 
 func ensure_inbox() -> void:
@@ -41,6 +60,85 @@ func ensure_inbox() -> void:
 		st["inbox"] = []
 	if not st.has("inboxSeen") or not (st.inboxSeen is Dictionary):
 		st["inboxSeen"] = {}
+	if not st.has("weekDigest") or not (st.weekDigest is Array):
+		st["weekDigest"] = []
+	if not st.has("seenKinds") or not (st.seenKinds is Dictionary):
+		st["seenKinds"] = {}
+	if not st.has("outMail") or not (st.outMail is Array):
+		st["outMail"] = []
+
+
+# =====================================================================
+# Bedeutungsstaffelung (Feature 24/25): Routine wird zusammengefasst,
+# Wichtiges wird zur Nachricht, Entscheidungen zum Kurzdialog, Wende-
+# punkte zur vollen Szene. Die Relevanz bewertet Person, Konsequenz,
+# Zeitdruck und Neuigkeitswert — automatisch.
+# =====================================================================
+# Wie groß muss diese Interaktion sein? (öffentlich, auch für Tests/Mods)
+func relevance(kind: String, ctx: Dictionary) -> float:
+	var st := _st()
+	var score := float(ctx.get("impact", 0.0))
+	var ct: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+	if not ct.is_empty():
+		if Network.is_vip(ct):
+			score += 2.0
+		if float(ct.rel) >= 60.0:
+			score += 1.0
+		elif float(ct.rel) >= 40.0:
+			score += 0.5
+	if ctx.has("dueMi") and int(ctx.dueMi) - Game.mi() <= 1:
+		score += 1.0
+	var seen := int(st.seenKinds.get(kind, 0))
+	score += 2.0 if seen == 0 else (1.0 if seen < 3 else 0.0)
+	st.seenKinds[kind] = seen + 1
+	return score
+
+
+# Zentrale Weiche: entscheidet, WIE eine Meldung den Spieler erreicht.
+# ctx: impact (0–3), ctid?, dueMi?, text (Digest-Zeile), subject/body
+# (Nachricht), scene_letter (Briefvorlage für Kurzdialog/Szene).
+func dispatch(kind: String, ctx: Dictionary) -> String:
+	var score := relevance(kind, ctx)
+	if score < 2.5:
+		if str(ctx.get("text", "")) != "":
+			_st().weekDigest.append(str(ctx.text))
+		return "digest"
+	# Szene/Kurzdialog: eine Briefvorlage mit echten Antworten
+	if ctx.has("scene_letter") and score >= 4.0 and not letter_def(str(ctx.scene_letter)).is_empty():
+		var ct: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
+		spawn_letter_for(str(ctx.scene_letter), ct)
+		return "scene" if score >= 6.0 else "event"
+	add_notice(str(ctx.get("subject", "A note")), str(ctx.get("body", ctx.get("text", ""))), Persona.contact_by_id(ctx.get("ctid", -1)))
+	return "notice"
+
+
+# Routine der Woche: eine Zeile im Ticker statt fünf Unterbrechungen.
+func flush_digest() -> void:
+	var st := _st()
+	if st == null or not st.has("weekDigest") or st.weekDigest.is_empty():
+		return
+	Game.log_msg("In passing: %s" % " · ".join(st.weekDigest.slice(0, 5)), "info")
+	st.weekDigest = []
+
+
+# Eine einfache Nachricht im Posteingang (ohne Vorlage): nur ablegen.
+func add_notice(subject: String, body: String, sender_ct: Dictionary = {}) -> Dictionary:
+	var st := _st()
+	var from := {"name": str(sender_ct.get("name", "Your desk")), "type": str(sender_ct.get("type", "notiz"))}
+	if not sender_ct.is_empty():
+		from["ctid"] = int(sender_ct.id)
+	var letter := {"id": Game.next_id(), "tid": "", "mi": Game.mi(), "wi": Game.wi(),
+		"from": from, "subject": subject, "body": body,
+		"status": "open", "expireWi": Game.wi() + 4, "outcome": ""}
+	st.inbox.append(letter)
+	return letter
+
+
+func dismiss_letter(lid) -> void:
+	var letter := letter_by_id(lid)
+	if not letter.is_empty() and str(letter.status) == "open":
+		letter.status = "done"
+		letter.outcome = "Noted."
 
 
 # Epochengefühl: Briefpost bis in die Neunziger, danach E-Mail.
@@ -211,13 +309,29 @@ func _letter_conditions_ok(def: Dictionary) -> bool:
 
 
 func spawn_letter(template_id: String, force: bool = false) -> Dictionary:
-	var st := _st()
 	var def := letter_def(template_id)
 	if def.is_empty():
 		return {}
 	if not force and not _letter_conditions_ok(def):
 		return {}
+	return _spawn_letter_with(def, _resolve_sender(def))
+
+
+# Wie spawn_letter, aber mit festem Absender aus dem Kontaktbuch —
+# für den Dispatcher (npc_rise, summons & Co.).
+func spawn_letter_for(template_id: String, ct: Dictionary) -> Dictionary:
+	var def := letter_def(template_id)
+	if def.is_empty():
+		return {}
 	var sender := _resolve_sender(def)
+	if not ct.is_empty():
+		sender = {"name": str(ct.name), "type": str(ct.type), "ctid": int(ct.id)}
+	return _spawn_letter_with(def, sender)
+
+
+func _spawn_letter_with(def: Dictionary, sender: Dictionary) -> Dictionary:
+	var st := _st()
+	var template_id := str(def.id)
 	var ctx := {"sender": str(sender.name)}
 	if sender.has("ctid"):
 		ctx["ctid"] = int(sender.ctid)
@@ -249,6 +363,9 @@ func tick_week() -> void:
 		for i in want:
 			var pool: Array = []
 			for def in Data.LETTERS:
+				# Manuelle Vorlagen (Dispatcher-Briefe) nie zufällig zustellen
+				if bool(def.get("manual", false)) or int(def.get("weight", 1)) <= 0:
+					continue
 				if Game.wi() - int(st.inboxSeen.get(str(def.id), -999)) < LETTER_COOLDOWN_WEEKS:
 					continue
 				if st.inbox.any(func(l): return str(l.tid) == str(def.id) and str(l.status) == "open"):
@@ -332,3 +449,60 @@ func letter_choose(lid, idx: int) -> Dictionary:
 		out += "\n\n" + "\n".join(extra)
 	letter.outcome = out
 	return {"ok": true, "text": out}
+
+
+# =====================================================================
+# Feature 26 — Datenvalidierung: Dialoge & Briefe dürfen nur über
+# bekannte Ops wirken und nur bekannte Platzhalter referenzieren.
+# =====================================================================
+var _ph_re := RegEx.create_from_string("\\{([a-z_]+)(:\\d+)?\\}")
+
+
+func _check_effects(effects: Array, where: String, out: Array) -> void:
+	for ef in effects:
+		if not (ef is Dictionary):
+			continue
+		var op := str(ef.get("op", ""))
+		if not KNOWN_OPS.has(op):
+			out.append("%s: unknown effect op \"%s\" — text must not invent mechanics" % [where, op])
+		if op == "chance":
+			_check_effects(ef.get("effects", []), where, out)
+			_check_effects(ef.get("else", []), where, out)
+
+
+func _check_text(text_s: String, where: String, out: Array) -> void:
+	for m in _ph_re.search_all(text_s):
+		var ph := str(m.get_string(1))
+		if not KNOWN_PLACEHOLDERS.has(ph) and ph != "money_fmt":
+			out.append("%s: unknown placeholder {%s} — text may only reference simulation facts" % [where, ph])
+
+
+func validate_defs() -> Array:
+	var out: Array = []
+	for def in Data.DIALOGS:
+		var nodes: Dictionary = def.get("nodes", {})
+		if not nodes.has(str(def.get("start", "opening"))):
+			out.append("dialog %s: start node \"%s\" missing" % [str(def.id), str(def.get("start", "opening"))])
+		for node_id in nodes:
+			var node: Dictionary = nodes[node_id]
+			var where := "dialog %s/%s" % [str(def.id), str(node_id)]
+			_check_effects(node.get("effects", []), where, out)
+			var texts: Array = node.get("text", []) if node.get("text") is Array else [str(node.get("text", ""))]
+			for t in texts:
+				_check_text(str(t), where, out)
+			for ch in node.get("choices", []):
+				_check_effects(ch.get("effects", []), where, out)
+				for target_key in [["goto", ch.get("goto")], ["check.success", ch.get("check", {}).get("success")], ["check.fail", ch.get("check", {}).get("fail")]]:
+					var target = target_key[1]
+					if target != null and str(target) != "end" and not nodes.has(str(target)):
+						out.append("%s: %s → \"%s\" does not exist" % [where, str(target_key[0]), str(target)])
+	for def in Data.LETTERS:
+		var where2 := "letter %s" % str(def.id)
+		_check_text(str(def.get("subject", "")) + " " + str(def.get("body", "")), where2, out)
+		_check_effects(def.get("expire_effects", []), where2, out)
+		for ch in def.get("choices", []):
+			_check_effects(ch.get("effects", []), where2, out)
+			_check_effects(ch.get("effects_fail", []), where2, out)
+			if ch.has("dialog") and not has_dialog(str(ch.dialog)):
+				out.append("%s: choice opens unknown dialog \"%s\"" % [where2, str(ch.dialog)])
+	return out

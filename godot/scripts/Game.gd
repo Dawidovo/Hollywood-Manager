@@ -2042,6 +2042,8 @@ func end_week() -> Array:
 	Mogul.tick_week()
 	# Die Post der Woche: Briefe/E-Mails werden zugestellt, Liegengebliebenes verfällt
 	Dialogs.tick_week()
+	# Bedeutungsstaffelung (Feature 24): die Routine der Woche wird zu EINER Zeile
+	Dialogs.flush_digest()
 
 	# Wochenplaner: die geplante Woche wirkt VOR den Ereignissen
 	_apply_planner(events)

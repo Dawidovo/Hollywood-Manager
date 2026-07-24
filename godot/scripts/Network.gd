@@ -174,23 +174,18 @@ func adjust(ct: Dictionary, deltas: Dictionary, spill: bool = true) -> void:
 				adjust(other, {"liking": ripple * 0.25}, false)
 
 
-# How each channel translates into dimensions (Feature 2 meets 12):
+# How each channel translates into dimensions (Feature 2 meets 12/23):
 # dinners build closeness and trust, letters respect, gifts liking.
-const CHANNEL_PROFILE := {
-	"call": {"liking": 0.7, "closeness": 0.3},
-	"meet": {"liking": 0.35, "closeness": 0.4, "trust": 0.25},
-	"note": {"respect": 0.6, "liking": 0.4},
-	"gift": {"liking": 0.8, "closeness": 0.2},
-	"aide": {"respect": 0.6, "liking": 0.4},
-	"club": {"closeness": 0.45, "trust": 0.3, "liking": 0.25},
-}
+# The profiles live in data/contacts channels ("profile") — moddable;
+# this fallback covers channels without one.
+const CHANNEL_PROFILE_FALLBACK := {"liking": 1.0}
 
 
 func apply_channel(ct: Dictionary, key: String, gain: float) -> void:
 	if gain < 0.0:
 		adjust(ct, {"liking": gain, "irritation": -gain * 1.5})
 		return
-	var profile: Dictionary = CHANNEL_PROFILE.get(key, {"liking": 1.0})
+	var profile: Dictionary = Data.CONTACT_CHANNELS.get(key, {}).get("profile", CHANNEL_PROFILE_FALLBACK)
 	var deltas := {}
 	for d in profile:
 		deltas[d] = gain * 1.6 * float(profile[d])
@@ -449,9 +444,16 @@ func _spawn_occasions() -> void:
 		if ["regisseur", "produzent", "studio"].has(str(ct.type)):
 			kinds.append("premiere")
 		var kind: String = Game.pick(kinds)
+		var due := Game.mi() + Game.rndi(1, 2)
 		st.occasions.append({"id": Game.next_id(), "ctName": str(ct.name), "kind": kind,
-			"madeMi": Game.mi(), "dueMi": Game.mi() + Game.rndi(1, 2), "status": "open"})
-		Game.log_msg("%s %s: %s — a small gesture now counts double." % [str(OCCASION_KINDS[kind].icon), str(OCCASION_KINDS[kind].name), str(ct.name)], "info")
+			"madeMi": Game.mi(), "dueMi": due, "status": "open"})
+		# Bedeutungsstaffelung (Feature 24/25): Krisen wichtiger Menschen
+		# werden zur Nachricht, Routine-Anlässe landen im Wochen-Digest.
+		Dialogs.dispatch("occasion_" + kind, {"ctid": int(ct.id), "dueMi": due,
+			"impact": 1.5 if kind == "crisis" else 0.5,
+			"text": "%s %s: %s" % [str(OCCASION_KINDS[kind].icon), str(OCCASION_KINDS[kind].name), str(ct.name)],
+			"subject": "%s %s — %s" % [str(OCCASION_KINDS[kind].icon), str(OCCASION_KINDS[kind].name), str(ct.name)],
+			"body": "Word reaches you: %s. A small gesture now counts double — respond from the Contacts desk before %s." % [str(ct.name), Game.mi_str(due)]})
 		break
 	while st.occasions.size() > 12:
 		var oldest = null
@@ -758,9 +760,14 @@ func _tick_reveal_castings(force: bool = false) -> void:
 			if force or Game.chance(0.5 + dim(ct, "trust") / 200.0):
 				cs.hidden = false
 				cs.netSource = ""
-				Game.log_msg("%s tips you off: “%s” is casting — quietly, for now." % [str(ct.name), str(cs.title)], "deal")
 				Persona._memory(ct, "Tipped you off about “%s” before the town knew." % str(cs.title))
 				add_fact(ct, "brought you in early on a project", 1, 0.5)
+				# Bedeutungsstaffelung (Feature 24/25): erste Tipps sind eine
+				# Nachricht wert, später reicht die Digest-Zeile.
+				Dialogs.dispatch("net_tip", {"ctid": int(ct.id), "impact": 1.0,
+					"text": "%s tips you off about “%s”" % [str(ct.name), str(cs.title)],
+					"subject": "A quiet tip from %s" % str(ct.name),
+					"body": "“%s” is casting — quietly, for now. The role sheet is on your desk before the town knows the title." % str(cs.title)})
 			break
 
 
@@ -892,6 +899,13 @@ func promote_contact(ct: Dictionary) -> String:
 		Persona._memory(ct, "Rose to %s. Your file with them is thin." % str(Data.CONTACT_ROLES.get(new_type, new_type)))
 	memoir("%s rises to %s — you knew them when." % [new_name, str(Data.CONTACT_ROLES.get(new_type, new_type))], [new_name])
 	Game.log_msg("People move: %s is now %s." % [old_name, str(Data.CONTACT_ROLES.get(new_type, new_type))], "deal")
+	# Bedeutungsstaffelung (Feature 24/25): der Aufstieg eines nahen
+	# Menschen wird zur beantwortbaren Nachricht — Randfiguren zur Notiz.
+	Dialogs.dispatch("npc_rise", {"ctid": int(ct.id), "impact": 2.0 if bool(ct.vip) else 1.0,
+		"scene_letter": "npc_rise",
+		"text": "%s rises to %s" % [new_name, str(Data.CONTACT_ROLES.get(new_type, new_type))],
+		"subject": "A career takes its next step",
+		"body": "%s has moved up in the world. The town resorts itself around news like this." % new_name})
 	return new_name
 
 

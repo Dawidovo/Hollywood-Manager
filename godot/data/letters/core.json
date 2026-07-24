@@ -106,6 +106,34 @@
           "outcome": "A polite note on agency paper. Some doors close so quietly you never hear it."}
       ]},
 
+    {"id": "npc_rise", "weight": 0, "manual": true, "from_type": "stranger",
+      "subject": "A career takes its next step",
+      "body": "Word arrives with the morning mail: {sender} has moved up in the world. The town resorts itself around news like this — and remembers who wrote first.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Send warm congratulations",
+          "effects": [{"op": "dims", "liking": 4, "respect": 2}, {"op": "memory", "text": "You were among the first to congratulate."}, {"op": "xp", "field": "networking", "amount": 1}],
+          "outcome": "Your note is on their new desk before the nameplate is. First congratulations are remembered longest."},
+        {"label": "Congratulate — and remind them, gently, of old times",
+          "effects": [{"op": "dims", "liking": 2, "dependence": 3}, {"op": "memory", "text": "Congratulated — with a soft reminder of who was kind early."}],
+          "outcome": "Warmth with a fine thread of memory woven in. They smile — and they understand."},
+        {"label": "Let it pass",
+          "effects": [{"op": "dims", "closeness": -2}],
+          "outcome": "No note, no call. Risen people keep score more carefully than struggling ones."}
+      ]},
+
+    {"id": "summons_meet", "weight": 0, "manual": true, "from_type": "stranger",
+      "subject": "A request for a face-to-face",
+      "body": "{sender} writes briefly, almost curtly: there is something that should not be discussed on paper. Could you make time this week?",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Take the meeting", "dialog": "channel_meet",
+          "outcome": "You clear an afternoon."},
+        {"label": "Send regrets",
+          "effects": [{"op": "dims", "liking": -2, "irritation": 2}],
+          "outcome": "A polite refusal. Whatever it was, someone else will hear it first now."}
+      ]},
+
     {"id": "gala_invitation", "weight": 1, "from_type": "gastgeberin",
       "conditions": {"min_career": 1, "chance": 0.6},
       "subject": "You are expected",

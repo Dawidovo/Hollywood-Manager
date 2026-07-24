@@ -1693,6 +1693,9 @@ func _render_post() -> void:
 			if reason != "":
 				b.tooltip_text = "⛔ " + reason
 			flow.add_child(b)
+		# Notizen (Bedeutungsstaffelung): nur zur Kenntnis nehmen
+		if choices.is_empty():
+			flow.add_child(_btn("File away", _player_action.bind(Dialogs.dismiss_letter.bind(int(letter.id)))))
 	# Archiv: erledigte & verfallene Post der letzten Wochen
 	var archive: Array = st.inbox.filter(func(l): return str(l.status) != "open")
 	if not archive.is_empty():

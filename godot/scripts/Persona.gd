@@ -148,6 +148,17 @@ func tick_week() -> void:
 	var workload: float = st.clients.size() * 1.0 + st.productions.size() * 0.5 + st.castings.size() * 0.25
 	p.energy = clampf(float(p.energy) + 9.0 - workload * 1.1, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) - 4.0 + workload * 0.8 + (4.0 if st.agency.cash < 0 else 0.0), 0.0, 100.0)
+	# Ausgehende Briefe (Feature 23): die Wirkung kommt mit der Zustellung.
+	for mail in st.get("outMail", []).duplicate():
+		if Game.wi() < int(mail.dueWi):
+			continue
+		st.outMail.erase(mail)
+		var ct := Network.contact_by_name(str(mail.ctName))
+		if ct.is_empty():
+			continue
+		Network.apply_channel(ct, "letter", float(mail.gain))
+		_memory(ct, "Your letter arrived — considered words, kept in a drawer.")
+		Game.log_msg("Your letter reaches %s — a page like that outweighs ten phone calls." % str(ct.name), "info")
 	_tick_location_week()
 	_tick_assistant_week()
 
@@ -408,6 +419,13 @@ func contact_interact(cid, key: String) -> Dictionary:
 			_memory(ct, "You showed up in person — people don't forget that.")
 			if Game.chance(0.25):
 				lines.append(_make_promise(ct))
+		"letter":
+			# Feature 23: der Brief wirkt erst, wenn er ankommt — dafür mehr.
+			_st().outMail.append({"ctName": str(ct.name), "gain": gain,
+				"dueWi": Game.wi() + int(ch.get("delay_weeks", 1))})
+			gain = 0.0
+			lines.append("You take your time with the wording — this page should be kept, not skimmed. It will arrive within the week.")
+			_memory(ct, "A letter of yours is on its way.")
 		"note":
 			lines.append("A precise message, cleanly worded.")
 			_memory(ct, "Reached out in writing.")

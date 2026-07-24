@@ -98,8 +98,11 @@ moddable:
 - **`contacts/core.json`** — `roles` (type → display name), `persons` (type →
   name pool the game draws contacts and favor partners from), `start_roster`
   (which roles the starting contact book is built from), and `channels` (each
-  with `name`, `icon`, `ap` = contact-time cost, `energy`, `cost`, and a
-  `rel_min`/`rel_max` relationship gain range).
+  with `name`, `icon`, `ap` = contact-time cost, `energy`, `cost`, a
+  `rel_min`/`rel_max` relationship gain range, a `profile` block that says
+  WHICH relationship dimensions the channel builds — e.g. dinners build
+  closeness+trust, written notes respect — and an optional `delay_weeks`:
+  channels like `letter` only take effect once they arrive).
 
 ## Dialogs & letters (shared effect language)
 
@@ -147,6 +150,21 @@ after):
 
 If a contact of `from_type` exists, the letter comes from them (and `dims`
 effects hit that relationship); otherwise a name is drawn from the pools.
+Templates with `"manual": true` (or `weight: 0`) never appear in the weekly
+delivery — they are reserved for the dispatcher (see below), which spawns
+them with a specific sender (`npc_rise`, `summons_meet`).
+
+**Interaction tiers**: the game grades every notification automatically —
+person (relationship, VIP), consequence (`impact`), time pressure and novelty
+decide whether something becomes a one-line **digest** entry in the ticker,
+a **notice** in the inbox, a **short dialog** (letter with choices) or a
+**full scene** (a letter that opens a dialog tree). Mods that call
+`Dialogs.dispatch(kind, ctx)` get the same grading for free.
+
+**Simulation first**: dialog and letter text can only read simulation facts
+through the placeholders and only change the world through the effect ops
+listed below. Unknown ops or placeholders are reported as warnings at load —
+generated text cannot invent contracts, contacts or promises.
 
 **Effect ops** (events, dialogs and letters alike): the classic set
 (`money`, `rep`, `fame`, `mood`, `trust`, `studio_rel`, `favor_grant`,

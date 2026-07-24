@@ -1448,6 +1448,67 @@ func _ready() -> void:
 	Dialogs.ensure_inbox()
 	check(Game.state.has("inbox"), "ensure_inbox rüstet alte Stände nach")
 
+	# =========== Kommunikation & Bedeutungsstaffelung (Features 23–26) ===========
+	# 45. Kommunikationswege: Daten-Profile & der langsame Brief
+	Game.new_game("Korrespondenz AG", 1950)
+	Game.state.player.cash = 5000.0
+	check(Data.CONTACT_CHANNELS.has("letter") and Data.CONTACT_CHANNELS.meet.has("profile"), "Kanäle tragen Wirkungsprofile aus den Daten")
+	var ch_ct: Dictionary = Game.state.contacts[0]
+	var ch_respect0 := Network.dim(ch_ct, "respect")
+	Network.apply_channel(ch_ct, "note", 4.0)
+	check(Network.dim(ch_ct, "respect") > ch_respect0, "Nachricht wirkt laut Datenprofil auf Respekt")
+	Game.state.contactAP = 3
+	var letter_res := Persona.contact_interact(int(ch_ct.id), "letter")
+	check(bool(letter_res.ok) and Game.state.outMail.size() == 1, "Brief geht in die Ausgangspost statt sofort zu wirken")
+	var ch_trust0 := Network.dim(ch_ct, "trust")
+	Game.state.outMail[0].dueWi = Game.wi()
+	Persona.tick_week()
+	check(Game.state.outMail.is_empty(), "Zustellung leert die Ausgangspost")
+	check(Network.dim(ch_ct, "trust") > ch_trust0, "Der angekommene Brief wirkt verzögert auf die Beziehung")
+
+	# 46. Relevanz & Staffelung: Digest, Nachricht, Kurzdialog
+	var digest0: int = Game.state.weekDigest.size()
+	Dialogs.dispatch("test_minor", {"impact": 0.0, "text": "eine Randnotiz"})
+	check(Game.state.seenKinds.has("test_minor"), "Neuigkeitswert wird pro Ereignisart gezählt")
+	var tier_low2 := Dialogs.dispatch("test_minor", {"impact": 0.0, "text": "noch eine Randnotiz"})
+	check(tier_low2 == "digest" and Game.state.weekDigest.size() > digest0, "Routine landet im Wochen-Digest")
+	Dialogs.flush_digest()
+	check(Game.state.weekDigest.is_empty() and Game.state.log.any(func(l): return str(l.text).contains("In passing")), "Digest wird zu EINER Ticker-Zeile zusammengefasst")
+	var vip_ct2 = null
+	for ct in Game.state.contacts:
+		if Network.is_vip(ct):
+			vip_ct2 = ct
+	var inbox_before: int = Game.state.inbox.size()
+	var tier_mid := Dialogs.dispatch("test_notice", {"impact": 1.0, "ctid": int(vip_ct2.id), "subject": "Testnachricht", "body": "Ein wichtiger Vorgang."})
+	check(tier_mid != "digest" and Game.state.inbox.size() == inbox_before + 1, "Wichtige Vorgänge werden zur Nachricht im Posteingang")
+	vip_ct2.dims.liking = 70.0
+	vip_ct2.rel = Network.derived_rel(vip_ct2)
+	var tier_high := Dialogs.dispatch("test_scene", {"impact": 2.5, "ctid": int(vip_ct2.id), "scene_letter": "npc_rise", "subject": "x", "body": "y"})
+	check(tier_high == "scene" or tier_high == "event", "Hohe Relevanz erzeugt einen beantwortbaren Kurzdialog/Szene (%s)" % tier_high)
+	var scene_letter = null
+	for l in Game.state.inbox:
+		if str(l.tid) == "npc_rise":
+			scene_letter = l
+	check(scene_letter != null and str(scene_letter["from"].name) == str(vip_ct2.name), "Szenen-Brief kommt vom richtigen Absender")
+	var rise_liking0 := Network.dim(vip_ct2, "liking")
+	check(bool(Dialogs.letter_choose(int(scene_letter.id), 0).ok) and Network.dim(vip_ct2, "liking") > rise_liking0, "Antwort im Kurzdialog wirkt auf die Beziehung")
+	check(bool(Dialogs.letter_def("summons_meet").manual) and bool(Dialogs.letter_def("npc_rise").manual), "Dispatcher-Vorlagen sind als manuell markiert (keine Zufallszustellung)")
+
+	# 47. Simulation & Text strikt getrennt: Validierung der Daten
+	check(Dialogs.validate_defs().is_empty(), "Alle mitgelieferten Dialoge & Briefe validieren sauber")
+	Data.DIALOGS.append({"id": "bad_test", "title": "x", "start": "opening",
+		"nodes": {"opening": {"text": ["{invented_contract}"], "choices": [
+			{"label": "x", "goto": "nowhere", "effects": [{"op": "invent_contract"}]}]}}})
+	var warnings: Array = Dialogs.validate_defs()
+	check(warnings.size() >= 3, "Unbekannte Ops, Platzhalter und Sprungziele werden erkannt (%d Befunde)" % warnings.size())
+	Data.DIALOGS.pop_back()
+	check(Dialogs.validate_defs().is_empty(), "Nach Entfernen der kaputten Definition ist alles wieder sauber")
+	var tiers_saved: Dictionary = Game.state.seenKinds.duplicate()
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Staffelungs-Spielstand geladen")
+	check(Game.state.seenKinds.size() == tiers_saved.size() and Game.state.has("outMail"), "Neuigkeitszähler & Ausgangspost überleben Save/Load")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()
