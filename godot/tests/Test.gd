@@ -1074,6 +1074,221 @@ func _ready() -> void:
 	Persona.fire_assistant()
 	check(not Persona.has_assistant(), "Assistant can be let go")
 
+	# =========== Empire-Cluster (Features 5–9) ===========
+	# 26. Immobilien & Statuskäufe: Kauf, Unterhalt, Abstiegs-Malus, Effekte
+	Game.new_game("Empire AG", 1950)
+	var mp: Dictionary = Game.state.player
+	mp.cash = 100000.0
+	check(Mogul.home_id() == "room", "Start im möblierten Zimmer")
+	check(Mogul.buy_home("hills") == "", "Umzug in die Hollywood Hills")
+	check(Mogul.upkeep_total() > 0.0, "Lebensstil-Unterhalt fällig: %s/Monat" % Game.fmt_money(Mogul.upkeep_total()))
+	check(Mogul.buy_purchase("car") == "", "Automobil & Chauffeur gekauft")
+	mp.energy = 50.0
+	Mogul.tick_week()
+	check(float(mp.energy) > 50.0, "Wagen spart Energie im Wochen-Tick")
+	var pub0 := float(mp.pubRep)
+	check(Mogul.buy_home("apartment") == "", "Abstieg ins Apartment möglich")
+	check(float(mp.pubRep) < pub0, "Abstieg kostet öffentlichen Ruf")
+	check(Mogul.purchase_blocked_reason("staff") != "", "Hauspersonal braucht ein größeres Haus")
+	check(Mogul.purchase_blocked_reason("jet") != "", "Jet-Anteil 1950 noch nicht verfügbar")
+	mp.cash = 300000.0
+	check(Mogul.buy_home("beverly") == "", "Villa in Beverly Hills bezogen")
+	check(Mogul.host_reception() != "", "Empfang in der Villa ausgerichtet")
+	check(not Mogul.can_host(), "Empfang nur 1× pro Monat")
+	Mogul.sell_purchase("car")
+	check(not Mogul.owns("car"), "Statuskauf wieder verkauft")
+
+	# 27. Erfahrung: Level, Freischaltungen, Ankündigung
+	Mogul.grant_xp("negotiation", 25.0, "Test")
+	check(Mogul.level("negotiation") >= 2, "XP heben das Level (L%d)" % Mogul.level("negotiation"))
+	check(Mogul.has_ability("second_pass"), "Fähigkeit ab Level 2 freigeschaltet")
+	check(not Mogul.has_ability("closer"), "Level-4-Fähigkeit bleibt gesperrt")
+	check(str(Mogul.next_ability("negotiation").id) == "closer", "Nächste Fähigkeit wird angekündigt")
+
+	# 28. Börse: Ära-Filter, Handel, Tipp-Auflösung, Berater
+	Mogul.ensure_prices()
+	var sdefs: Array = Mogul.stock_defs()
+	check(sdefs.size() >= 5 and sdefs.any(func(s): return str(s.id).begins_with("st_")), "Ticker: Firmen + Studio-Aktien gelistet (%d)" % sdefs.size())
+	check(not sdefs.any(func(s): return str(s.id) == "nimbus"), "Streaming 1950 nicht handelbar")
+	var sid0 := str(sdefs[0].id)
+	var trade_cash0 := float(mp.cash)
+	check(Mogul.buy_stock(sid0, 1000.0) == "", "Aktienkauf ausgeführt")
+	check(Mogul.shares_of(sid0) > 0 and float(mp.cash) < trade_cash0, "Depot & Privatkonto verbucht")
+	var tip: Dictionary = Mogul.add_tip(sid0, 1, 0.15, Game.mi(), "Test", false)
+	Mogul._tick_invest_month([])
+	check(bool(tip.resolved), "Tipp wird zum Fälligkeitstermin aufgelöst")
+	check(Mogul.price(sid0) > 0.0, "Kurs bleibt positiv")
+	check(Mogul.sell_stock(sid0) == "", "Position glattgestellt")
+	check(Mogul.shares_of(sid0) == 0, "Depot leer nach Verkauf")
+	Mogul.hire_advisor()
+	check(Mogul.has_advisor() and Mogul.advisor_fee() > 0.0, "Vermögensberater engagiert (Honorar fällig)")
+
+	# 29. Filmbeteiligung: Zeichnung, Interessenkonflikt, Marketing, Auszahlung
+	Game.state.agency.rep = 100
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	var stake_client: Dictionary = Game.state.clients[0]
+	var sprod: Dictionary = Game.quick_production(stake_client, {"genre": "drama", "prestige": 2}).prod
+	mp.cash = 500000.0
+	check(Mogul.invest_stake(int(sprod.id), "equity") == "", "Eigenkapital-Beteiligung gezeichnet")
+	check(bool(Mogul.stake_for(int(sprod.id)).conflict), "Eigener Klient im Film ⇒ Interessenkonflikt markiert")
+	check(Mogul.boost_marketing(int(sprod.id)) == "", "Marketing-Nachschuss finanziert")
+	check(float(sprod.qualityMod) >= 3.0, "Marketing hebt die Qualität")
+	Game.state.market = 2.0
+	Game.release_film(sprod)
+	Game.state.productions.erase(sprod)
+	check(mp.ledger.any(func(e): return str(e.text).contains("Film stake payout")), "Beteiligung beim Release privat ausgezahlt")
+	check(Mogul.stake_for(int(sprod.id)).is_empty(), "Beteiligung nach Abrechnung abgeräumt")
+
+	# 30. Hinterzimmer: Vorlagen, Abschluss, Boost, Fälligkeit & Wortbruch
+	var br_ct = null
+	for ct in Game.state.contacts:
+		if str(ct.type) == "produzent":
+			br_ct = ct
+	br_ct.rel = 80.0
+	check(Mogul.deals_for_contact(br_ct).size() >= 2, "Deal-Vorlagen für Produzenten verfügbar")
+	var def_ns: Dictionary = Mogul.deal_def("newcomer_star")
+	check(Mogul._accept_deal(br_ct, def_ns).contains("Handshake"), "Absprache im Hinterzimmer geschlossen")
+	var br_rec: Dictionary = Game.state.backroom.back()
+	check(str(br_rec.status) == "open" and int(br_rec.dueMi) > Game.mi(), "Register: offen mit Fälligkeitsdatum")
+	var br_mods: Dictionary = Mogul.pitch_mods({"id": 999999, "studioId": str(Game.active_studios()[0].id)})
+	check(float(br_mods.bonus) >= 0.15, "Pitch-Boost aus der Absprache aktiv")
+	var ob_ev: Dictionary = Mogul._obligation_event(br_rec, def_ns)
+	check(ob_ev.choices.size() == 2, "Fällige Absprache bietet Ehren oder Brechen")
+	var rel_before_break := float(br_ct.rel)
+	ob_ev.choices[1].fn.call()
+	check(str(br_rec.status) == "broken" and float(br_ct.rel) < rel_before_break, "Wortbruch kostet Beziehung")
+	mp.cash = 500000.0
+	Mogul._accept_deal(br_ct, Mogul.deal_def("finance_casting"))
+	var br_mods2: Dictionary = Mogul.pitch_mods({"id": 999998, "studioId": str(Game.active_studios()[0].id)})
+	check(bool(br_mods2.golden), "Goldene Zusage: der nächste Pitch sitzt")
+	check(str(Game.state.backroom.back().status) == "honored", "Goldene Zusage verbraucht sich beim Einsatz")
+
+	# 31. Endgame: Partner-Einkauf, Gewinnanteil, Übernahme, Studio-Anteil
+	mp.career = 3
+	var eg_events: Array = []
+	Mogul.on_promotion(eg_events)
+	check(eg_events.size() == 1 and str(eg_events[0].title).contains("buy-in"), "Partner-Einkauf wird angeboten")
+	mp.cash = 500000.0
+	eg_events[0].choices[0].fn.call()
+	check(Mogul.is_partner(), "Buy-in macht zum Namenspartner")
+	Game.book(10000.0, "sonstiges", "Testgewinn")
+	var pcash0 := float(mp.cash)
+	Mogul._tick_endgame_month()
+	check(float(mp.cash) > pcash0, "Partner-Gewinnanteil fließt aufs Privatkonto")
+	mp.career = 4
+	var rv_n: int = Game.state.rivals.size()
+	mp.cash = 1000000.0
+	check(Mogul.takeover(str(Game.state.rivals[0].id)) == "", "Rivalen-Agentur übernommen")
+	check(Game.state.rivals.size() == rv_n - 1, "Rivale verschwindet vom Markt")
+	mp.career = 5
+	var sid_st := str(Game.active_studios()[0].id)
+	check(Mogul.buy_studio_stake(sid_st) == "", "Studio-Anteil gekauft")
+	check(int(Game.state.studioRel[sid_st]) >= 75, "Studio-Türen stehen dauerhaft offen")
+
+	# 32. Save/Load-Roundtrip & Migration des Empire-Clusters
+	var skills_xp := float(Game.state.skills.xp.get("negotiation", 0.0))
+	var backroom_n: int = Game.state.backroom.size()
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Empire-Spielstand geladen")
+	check(absf(float(Game.state.skills.xp.get("negotiation", 0.0)) - skills_xp) < 0.01, "Skill-XP überleben Save/Load")
+	check(str(Game.state.estate.home) == "beverly", "Immobilie überlebt Save/Load")
+	check(Game.state.backroom.size() == backroom_n, "Hinterzimmer-Register überlebt Save/Load")
+	check(float(Game.state.endgame.partnerShare) > 0.0 and Game.state.endgame.studioStakes.size() == 1, "Endgame-Felder überleben Save/Load")
+	check(Game.state.invest.advisor != null, "Vermögensberater überlebt Save/Load")
+	Game.state.erase("skills")
+	Game.state.erase("estate")
+	Game.state.erase("invest")
+	Game.state.erase("filmStakes")
+	Game.state.erase("backroom")
+	Game.state.erase("endgame")
+	Mogul.ensure_all()
+	check(Game.state.has("skills") and Game.state.has("estate") and Game.state.has("invest") and Game.state.has("backroom") and Game.state.has("endgame"), "ensure_all rüstet alte Stände nach")
+
+	# =========== Netzwerk-Cluster (Features 10–15) ===========
+	# 33. Mehrdimensionale Beziehungen, Netz & Spillover
+	Game.new_game("Netzwerk AG", 1950)
+	var nw_ct: Dictionary = Game.state.contacts[0]
+	check(nw_ct.has("dims") and nw_ct.dims.size() == 6, "Kontakte starten mit 6 Beziehungsdimensionen")
+	check(nw_ct.get("links", []).size() >= 1, "Kontaktnetz: Verbindungen gewoben")
+	var close0 := Network.dim(nw_ct, "closeness")
+	var trust0n := Network.dim(nw_ct, "trust")
+	Network.apply_channel(nw_ct, "meet", 6.0)
+	check(Network.dim(nw_ct, "closeness") > close0 and Network.dim(nw_ct, "trust") > trust0n, "Dinner baut Nähe und Vertrauen")
+	var irr0 := Network.dim(nw_ct, "irritation")
+	Network.apply_channel(nw_ct, "call", -2.0)
+	check(Network.dim(nw_ct, "irritation") > irr0, "Fauxpas erzeugt Verärgerung")
+	check(absf(float(nw_ct.rel) - Network.derived_rel(nw_ct)) < 0.01, "rel ist der abgeleitete Kompositwert")
+	var linked := Network.contact_by_name(str(nw_ct.links[0].to))
+	var linked_liking := Network.dim(linked, "liking")
+	Network.adjust(nw_ct, {"liking": 10.0})
+	check(Network.dim(linked, "liking") > linked_liking, "Sympathie strahlt auf Verbundene aus")
+	nw_ct.erase("dims")
+	nw_ct.erase("circles")
+	Network.ensure_network()
+	check(nw_ct.has("dims") and nw_ct.circles.size() >= 1, "ensure_network rüstet alte Kontakte nach")
+
+	# 34. Gatekeeper: das Vorzimmer blockiert, Charme öffnet
+	var vip_ct = null
+	for ct in Game.state.contacts:
+		if str(ct.type) == "studio":
+			vip_ct = ct
+	check(vip_ct != null and Network.is_vip(vip_ct) and not Network.gate_of(vip_ct).is_empty(), "Studioboss ist VIP mit Vorzimmer")
+	vip_ct.gate.rel = 10.0
+	vip_ct.dims.closeness = 10.0
+	vip_ct.rel = Network.derived_rel(vip_ct)
+	check(Persona.contact_blocked_reason(vip_ct, "meet") != "", "Vorzimmer blockiert Treffen & Clubabend")
+	Game.state.player.cash = 10000.0
+	var charm := Network.charm_gate(int(vip_ct.id))
+	check(bool(charm.ok) and float(vip_ct.gate.rel) > 10.0, "Charme hebt die Vorzimmer-Gunst")
+	check(not bool(Network.charm_gate(int(vip_ct.id)).ok), "Vorzimmer-Pflege nur 1× pro Woche")
+	vip_ct.gate.rel = 80.0
+	Game.state.contactAP = 3
+	check(Persona.contact_blocked_reason(vip_ct, "meet") == "", "Gewonnenes Vorzimmer lässt durch")
+
+	# 35. Vorstellungen, Marker & Glaubwürdigkeit (Soziales Kapital)
+	check(Network.notables_unmet().size() >= 4, "Bedeutende Personen warten außerhalb des Zirkels")
+	var intro_ct: Dictionary = Game.state.contacts[0]
+	intro_ct.dims.liking = 70.0
+	intro_ct.dims.trust = 60.0
+	intro_ct.rel = Network.derived_rel(intro_ct)
+	var hostess_def = null
+	for nb in Network.notables_unmet():
+		if str(nb.type) == "gastgeberin":
+			hostess_def = nb
+	check(hostess_def != null and Network.introducers_for(hostess_def).size() >= 1, "Gemeinsamer Bekannter kann vorstellen")
+	var contacts_n: int = Game.state.contacts.size()
+	Game.state.contactAP = 3
+	var intro_res := Network.introduce(str(hostess_def.name), int(intro_ct.id))
+	check(bool(intro_res.ok) and Game.state.contacts.size() == contacts_n + 1, "Vorstellung fügt neuen Kontakt hinzu")
+	check(Game.state.memoirs.any(func(m): return m.get("people", []).has(str(hostess_def.name))), "Vorstellung landet im Karrieregedächtnis")
+	intro_ct.dims.dependence = 60.0
+	var marker_favors: int = Game.state.favors.size()
+	var marker_res := Network.call_marker(int(intro_ct.id))
+	check(bool(marker_res.ok) and Game.state.favors.size() == marker_favors + 1, "Marker eingelöst: konkreter Gefallen")
+	check(Network.dim(intro_ct, "dependence") < 60.0, "Marker verbraucht Hebel")
+	vip_ct.dims.respect = 80.0
+	var vip_sid := ""
+	for s in Data.STUDIOS:
+		if str(vip_ct.name).contains(str(s.name)):
+			vip_sid = str(s.id)
+	check(vip_sid != "" and Network.pitch_bonus({"studioId": vip_sid}) > 0.0, "Respektierter Studio-Kontakt öffnet Ohren (Pitch-Bonus)")
+
+	# 36. Karrieregedächtnis: automatische Erfassung & Save/Load
+	var mem_n: int = Game.state.memoirs.size()
+	Game.log_msg("Ein denkwürdiger Testmoment.", "history")
+	check(Game.state.memoirs.size() == mem_n + 1, "History-Ereignisse landen automatisch im Memoir")
+	Game.log_msg("Alltagsnotiz.", "info")
+	check(Game.state.memoirs.size() == mem_n + 1, "Alltag bleibt aus dem Memoir draußen")
+	var liking_saved := float(intro_ct.dims.liking)
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Netzwerk-Spielstand geladen")
+	check(Game.state.memoirs.size() == mem_n + 1, "Memoir überlebt Save/Load")
+	check(absf(float(Game.state.contacts[0].dims.liking) - liking_saved) < 0.01, "Beziehungsdimensionen überleben Save/Load")
+	check(Game.state.contacts.any(func(ct): return not Network.gate_of(ct).is_empty()), "Gatekeeper überleben Save/Load")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()

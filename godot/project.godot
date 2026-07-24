@@ -23,6 +23,8 @@ Ev="*res://scripts/Events.gd"
 EvEngine="*res://scripts/EventEngine.gd"
 Jukebox="*res://scripts/MusicGen.gd"
 Persona="*res://scripts/Persona.gd"
+Mogul="*res://scripts/Mogul.gd"
+Network="*res://scripts/Network.gd"
 
 [debug]
 

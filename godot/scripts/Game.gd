@@ -271,6 +271,9 @@ func grade_range(v: float, spread: float, seed_s: String) -> String:
 	# Backstory-Trait (z. B. gescheiterte:r Schauspieler:in): engere Einschätzung
 	if state != null:
 		spread = maxf(2.0, spread + backstory_mod("grade_spread_add", 0.0))
+		# Talenturteil (Feature 6): das scharfe Auge sieht die Note, nicht die Spanne
+		if Mogul.has_ability("sharp_eye"):
+			spread = 2.0
 	var jitter: float = float(hashs(seed_s) % 9) - 4.0
 	var center: float = clampf(v + jitter, 3.0, 100.0)
 	var lo := grade(clampf(center - spread, 0.0, 100.0))
@@ -482,6 +485,8 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		state.identity[key] = 0.0
 	_init_rivals(start_year)
 	Persona.init_contacts()
+	Mogul.init_state()
+	Network.init_state()
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = rndi(20, 45)
 	book(float(roundi(120000.0 * infl(start_year))), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
@@ -554,6 +559,9 @@ func log_msg(text: String, type: String = "info") -> void:
 	# Jede Krise nagt auch am Manager persönlich.
 	if type == "bad":
 		Persona.on_bad_news()
+	# Karrieregedächtnis (Feature 10): historische Momente bleiben für immer
+	if type == "history":
+		Network.memoir(text)
 
 func press_event(cat: String, text_s: String) -> void:
 	if state == null:
@@ -1118,7 +1126,11 @@ func deny_rumor(rid: int) -> String:
 		if c != null:
 			c.mood = clampf(float(c.mood) - 8.0, 0.0, 100.0)
 		return "The denial crumbles under questioning. Now the story looks twice as credible."
-	rumor.belief = maxf(0.0, float(rumor.belief) - (24.0 if not bool(rumor.truth) else 10.0))
+	# Medienstrategie (Feature 6): Freunde bei der Presse tragen Dementis weiter
+	var extra := 10.0 if Mogul.has_ability("press_pal") else 0.0
+	rumor.belief = maxf(0.0, float(rumor.belief) - (24.0 if not bool(rumor.truth) else 10.0) - extra)
+	Mogul.grant_xp("media", 1.0, "Issued a denial")
+	Mogul.grant_xp("crisis", 1.0, "Handled a story")
 	return "The explanation lands. For the moment the rumor loses its pull."
 
 func suppress_rumor(rid: int) -> String:
@@ -1128,12 +1140,15 @@ func suppress_rumor(rid: int) -> String:
 	var used_favor := false
 	if has_method("consume_favor"):
 		used_favor = bool(call("consume_favor", "suppressStory"))
-	var cost: int = roundi(12000.0 * infl(state.year))
+	# Krisenmanagement (Feature 6): der Spin-Doctor kennt die halbe Preisliste
+	var cost: int = roundi(12000.0 * infl(state.year) * (0.5 if Mogul.has_ability("spin_doctor") else 1.0))
 	if not used_favor:
 		if float(state.agency.cash) < cost:
 			return "No matching favor — and the till is short the %s they ask for." % fmt_money(cost)
 		book(-float(cost), "pr_recht", "Rumor suppressed: %s" % rumor_subject_name(rumor))
 	record_identity("diskret", 1.5)
+	Mogul.grant_xp("crisis", 2.0, "Buried a story")
+	Mogul.grant_xp("media", 1.0, "Buried a story")
 	rumor.belief = maxf(0.0, float(rumor.belief) - 38.0)
 	rumor.holders = rumor.holders.filter(func(h): return str(h) not in ["Journalists", "Party guests"])
 	if rumor.holders.is_empty():
@@ -1166,8 +1181,11 @@ func counter_rumor(rid: int) -> String:
 	if float(state.agency.cash) < cost:
 		return "The campaign would cost %s. The till will not cover it." % fmt_money(cost)
 	book(-float(cost), "pr_recht", "Counter-rumor campaign: %s" % rumor_subject_name(rumor))
-	rumor.belief = maxf(0.0, float(rumor.belief) - 20.0)
-	if chance(0.12):
+	# Medienstrategie (Feature 6): wer das Narrativ führt, trifft härter & bleibt unerkannt
+	var control := Mogul.has_ability("narrative_control")
+	rumor.belief = maxf(0.0, float(rumor.belief) - (32.0 if control else 20.0))
+	Mogul.grant_xp("media", 2.0, "Ran a counter-campaign")
+	if chance(0.06 if control else 0.12):
 		for c in state.clients:
 			change_trust(c, -2.0)
 		return "The counter-rumor works — but a reporter recognizes your handwriting. Trust in the house takes a scratch."
@@ -1193,6 +1211,8 @@ func launch_rumor(actor_id: String, topic: String = "skandal") -> String:
 		return "The target is no good for this campaign."
 	var actor: Dictionary = actor_by_id[actor_id]
 	var owner = rival_for_actor(actor_id)
+	# Hinterzimmer (Feature 8): eine Schmutzkampagne gegen ein geschütztes Haus bricht den Pakt
+	Mogul.on_launch_rumor(owner)
 	var text_s := "In the anterooms they say there is a story about %s that nobody wants to print yet." % actor.name
 	var rumor := add_rumor(actor_id, text_s, false, topic, ["Assistants", "Party guests"], 14.0, true, "", 20.0)
 	rumor["launchedByAgency"] = true
@@ -1361,6 +1381,8 @@ func grant_favor(kind: String, from: Dictionary = {}, silent: bool = false) -> D
 	var fav := {"id": next_id(), "kind": kind, "from": person, "gainedMi": mi(), "expiresMi": exp, "note": str(FAVOR_KINDS[kind].desc)}
 	state.favors.append(fav)
 	Persona.touch_contact_person(person, 2.0)
+	# Soziales Kapital (Feature 13): wer dir etwas schuldet, ist Hebel
+	Network.bump_dependence(str(person.get("name", "")), 6.0)
 	if not silent:
 		log_msg("%s now owes you a favor: %s." % [person.get("name", "?"), FAVOR_KINDS[kind].name], "deal")
 	return fav
@@ -1408,6 +1430,9 @@ func script_insight(casting: Dictionary) -> int:
 	var base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
 	var noise := (hashs(str(casting.id) + "noi") % 13) - 6
 	var err := roundi(float(noise) * (1.0 - float(state.get("instinct", 20)) / 100.0))
+	# Vertragswissen (Feature 6): das Klausel-Radar liest Drehbücher fast exakt
+	if Mogul.has_ability("clause_radar"):
+		err = roundi(float(err) * 0.4)
 	return clampi(base + err, 5, 100)
 
 # Verfall: abgelaufene Gefallen im Monatstakt entfernen.
@@ -1603,6 +1628,9 @@ func sign_client(terms: Dictionary) -> Dictionary:
 	else:
 		press_event("Client moves", "%s signs with %s" % [actor.name, state.agency.name])
 	state.agency.rep = clampi(int(state.agency.rep) + roundi(nego.fame / 22.0), 0, 100)
+	Mogul.grant_xp("negotiation", 3.0, "Signed a client")
+	Mogul.grant_xp("people", 1.0, "Signed a client")
+	Network.memoir("%s signs with the agency — %d years, %d%% commission." % [actor.name, int(terms.years), int(terms.commission)], [str(actor.name)])
 	log_msg("%s signs for %d years (%d%% commission%s%s)." % [actor.name, terms.years, terms.commission,
 		(", bonus " + fmt_money(terms.bonus)) if terms.bonus > 0 else "",
 		", with a promise" if terms.get("promise") != null else ""], "deal")
@@ -1610,9 +1638,13 @@ func sign_client(terms: Dictionary) -> Dictionary:
 	return {"accepted": true, "client": c}
 
 func make_offer(offer: Dictionary) -> Dictionary:
-	var score := evaluate_offer(offer) + rndf(-9.0, 9.0)
+	# Menschenkenntnis (Feature 6): wer Bluffs liest, erlebt weniger Launen-Rauschen
+	var noise := 3.0 if Mogul.has_ability("cold_read") else 9.0
+	var score := evaluate_offer(offer) + rndf(-noise, noise)
 	if score >= 58.0:
 		return sign_client(offer)
+	Mogul.grant_xp("negotiation", 1.0, "A rejected offer teaches")
+	Mogul.grant_xp("people", 0.5, "Read the room, badly")
 	nego.round = int(nego.round) + 1
 	nego.counter = build_counter(offer) if score >= 34.0 else null
 	if nego.round > nego.maxRounds:
@@ -1789,6 +1821,13 @@ func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
 	# Gagen-Eskalator: Studios zögern bei teuren Wiederbesetzungen
 	if c.get("clauses", []).has("escalator"):
 		p = clampf(p - 0.06, 0.05, 0.95)
+	# Hinterzimmer-Absprachen (Feature 8): Boni, goldene Zusagen — und Wortbruch
+	var backroom_mods: Dictionary = Mogul.pitch_mods(casting)
+	p = clampf(p + float(backroom_mods.get("bonus", 0.0)), 0.05, 0.98)
+	# Glaubwürdigkeit (Feature 13): ein respektierter Studio-Kontakt öffnet Ohren
+	p = clampf(p + Network.pitch_bonus(casting), 0.05, 0.98)
+	if bool(backroom_mods.get("golden", false)):
+		p = 1.0
 	# Planner-„Vorbereitung“ ist einmalig — jetzt wird sie verbraucht
 	if c.flags.has("prepFit"):
 		c.flags.erase("prepFit")
@@ -1805,6 +1844,7 @@ func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
 		return {"success": true, "fee": pitch_ctx.fee}
 	role.rejected.append(int(client_id))
 	state.studioRel[casting.studioId] = clampi(int(state.studioRel[casting.studioId]) - 1, 0, 100)
+	Mogul.grant_xp("talent", 1.0, "A rejection teaches too")
 	return {"success": false}
 
 func _casting(cid) -> Variant:
@@ -1817,9 +1857,10 @@ func close_deal(fee: float, extra_log: String = "", clauses: Array = [], billing
 	var casting: Dictionary = pitch_ctx.casting
 	var role: Dictionary = pitch_ctx.role
 	var c: Dictionary = pitch_ctx.client
-	# Gewinnbeteiligung drückt die Fixgage (Feature 8)
+	# Gewinnbeteiligung drückt die Fixgage (Feature 8) — Kleingedrucktes-Profis
+	# formulieren die Klausel selbst und geben weniger Fixgage ab (Feature 6)
 	if clauses.has("profitShare"):
-		fee = roundi(fee * 0.8)
+		fee = roundi(fee * (0.88 if Mogul.has_ability("fine_print") else 0.8))
 	role.filled = {"clientId": int(c.id), "fee": roundi(fee), "billing": billing}
 	if clauses.size():
 		role.filled["clauses"] = clauses.duplicate()
@@ -1841,6 +1882,11 @@ func close_deal(fee: float, extra_log: String = "", clauses: Array = [], billing
 	if chance(0.18):
 		var kind_s: String = pick(["extraAudition", "scriptAccess", "billing"])
 		grant_favor(kind_s, favor_contact_for(kind_s, str(casting.studioId)))
+	Mogul.grant_xp("negotiation", 2.0, "Closed a deal")
+	if clauses.size():
+		Mogul.grant_xp("contracts", 1.0, "Negotiated clauses")
+	# Interessenkonflikt (Feature 7): eigener Klient in einem selbst finanzierten Film
+	Mogul.on_deal_closed(casting)
 	pitch_ctx = null
 
 func accept_offer() -> void:
@@ -1850,11 +1896,16 @@ func haggle() -> Dictionary:
 	var rel: float = state.studioRel[pitch_ctx.casting.studioId]
 	var surplus: float = pitch_ctx.client.fame - pitch_ctx.role.minFame
 	var p: float = clampf(0.35 + surplus / 120.0 + pitch_ctx.client.heat / 50.0 + rel / 250.0 + int(pitch_ctx.client.get("awards", 0)) * 0.06, 0.1, 0.88)
+	# Verhandlungs-Fähigkeiten (Feature 6): der Closer trifft öfter
+	if Mogul.has_ability("closer"):
+		p = clampf(p + 0.07, 0.1, 0.92)
 	pitch_ctx.haggled = true
 	if chance(p):
 		pitch_ctx.fee = roundi(pitch_ctx.fee * 1.25)
 		return {"success": true, "fee": pitch_ctx.fee}
-	if chance(0.45):
+	Mogul.grant_xp("negotiation", 1.0, "A failed haggle teaches")
+	# „Second pass“: wer weiß, wann Schluss ist, sprengt selten den Deal
+	if chance(0.2 if Mogul.has_ability("second_pass") else 0.45):
 		state.studioRel[pitch_ctx.casting.studioId] = clampi(int(rel) - 6, 0, 100)
 		log_msg("Overplayed the hand: “%s” — the studio walks away from the talks with %s." % [pitch_ctx.casting.title, client_name(pitch_ctx.client)], "bad")
 		pitch_ctx = null
@@ -1981,6 +2032,7 @@ func end_week() -> Array:
 
 	# Spielfigur: Arbeitslast der Woche wirkt auf Energie & Stress
 	Persona.tick_week()
+	Mogul.tick_week()
 
 	# Wochenplaner: die geplante Woche wirkt VOR den Ereignissen
 	_apply_planner(events)
@@ -2023,7 +2075,7 @@ func end_week() -> Array:
 	else:
 		state.week = int(state.get("week", 1)) + 1
 	# Neue Woche, neue Kontaktzeit
-	state.contactAP = Persona.AP_PER_WEEK
+	state.contactAP = Persona.ap_per_week()
 	save_game()
 	return events
 
@@ -2044,6 +2096,11 @@ func _month_close(events: Array) -> void:
 	# Spielfigur: Gehalt, Lebensstil, Zustand & Karriere — vor dem
 	# Ledger-Abschluss, damit die Buchungen im ablaufenden Monat landen.
 	Persona.tick_month(events)
+	# Empire-Cluster (Features 5–9): Immobilien-Unterhalt, Börse, Beteiligungen,
+	# Hinterzimmer-Fristen & Endgame — ebenfalls vor dem Ledger-Abschluss.
+	Mogul.tick_month(events)
+	# Netzwerk-Cluster (Features 10–15): Kapital zahlt aus, Ärger kühlt ab
+	Network.tick_month()
 	_close_ledger_month(mi())
 	state.month = int(state.month) + 1
 	if state.month > 12:
@@ -2421,6 +2478,9 @@ func release_film(prod: Dictionary) -> Dictionary:
 		# Sequel-Option (Feature 8): Blockbuster aktiviert die Alt-Gagen-Falle
 		if rclauses.has("sequelOption") and ratio >= 3.0:
 			c3.flags["sequelDue"] = {"title": prod.title, "fee": int(r.filled.get("fee", 0)), "studioId": str(prod.studioId)}
+	# Empire-Cluster: Film-Beteiligungen auszahlen, Studio-Aktien reagieren,
+	# Interessenkonflikte können auffliegen (Feature 7)
+	Mogul.on_release(prod, revenue, ratio, quality)
 	# Gemeinsame Historie der Beteiligten pflegt die persönliche Chemie (Feature 12)
 	var lead_keys := _prod_people_keys(prod, true)
 	for i in lead_keys.size():
@@ -2588,6 +2648,10 @@ func load_game() -> bool:
 	# Migration Spielfigur-Cluster
 	Persona.ensure_player()
 	Persona.ensure_contacts()
+	# Migration Empire-Cluster (Features 5–9: Estate, Skills, Invest, Backroom, Endgame)
+	Mogul.ensure_all()
+	# Migration Netzwerk-Cluster (Features 10–15: Memoir, Dimensionen, Gatekeeper)
+	Network.ensure_network()
 	# Migration Simulations- & Verhandlungs-Cluster
 	if not state.has("instinct"):
 		state["instinct"] = 20
@@ -2839,16 +2903,18 @@ func pool_spread() -> float:
 	base -= float(state.get("scoutBonus", 0))
 	return clampf(base, 2.0, 9.0)
 
-# Bauchgefühl-Hinweis bei hohem Instinkt (ab 55)
+# Bauchgefühl-Hinweis bei hohem Instinkt (ab 55) — oder mit trainiertem Bauch (Feature 6)
 func gut_feeling(casting: Dictionary) -> String:
-	if int(state.get("instinct", 20)) < 55:
+	var trained := Mogul.has_ability("gut_plus")
+	if int(state.get("instinct", 20)) < (40 if trained else 55):
 		return ""
 	var base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
+	var precise := " (script feels like a %d/100)" % base if trained else ""
 	if base >= 62:
-		return "🧠 Your gut says: hit material."
+		return "🧠 Your gut says: hit material.%s" % precise
 	if base <= 48:
-		return "🧠 Your gut says: smells like a flop."
-	return "🧠 Your gut says: could go either way."
+		return "🧠 Your gut says: smells like a flop.%s" % precise
+	return "🧠 Your gut says: could go either way.%s" % precise
 
 # ---------- Feature 12: Beziehungschemie ----------
 # Paarweise, deterministisch aus hashs() + gespeicherte gemeinsame Historie.

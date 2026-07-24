@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {"id": "keystone", "name": "Keystone Theatre Chain", "icon": "🎟", "sector": "Cinema chain",
+      "price": 24, "vol": 0.05, "drift": 0.003, "from": 1925, "to": 1968,
+      "desc": "Movie palaces in forty states. Lives and dies with the box office."},
+    {"id": "meridian", "name": "Meridian Press & Media", "icon": "🗞", "sector": "Media concern",
+      "price": 40, "vol": 0.04, "drift": 0.0035,
+      "desc": "Papers, magazines and — depending on the decade — whatever carries news."},
+    {"id": "zephyr", "name": "Zephyr Radio Corp.", "icon": "📻", "sector": "Technology",
+      "price": 12, "vol": 0.09, "drift": 0.006, "to": 1962,
+      "desc": "Radio sets in every parlor. The growth story of its era — while it lasts."},
+    {"id": "teletron", "name": "Teletron Broadcasting", "icon": "📺", "sector": "Television",
+      "price": 18, "vol": 0.07, "drift": 0.005, "from": 1948,
+      "desc": "The little screen that empties the movie palaces."},
+    {"id": "lumina", "name": "Lumina Luxury Goods", "icon": "💎", "sector": "Luxury",
+      "price": 55, "vol": 0.03, "drift": 0.0025,
+      "desc": "Watches, silk and perfume. Steady money for nervous times."},
+    {"id": "orbit", "name": "Orbit Cable Networks", "icon": "🛰", "sector": "Cable TV",
+      "price": 20, "vol": 0.07, "drift": 0.005, "from": 1975,
+      "desc": "A hundred channels, and someone has to fill them all."},
+    {"id": "vidhome", "name": "VidHome Rentals", "icon": "📼", "sector": "Home video",
+      "price": 15, "vol": 0.09, "drift": 0.004, "from": 1978, "to": 2008,
+      "desc": "Be kind, rewind. A gold rush with an expiration date."},
+    {"id": "nimbus", "name": "Nimbus Streaming", "icon": "☁", "sector": "Streaming",
+      "price": 30, "vol": 0.10, "drift": 0.007, "from": 2005,
+      "desc": "All of Hollywood in your living room, for a monthly fee."}
+  ]
+}

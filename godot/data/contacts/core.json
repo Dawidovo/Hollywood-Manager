@@ -4,15 +4,55 @@
     "regisseur": "Director",
     "kolumnist": "Columnist",
     "journalist": "Journalist",
-    "studio": "Studio Boss"
+    "studio": "Studio Boss",
+    "anwalt": "Lawyer",
+    "financier": "Financier",
+    "verleger": "Press Baron",
+    "gastgeberin": "Society Hostess"
   },
   "persons": {
     "kolumnist": ["Columnist R. Hopper", "Gossip columnist L. Parson", "Columnist S. Skolsky"],
     "journalist": ["Reporter E. Crane", "Journalist P. Lane", "Tabloid reporter W. Falk"],
     "regisseur": ["Director V. Malone", "Director D. Whitfield", "Director R. Kessler"],
-    "produzent": ["Producer H. Barrow", "Producer G. Mercer", "Producer M. Quinn"]
+    "produzent": ["Producer H. Barrow", "Producer G. Mercer", "Producer M. Quinn"],
+    "anwalt": ["Attorney J. Calloway", "Attorney R. Fontaine"],
+    "financier": ["Financier E. Marbury"],
+    "verleger": ["Press baron T. Ashford"],
+    "gastgeberin": ["Society hostess D. Lamont"]
   },
   "start_roster": ["produzent", "produzent", "regisseur", "kolumnist", "journalist"],
+  "circles": {
+    "produzent": ["studio", "gesellschaft"],
+    "regisseur": ["kunst", "studio"],
+    "kolumnist": ["presse", "gesellschaft"],
+    "journalist": ["presse"],
+    "studio": ["studio", "geld"],
+    "anwalt": ["recht", "geld"],
+    "financier": ["geld", "gesellschaft"],
+    "verleger": ["presse", "geld"],
+    "gastgeberin": ["gesellschaft", "kunst"]
+  },
+  "circle_names": {
+    "studio": "Studio circles",
+    "presse": "The press",
+    "geld": "Old money",
+    "recht": "The legal world",
+    "kunst": "The arts crowd",
+    "gesellschaft": "High society"
+  },
+  "vip_types": ["studio", "financier", "verleger"],
+  "notables": [
+    {"name": "Financier A. Rothmere", "type": "financier",
+      "desc": "Old money with a taste for pictures — half a slate can hang on his nod."},
+    {"name": "Attorney M. Vogel", "type": "anwalt",
+      "desc": "The lawyer the studios call before they call each other. Makes problems disappear."},
+    {"name": "Society hostess V. Harcourt", "type": "gastgeberin",
+      "desc": "Her dinner table seats twelve — and decides half the town's friendships."},
+    {"name": "Press baron C. Whitlock", "type": "verleger",
+      "desc": "Owns the morning edition and, with it, tomorrow's truth."},
+    {"name": "Producer legend O. Steiner", "type": "produzent",
+      "desc": "Three decades of hits. Returns calls only for people he has been introduced to."}
+  ],
   "channels": {
     "call": {"name": "Phone call", "icon": "📞", "ap": 1, "energy": 2.0, "cost": 0.0, "rel_min": 2, "rel_max": 5,
       "desc": "Fast, direct, fairly discreet — but with no time to think, gaffes happen."},

@@ -129,6 +129,35 @@ func _ready() -> void:
 		Persona.contact_interact(int(Game.state.contacts[1].id), "aide")
 		_switch_tab("kontakte")
 		await _take_shot("kontakte")
+	elif args.has("--shot-lifestyle"):
+		_on_era_selected(1950)
+		Game.state.player.cash = 60000.0
+		Mogul.buy_home("hills")
+		Mogul.buy_purchase("car")
+		_switch_tab("lifestyle")
+		await _take_shot("lifestyle")
+	elif args.has("--shot-invest"):
+		_on_era_selected(1950)
+		Game.state.player.cash = 80000.0
+		Game.state.agency.rep = 100
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		Game.quick_production(Game.state.clients[0], {"genre": "drama", "prestige": 2})
+		Mogul.ensure_prices()
+		Mogul.buy_stock(str(Mogul.stock_defs()[0].id), 2000.0)
+		Mogul.add_tip(str(Mogul.stock_defs()[1].id), 1, 0.12, Game.mi() + 2, "a studio boss", true)
+		Mogul.invest_stake(int(Game.state.productions[0].id), "equity")
+		_switch_tab("invest")
+		await _take_shot("invest")
+	elif args.has("--shot-chronik"):
+		_on_era_selected(1950)
+		Game.state.agency.rep = 100
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		Game.log_msg("The first premiere under your banner sells out three houses.", "history")
+		Network.memoir("You broke your word to Producer H. Barrow — the back rooms remember.", ["Producer H. Barrow"])
+		_switch_tab("chronik")
+		await _take_shot("chronik")
 	elif args.has("--shot-client"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
@@ -1049,7 +1078,7 @@ func render() -> void:
 
 	_clear(tab_bar)
 	var known_rumors: int = st.rumors.filter(func(r): return r.knownToPlayer).size()
-	var tabs := [["buero", "🏢 Agency"], ["privat", "🎩 Personal"], ["kontakte", "📇 Contacts (%d⏱)" % int(st.contactAP)], ["orte", "🗺 Places"], ["klienten", "👥 Clients (%d)" % st.clients.size()], ["rumors", "🗣 Rumors (%d)" % known_rumors],
+	var tabs := [["buero", "🏢 Agency"], ["privat", "🎩 Personal"], ["lifestyle", "🏠 Lifestyle"], ["invest", "📈 Investments"], ["kontakte", "📇 Contacts (%d⏱)" % int(st.contactAP)], ["orte", "🗺 Places"], ["klienten", "👥 Clients (%d)" % st.clients.size()], ["rumors", "🗣 Rumors (%d)" % known_rumors],
 		["zeitung", "🗞 Newspaper"], ["pool", "🎭 Talent pool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Films"], ["planer", "🗓 Planner"], ["finanzen", "💰 Finances"], ["chronik", "📰 Chronicle"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
@@ -1058,6 +1087,8 @@ func render() -> void:
 	match current_tab:
 		"buero": _render_buero()
 		"privat": _render_privat()
+		"lifestyle": _render_lifestyle()
+		"invest": _render_invest()
 		"kontakte": _render_kontakte()
 		"orte": _render_orte()
 		"klienten": _render_klienten()
@@ -1192,6 +1223,62 @@ func _render_privat() -> void:
 		av[1].add_child(_lbl("The “Send assistant” contact channel is only available while someone holds this desk.", 11, DIM))
 		av[1].add_child(_btn("Let %s go" % str(a.name), _player_action.bind(Persona.fire_assistant)))
 
+	# Experience & specializations (Feature 6): abilities, not % boni
+	var sk = _card("Experience & abilities", "🎓")
+	grid.add_child(sk[0])
+	sk[1].add_child(_lbl("Doing teaches — failing teaches too. Levels unlock new ways to see and act, not percent boni.", 11, DIM))
+	for field in Data.SKILL_FIELDS:
+		var fd: Dictionary = Data.SKILL_FIELDS[field]
+		var lvl: int = Mogul.level(field)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var name_l := _lbl("%s %s" % [str(fd.icon), str(fd.name)], 12, TEXT_C)
+		name_l.custom_minimum_size = Vector2(180 * font_scale, 0)
+		name_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+		name_l.tooltip_text = str(fd.desc)
+		row.add_child(name_l)
+		var dots := ""
+		for i in 5:
+			dots += "●" if i < lvl else "○"
+		var dots_l := _lbl("%s  L%d" % [dots, lvl], 12, ACC if lvl > 0 else DIM)
+		dots_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+		row.add_child(dots_l)
+		var next: Dictionary = Mogul.next_ability(field)
+		if not next.is_empty():
+			var nl := _lbl("→ L%d: %s" % [int(next.level), str(next.name)], 11, DIM)
+			nl.autowrap_mode = TextServer.AUTOWRAP_OFF
+			nl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			nl.tooltip_text = str(next.desc)
+			row.add_child(nl)
+		sk[1].add_child(row)
+	var unlocked: Array = Data.SKILL_ABILITIES.filter(func(ab): return Mogul.has_ability(str(ab.id)))
+	if not unlocked.is_empty():
+		sk[1].add_child(_lbl("Unlocked abilities:", 12, DIM))
+		for ab in unlocked:
+			sk[1].add_child(_lbl("✔ %s — %s" % [str(ab.name), str(ab.desc)], 11, GREEN))
+
+	# Empire & legacy (Feature 9): partner share, takeovers, mogul goals
+	var em = _card("Empire & legacy", "👑")
+	grid.add_child(em[0])
+	if int(p.career) < 3:
+		em[1].add_child(_lbl("Partnership, takeovers and studio stakes open up from the Partner level onward. For now, the ladder is the work.", 12, DIM))
+	else:
+		if Mogul.is_partner():
+			em[1].add_child(_lbl("✔ Name partner: 10% of every profitable month flows into your own account.", 12, GREEN))
+		else:
+			em[1].add_child(_lbl("You carry the title, not the equity — the buy-in offer comes with the promotion.", 12, DIM))
+		if int(p.career) >= 4:
+			em[1].add_child(_lbl("Rival agencies can be bought outright — see the Investments tab.", 12, TEXT_C))
+		var eg: Dictionary = st.endgame
+		if not eg.takeovers.is_empty():
+			em[1].add_child(_lbl("Swallowed: %s" % ", ".join(eg.takeovers), 12, ACC))
+		for sid in eg.studioStakes:
+			em[1].add_child(_lbl("🎬 Studio stake: %s — dividends on every release, doors always open." % str(Game._studio(str(sid)).name), 12, ACC))
+		var honored: int = st.backroom.filter(func(d): return str(d.status) == "honored").size()
+		var broken: int = st.backroom.filter(func(d): return str(d.status) in ["broken", "exposed"]).size()
+		em[1].add_child(_lbl("Your word in the back rooms: %d kept · %d broken or exposed." % [honored, broken], 11, DIM))
+
 # ---------- Contacts: relationships over real channels ----------
 func _on_contact_channel(cid: int, key: String) -> void:
 	var res: Dictionary = Persona.contact_interact(cid, key)
@@ -1216,7 +1303,7 @@ func _render_kontakte() -> void:
 	var st = Game.state
 	var head = _card("Relationship work", "📇")
 	content_box.add_child(head[0])
-	head[1].add_child(_lbl("Contact time this week: %d/%d ⏱ — personal appointments cost more time than a phone call. All costs come out of your private account (currently %s)." % [int(st.contactAP), Persona.AP_PER_WEEK, Game.fmt_money(st.player.cash)], 13))
+	head[1].add_child(_lbl("Contact time this week: %d/%d ⏱ — personal appointments cost more time than a phone call. All costs come out of your private account (currently %s)." % [int(st.contactAP), Persona.ap_per_week(), Game.fmt_money(st.player.cash)], 13))
 	head[1].add_child(_lbl("People remember: whether you came yourself or sent the assistant, what you promised — and how long you kept them waiting.", 12, DIM))
 
 	# Promise register: your own commitments + favor debts
@@ -1234,14 +1321,70 @@ func _render_kontakte() -> void:
 	for d in st.debts:
 		pv[1].add_child(_lbl("⚠ Favor owed to %s: %s" % [d["from"].get("name", "?"), str(d.get("note", ""))], 12, AMBER))
 
+	# Backroom register (Feature 8): parties, promise, expiry, paper trail
+	if not st.backroom.is_empty():
+		var bv = _card("Backroom register", "🥃")
+		content_box.add_child(bv[0])
+		bv[1].add_child(_lbl("Arrangements no contract will ever mention. Witnesses and paper make them dangerous; broken words make them expensive.", 11, DIM))
+		var deals: Array = st.backroom.duplicate()
+		deals.reverse()
+		for rec in deals.slice(0, 8):
+			var def: Dictionary = Mogul.deal_def(str(rec.dealId))
+			var status := str(rec.status)
+			var color := AMBER if status == "open" else (GREEN if status == "honored" else RED)
+			var icon := "⏳" if status == "open" else ("✔" if status == "honored" else "✖")
+			var extra := ""
+			if status == "open":
+				var give: Dictionary = def.get("give", {})
+				if not give.is_empty():
+					extra = " — owed: %s (by %s)" % [str(give.get("label", "")), Game.mi_str(rec.dueMi)]
+				if int(rec.witnesses) > 0:
+					extra += " · %d👁" % int(rec.witnesses)
+				if bool(rec.paper):
+					extra += " · 📄 paper trail"
+			bv[1].add_child(_lbl("%s %s %s with %s (%s)%s" % [icon, str(def.get("icon", "🤝")), str(def.get("name", rec.dealId)), rec["with"].get("name", "?"), status, extra], 12, color))
+
 	var grid := _grid(560.0)
 	content_box.add_child(grid)
 	for ct in st.contacts:
 		var cv = _card(str(ct.name))
 		grid.add_child(cv[0])
 		var box: VBoxContainer = cv[1]
-		box.add_child(_chip(str(Data.CONTACT_ROLES.get(str(ct.type), str(ct.type))), BLUE))
+		var chips: Array = [_chip(str(Data.CONTACT_ROLES.get(str(ct.type), str(ct.type))), BLUE)]
+		if Network.is_vip(ct):
+			chips.append(_chip("⭐ VIP", AMBER))
+		for circle in ct.get("circles", []):
+			chips.append(_chip(str(Data.CONTACT_CIRCLE_NAMES.get(str(circle), circle)), DIM))
+		box.add_child(_chip_row(chips))
 		_stat_row(box, "💛 Relationship", float(ct.rel), ACC if float(ct.rel) >= 40.0 else DIM)
+		# Six dimensions instead of one number (Feature 12)
+		var d1 := ""
+		var d2 := ""
+		for dk in ["trust", "liking", "respect"]:
+			d1 += "%s %s %d   " % [Network.DIM_INFO[dk].icon, Network.DIM_INFO[dk].name, roundi(Network.dim(ct, dk))]
+		for dk in ["closeness", "dependence", "irritation"]:
+			d2 += "%s %s %d   " % [Network.DIM_INFO[dk].icon, Network.DIM_INFO[dk].name, roundi(Network.dim(ct, dk))]
+		box.add_child(_lbl(d1.strip_edges(), 11, TEXT_C))
+		box.add_child(_lbl(d2.strip_edges(), 11, RED if Network.dim(ct, "irritation") >= 20.0 else TEXT_C))
+		# The web (Feature 11): who they are connected to
+		var links: Array = ct.get("links", [])
+		if not links.is_empty():
+			var link_parts: Array = []
+			for l in links.slice(0, 3):
+				link_parts.append("%s (%s)" % [str(l.to), str(Network.LINK_KINDS.get(str(l.kind), l.kind))])
+			box.add_child(_lbl("🕸 Connected: %s — how you treat one, the others hear about." % " · ".join(link_parts), 11, DIM))
+		# Social capital (Feature 13): what this contact is actually worth
+		var cap_line := ""
+		for cap in Network.capital_of(ct):
+			cap_line += "%s %s%s   " % [str(cap.icon), str(cap.label), "" if bool(cap.active) else " (locked)"]
+		var cap_l := _lbl(cap_line.strip_edges(), 11, ACC_DIM)
+		cap_l.tooltip_text = "\n".join(Network.capital_of(ct).map(func(c): return "%s %s: %s" % [str(c.icon), str(c.label), str(c.desc)]))
+		box.add_child(cap_l)
+		# Gatekeeper (Feature 14): the anteroom before the audience
+		var gate: Dictionary = Network.gate_of(ct)
+		if not gate.is_empty():
+			var gate_col := GREEN if float(gate.rel) >= Network.GATE_BLOCK_REL else AMBER
+			box.add_child(_lbl("🚪 Anteroom: %s — disposition %d/100%s" % [str(gate.name), roundi(float(gate.rel)), "" if not Network.gate_blocks(ct) else " · blocks meetings & club nights"], 11, gate_col))
 		box.add_child(_lbl("Last spoken: %s" % _months_ago(int(ct.lastMi)), 11, DIM))
 		var mem: Array = ct.log.slice(0, 3)
 		if not mem.is_empty():
@@ -1268,6 +1411,103 @@ func _render_kontakte() -> void:
 			b.disabled = reason != ""
 			b.tooltip_text = str(ch.desc) + ("" if reason == "" else "\n⛔ " + reason)
 			flow.add_child(b)
+		# Gatekeeper pflegen (Feature 14): Freundlichkeit zum Vorzimmer zahlt sich aus
+		if not Network.gate_of(ct).is_empty():
+			var gb := _btn("🌷 Charm the anteroom (−%s)" % Game.fmt_money(Network.charm_cost()), _on_charm_gate.bind(int(ct.id)))
+			gb.tooltip_text = "Flowers, tickets, a remembered birthday. Cheap — and it decides whether your calls get through."
+			gb.disabled = int(ct.get("gateWeek", -99)) == Game.wi() or float(st.player.cash) < Network.charm_cost()
+			flow.add_child(gb)
+		# Marker einlösen (Feature 13): Hebel wird zu einem konkreten Gefallen
+		if Network.dim(ct, "dependence") >= 50.0:
+			var mb := _btn("🪝 Call in a marker", _on_call_marker.bind(int(ct.id)))
+			mb.tooltip_text = "They owe you enough. Convert leverage into a concrete favor — it will cost the warmth of the moment."
+			mb.disabled = Network.marker_blocked_reason(ct) != ""
+			flow.add_child(mb)
+		# Backroom deals (Feature 8) grow out of good relationships
+		var offers: Array = Mogul.deals_for_contact(ct)
+		if not offers.is_empty():
+			var db := _btn("🥃 Backroom deal… (%d)" % offers.size(), _open_backroom_picker.bind(int(ct.id)))
+			db.tooltip_text = "Confidential arrangements: concrete promises, witnesses, expiry dates — and consequences."
+			db.disabled = Persona.is_away() or int(st.contactAP) < 1
+			flow.add_child(db)
+
+	# Introductions (Feature 15): new doors open only through mutual friends
+	var notables: Array = Network.notables_unmet()
+	if not notables.is_empty():
+		var iv = _card("Beyond your circle", "🪜")
+		content_box.add_child(iv[0])
+		iv[1].add_child(_lbl("These people do not take cold calls. A credible word from a mutual acquaintance opens the door — if someone likes and trusts you enough to vouch.", 11, DIM))
+		for n in notables:
+			var nbox := VBoxContainer.new()
+			nbox.add_theme_constant_override("separation", 2)
+			iv[1].add_child(nbox)
+			nbox.add_child(_lbl("%s (%s)" % [str(n.name), str(Data.CONTACT_ROLES.get(str(n.type), n.type))], 14, TEXT_C))
+			nbox.add_child(_lbl(str(n.desc), 11, DIM))
+			var intros: Array = Network.introducers_for(n)
+			if intros.is_empty():
+				nbox.add_child(_lbl("Nobody in your book can vouch for you yet (needs liking ≥ 55 and trust ≥ 45 in a shared circle).", 11, DIM))
+			else:
+				var irow := HFlowContainer.new()
+				irow.add_theme_constant_override("h_separation", 6)
+				nbox.add_child(irow)
+				for intro in intros:
+					var ib2 := _btn("Ask %s for an introduction (1⏱)" % str(intro.name), _on_introduce.bind(str(n.name), int(intro.id)))
+					ib2.disabled = Network.introduce_blocked_reason(str(n.name)) != ""
+					irow.add_child(ib2)
+
+func _on_charm_gate(cid: int) -> void:
+	var res: Dictionary = Network.charm_gate(cid)
+	_open_modal()
+	modal_box.add_child(_lbl("🌷 The anteroom", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+func _on_call_marker(cid: int) -> void:
+	var res: Dictionary = Network.call_marker(cid)
+	_open_modal()
+	modal_box.add_child(_lbl("🪝 A marker, called in", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+func _on_introduce(notable_name: String, introducer_cid: int) -> void:
+	var res: Dictionary = Network.introduce(notable_name, introducer_cid)
+	_open_modal()
+	modal_box.add_child(_lbl("🪜 An introduction" if res.ok else "No introduction", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
+
+# ---------- Backroom deals: arrangements born from dialogue ----------
+func _open_backroom_picker(cid: int) -> void:
+	var ct: Dictionary = Persona.contact_by_id(cid)
+	if ct.is_empty():
+		return
+	_open_modal()
+	modal_box.add_child(_lbl("🥃 In the back room with %s" % str(ct.name), 22, ACC))
+	modal_box.add_child(_lbl("A proposal costs 1⏱ contact time and can be declined. Once struck, an arrangement binds — witnesses, paper and broken words all have a price.", 12, DIM))
+	for def in Mogul.deals_for_contact(ct):
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 2)
+		modal_box.add_child(box)
+		box.add_child(_lbl("%s %s%s" % [str(def.icon), str(def.name), "  ⚠ risky" if bool(def.illegal) else ""], 15, TEXT_C if not bool(def.illegal) else AMBER))
+		box.add_child(_lbl(str(def.desc), 12, DIM))
+		box.add_child(_lbl("You get: %s" % str(def.get("get", {}).get("label", "")), 11, GREEN))
+		var give: Dictionary = def.get("give", {})
+		if not give.is_empty():
+			box.add_child(_lbl("You owe: %s" % str(give.get("label", "")), 11, AMBER))
+		var cost := roundf(float(def.get("cost", 0)) * Game.infl(Game.state.year))
+		var label := "Propose it"
+		if cost > 0.0:
+			label += " (−%s private)" % Game.fmt_money(cost)
+		box.add_child(_btn(label, _do_backroom.bind(cid, str(def.id)), true))
+	modal_box.add_child(_btn("Leave it", _modal_done))
+
+func _do_backroom(cid: int, deal_id: String) -> void:
+	var res: Dictionary = Mogul.propose_deal(cid, deal_id)
+	_close_modal()
+	_open_modal()
+	modal_box.add_child(_lbl("Handshake" if res.ok else "No deal", 22, ACC))
+	modal_box.add_child(_rich(str(res.text), 14))
+	modal_box.add_child(_btn("Continue", _modal_done, true))
 
 # ---------- Locations: the node map with presence ----------
 func _on_travel(id_s: String) -> void:
@@ -1325,6 +1565,221 @@ func _render_orte() -> void:
 			box.add_child(tb)
 
 # ---------- Sidebar ----------
+# ---------- Lifestyle: real estate & status purchases (Feature 5) ----------
+func _estate_action(action: Callable) -> void:
+	var res = action.call()
+	if res is String and res != "":
+		_show_simple_modal("Not possible", str(res))
+		return
+	render()
+
+func _on_host_reception() -> void:
+	var text_s: String = Mogul.host_reception()
+	render()
+	if text_s != "":
+		_show_simple_modal("🥂 Reception", text_s)
+
+func _render_lifestyle() -> void:
+	var st = Game.state
+	var home: Dictionary = Mogul.home_def()
+	var head = _card("Lifestyle", "🏠")
+	content_box.add_child(head[0])
+	head[1].add_child(_lbl("You live at: %s %s (tier %d)" % [str(home.icon), str(home.name), int(home.tier)], 16, ACC))
+	head[1].add_child(_lbl("Running lifestyle costs: %s/month (home & purchases, paid privately). Private account: %s." % [Game.fmt_money(Mogul.upkeep_total()), Game.fmt_money(st.player.cash)], 12, DIM))
+	head[1].add_child(_lbl("An address is a statement: prestige lifts your public name, privacy protects secrets, capacity lets you host — and whoever lives beneath their title pays for it in standing. Moving down is noticed.", 11, DIM))
+	if Mogul.can_host():
+		head[1].add_child(_btn("🥂 Host a reception (−%s, once a month)" % Game.fmt_money(Mogul.reception_cost()), _on_host_reception, true))
+	elif int(home.get("capacity", 0)) >= 3:
+		head[1].add_child(_lbl("A reception has already filled this month's calendar.", 11, DIM))
+
+	var grid := _grid(520.0)
+	content_box.add_child(grid)
+	var hv = _card("Residences", "🔑")
+	grid.add_child(hv[0])
+	for h in Data.ESTATE_HOMES:
+		var id_s := str(h.id)
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 2)
+		hv[1].add_child(box)
+		var current := id_s == Mogul.home_id()
+		box.add_child(_lbl("%s %s%s" % [str(h.icon), str(h.name), "  ← you live here" if current else ""], 14, ACC if current else TEXT_C))
+		box.add_child(_lbl(str(h.desc), 11, DIM))
+		var stats := "Prestige %d · Privacy %d · Guests %d · Upkeep %s/mo" % [int(h.prestige), int(h.privacy), int(h.capacity), Game.fmt_money(roundf(float(h.upkeep) * Game.infl(st.year)))]
+		if float(h.get("paparazzi", 0.0)) > 0.0:
+			stats += " · 📸 risk"
+		box.add_child(_lbl(stats, 11, DIM))
+		if not current:
+			var price := Mogul.home_price(id_s)
+			var label := "Move in (−%s" % Game.fmt_money(price)
+			if Mogul.home_value() > 0.0:
+				label += ", old home sells for %s" % Game.fmt_money(Mogul.home_value())
+			label += ")"
+			if int(h.tier) < int(home.get("tier", 0)):
+				label += " ⚠ downgrade"
+			var b := _btn(label, _estate_action.bind(Mogul.buy_home.bind(id_s)))
+			var reason := Mogul.home_blocked_reason(id_s)
+			b.disabled = reason != ""
+			b.tooltip_text = reason
+			box.add_child(b)
+
+	var pv = _card("Status purchases", "🛍")
+	grid.add_child(pv[0])
+	pv[1].add_child(_lbl("Every purchase buys access, time or protection — and adds to the monthly bill.", 11, DIM))
+	for pdef in Data.ESTATE_PURCHASES:
+		var pid := str(pdef.id)
+		var box2 := VBoxContainer.new()
+		box2.add_theme_constant_override("separation", 2)
+		pv[1].add_child(box2)
+		var owned := Mogul.owns(pid)
+		box2.add_child(_lbl("%s %s%s" % [str(pdef.icon), str(pdef.name), "  ✔ yours" if owned else ""], 14, ACC if owned else TEXT_C))
+		box2.add_child(_lbl("%s Upkeep %s/mo." % [str(pdef.desc), Game.fmt_money(roundf(float(pdef.upkeep) * Game.infl(st.year)))], 11, DIM))
+		if owned:
+			var value := Mogul.purchase_value(pid)
+			var sell_label := "Sell (+%s)" % Game.fmt_money(value) if value > 0.0 else "Cancel"
+			box2.add_child(_btn(sell_label, _player_action.bind(Mogul.sell_purchase.bind(pid))))
+		else:
+			var b2 := _btn("Buy (−%s private)" % Game.fmt_money(Mogul.purchase_price(pid)), _estate_action.bind(Mogul.buy_purchase.bind(pid)))
+			var reason2 := Mogul.purchase_blocked_reason(pid)
+			b2.disabled = reason2 != ""
+			b2.tooltip_text = reason2
+			box2.add_child(b2)
+
+# ---------- Investments: ticker, tips, film stakes, empire (Feature 7/9) ----------
+func _on_trade(id_s: String, action: String, amount: float) -> void:
+	var res := ""
+	if action == "buy":
+		res = Mogul.buy_stock(id_s, amount)
+	else:
+		res = Mogul.sell_stock(id_s)
+	if res != "":
+		_show_simple_modal("Not possible", res)
+		return
+	render()
+
+func _on_stake(ref_id: int, type_s: String) -> void:
+	var res: String = Mogul.invest_stake(ref_id, type_s)
+	if res != "":
+		_show_simple_modal("Not possible", res)
+		return
+	render()
+
+func _render_invest() -> void:
+	var st = Game.state
+	Mogul.ensure_prices()
+	var p: Dictionary = st.player
+	var head = _card("Your money", "📈")
+	content_box.add_child(head[0])
+	head[1].add_child(_lbl("Private account: %s · Portfolio: %s" % [Game.fmt_money(p.cash), Game.fmt_money(Mogul.portfolio_value())], 16, ACC))
+	head[1].add_child(_lbl("Everything here runs on private money — the agency till stays untouched. The interesting part is never the ticker itself: it is who whispers to you, and whom you owe when it pays off.", 11, DIM))
+	if Mogul.has_advisor():
+		var adv: Dictionary = st.invest.advisor
+		head[1].add_child(_lbl("💼 %s manages the portfolio (skill %d, fee %s/mo): acts on open tips — but their judgement is not always yours." % [str(adv.name), int(adv.skill), Game.fmt_money(Mogul.advisor_fee())], 12, TEXT_C))
+		head[1].add_child(_btn("Dismiss the financial manager", _player_action.bind(Mogul.fire_advisor)))
+	else:
+		head[1].add_child(_btn("💼 Hire a financial manager (fee ≈ %s/mo)" % Game.fmt_money(roundf(140.0 * Game.infl(st.year))), _player_action.bind(Mogul.hire_advisor)))
+
+	# Open tips
+	var open_tips: Array = st.invest.tips.filter(func(t): return not bool(t.resolved))
+	if not open_tips.is_empty():
+		var tv = _card("Whispers", "💹")
+		content_box.add_child(tv[0])
+		for tip in open_tips:
+			var def: Dictionary = Mogul.stock_def(str(tip.companyId))
+			tv[1].add_child(_lbl("%s %s: %s expects the stock to go %s (by %s).%s" % [str(def.get("icon", "📈")), str(def.get("name", tip.companyId)), str(tip.source), "up" if int(tip.dir) > 0 else "down", Game.mi_str(tip.dueMi), "  🤫 insider" if bool(tip.insider) else ""], 12, AMBER if bool(tip.insider) else TEXT_C))
+		tv[1].add_child(_lbl("Trading on insider whispers works — until the timing of your trades starts asking questions.", 11, DIM))
+
+	# Ticker
+	var sv = _card("The ticker", "🗠")
+	content_box.add_child(sv[0])
+	for def in Mogul.stock_defs():
+		var id_s := str(def.id)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		sv[1].add_child(row)
+		var tr := Mogul.trend(id_s)
+		var arrow := "→"
+		if tr > 1.0:
+			arrow = "↗"
+		if tr < -1.0:
+			arrow = "↘"
+		var name_l := _lbl("%s %s" % [str(def.icon), str(def.name)], 12, TEXT_C)
+		name_l.custom_minimum_size = Vector2(230 * font_scale, 0)
+		name_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+		name_l.tooltip_text = "%s — %s" % [str(def.sector), str(def.get("desc", ""))]
+		row.add_child(name_l)
+		var price_l := _lbl("$%.2f %s %+.1f%%" % [Mogul.price(id_s), arrow, tr], 12, GREEN if tr > 1.0 else (RED if tr < -1.0 else DIM))
+		price_l.custom_minimum_size = Vector2(130 * font_scale, 0)
+		price_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+		row.add_child(price_l)
+		if Mogul.has_ability("market_nose"):
+			var drift_l := _lbl("nose: %s" % ("solid" if float(def.drift) >= 0.004 else "sluggish"), 11, DIM)
+			drift_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+			row.add_child(drift_l)
+		var held := Mogul.shares_of(id_s)
+		if held > 0:
+			var held_l := _lbl("%d× (%s)" % [held, Game.fmt_money(held * Mogul.price(id_s))], 12, ACC)
+			held_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+			row.add_child(held_l)
+		for budget in [500, 2500]:
+			var amount := roundf(float(budget) * Game.infl(st.year))
+			var bb := _btn("Buy %s" % Game.fmt_money(amount), _on_trade.bind(id_s, "buy", amount))
+			bb.disabled = float(p.cash) < amount
+			row.add_child(bb)
+		if held > 0:
+			row.add_child(_btn("Sell all", _on_trade.bind(id_s, "sell", 0.0)))
+
+	# Film stakes
+	var fv = _card("Film stakes", "🎬")
+	content_box.add_child(fv[0])
+	fv[1].add_child(_lbl("Equity (5% of budget) pays out with the box office. Profit points cost less (2%) but only pay on a real hit. Putting your own client into a picture you financed is lucrative — and a conflict of interest someone may notice.", 11, DIM))
+	for stk in st.filmStakes:
+		fv[1].add_child(_lbl("💼 “%s”: %s as %s%s%s" % [str(stk.title), Game.fmt_money(float(stk.amount)), "equity" if str(stk.type) == "equity" else "profit points", "  ⚠ conflict of interest" if bool(stk.conflict) else "", "  📣 boosted" if bool(stk.boosted) else ""], 12, AMBER if bool(stk.conflict) else TEXT_C))
+	for target in Mogul.stake_targets():
+		var ref: Dictionary = target.ref
+		var have: Dictionary = Mogul.stake_for(int(ref.id))
+		var row2 := HBoxContainer.new()
+		row2.add_theme_constant_override("separation", 8)
+		fv[1].add_child(row2)
+		var t_l := _lbl("“%s” (%s, budget %s)" % [str(ref.title), "casting" if str(target.phase) == "casting" else "shooting", Game.fmt_money(float(ref.get("budget", 0)))], 12, TEXT_C)
+		t_l.custom_minimum_size = Vector2(300 * font_scale, 0)
+		row2.add_child(t_l)
+		if have.is_empty():
+			for type_s in [["equity", "Equity"], ["points", "Points"]]:
+				var cost := Mogul.stake_cost(ref, str(type_s[0]))
+				var b3 := _btn("%s (−%s)" % [str(type_s[1]), Game.fmt_money(cost)], _on_stake.bind(int(ref.id), str(type_s[0])))
+				b3.disabled = Mogul.stake_blocked_reason(int(ref.id), str(type_s[0])) != ""
+				row2.add_child(b3)
+		elif str(target.phase) == "production" and not bool(have.boosted):
+			row2.add_child(_btn("📣 Marketing push (−%s)" % Game.fmt_money(roundf(2000.0 * Game.infl(st.year))), _estate_action.bind(Mogul.boost_marketing.bind(int(ref.id)))))
+
+	# Empire: takeovers & studio stakes (Feature 9)
+	if int(p.career) >= 4:
+		var ev = _card("Empire", "👑")
+		content_box.add_child(ev[0])
+		if st.rivals.is_empty():
+			ev[1].add_child(_lbl("No rival houses left standing. The market is yours.", 12, GREEN))
+		for rival in st.rivals:
+			var row3 := HBoxContainer.new()
+			row3.add_theme_constant_override("separation", 8)
+			ev[1].add_child(row3)
+			row3.add_child(_lbl_fill("%s — %d clients, grudge %d" % [str(rival.name), rival.clients.size(), roundi(float(rival.grudge))], 12, TEXT_C))
+			var cost4 := Mogul.takeover_cost(rival)
+			var tb := _btn("Buy them out (−%s private)" % Game.fmt_money(cost4), _estate_action.bind(Mogul.takeover.bind(str(rival.id))))
+			tb.disabled = Mogul.takeover_blocked_reason(str(rival.id)) != ""
+			tb.tooltip_text = Mogul.takeover_blocked_reason(str(rival.id))
+			row3.add_child(tb)
+		if int(p.career) >= 5:
+			ev[1].add_child(_lbl("A studio stake (10%%) costs %s: dividends on every release, permanent open doors — and a conflict of interest the whole town knows about." % Game.fmt_money(Mogul.studio_stake_cost()), 11, DIM))
+			for studio in Game.active_studios():
+				var sid := str(studio.id)
+				if st.endgame.studioStakes.has(sid):
+					ev[1].add_child(_lbl("✔ %s — you sit at their table." % str(studio.name), 12, GREEN))
+					continue
+				var sb := _btn("Buy into %s (−%s)" % [str(studio.name), Game.fmt_money(Mogul.studio_stake_cost())], _estate_action.bind(Mogul.buy_studio_stake.bind(sid)))
+				sb.disabled = Mogul.studio_stake_blocked_reason(sid) != ""
+				sb.tooltip_text = Mogul.studio_stake_blocked_reason(sid)
+				ev[1].add_child(sb)
+
 func _render_sidebar() -> void:
 	_clear(sidebar_box)
 	var st = Game.state
@@ -2823,11 +3278,36 @@ func _render_zeitung() -> void:
 
 # ---------- Tab: Chronicle ----------
 func _render_chronik() -> void:
+	# Career memoir (Feature 10): the decisions and relationships that
+	# defined this career — kept forever, unlike the rolling log below.
+	var memoirs: Array = Game.state.get("memoirs", [])
+	var mv = _card("Career memoir (%d entries)" % memoirs.size(), "📖")
+	content_box.add_child(mv[0])
+	if memoirs.is_empty():
+		mv[1].add_child(_lbl("Nothing worth remembering yet. Careers are written one decision at a time.", 12, DIM))
+	else:
+		mv[1].add_child(_lbl("What this career will be remembered for — promises broken, doors opened, empires bought. This record never fades.", 11, DIM))
+		var mtxt := ""
+		var shown: Array = memoirs.slice(maxi(0, memoirs.size() - 30))
+		shown.reverse()
+		var last_year := -1
+		for m in shown:
+			var y := int(m.mi) / 12
+			if y != last_year:
+				last_year = y
+				mtxt += "[color=%s][b]— %d —[/b][/color]\n" % [ACC.to_html(false), y]
+			mtxt += "[color=#a89b7e]%s[/color]  %s\n" % [Game.mi_str(m.mi), str(m.text)]
+		if memoirs.size() > 30:
+			mtxt += "[color=#6b6152](%d earlier entries rest in the archive.)[/color]\n" % (memoirs.size() - 30)
+		mv[1].add_child(_rich(mtxt, 13))
+
+	var lv = _card("The rolling log", "📰")
+	content_box.add_child(lv[0])
 	var txt := ""
 	for l in Game.state.log:
 		var col := {"deal": "#7da05c", "bad": "#c0504d", "history": ACC.to_html(false)}.get(l.type, "#a89b7e")
 		txt += "[color=#6b6152]%s %d[/color]  [color=%s]%s %s[/color]\n" % [Game.MONTHS[int(l.m) - 1], int(l.y), col, LOG_ICONS.get(l.type, "•"), l.text]
-	content_box.add_child(_rich(txt if txt != "" else "Nothing has happened yet.", 13))
+	lv[1].add_child(_rich(txt if txt != "" else "Nothing has happened yet.", 13))
 
 # =====================================================================
 # Modals

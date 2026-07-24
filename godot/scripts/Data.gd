@@ -29,6 +29,20 @@ var CONTACT_ROLES: Dictionary = {}
 var CONTACT_PERSONS: Dictionary = {}
 var CONTACT_CHANNELS: Dictionary = {}
 var CONTACT_START_ROSTER: Array = []
+var CONTACT_CIRCLES: Dictionary = {}
+var CONTACT_CIRCLE_NAMES: Dictionary = {}
+var CONTACT_VIP_TYPES: Array = []
+var CONTACT_NOTABLES: Array = []
+var ESTATE_HOMES: Array = []
+var ESTATE_PURCHASES: Array = []
+var ESTATE_HOME_BY_ID: Dictionary = {}
+var ESTATE_PURCHASE_BY_ID: Dictionary = {}
+var SKILL_FIELDS: Dictionary = {}
+var SKILL_ABILITIES: Array = []
+var SKILL_THRESHOLDS: Array = []
+var STOCKS: Array = []
+var BACKROOM_DEALS: Array = []
+var BACKROOM_BY_ID: Dictionary = {}
 
 
 func _init() -> void:
@@ -70,3 +84,30 @@ func reload() -> void:
 	CONTACT_PERSONS = contacts.get("persons", {})
 	CONTACT_CHANNELS = contacts.get("channels", {})
 	CONTACT_START_ROSTER = contacts.get("start_roster", [])
+	CONTACT_CIRCLES = contacts.get("circles", {})
+	CONTACT_CIRCLE_NAMES = contacts.get("circle_names", {})
+	CONTACT_VIP_TYPES = contacts.get("vip_types", [])
+	CONTACT_NOTABLES = contacts.get("notables", [])
+	var estate := DataLoader.load_dict("estate")
+	ESTATE_HOMES = estate.get("homes", [])
+	ESTATE_PURCHASES = estate.get("purchases", [])
+	ESTATE_HOME_BY_ID = {}
+	for h in ESTATE_HOMES:
+		ESTATE_HOME_BY_ID[str(h.id)] = h
+	ESTATE_PURCHASE_BY_ID = {}
+	for p in ESTATE_PURCHASES:
+		ESTATE_PURCHASE_BY_ID[str(p.id)] = p
+	var skills := DataLoader.load_dict("skills")
+	SKILL_FIELDS = skills.get("fields", {})
+	SKILL_ABILITIES = skills.get("abilities", [])
+	SKILL_THRESHOLDS = skills.get("thresholds", [0, 10, 25, 45, 70, 100])
+	STOCKS = DataLoader.load_entries("stocks", ["id"],
+		{"from": 0, "to": 9999, "vol": 0.06, "drift": 0.003, "sector": "Media", "icon": "📈", "desc": ""},
+		["id", "name", "price"])
+	BACKROOM_DEALS = DataLoader.load_entries("backroom", ["id"],
+		{"icon": "🤝", "partners": [], "minRel": 40, "risk": 0.05, "paper": false, "illegal": false, "cost": 0,
+			"get": {}, "give": {}},
+		["id", "name"])
+	BACKROOM_BY_ID = {}
+	for d in BACKROOM_DEALS:
+		BACKROOM_BY_ID[str(d.id)] = d

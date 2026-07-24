@@ -137,6 +137,8 @@ func _check_promotion(events: Array) -> void:
 	Game.log_msg("Promotion: you are now considered a %s. Salary and expectations rise." % str(lvl.name), "history")
 	Game.press_event("Business", "People move: %s is now talked about as a %s." % [_st().agency.name, str(lvl.name)])
 	events.append({"title": "Promotion", "text": "The industry knows your name now: [b]%s[/b].\n\nYour salary rises to %s a month — and your lifestyle follows (%s living costs)." % [str(lvl.name), Game.fmt_money(salary()), Game.fmt_money(living_cost())], "choices": [{"label": "Continue"}]})
+	# Endgame (Feature 9): partnership buy-in & mogul recognition
+	Mogul.on_promotion(events)
 
 
 # Weekly condition tick: workload drains energy and builds stress.
@@ -184,6 +186,7 @@ func tick_month(events: Array) -> void:
 	# Collapse: the clinic is expensive, public, and unavoidable.
 	if float(p.health) <= 15.0 and not p.monthFlags.has("collapse"):
 		p.monthFlags["collapse"] = true
+		Network.memoir("A collapse puts you in a clinic — the columns write about it for weeks.")
 		book(-roundf(800.0 * Game.infl(st.year)), "Clinic stay after collapse")
 		p.health = 45.0
 		p.energy = 60.0
@@ -282,6 +285,8 @@ func _add_contact(ctype: String, cname: String) -> Dictionary:
 	var ct := {"id": Game.next_id(), "type": ctype, "name": cname, "rel": float(Game.rndi(15, 35)),
 		"lastMi": Game.mi(), "lastActWeek": -99, "log": [], "waitNoted": false}
 	_st().contacts.append(ct)
+	# Netzwerk (Features 11/12/14): Dimensionen, Kreise, ggf. Vorzimmer
+	Network.seed_contact(ct)
 	return ct
 
 
@@ -305,14 +310,19 @@ func touch_contact_person(person: Dictionary, delta: float, memo: String = "") -
 		return
 	for ct in st.contacts:
 		if str(ct.name) == str(person.get("name", "")):
-			ct.rel = clampf(float(ct.rel) + delta, 0.0, 100.0)
+			Network.touch(ct, delta)
 			if memo != "":
 				_memory(ct, memo)
 			return
 
 
+# Contact time per week — society lions (Feature 6) squeeze in one more.
+func ap_per_week() -> int:
+	return AP_PER_WEEK + (1 if Mogul.has_ability("society") else 0)
+
+
 func channel_cost(key: String) -> float:
-	return roundf(float(Data.CONTACT_CHANNELS[key].cost) * Game.infl(_st().year))
+	return roundf(float(Data.CONTACT_CHANNELS[key].cost) * Game.infl(_st().year) * Mogul.channel_cost_mult(key))
 
 
 # Why a channel is unavailable for this contact right now ("" = fine).
@@ -323,9 +333,12 @@ func contact_blocked_reason(ct: Dictionary, key: String) -> String:
 		return "You are not in Los Angeles"
 	if key == "aide" and not has_assistant():
 		return "You employ no assistant"
+	# Gatekeeper (Feature 14): to important people, the anteroom IS the door.
+	if (key == "meet" or key == "club") and Network.gate_blocks(ct):
+		return "%s guards the calendar — charm the anteroom first" % str(Network.gate_of(ct).get("name", "The anteroom"))
 	if int(ct.lastActWeek) == Game.wi():
 		return "Already contacted this week"
-	if int(_st().contactAP) < int(ch.ap):
+	if int(_st().contactAP) < Mogul.channel_ap(key):
 		return "No contact time left"
 	if float(player().cash) < channel_cost(key):
 		return "Privately short on cash"
@@ -346,7 +359,7 @@ func contact_interact(cid, key: String) -> Dictionary:
 	var cost := channel_cost(key)
 	if cost > 0.0:
 		book(-cost, "%s %s — %s" % [str(ch.icon), str(ch.name), str(ct.name)])
-	st.contactAP = int(st.contactAP) - int(ch.ap)
+	st.contactAP = int(st.contactAP) - Mogul.channel_ap(key)
 	st.player.energy = clampf(float(st.player.energy) - float(ch.energy), 0.0, 100.0)
 	ct.lastActWeek = Game.wi()
 	ct.lastMi = Game.mi()
@@ -371,12 +384,14 @@ func contact_interact(cid, key: String) -> Dictionary:
 		"note":
 			lines.append("A precise message, cleanly worded.")
 			_memory(ct, "Reached out in writing.")
-			if Game.chance(0.1):
+			# Back channels (Feature 6): discreet couriers leak half as often
+			if Game.chance(0.05 if Mogul.has_ability("back_channels") else 0.1):
 				st.player.discretion = clampf(float(st.player.discretion) - 5.0, 0.0, 100.0)
 				Game.add_rumor("agency", "A private note from %s to %s is circulating in copies." % [st.agency.name, ct.name], true, "skandal", ["Journalists"], 20.0, true)
 				lines.append("The message got passed around — copies are circulating (discretion −5).")
 		"gift":
-			if float(ct.rel) < 25.0 and Game.chance(0.5):
+			# The true wish (Feature 6): you always know what lands
+			if float(ct.rel) < 25.0 and not Mogul.has_ability("true_wish") and Game.chance(0.5):
 				gain = -4.0
 				lines.append("The gift reads as a clumsy attempt to buy goodwill — frowns instead of thanks.")
 				_memory(ct, "Inappropriate gift at the wrong moment.")
@@ -405,10 +420,19 @@ func contact_interact(cid, key: String) -> Dictionary:
 						break
 			if Game.chance(0.3):
 				lines.append(_make_promise(ct))
+			# Market whispers (Feature 7): the club is where tips are born
+			if Game.chance(0.2):
+				var tip_line: String = Mogul.maybe_market_tip(ct)
+				if tip_line != "":
+					lines.append(tip_line)
 			if Game.chance(0.15):
 				st.player.discretion = clampf(float(st.player.discretion) - 3.0, 0.0, 100.0)
 				lines.append("Someone with good ears sat at the next table (discretion −3).")
-	ct.rel = clampf(float(ct.rel) + gain, 0.0, 100.0)
+	# Mehrdimensional (Feature 12): jeder Kanal bewegt andere Saiten
+	Network.apply_channel(ct, key, gain)
+	Mogul.grant_xp("networking", 1.0, "Kept a relationship alive")
+	if key == "meet":
+		Mogul.grant_xp("people", 1.0, "Face to face, you learn the most")
 	_fulfill_promises(ct)
 	var head := "%s %s — %s: relationship %s%d, now %d/100." % [str(ch.icon), str(ch.name), str(ct.name),
 		"+" if gain >= 0.0 else "", roundi(gain), roundi(float(ct.rel))]
@@ -431,7 +455,8 @@ func _fulfill_promises(ct: Dictionary) -> void:
 	for pr in _st().promises:
 		if str(pr.status) == "open" and str(pr.to) == str(ct.name):
 			pr.status = "kept"
-			ct.rel = clampf(float(ct.rel) + 4.0, 0.0, 100.0)
+			# Gehaltenes Wort zahlt vor allem auf Vertrauen ein (Feature 12)
+			Network.adjust(ct, {"trust": 5.0, "liking": 2.0}, false)
 			_memory(ct, "You kept your word.")
 			Game.log_msg("Promise kept: %s appreciates it." % str(ct.name), "deal")
 
@@ -445,14 +470,16 @@ func _tick_contacts_month(events: Array) -> void:
 			st.player.stress = clampf(float(st.player.stress) + 3.0, 0.0, 100.0)
 			for ct in st.contacts:
 				if str(ct.name) == str(pr.to):
-					ct.rel = clampf(float(ct.rel) - 12.0, 0.0, 100.0)
+					# Gebrochenes Wort: Vertrauen bricht, Ärger bleibt (Feature 12)
+					Network.adjust(ct, {"trust": -10.0, "liking": -4.0, "irritation": 8.0})
 					_memory(ct, "You broke your promise.")
+			Network.memoir("Promise broken: %s waited in vain — people talk about things like that." % str(pr.to), [str(pr.to)])
 			Game.log_msg("Promise broken: %s waited in vain." % str(pr.to), "bad")
 	# Neglected contacts cool off — and note it exactly once.
 	for ct in st.contacts:
 		var idle := Game.mi() - int(ct.lastMi)
 		if idle >= 4:
-			ct.rel = clampf(float(ct.rel) - 2.0, 0.0, 100.0)
+			Network.adjust(ct, {"closeness": -3.0, "liking": -1.0}, false)
 			if not bool(ct.get("waitNoted", false)):
 				ct.waitNoted = true
 				_memory(ct, "Has been waiting for months to hear from you.")
@@ -519,7 +546,8 @@ func is_away() -> bool:
 
 
 func travel_cost(id_s: String) -> float:
-	return roundf(float(Data.LOCATION_BY_ID[id_s].cost) * Game.infl(_st().year))
+	# Jet share & Manhattan apartment (Feature 5) discount or waive the trip
+	return roundf(float(Data.LOCATION_BY_ID[id_s].cost) * Game.infl(_st().year) * Mogul.travel_cost_mult(id_s))
 
 
 # Why a trip is impossible right now ("" = possible).
@@ -546,10 +574,11 @@ func travel_to(id_s: String) -> bool:
 	var cost := travel_cost(id_s)
 	if cost > 0.0:
 		Game.book(-cost, "reisen", "Trip to %s" % str(loc.name))
-	st.player.energy = clampf(float(st.player.energy) - float(loc.energy), 0.0, 100.0)
+	st.player.energy = clampf(float(st.player.energy) - float(loc.energy) * Mogul.travel_energy_mult(), 0.0, 100.0)
 	st.contactAP = 0
 	st.player.location = id_s
 	st.player.awayNoted = false
+	Mogul.grant_xp("networking", 1.0, "Showed your face out of town")
 	Game.log_msg("You travel to %s — the week belongs to the journey." % str(loc.name), "info")
 	return true
 
@@ -683,14 +712,18 @@ func _tick_assistant_week() -> void:
 	var a := assistant()
 	st.player.stress = clampf(float(st.player.stress) - float(a.skill) * 0.02, 0.0, 100.0)
 	if rule("upkeep"):
+		# Born delegators (Feature 6) get two courtesy calls out of the week.
+		var quota := 2 if Mogul.has_ability("delegator") else 1
 		for ct in st.contacts:
+			if quota <= 0:
+				break
 			if Game.mi() - int(ct.lastMi) >= 2 and int(ct.lastActWeek) != Game.wi():
 				Game.book(-roundf(5.0 * Game.infl(st.year)), "buero", "Assistant: courtesies & couriers")
-				ct.rel = clampf(float(ct.rel) + 1.0 + float(a.skill) / 50.0, 0.0, 100.0)
+				Network.adjust(ct, {"liking": 1.0 + float(a.skill) / 50.0}, false)
 				ct.lastMi = Game.mi()
 				ct.waitNoted = false
 				_memory(ct, "%s checked in on your behalf." % str(a.name))
-				break
+				quota -= 1
 
 
 # Monthly: wages from the agency; the assistant learns on the job.
@@ -699,7 +732,9 @@ func _tick_assistant_month() -> void:
 		return
 	var a := assistant()
 	Game.book(-assistant_wage(), "buero", "Assistant wages (%s)" % str(a.name))
-	a.skill = clampi(int(a.skill) + 1, 10, 90)
+	# Mentors (Feature 6) teach twice as fast — and leading people teaches you.
+	a.skill = clampi(int(a.skill) + (2 if Mogul.has_ability("mentor") else 1), 10, 90)
+	Mogul.grant_xp("leadership", 1.0, "A month of leading people")
 
 
 # The morning note: a short decision brief instead of raw chaos.
@@ -720,6 +755,8 @@ func assistant_briefing() -> Dictionary:
 	for cs in st.castings:
 		if int(cs.deadline) <= 2 and not bool(cs.get("hidden", false)):
 			items.append("🎬 “%s” casts in %d week(s) — open roles are waiting." % [str(cs.title), int(cs.deadline)])
+	# Empire desk (Features 5–9): due deals, maturing tips, opening stakes
+	items.append_array(Mogul.briefing_items())
 	if items.is_empty():
 		return {}
 	var text := "%s puts a note on your desk:\n\n%s" % [str(assistant().name), "\n".join(items.slice(0, 4))]
