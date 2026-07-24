@@ -43,6 +43,11 @@ func ensure_staff() -> void:
 	for key in [["feeCap", 15000], ["vipFame", 70], ["escalateScandal", true]]:
 		if not st.delegation.has(key[0]):
 			st.delegation[key[0]] = key[1]
+	# Migration Feature 33: Loyalität, Auslastung, Gehaltsbonus nachrüsten
+	for s in st.staff:
+		for skey in [["loyalty", 55.0], ["load", 0.0], ["wageBonus", 0.0], ["raiseMi", -99]]:
+			if not s.has(skey[0]):
+				s[skey[0]] = skey[1]
 
 
 func fee_cap() -> float:
@@ -53,7 +58,7 @@ func fee_cap() -> float:
 # Anstellung
 # =====================================================================
 func wage(s: Dictionary) -> float:
-	return roundf((150.0 + float(s.skill) * 2.0) * Game.infl(_st().year))
+	return roundf((150.0 + float(s.skill) * 2.0) * (1.0 + float(s.get("wageBonus", 0.0))) * Game.infl(_st().year))
 
 
 func hire_blocked_reason(focus: String) -> String:
@@ -72,7 +77,8 @@ func hire(focus: String) -> Dictionary:
 	var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.5) else Data.NPC_FIRST_M)
 	var s := {"id": Game.next_id(), "name": "%s %s" % [first, Game.pick(Data.NPC_LAST)],
 		"focus": focus, "skill": Game.rndi(35, 70), "trait": str(Game.pick(Data.STAFF_TRAITS.keys())),
-		"mode": "propose", "hiredMi": Game.mi(), "actsWeek": -99}
+		"mode": "propose", "hiredMi": Game.mi(), "actsWeek": -99,
+		"loyalty": float(Game.rndi(45, 70)), "load": 0.0, "wageBonus": 0.0, "raiseMi": -99}
 	_st().staff.append(s)
 	Game.log_msg("%s joins the %s — wages %s a month, opinions included." % [str(s.name), str(Data.STAFF_FOCI[focus].name).to_lower(), Game.fmt_money(wage(s))], "deal")
 	Network.memoir("%s joined the agency (%s)." % [str(s.name), str(Data.STAFF_FOCI[focus].name)], [str(s.name)])
@@ -109,6 +115,38 @@ func cycle_mode(sid) -> void:
 	s.mode = MODES[(MODES.find(str(s.mode)) + 1) % MODES.size()]
 
 
+# Gehaltserhöhung (Feature 33/35): das billigste Mittel gegen Abwerbung.
+func raise_blocked_reason(sid) -> String:
+	var s := staffer_by_id(sid)
+	if s.is_empty():
+		return "Unknown"
+	if Game.mi() - int(s.get("raiseMi", -99)) < 6:
+		return "The last raise is still fresh"
+	return ""
+
+
+func give_raise(sid) -> void:
+	var s := staffer_by_id(sid)
+	if s.is_empty() or raise_blocked_reason(sid) != "":
+		return
+	s.raiseMi = Game.mi()
+	s.wageBonus = float(s.get("wageBonus", 0.0)) + 0.2
+	s.loyalty = clampf(float(s.get("loyalty", 55.0)) + 15.0, 0.0, 100.0)
+	Game.log_msg("%s gets a raise — loyalty is cheaper than a spin-off." % str(s.name), "info")
+
+
+# Fehlerneigung (Feature 33): Kompetenz, Loyalität und Überlastung
+# entscheiden, wie gut delegierte Arbeit wirklich ist.
+func mishap_chance(s: Dictionary) -> float:
+	return clampf(0.06 + float(s.get("load", 0.0)) / 300.0
+		+ (50.0 - float(s.skill)) / 500.0
+		+ (40.0 - float(s.get("loyalty", 55.0))) / 500.0, 0.02, 0.5)
+
+
+func _note_act(s: Dictionary) -> void:
+	s.load = clampf(float(s.get("load", 0.0)) + 10.0, 0.0, 100.0)
+
+
 # =====================================================================
 # Empfehlungen (Feature 34): Begründung, Unsicherheit, Eigeninteresse
 # =====================================================================
@@ -140,11 +178,14 @@ func tick_week(events: Array) -> void:
 	if st == null or not st.has("staff"):
 		return
 	for s in st.staff:
+		# Erholung (Feature 33): Auslastung fällt, wenn nichts ansteht
+		s.load = clampf(float(s.get("load", 0.0)) - 4.0, 0.0, 100.0)
 		if str(s.mode) == "off" or int(s.get("actsWeek", -99)) == Game.wi():
 			continue
 		if not Game.chance(0.45):
 			continue
 		s.actsWeek = Game.wi()
+		_note_act(s)
 		match str(s.focus):
 			"deals":
 				_work_deals(s, events)
@@ -176,6 +217,13 @@ func _best_pitch() -> Dictionary:
 
 
 func _exec_pitch(s: Dictionary, pick: Dictionary) -> void:
+	# Fehler (Feature 33): ein überlasteter oder illoyaler Mitarbeiter
+	# verbrennt den Pitch — und ein Stück Studio-Beziehung gleich mit.
+	if Game.chance(mishap_chance(s)):
+		Game.state.studioRel[pick.casting.studioId] = clampi(int(Game.state.studioRel.get(pick.casting.studioId, 40)) - 3, 0, 100)
+		pick.role.rejected.append(int(pick.client.id))
+		Game.log_msg("%s botches the pitch for “%s” — wrong tone, wrong day. The studio remembers (relations −3)." % [str(s.name), str(pick.casting.title)], "bad")
+		return
 	var res: Dictionary = Game.submit_pitch(int(pick.casting.id), int(pick.roleIdx), int(pick.client.id))
 	if not bool(res.get("success", false)):
 		Game.log_msg("%s pitched %s for “%s” — the studio passed. Filed under experience." % [str(s.name), Game.client_name(pick.client), str(pick.casting.title)], "info")
@@ -183,6 +231,11 @@ func _exec_pitch(s: Dictionary, pick: Dictionary) -> void:
 	# Charakterzug färbt die Gage: Studiofreunde geben zu schnell nach.
 	Game.pitch_ctx.fee = roundi(float(Game.pitch_ctx.fee) * (1.0 + float(trait_def(s).get("fee", 0.0)) + float(s.skill) / 1000.0))
 	Game.accept_offer()
+	# Persönliche Betreuung (Feature 34): große Namen merken, wenn nur
+	# der Angestellte anruft.
+	if float(pick.client.fame) >= 60.0:
+		Game.change_trust(pick.client, -2.0)
+		Game.log_msg("%s notices the boss didn't make this call personally." % Game.client_name(pick.client), "info")
 	Game.log_msg("%s closes: %s takes a role in “%s”. Delegation, when it works." % [str(s.name), Game.client_name(pick.client), str(pick.casting.title)], "deal")
 	Mogul.grant_xp("leadership", 1.0, "A staffer closed a deal")
 
@@ -246,6 +299,12 @@ func _coldest_contact() -> Dictionary:
 
 func _care_gesture(s: Dictionary, ct: Dictionary) -> void:
 	Game.book(-roundf(8.0 * Game.infl(_st().year)), "buero", "Care desk: flowers & couriers")
+	# Fehler (Feature 33): die falsche Karte zum falschen Anlass
+	if Game.chance(mishap_chance(s)):
+		Network.adjust(ct, {"irritation": 3.0, "liking": -1.0}, false)
+		Persona._memory(ct, "%s sent condolences — to a premiere. People talk." % str(s.name))
+		Game.log_msg("%s mixes up the card files — %s got the wrong flowers with the wrong note." % [str(s.name), str(ct.name)], "bad")
+		return
 	Network.adjust(ct, {"liking": 1.5 + float(s.skill) / 60.0, "closeness": 1.0}, false)
 	ct.lastMi = Game.mi()
 	Persona._memory(ct, "%s kept in touch on the agency's behalf." % str(s.name))
@@ -299,15 +358,74 @@ func _work_crisis(s: Dictionary, events: Array) -> void:
 		]})
 
 
+# Warnzeichen für das Morgen-Briefing (Feature 33/35).
+func briefing_items() -> Array:
+	var items: Array = []
+	for s in _st().get("staff", []):
+		if float(s.get("loyalty", 55.0)) < 40.0:
+			items.append("🗂 %s seems restless lately — a raise or lighter load might keep them%s." % [str(s.name),
+				" (loyalty %d)" % roundi(float(s.loyalty)) if bias_visible() else ""])
+		elif float(s.get("load", 0.0)) >= 70.0:
+			items.append("🗂 %s is drowning in files — overloaded people make expensive mistakes." % str(s.name))
+	return items
+
+
 # =====================================================================
-# Monats-Tick: Löhne, Lernen, Führungserfahrung
+# Monats-Tick: Löhne, Lernen, Loyalität — und Abwerbung (Feature 35)
 # =====================================================================
-func tick_month() -> void:
+func tick_month(events: Array = []) -> void:
 	var st := _st()
 	if st == null or not st.has("staff"):
 		return
-	for s in st.staff:
+	for s in st.staff.duplicate():
 		Game.book(-wage(s), "buero", "Wages: %s (%s)" % [str(s.name), str(Data.STAFF_FOCI.get(str(s.focus), {}).get("name", "?"))])
 		s.skill = clampi(int(s.skill) + (2 if Mogul.has_ability("mentor") else 1), 10, 95)
+		# Loyalität (Feature 33): Vertrauen und Erfolg binden, Überlastung
+		# und Bevormundung treiben fort.
+		var drift := 0.0
+		drift += 1.5 if str(s.mode) == "auto" else (0.0 if str(s.mode) == "propose" else -1.5)
+		drift -= 2.0 if float(s.get("load", 0.0)) >= 70.0 else 0.0
+		drift += 1.0 if int(st.agency.rep) >= 60 else 0.0
+		s.loyalty = clampf(float(s.get("loyalty", 55.0)) + drift, 0.0, 100.0)
+		# Abwerbung & Abspaltung (Feature 35): gute Leute mit schlechter
+		# Bindung gehen — zur Konkurrenz oder in die Selbstständigkeit.
+		if float(s.loyalty) < 30.0 and int(s.skill) >= 55 and Game.chance(0.15):
+			_defect(s, events)
 	if st.staff.size():
 		Mogul.grant_xp("leadership", 0.5 * st.staff.size(), "Running a staff")
+
+
+func _defect(s: Dictionary, events: Array) -> void:
+	var st := _st()
+	st.staff.erase(s)
+	var takes_client: bool = str(s.focus) == "deals" and st.clients.size() > 0 and Game.chance(0.5)
+	var poached = null
+	if takes_client:
+		for c in st.clients:
+			if poached == null or float(c.loyalty) < float(poached.loyalty):
+				poached = c
+	if Game.chance(0.5) and st.rivals.size() > 0:
+		# Zur Konkurrenz — mit Aktenkenntnis und schlechtem Gewissen.
+		var rival: Dictionary = Game.pick(st.rivals)
+		rival.grudge = clampf(float(rival.grudge) + 10.0, 0.0, 100.0)
+		if poached != null:
+			Game.rival_poach_client(str(rival.id), poached)
+		Network.memoir("%s defected to %s%s — trained by you, used against you." % [str(s.name), str(rival.name), " and took %s along" % Game.client_name(poached) if poached != null else ""], [str(s.name)])
+		events.append({"title": "A defection", "text": "[b]%s[/b] clears the desk overnight and reappears at %s%s.\n\nEverything they know about your files, they now know for the other side." % [str(s.name), str(rival.name), " — with %s in tow" % Game.client_name(poached) if poached != null else ""], "choices": [{"label": "Change the locks"}]})
+		Game.log_msg("%s defects to %s. Loyalty is a wage you didn't pay." % [str(s.name), str(rival.name)], "bad")
+	else:
+		# Die eigene Agentur — der Traum jedes guten Angestellten.
+		var name_parts := str(s.name).split(" ")
+		var tail := str(name_parts[name_parts.size() - 1])
+		var new_rival := {"id": "spinoff_%d" % Game.next_id(), "name": "%s & Associates" % tail,
+			"style": "nachwuchs", "clients": [], "grudge": 20.0, "rel": 0.0,
+			"studioId": str(Game.active_studios()[0].id) if Game.active_studios().size() else ""}
+		st.rivals.append(new_rival)
+		if poached != null:
+			Game.rival_poach_client(str(new_rival.id), poached)
+		Network.memoir("%s left to found %s — your training, their letterhead." % [str(s.name), str(new_rival.name)], [str(s.name)])
+		var spin_extra := ", with %s as founding client" % Game.client_name(poached) if poached != null else ""
+		events.append({"title": "A spin-off",
+			"text": "[b]%s[/b] resigns — politely, finally — and opens [b]%s[/b] three blocks away%s.\n\nThe town loves nothing more than a protégé with sharp elbows." % [str(s.name), str(new_rival.name), spin_extra],
+			"choices": [{"label": "Send flowers. Sharpen knives."}]})
+		Game.log_msg("%s founds %s — the market just got one agency more crowded." % [str(s.name), str(new_rival.name)], "bad")

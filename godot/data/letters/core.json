@@ -99,8 +99,8 @@
       "expire_weeks": 2,
       "choices": [
         {"label": "Make time for them (1⏱)", "requirements": {"ap": 1},
-          "effects": [{"op": "meet_someone", "origin": "again, after all these years"}, {"op": "player", "stress": -4}],
-          "outcome": "Two hours with someone who knew you before you mattered. Cheaper than any doctor, and twice as honest."},
+          "effects": [{"op": "private_life", "action": "friend_add"}, {"op": "player", "stress": -4}],
+          "outcome": "Two hours with someone who knew you before you mattered. Cheaper than any doctor, and twice as honest — a friendship outside the business."},
         {"label": "Have the office send regrets",
           "effects": [],
           "outcome": "A polite note on agency paper. Some doors close so quietly you never hear it."}
@@ -150,6 +150,59 @@
           "outcome": "No reply. In this town, unpaid debts do not disappear — they compound, in whispers."}
       ],
       "expire_effects": [{"op": "refuse_debt"}]},
+
+    {"id": "courtship", "weight": 0, "manual": true, "from_type": "stranger",
+      "subject": "A note that is not about business",
+      "body": "A short letter from {sender} — no agency matter, no favor, no angle. Just an invitation to dinner, for its own sake. When did you last get one of those?",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Say yes (1⏱)", "requirements": {"ap": 1},
+          "effects": [{"op": "private_life", "action": "courtship_accept"}],
+          "outcome": "Dinner runs long, and for once nobody at the table wants anything from you. You will see each other again."},
+        {"label": "Decline — the work comes first",
+          "effects": [{"op": "private_life", "action": "courtship_decline"}],
+          "outcome": "You write a courteous no. The work is still there in the morning. It always is."}
+      ]},
+
+    {"id": "partner_evening", "weight": 0, "manual": true, "from_type": "stranger",
+      "subject": "An evening that belongs to you two",
+      "body": "{sender} suggests an evening — no premiere, no table full of producers. Just the two of you, somewhere quiet.",
+      "expire_weeks": 1,
+      "choices": [
+        {"label": "Keep the evening free (1⏱)", "requirements": {"ap": 1},
+          "effects": [{"op": "private_life", "action": "evening"}],
+          "outcome": "For a few hours the town does not exist. You come back lighter — and remembered why."},
+        {"label": "Cancel — the week is on fire",
+          "effects": [{"op": "private_life", "action": "partner_rel", "amount": -6}],
+          "outcome": "You cancel, kindly, with reasons. Reasons are what one always has."}
+      ],
+      "expire_effects": [{"op": "private_life", "action": "partner_rel", "amount": -8}]},
+
+    {"id": "partner_conflict", "weight": 0, "manual": true, "from_type": "stranger",
+      "subject": "\"We need to talk.\"",
+      "body": "{sender} is not angry, which is worse. The premieres you missed, the calls at dinner, the town that always comes first — it has a price, and it is being named now.",
+      "expire_weeks": 1,
+      "choices": [
+        {"label": "Talk it out — honestly (1⏱)", "requirements": {"ap": 1},
+          "effects": [{"op": "private_life", "action": "tension"}],
+          "outcome": "A long evening, some of it hard to hear. But the air is clear afterward — clearer than in months."},
+        {"label": "Bury it under a gift",
+          "effects": [{"op": "private_life", "action": "partner_rel", "amount": -8}, {"op": "money_private", "amount": -60, "inflate": true, "label": "A guilt gift"}],
+          "outcome": "The bracelet is beautiful. The silence it buys is not."}
+      ]},
+
+    {"id": "partner_proposal", "weight": 0, "manual": true, "from_type": "stranger",
+      "subject": "A question, long overdue",
+      "body": "Between two ordinary sentences, {sender} asks the question that changes the shape of a life. The town, for once, has no opinion you care about.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Yes.",
+          "effects": [{"op": "private_life", "action": "proposal_accept"}],
+          "outcome": "Yes. The rest of the week is paperwork and champagne, in that order."},
+        {"label": "Not yet",
+          "effects": [{"op": "private_life", "action": "partner_rel", "amount": -15}],
+          "outcome": "\"Not yet\" is an answer that ages badly. You both pretend it didn't."}
+      ]},
 
     {"id": "gala_invitation", "weight": 1, "from_type": "gastgeberin",
       "conditions": {"min_career": 1, "chance": 0.6},

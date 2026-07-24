@@ -1,48 +1,206 @@
 {
-  "homes": [
-    {"id": "room", "name": "Furnished room, boarding house", "icon": "🛏", "tier": 0, "price": 0, "upkeep": 0,
-      "prestige": 0, "privacy": 0, "capacity": 0, "paparazzi": 0.0,
-      "desc": "A bed, a desk, a shared phone in the hallway. Nobody expects anything from you here."},
-    {"id": "apartment", "name": "Small apartment, Franklin Avenue", "icon": "🏢", "tier": 1, "price": 3500, "upkeep": 25,
-      "prestige": 4, "privacy": 5, "capacity": 0, "paparazzi": 0.0,
-      "desc": "Your own four walls close to the office — modest, but an address you can print on a card."},
-    {"id": "hills", "name": "House in the Hollywood Hills", "icon": "🏡", "tier": 2, "price": 16000, "upkeep": 90,
-      "prestige": 10, "privacy": 12, "capacity": 6, "paparazzi": 0.04,
-      "desc": "A view over the city and a terrace big enough for a first small reception."},
-    {"id": "retreat", "name": "Discreet retreat near Ojai", "icon": "🌵", "tier": 2, "price": 20000, "upkeep": 110,
-      "prestige": 4, "privacy": 30, "capacity": 3, "paparazzi": 0.01, "effects": {"stressMonthly": -2},
-      "desc": "No columnist knows this driveway. For conversations — and weekends — that never happened."},
-    {"id": "malibu", "name": "Beach house in Malibu", "icon": "🏖", "tier": 3, "price": 42000, "upkeep": 200,
-      "prestige": 15, "privacy": 18, "capacity": 8, "paparazzi": 0.05, "effects": {"stressMonthly": -3},
-      "desc": "The Pacific at breakfast. Guests relax here — and so, occasionally, do you."},
-    {"id": "beverly", "name": "Villa in Beverly Hills", "icon": "🏛", "tier": 3, "price": 55000, "upkeep": 260,
-      "prestige": 20, "privacy": 8, "capacity": 12, "paparazzi": 0.10,
-      "desc": "The address that ends every discussion about your standing — and starts a few about your bills."}
-  ],
-  "purchases": [
-    {"id": "car", "name": "Automobile & chauffeur", "icon": "🚗", "price": 2200, "upkeep": 40, "resale": 0.4,
-      "effects": {"energyWeekly": 2},
-      "desc": "Someone else fights the traffic. You arrive rested (+2 energy per week)."},
-    {"id": "club_mem", "name": "Private club membership", "icon": "🥃", "price": 800, "upkeep": 35, "resale": 0.0,
-      "effects": {"clubCostMult": 0.5},
-      "desc": "Members pay half. Club evenings with your contacts cost 50% less."},
-    {"id": "wardrobe", "name": "Wardrobe & stylist", "icon": "🎩", "price": 500, "upkeep": 30, "resale": 0.0,
-      "effects": {"pubRepMonthly": 0.8},
-      "desc": "The right suit in the right room. Public reputation drifts slowly upward."},
-    {"id": "security", "name": "Security service", "icon": "🛡", "price": 700, "upkeep": 55, "resale": 0.0,
-      "effects": {"paparazziMult": 0.4},
-      "desc": "Discreet men at the gate. Paparazzi incidents at your home become much rarer."},
-    {"id": "staff", "name": "Household staff", "icon": "🧹", "price": 400, "upkeep": 45, "resale": 0.0, "req_tier": 2,
-      "effects": {"stressMonthly": -3},
-      "desc": "A cook and a housekeeper. Home actually means rest now (stress −3 per month)."},
-    {"id": "art", "name": "Art collection", "icon": "🖼", "price": 5000, "upkeep": 8, "resale": 1.0, "appreciation": 0.004,
-      "effects": {"indRepMonthly": 0.5},
-      "desc": "Old masters impress old money. Gains value over the years and can be sold again."},
-    {"id": "manhattan", "name": "Apartment in Manhattan", "icon": "🗽", "price": 28000, "upkeep": 140, "resale": 0.85,
-      "effects": {"nyTravelFree": 1, "pubRepMonthly": 0.5},
-      "desc": "A second address on the East Coast: trips to New York cost the agency nothing."},
-    {"id": "jet", "name": "Private-jet share", "icon": "✈", "price": 25000, "upkeep": 280, "resale": 0.5, "from": 1955,
-      "effects": {"travelCostMult": 0.5, "travelEnergyMult": 0.5},
-      "desc": "Your own wings: travel costs and travel fatigue are cut in half."}
-  ]
+	"homes": [
+		{
+			"id": "room",
+			"name": "Furnished room, boarding house",
+			"icon": "🛏",
+			"tier": 0,
+			"price": 0,
+			"upkeep": 0,
+			"prestige": 0,
+			"privacy": 0,
+			"capacity": 0,
+			"paparazzi": 0.0,
+			"desc": "A bed, a desk, a shared phone in the hallway. Nobody expects anything from you here."
+		},
+		{
+			"id": "apartment",
+			"name": "Small apartment, Franklin Avenue",
+			"icon": "🏢",
+			"tier": 1,
+			"price": 3500,
+			"upkeep": 25,
+			"prestige": 4,
+			"privacy": 5,
+			"capacity": 0,
+			"paparazzi": 0.0,
+			"desc": "Your own four walls close to the office — modest, but an address you can print on a card."
+		},
+		{
+			"id": "hills",
+			"name": "House in the Hollywood Hills",
+			"icon": "🏡",
+			"tier": 2,
+			"price": 16000,
+			"upkeep": 90,
+			"prestige": 10,
+			"privacy": 12,
+			"capacity": 6,
+			"paparazzi": 0.04,
+			"desc": "A view over the city and a terrace big enough for a first small reception."
+		},
+		{
+			"id": "retreat",
+			"name": "Discreet retreat near Ojai",
+			"icon": "🌵",
+			"tier": 2,
+			"price": 20000,
+			"upkeep": 110,
+			"prestige": 4,
+			"privacy": 30,
+			"capacity": 3,
+			"paparazzi": 0.01,
+			"effects": {
+				"stressMonthly": -2
+			},
+			"desc": "No columnist knows this driveway. For conversations — and weekends — that never happened."
+		},
+		{
+			"id": "malibu",
+			"name": "Beach house in Malibu",
+			"icon": "🏖",
+			"tier": 3,
+			"price": 42000,
+			"upkeep": 200,
+			"prestige": 15,
+			"privacy": 18,
+			"capacity": 8,
+			"paparazzi": 0.05,
+			"effects": {
+				"stressMonthly": -3
+			},
+			"desc": "The Pacific at breakfast. Guests relax here — and so, occasionally, do you."
+		},
+		{
+			"id": "beverly",
+			"name": "Villa in Beverly Hills",
+			"icon": "🏛",
+			"tier": 3,
+			"price": 55000,
+			"upkeep": 260,
+			"prestige": 20,
+			"privacy": 8,
+			"capacity": 12,
+			"paparazzi": 0.1,
+			"desc": "The address that ends every discussion about your standing — and starts a few about your bills."
+		}
+	],
+	"purchases": [
+		{
+			"id": "car",
+			"name": "Automobile & chauffeur",
+			"icon": "🚗",
+			"price": 2200,
+			"upkeep": 40,
+			"resale": 0.4,
+			"effects": {
+				"energyWeekly": 2
+			},
+			"desc": "Someone else fights the traffic. You arrive rested (+2 energy per week)."
+		},
+		{
+			"id": "club_mem",
+			"name": "Private club membership",
+			"icon": "🥃",
+			"price": 800,
+			"upkeep": 35,
+			"resale": 0.0,
+			"effects": {
+				"clubCostMult": 0.5
+			},
+			"desc": "Members pay half. Club evenings with your contacts cost 50% less."
+		},
+		{
+			"id": "wardrobe",
+			"name": "Wardrobe & stylist",
+			"icon": "🎩",
+			"price": 500,
+			"upkeep": 30,
+			"resale": 0.0,
+			"effects": {
+				"pubRepMonthly": 0.8
+			},
+			"desc": "The right suit in the right room. Public reputation drifts slowly upward."
+		},
+		{
+			"id": "security",
+			"name": "Security service",
+			"icon": "🛡",
+			"price": 700,
+			"upkeep": 55,
+			"resale": 0.0,
+			"effects": {
+				"paparazziMult": 0.4
+			},
+			"desc": "Discreet men at the gate. Paparazzi incidents at your home become much rarer."
+		},
+		{
+			"id": "staff",
+			"name": "Household staff",
+			"icon": "🧹",
+			"price": 400,
+			"upkeep": 45,
+			"resale": 0.0,
+			"req_tier": 2,
+			"effects": {
+				"stressMonthly": -3
+			},
+			"desc": "A cook and a housekeeper. Home actually means rest now (stress −3 per month)."
+		},
+		{
+			"id": "art",
+			"name": "Art collection",
+			"icon": "🖼",
+			"price": 5000,
+			"upkeep": 8,
+			"resale": 1.0,
+			"appreciation": 0.004,
+			"effects": {
+				"indRepMonthly": 0.5
+			},
+			"desc": "Old masters impress old money. Gains value over the years and can be sold again."
+		},
+		{
+			"id": "manhattan",
+			"name": "Apartment in Manhattan",
+			"icon": "🗽",
+			"price": 28000,
+			"upkeep": 140,
+			"resale": 0.85,
+			"effects": {
+				"nyTravelFree": 1,
+				"pubRepMonthly": 0.5
+			},
+			"desc": "A second address on the East Coast: trips to New York cost the agency nothing."
+		},
+		{
+			"id": "jet",
+			"name": "Private-jet share",
+			"icon": "✈",
+			"price": 25000,
+			"upkeep": 280,
+			"resale": 0.5,
+			"from": 1955,
+			"effects": {
+				"travelCostMult": 0.5,
+				"travelEnergyMult": 0.5
+			},
+			"desc": "Your own wings: travel costs and travel fatigue are cut in half."
+		},
+		{
+			"id": "own_club",
+			"name": "Your own private club",
+			"icon": "🍸",
+			"price": 22000,
+			"upkeep": 180,
+			"resale": 0.7,
+			"effects": {
+				"clubCostMult": 0.25,
+				"receptionCostMult": 0.5,
+				"incomeMonthly": 120,
+				"pubRepMonthly": 0.5
+			},
+			"desc": "The back room is YOUR back room now: club nights cost a quarter, receptions half, and the bar turns a small profit."
+		}
+	]
 }

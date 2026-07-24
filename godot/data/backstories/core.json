@@ -4,54 +4,170 @@
 		"name": "Ex-Studio Junior",
 		"icon": "🎬",
 		"desc": "Ten years you served in the mailroom, the anteroom and on the sets of a big studio. You know the hallways, the names — and the shortcuts.",
-		"start": {"cash_add": 0, "rep_add": 2, "favors": ["billing"], "studio_rel_style": {"prestige": 8, "commercial": 8, "indie": -5}},
-		"trait": {"de": "House scent: studio dinners are one and a half times as effective.", "effects": {"dinner_mult": 1.5}},
-		"weakness": {"de": "The indie scene considers you a corporate creature.", "effects": {}},
+		"start": {
+			"cash_add": 0,
+			"rep_add": 2,
+			"favors": [
+				"billing"
+			],
+			"studio_rel_style": {
+				"prestige": 8,
+				"commercial": 8,
+				"indie": -5
+			},
+			"skills_xp": {
+				"networking": 10,
+				"contracts": 5
+			},
+			"contacts_extra": [
+				"studio"
+			]
+		},
+		"trait": {
+			"de": "House scent: studio dinners are one and a half times as effective.",
+			"effects": {
+				"dinner_mult": 1.5
+			}
+		},
+		"weakness": {
+			"de": "The indie scene considers you a corporate creature.",
+			"effects": {}
+		},
 		"client_capacity_mod": 0,
-		"chains": ["junior_alter_chef"]
+		"chains": [
+			"junior_alter_chef"
+		]
 	},
 	{
 		"id": "kolumnist",
 		"name": "Gossip Columnist",
 		"icon": "🖋",
 		"desc": "For years you wrote for the gossip columns. You know every doorman, every dresser — and every skeleton in this town's closets.",
-		"start": {"cash_add": -15000, "instinct_add": 10, "favors": ["suppressStory"]},
-		"trait": {"de": "Ear to the town: new rumors reach you instantly, press work already counts from 1 slot.", "effects": {"rumor_auto_known": 1.0, "presse_slot_bonus": 1}},
-		"weakness": {"de": "The studios don't quite trust you.", "effects": {}},
+		"start": {
+			"cash_add": -15000,
+			"instinct_add": 10,
+			"favors": [
+				"suppressStory"
+			],
+			"skills_xp": {
+				"media": 12,
+				"crisis": 8
+			},
+			"contacts_extra": [
+				"journalist"
+			]
+		},
+		"trait": {
+			"de": "Ear to the town: new rumors reach you instantly, press work already counts from 1 slot.",
+			"effects": {
+				"rumor_auto_known": 1.0,
+				"presse_slot_bonus": 1
+			}
+		},
+		"weakness": {
+			"de": "The studios don't quite trust you.",
+			"effects": {}
+		},
 		"client_capacity_mod": 0,
-		"chains": ["kolumnist_alte_quelle"]
+		"chains": [
+			"kolumnist_alte_quelle"
+		]
 	},
 	{
 		"id": "anwalt",
 		"name": "Lawyer",
 		"icon": "⚖",
 		"desc": "You drafted contracts, picked them apart and saved them. Now you sit on the other side of the table — with reserves and a reputation for watertight clauses.",
-		"start": {"cash_add": 25000, "instinct_add": -8},
-		"trait": {"de": "Watertight: your contract offers come across far more convincing.", "effects": {"nego_bonus": 6}},
-		"weakness": {"de": "Paragraphs instead of gut feeling: your instinct starts lower.", "effects": {}},
+		"start": {
+			"cash_add": 25000,
+			"instinct_add": -8,
+			"skills_xp": {
+				"contracts": 15,
+				"negotiation": 5
+			},
+			"contacts_extra": [
+				"anwalt"
+			]
+		},
+		"trait": {
+			"de": "Watertight: your contract offers come across far more convincing.",
+			"effects": {
+				"nego_bonus": 6
+			}
+		},
+		"weakness": {
+			"de": "Paragraphs instead of gut feeling: your instinct starts lower.",
+			"effects": {}
+		},
 		"client_capacity_mod": 1,
-		"chains": ["anwalt_alte_akte"]
+		"chains": [
+			"anwalt_alte_akte"
+		]
 	},
 	{
 		"id": "gescheitert",
 		"name": "Failed Actor",
 		"icon": "🎭",
 		"desc": "Three auditions away from the breakthrough that never came. You know how your clients' dreams feel — you had the same ones.",
-		"start": {"cash_add": -10000, "rep_add": -4, "instinct_add": 5},
-		"trait": {"de": "Empathy: you read talent more precisely (tighter grade spreads) and gain trust faster (×1.25).", "effects": {"grade_spread_add": -3, "trust_gain_mult": 1.25}},
-		"weakness": {"de": "People remember your flops — your reputation starts lower.", "effects": {}},
+		"start": {
+			"cash_add": -10000,
+			"rep_add": -4,
+			"instinct_add": 5,
+			"skills_xp": {
+				"talent": 12,
+				"people": 8
+			},
+			"contacts_extra": [
+				"regisseur"
+			]
+		},
+		"trait": {
+			"de": "Empathy: you read talent more precisely (tighter grade spreads) and gain trust faster (×1.25).",
+			"effects": {
+				"grade_spread_add": -3,
+				"trust_gain_mult": 1.25
+			}
+		},
+		"weakness": {
+			"de": "People remember your flops — your reputation starts lower.",
+			"effects": {}
+		},
 		"client_capacity_mod": 0,
-		"chains": ["gescheitert_alte_rolle"]
+		"chains": [
+			"gescheitert_alte_rolle"
+		]
 	},
 	{
 		"id": "aufsteiger",
 		"name": "Self-Made Climber",
 		"icon": "💼",
 		"desc": "From paperboy to businessman — nobody gave you anything. Your capital is real; your name just doesn't mean anything in Bel Air yet.",
-		"start": {"cash_add": 45000, "rep_add": -7},
-		"trait": {"de": "Every dollar counts: office costs permanently −10%.", "effects": {"office_cost_mult": 0.9}},
-		"weakness": {"de": "A-listers demand extra reputation from upstarts (+5).", "effects": {"required_rep_add": 5}},
+		"start": {
+			"cash_add": 45000,
+			"rep_add": -7,
+			"skills_xp": {
+				"finance": 12,
+				"leadership": 5
+			},
+			"contacts_extra": [
+				"financier"
+			]
+		},
+		"trait": {
+			"de": "Every dollar counts: office costs permanently −10%.",
+			"effects": {
+				"office_cost_mult": 0.9
+			}
+		},
+		"weakness": {
+			"de": "A-listers demand extra reputation from upstarts (+5).",
+			"effects": {
+				"required_rep_add": 5
+			}
+		},
 		"client_capacity_mod": 0,
-		"chains": ["aufsteiger_alte_schulden"]
+		"chains": [
+			"aufsteiger_alte_schulden"
+		]
 	}
 ]

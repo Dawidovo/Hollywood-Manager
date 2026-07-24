@@ -542,6 +542,17 @@ func _apply_backstory_start() -> void:
 	state.instinct = clampi(int(state.instinct) + int(start.get("instinct_add", 0)), 5, 100)
 	for kind_s in start.get("favors", []):
 		grant_favor(str(kind_s), favor_contact_for(str(kind_s)), true)
+	# Biografischer Start (Feature 41): frühere Tätigkeiten bringen
+	# Fähigkeiten und ein anfängliches Netzwerk mit.
+	for field in start.get("skills_xp", {}):
+		Mogul.grant_xp(str(field), float(start.skills_xp[field]), "Backstory: %s" % str(b.name))
+	for ctype in start.get("contacts_extra", []):
+		if Data.CONTACT_PERSONS.has(str(ctype)):
+			var cname := str(pick(Data.CONTACT_PERSONS[str(ctype)]))
+			if not state.contacts.any(func(ct): return str(ct.name) == cname):
+				var new_ct: Dictionary = Persona._add_contact(str(ctype), cname)
+				Network.adjust(new_ct, {"liking": 10.0, "trust": 8.0}, false)
+				Persona._memory(new_ct, "Knows you from your years before the agency.")
 	var by_style: Dictionary = start.get("studio_rel_style", {})
 	var rel_all := int(start.get("studio_rel_all", 0))
 	for s in Data.STUDIOS:
@@ -1923,7 +1934,8 @@ func haggle() -> Dictionary:
 		p = clampf(p + 0.07, 0.1, 0.92)
 	pitch_ctx.haggled = true
 	if chance(p):
-		pitch_ctx.fee = roundi(pitch_ctx.fee * 1.25)
+		# Spezialisierung (Feature 42): der Meisterverhandler holt mehr heraus
+		pitch_ctx.fee = roundi(pitch_ctx.fee * (1.32 if Mogul.has_ability("master_negotiator") else 1.25))
 		return {"success": true, "fee": pitch_ctx.fee}
 	Mogul.grant_xp("negotiation", 1.0, "A failed haggle teaches")
 	# „Second pass“: wer weiß, wann Schluss ist, sprengt selten den Deal
@@ -2130,8 +2142,8 @@ func _month_close(events: Array) -> void:
 	Mogul.tick_month(events)
 	# Netzwerk-Cluster (Features 10–15): Kapital zahlt aus, Ärger kühlt ab
 	Network.tick_month()
-	# Mitarbeiter: Löhne & Lernen (Features 32–36)
-	Staff.tick_month()
+	# Mitarbeiter: Löhne, Lernen, Loyalität & Abwerbung (Features 32–36)
+	Staff.tick_month(events)
 	_close_ledger_month(mi())
 	state.month = int(state.month) + 1
 	if state.month > 12:
@@ -2936,6 +2948,9 @@ func tick_predictions(_events: Array) -> void:
 func pool_spread() -> float:
 	var base := 9.0 - float(state.get("instinct", 20)) / 100.0 * 5.0
 	base -= float(state.get("scoutBonus", 0))
+	# Spezialisierung (Feature 42): der Meister-Scout schätzt fast exakt
+	if Mogul.has_ability("master_scout"):
+		base -= 2.0
 	return clampf(base, 2.0, 9.0)
 
 # Bauchgefühl-Hinweis bei hohem Instinkt (ab 55) — oder mit trainiertem Bauch (Feature 6)

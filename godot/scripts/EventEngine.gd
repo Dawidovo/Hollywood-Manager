@@ -355,6 +355,11 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 				gate.rel = clampf(float(gate.rel) + amount, 0.0, 100.0)
 		"memoir":
 			Network.memoir(subst(str(ef.get("text", "")), ctx))
+		# Privatleben (Feature 44): Partnerschaft, Freundschaften, Familie
+		"private_life":
+			var line := Persona.private_action(str(ef.get("action", "")), amount, str(ctx.get("sender", "")))
+			if line != "":
+				_say(line, ctx)
 		# Gefallen als Verpflichtungen (Feature 31): eingeforderte Schulden
 		"settle_debt":
 			var debt := _debt_from_sender(ctx)

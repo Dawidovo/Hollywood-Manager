@@ -105,6 +105,22 @@ func has_ability(id_s: String) -> bool:
 	return false
 
 
+# Spezialisierung (Feature 42): das stärkste Feld ab Level 3 prägt, als
+# was die Branche dich sieht — Verhandler, Talentspäher, Netzwerker …
+func specialization() -> Dictionary:
+	var best_field := ""
+	var best_lvl := 2
+	for field in Data.SKILL_FIELDS:
+		var lvl := level(str(field))
+		if lvl > best_lvl:
+			best_lvl = lvl
+			best_field = str(field)
+	if best_field == "":
+		return {}
+	return {"field": best_field, "level": best_lvl,
+		"label": str(Data.SKILL_SPECIALIZATIONS.get(best_field, Data.SKILL_FIELDS[best_field].name))}
+
+
 # The next ability this field will unlock (empty dict = none left).
 func next_ability(field: String) -> Dictionary:
 	var lvl := level(field)
@@ -321,7 +337,11 @@ func can_host() -> bool:
 
 
 func reception_cost() -> float:
-	return roundf(25.0 * float(home_def().get("capacity", 0)) * Game.infl(_st().year))
+	var mult := _effect_mult("receptionCostMult")
+	# Spezialisierung (Feature 42): beim Meister-Netzwerker zahlt der Ruf mit
+	if has_ability("master_networker"):
+		mult *= 0.5
+	return roundf(25.0 * float(home_def().get("capacity", 0)) * Game.infl(_st().year) * mult)
 
 
 func host_reception() -> String:
@@ -371,6 +391,10 @@ func _tick_estate_month() -> void:
 	var upkeep := upkeep_total()
 	if upkeep > 0.0:
 		Persona.book(-upkeep, "Upkeep: home & lifestyle")
+	# Eigener Club & Co. (Feature 43): mancher Besitz wirft etwas ab
+	var income := effect_sum("incomeMonthly")
+	if income > 0.0:
+		Persona.book(roundf(income * Game.infl(st.year)), "Proceeds: your own establishments")
 	p.pubRep = clampf(float(p.pubRep) + float(h.get("prestige", 0)) * 0.08 + effect_sum("pubRepMonthly"), 0.0, 100.0)
 	p.indRep = clampf(float(p.indRep) + effect_sum("indRepMonthly"), 0.0, 100.0)
 	p.discretion = clampf(float(p.discretion) + float(h.get("privacy", 0)) * 0.05, 0.0, 100.0)
@@ -768,6 +792,8 @@ func on_release(prod: Dictionary, revenue: int, ratio: float, _quality: int) -> 
 			payout = float(stk.amount) * 2.2 * maxf(0.0, ratio - 1.4)
 		if has_ability("green_light"):
 			payout *= 1.1
+		if has_ability("master_investor"):
+			payout *= 1.05
 		payout = roundf(payout)
 		if payout > 0.0:
 			Persona.book(payout, "Film stake payout: “%s”" % str(prod.title))
@@ -1250,6 +1276,11 @@ func tick_month(events: Array) -> void:
 	_tick_invest_month(events)
 	_tick_backroom_month(events)
 	_tick_endgame_month()
+	# Spezialisierung (Feature 42): der Meister-Fixer lässt Geschichten altern
+	if has_ability("master_fixer"):
+		for rumor in st.rumors:
+			if bool(rumor.knownToPlayer):
+				rumor.belief = maxf(0.0, float(rumor.belief) - 3.0)
 	# Crisis radar: once a month, a rumor finds YOU.
 	if has_ability("early_warning"):
 		for rumor in st.rumors:

@@ -24,7 +24,7 @@ const KNOWN_OPS := ["money", "rep", "instinct", "fame", "mood", "heat", "exhaust
 	"loyalty", "trust", "dna", "flag_set", "studio_rel", "favor_grant", "favor_consume",
 	"favor_owe", "rumor", "identity", "log", "followup", "chance", "dims", "fact", "memory",
 	"promise", "xp", "player", "money_private", "tip", "rumor_reveal", "casting_spawn",
-	"meet_someone", "seal_deal", "gate_rel", "memoir", "settle_debt", "refuse_debt"]
+	"meet_someone", "seal_deal", "gate_rel", "memoir", "settle_debt", "refuse_debt", "private_life"]
 const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio"]
 
 # Laufender Dialog (nur zur Laufzeit, wird nie gespeichert).
@@ -414,6 +414,14 @@ func spawn_letter_for(template_id: String, ct: Dictionary) -> Dictionary:
 	if not ct.is_empty():
 		sender = {"name": str(ct.name), "type": str(ct.type), "ctid": int(ct.id)}
 	return _spawn_letter_with(def, sender)
+
+
+# Brief mit frei benanntem Absender (Privatleben: Partner sind keine Kontakte).
+func spawn_letter_named(template_id: String, sender_name: String) -> Dictionary:
+	var def := letter_def(template_id)
+	if def.is_empty():
+		return {}
+	return _spawn_letter_with(def, {"name": sender_name, "type": "privat"})
 
 
 func _spawn_letter_with(def: Dictionary, sender: Dictionary) -> Dictionary:

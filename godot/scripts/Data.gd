@@ -41,6 +41,7 @@ var ESTATE_PURCHASE_BY_ID: Dictionary = {}
 var SKILL_FIELDS: Dictionary = {}
 var SKILL_ABILITIES: Array = []
 var SKILL_THRESHOLDS: Array = []
+var SKILL_SPECIALIZATIONS: Dictionary = {}
 var STOCKS: Array = []
 var BACKROOM_DEALS: Array = []
 var BACKROOM_BY_ID: Dictionary = {}
@@ -107,6 +108,7 @@ func reload() -> void:
 	SKILL_FIELDS = skills.get("fields", {})
 	SKILL_ABILITIES = skills.get("abilities", [])
 	SKILL_THRESHOLDS = skills.get("thresholds", [0, 10, 25, 45, 70, 100])
+	SKILL_SPECIALIZATIONS = skills.get("specializations", {})
 	STOCKS = DataLoader.load_entries("stocks", ["id"],
 		{"from": 0, "to": 9999, "vol": 0.06, "drift": 0.003, "sector": "Media", "icon": "📈", "desc": ""},
 		["id", "name", "price"])

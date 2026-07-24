@@ -102,6 +102,8 @@ func seed_contact(ct: Dictionary) -> void:
 		ct["facts"] = []
 	if not ct.has("infoMi"):
 		ct["infoMi"] = -99
+	if not ct.has("lastPersonalMi"):
+		ct["lastPersonalMi"] = int(ct.get("lastMi", Game.mi()))
 	ct.rel = derived_rel(ct)
 
 
@@ -977,6 +979,19 @@ func tick_month() -> void:
 		# in the promise/contact tick.
 		if float(ct.dims.irritation) > 0.0:
 			adjust(ct, {"irritation": -2.0}, false)
+	# Persönliche Betreuung (Feature 34): wichtige Menschen merken, wenn
+	# monatelang nur noch das Personal erscheint.
+	for ct in st.contacts:
+		if not (is_vip(ct) or float(ct.rel) >= 60.0):
+			continue
+		if Game.mi() - int(ct.get("lastPersonalMi", Game.mi())) < 4 or Game.mi() - int(ct.lastMi) > 1:
+			continue
+		if ct.get("facts", []).any(func(f): return str(f.text) == "only ever sends the help"):
+			continue
+		adjust(ct, {"irritation": 3.0, "closeness": -3.0}, false)
+		add_fact(ct, "only ever sends the help", -1, 1.5)
+		Persona._memory(ct, "Months of couriers and assistants — you never come yourself anymore.")
+		Game.log_msg("%s notices that you only ever send the help these days." % str(ct.name), "bad")
 	_tick_occasions()
 	_tick_reveal_castings()
 	_spread_facts()

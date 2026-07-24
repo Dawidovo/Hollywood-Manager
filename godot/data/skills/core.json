@@ -1,57 +1,251 @@
 {
-  "thresholds": [0, 10, 25, 45, 70, 100],
-  "fields": {
-    "people": {"name": "People sense", "icon": "🧠", "desc": "Reading nervousness, bluffs and what someone really wants."},
-    "negotiation": {"name": "Negotiation", "icon": "🤝", "desc": "Getting more out of the room than you brought into it."},
-    "talent": {"name": "Talent judgement", "icon": "🎭", "desc": "Seeing the star before anyone else does — and the flop, too."},
-    "contracts": {"name": "Contract craft", "icon": "📜", "desc": "Finding the clause that bites three years from now."},
-    "finance": {"name": "Film finance", "icon": "💵", "desc": "Knowing what a picture is worth before the first ticket sells."},
-    "crisis": {"name": "Crisis management", "icon": "🚨", "desc": "Smelling smoke before the columnists see fire."},
-    "networking": {"name": "Networking", "icon": "🥂", "desc": "Being welcome in rooms you were never invited to."},
-    "leadership": {"name": "Leadership", "icon": "🧑‍💼", "desc": "Getting good work out of people who are not you."},
-    "discretion": {"name": "Discretion", "icon": "🤫", "desc": "Making sure what mustn't be written down never is."},
-    "media": {"name": "Media strategy", "icon": "🗞", "desc": "Feeding the press the story you want them to chew on."}
-  },
-  "abilities": [
-    {"id": "cold_read", "field": "people", "level": 2, "name": "Cold read",
-      "desc": "You spot hesitation and bluffs — client negotiations react far more predictably to your offers."},
-    {"id": "true_wish", "field": "people", "level": 4, "name": "The true wish",
-      "desc": "You always know what a person actually values: gifts to contacts never land badly again."},
-    {"id": "second_pass", "field": "negotiation", "level": 2, "name": "Second pass",
-      "desc": "A failed haggle rarely blows up the deal anymore — you know when to stop pushing."},
-    {"id": "closer", "field": "negotiation", "level": 4, "name": "The closer",
-      "desc": "Your haggling lands more often — studios respect an agent who knows the number."},
-    {"id": "sharp_eye", "field": "talent", "level": 2, "name": "Sharp eye",
-      "desc": "Talent grades in the pool are shown precisely instead of as a rough range."},
-    {"id": "gut_plus", "field": "talent", "level": 4, "name": "Trained gut",
-      "desc": "Your gut feeling about a project's quality becomes considerably sharper."},
-    {"id": "clause_radar", "field": "contracts", "level": 2, "name": "Clause radar",
-      "desc": "Script access reads much more precisely — hidden quality estimates lose most of their noise."},
-    {"id": "fine_print", "field": "contracts", "level": 4, "name": "Fine print",
-      "desc": "Profit-share deals cost less fixed fee up front — you draft the clause yourself."},
-    {"id": "market_nose", "field": "finance", "level": 2, "name": "A nose for the market",
-      "desc": "The ticker shows you each company's underlying trend."},
-    {"id": "green_light", "field": "finance", "level": 4, "name": "Green light",
-      "desc": "Your film stakes are negotiated on better terms: payouts +10%."},
-    {"id": "early_warning", "field": "crisis", "level": 2, "name": "Early warning",
-      "desc": "Once a month, a rumor you would never have heard reaches you anyway."},
-    {"id": "spin_doctor", "field": "crisis", "level": 4, "name": "Spin doctor",
-      "desc": "Suppressing a story costs half — you know exactly whom to call."},
-    {"id": "open_doors", "field": "networking", "level": 2, "name": "Open doors",
-      "desc": "Club evenings cost you less of the week (1⏱ instead of 2⏱)."},
-    {"id": "society", "field": "networking", "level": 4, "name": "Man about town",
-      "desc": "You gain one extra unit of contact time every week."},
-    {"id": "mentor", "field": "leadership", "level": 2, "name": "Mentor",
-      "desc": "Your assistant learns twice as fast under you."},
-    {"id": "delegator", "field": "leadership", "level": 4, "name": "Born delegator",
-      "desc": "Your assistant manages to keep two neglected contacts warm each week."},
-    {"id": "back_channels", "field": "discretion", "level": 2, "name": "Back channels",
-      "desc": "Written messages leak half as often, and backroom deals are harder to expose."},
-    {"id": "ghost", "field": "discretion", "level": 4, "name": "The ghost",
-      "desc": "Paparazzi incidents around your home become twice as rare."},
-    {"id": "press_pal", "field": "media", "level": 2, "name": "Friend of the press",
-      "desc": "Your denials carry further — rumors lose extra credibility."},
-    {"id": "narrative_control", "field": "media", "level": 4, "name": "Narrative control",
-      "desc": "Counter-rumor campaigns hit harder and your handwriting is rarely recognized."}
-  ]
+	"thresholds": [
+		0,
+		10,
+		25,
+		45,
+		70,
+		100
+	],
+	"fields": {
+		"people": {
+			"name": "People sense",
+			"icon": "🧠",
+			"desc": "Reading nervousness, bluffs and what someone really wants."
+		},
+		"negotiation": {
+			"name": "Negotiation",
+			"icon": "🤝",
+			"desc": "Getting more out of the room than you brought into it."
+		},
+		"talent": {
+			"name": "Talent judgement",
+			"icon": "🎭",
+			"desc": "Seeing the star before anyone else does — and the flop, too."
+		},
+		"contracts": {
+			"name": "Contract craft",
+			"icon": "📜",
+			"desc": "Finding the clause that bites three years from now."
+		},
+		"finance": {
+			"name": "Film finance",
+			"icon": "💵",
+			"desc": "Knowing what a picture is worth before the first ticket sells."
+		},
+		"crisis": {
+			"name": "Crisis management",
+			"icon": "🚨",
+			"desc": "Smelling smoke before the columnists see fire."
+		},
+		"networking": {
+			"name": "Networking",
+			"icon": "🥂",
+			"desc": "Being welcome in rooms you were never invited to."
+		},
+		"leadership": {
+			"name": "Leadership",
+			"icon": "🧑‍💼",
+			"desc": "Getting good work out of people who are not you."
+		},
+		"discretion": {
+			"name": "Discretion",
+			"icon": "🤫",
+			"desc": "Making sure what mustn't be written down never is."
+		},
+		"media": {
+			"name": "Media strategy",
+			"icon": "🗞",
+			"desc": "Feeding the press the story you want them to chew on."
+		}
+	},
+	"abilities": [
+		{
+			"id": "cold_read",
+			"field": "people",
+			"level": 2,
+			"name": "Cold read",
+			"desc": "You spot hesitation and bluffs — client negotiations react far more predictably to your offers."
+		},
+		{
+			"id": "true_wish",
+			"field": "people",
+			"level": 4,
+			"name": "The true wish",
+			"desc": "You always know what a person actually values: gifts to contacts never land badly again."
+		},
+		{
+			"id": "second_pass",
+			"field": "negotiation",
+			"level": 2,
+			"name": "Second pass",
+			"desc": "A failed haggle rarely blows up the deal anymore — you know when to stop pushing."
+		},
+		{
+			"id": "closer",
+			"field": "negotiation",
+			"level": 4,
+			"name": "The closer",
+			"desc": "Your haggling lands more often — studios respect an agent who knows the number."
+		},
+		{
+			"id": "sharp_eye",
+			"field": "talent",
+			"level": 2,
+			"name": "Sharp eye",
+			"desc": "Talent grades in the pool are shown precisely instead of as a rough range."
+		},
+		{
+			"id": "gut_plus",
+			"field": "talent",
+			"level": 4,
+			"name": "Trained gut",
+			"desc": "Your gut feeling about a project's quality becomes considerably sharper."
+		},
+		{
+			"id": "clause_radar",
+			"field": "contracts",
+			"level": 2,
+			"name": "Clause radar",
+			"desc": "Script access reads much more precisely — hidden quality estimates lose most of their noise."
+		},
+		{
+			"id": "fine_print",
+			"field": "contracts",
+			"level": 4,
+			"name": "Fine print",
+			"desc": "Profit-share deals cost less fixed fee up front — you draft the clause yourself."
+		},
+		{
+			"id": "market_nose",
+			"field": "finance",
+			"level": 2,
+			"name": "A nose for the market",
+			"desc": "The ticker shows you each company's underlying trend."
+		},
+		{
+			"id": "green_light",
+			"field": "finance",
+			"level": 4,
+			"name": "Green light",
+			"desc": "Your film stakes are negotiated on better terms: payouts +10%."
+		},
+		{
+			"id": "early_warning",
+			"field": "crisis",
+			"level": 2,
+			"name": "Early warning",
+			"desc": "Once a month, a rumor you would never have heard reaches you anyway."
+		},
+		{
+			"id": "spin_doctor",
+			"field": "crisis",
+			"level": 4,
+			"name": "Spin doctor",
+			"desc": "Suppressing a story costs half — you know exactly whom to call."
+		},
+		{
+			"id": "open_doors",
+			"field": "networking",
+			"level": 2,
+			"name": "Open doors",
+			"desc": "Club evenings cost you less of the week (1⏱ instead of 2⏱)."
+		},
+		{
+			"id": "society",
+			"field": "networking",
+			"level": 4,
+			"name": "Man about town",
+			"desc": "You gain one extra unit of contact time every week."
+		},
+		{
+			"id": "mentor",
+			"field": "leadership",
+			"level": 2,
+			"name": "Mentor",
+			"desc": "Your assistant learns twice as fast under you."
+		},
+		{
+			"id": "delegator",
+			"field": "leadership",
+			"level": 4,
+			"name": "Born delegator",
+			"desc": "Your assistant manages to keep two neglected contacts warm each week."
+		},
+		{
+			"id": "back_channels",
+			"field": "discretion",
+			"level": 2,
+			"name": "Back channels",
+			"desc": "Written messages leak half as often, and backroom deals are harder to expose."
+		},
+		{
+			"id": "ghost",
+			"field": "discretion",
+			"level": 4,
+			"name": "The ghost",
+			"desc": "Paparazzi incidents around your home become twice as rare."
+		},
+		{
+			"id": "press_pal",
+			"field": "media",
+			"level": 2,
+			"name": "Friend of the press",
+			"desc": "Your denials carry further — rumors lose extra credibility."
+		},
+		{
+			"id": "narrative_control",
+			"field": "media",
+			"level": 4,
+			"name": "Narrative control",
+			"desc": "Counter-rumor campaigns hit harder and your handwriting is rarely recognized."
+		},
+		{
+			"id": "master_negotiator",
+			"field": "negotiation",
+			"level": 5,
+			"name": "Master negotiator",
+			"desc": "Your haggling squeezes noticeably more out of every fee."
+		},
+		{
+			"id": "master_scout",
+			"field": "talent",
+			"level": 5,
+			"name": "Master scout",
+			"desc": "Talent estimates across the pool tighten to near certainty."
+		},
+		{
+			"id": "master_networker",
+			"field": "networking",
+			"level": 5,
+			"name": "Master networker",
+			"desc": "Your receptions cost half — the town fights for the invitations."
+		},
+		{
+			"id": "master_fixer",
+			"field": "crisis",
+			"level": 5,
+			"name": "Master fixer",
+			"desc": "Stories you know about lose steam on their own — the town half-forgets on your schedule."
+		},
+		{
+			"id": "master_investor",
+			"field": "finance",
+			"level": 5,
+			"name": "Master investor",
+			"desc": "Film stakes settle on even better terms (+5% on payouts)."
+		}
+	],
+	"specializations": {
+		"negotiation": "The Negotiator",
+		"talent": "The Talent Scout",
+		"networking": "The Networker",
+		"crisis": "The Crisis Manager",
+		"finance": "The Investor",
+		"people": "The People Reader",
+		"contracts": "The Contract Surgeon",
+		"leadership": "The Boss",
+		"discretion": "The Ghost of Sunset Blvd",
+		"media": "The Narrative Maker"
+	}
 }

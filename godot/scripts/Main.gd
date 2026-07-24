@@ -1171,6 +1171,10 @@ func _render_privat() -> void:
 	var cv = _card("Career", "🎩")
 	grid.add_child(cv[0])
 	cv[1].add_child(_lbl(str(Persona.career_def().name), 24, ACC))
+	# Spezialisierung (Feature 42): wozu die Erfahrung dich gemacht hat
+	var spec: Dictionary = Mogul.specialization()
+	if not spec.is_empty():
+		cv[1].add_child(_lbl("Known as: %s (from your %s, level %d)" % [str(spec.label), str(Data.SKILL_FIELDS[spec.field].name).to_lower(), int(spec.level)], 13, GOLD))
 	cv[1].add_child(_lbl("Reputation profile: %s — earned, not chosen. How you behave decides who calls and which deals reach you." % Persona.title(), 12, DIM))
 	var reqs: Array = Persona.promotion_requirements()
 	if reqs.is_empty():
@@ -1270,12 +1274,21 @@ func _render_privat() -> void:
 		var skill_s := str(int(s.skill)) if Mogul.level("leadership") >= 2 else Game.grade_range(float(s.skill), 8.0, "staff" + str(s.id))
 		var trait_s: String = str(Data.STAFF_TRAITS.get(str(s.trait), {}).get("name", "?")) if Staff.bias_visible() else "character: unclear"
 		srow.add_child(_lbl("%s %s — %s · skill %s · %s · wages %s/mo" % [str(fdef.get("icon", "🗂")), str(s.name), str(fdef.get("name", s.focus)), skill_s, trait_s, Game.fmt_money(Staff.wage(s))], 13, TEXT_C))
+		# Qualität & Bindung (Feature 33): Loyalität und Auslastung zählen
+		var loy := float(s.get("loyalty", 55.0))
+		var load := float(s.get("load", 0.0))
+		var loy_s := "loyalty %d · load %d" % [roundi(loy), roundi(load)] if Staff.bias_visible() else ("%s · %s" % ["restless" if loy < 40.0 else "settled", "overloaded" if load >= 70.0 else "coping"])
+		srow.add_child(_lbl("%s — overloaded or disloyal staff botch work; the best ones leave, and take clients with them." % loy_s, 11, RED if loy < 40.0 or load >= 70.0 else DIM))
 		if Staff.bias_visible():
 			srow.add_child(_lbl("Your read: %s." % str(Data.STAFF_TRAITS.get(str(s.trait), {}).get("hint", "")), 11, DIM))
 		var brow := HBoxContainer.new()
 		brow.add_theme_constant_override("separation", 6)
 		srow.add_child(brow)
 		brow.add_child(_btn("Mode: %s" % str(Staff.MODE_LABELS.get(str(s.mode), s.mode)), _player_action.bind(Staff.cycle_mode.bind(int(s.id)))))
+		var rb := _btn("Give a raise (+20% wages)", _player_action.bind(Staff.give_raise.bind(int(s.id))))
+		rb.disabled = Staff.raise_blocked_reason(int(s.id)) != ""
+		rb.tooltip_text = "Loyalty +15." + ("" if Staff.raise_blocked_reason(int(s.id)) == "" else "\n⛔ " + Staff.raise_blocked_reason(int(s.id)))
+		brow.add_child(rb)
 		brow.add_child(_btn("Let go", _player_action.bind(Staff.fire.bind(int(s.id)))))
 	var hire_flow := HFlowContainer.new()
 	hire_flow.add_theme_constant_override("h_separation", 6)
@@ -1344,6 +1357,22 @@ func _render_privat() -> void:
 		sk[1].add_child(_lbl("Unlocked abilities:", 12, DIM))
 		for ab in unlocked:
 			sk[1].add_child(_lbl("✔ %s — %s" % [str(ab.name), str(ab.desc)], 11, GREEN))
+
+	# Privatleben (Feature 44): abstrahiert, aber mit echten Ansprüchen
+	var pv2 = _card("Private life", "🏡")
+	grid.add_child(pv2[0])
+	var pl2: Dictionary = p.privateLife
+	if pl2.partner == null:
+		pv2[1].add_child(_lbl("The work is your life — for now. Every so often, life writes back: watch the mail.", 12, DIM))
+	else:
+		var status_s := "Married to" if Persona.is_married() else "Seeing"
+		pv2[1].add_child(_lbl("%s %s — since %s" % [status_s, str(pl2.partner.name), Game.mi_str(pl2.partner.sinceMi)], 14, ACC))
+		_stat_row(pv2[1], "💞 Closeness", float(pl2.partner.rel), GREEN if float(pl2.partner.rel) >= 50.0 else RED)
+		pv2[1].add_child(_lbl("A good partnership carries you (stress −2, health + each month) — but it wants evenings, answered letters and shared vacations. Below 20 it ends, publicly.", 11, DIM))
+		if Persona.is_married():
+			pv2[1].add_child(_lbl("The household lives larger: living costs +12%.", 11, DIM))
+	pv2[1].add_child(_lbl("Friendships outside the business: %d/3 — each one quietly takes a point of stress off your month. They starve without shared time off." % int(pl2.friends), 12, TEXT_C))
+	pv2[1].add_child(_lbl("Vacations feed both: your partner joins, and friendships stay alive.", 11, DIM))
 
 	# Empire & legacy (Feature 9): partner share, takeovers, mogul goals
 	var em = _card("Empire & legacy", "👑")

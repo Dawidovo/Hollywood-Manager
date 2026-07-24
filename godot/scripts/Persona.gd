@@ -35,6 +35,7 @@ func default_player() -> Dictionary:
 		"pubRep": 10.0, "indRep": 15.0, "discretion": 50.0, "influence": 5.0,
 		"ledger": [], "monthFlags": {},
 		"location": "la", "locActWeek": -99, "awayNoted": false,
+		"privateLife": {"partner": null, "marriedMi": -1, "friends": 0, "lastVacMi": 0, "courtMi": -99, "proposalAsked": false},
 	}
 
 
@@ -70,7 +71,9 @@ func salary() -> float:
 
 
 func living_cost() -> float:
-	return roundf(float(career_def().living) * Game.infl(_st().year))
+	# Familie (Feature 44): ein gemeinsamer Haushalt lebt größer
+	var family_mult := 1.12 if is_married() else 1.0
+	return roundf(float(career_def().living) * Game.infl(_st().year) * family_mult)
 
 
 # Earned reputation title, derived from the moral identity — you don't
@@ -212,6 +215,8 @@ func tick_month(events: Array) -> void:
 	p.influence = clampf(float(p.influence) + (infl_target - float(p.influence)) * 0.2, 0.0, 100.0)
 	p.discretion = clampf(float(p.discretion) + (50.0 - float(p.discretion)) * 0.05, 0.0, 100.0)
 	_check_promotion(events)
+	# Privatleben (Feature 44): Partnerschaft, Freundschaften, Familie
+	_tick_private_life(events)
 	_tick_contacts_month(events)
 	_tick_location_month()
 	_tick_assistant_month()
@@ -239,7 +244,116 @@ func vacation() -> void:
 	p.energy = clampf(float(p.energy) + 18.0, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) - 22.0, 0.0, 100.0)
 	p.health = clampf(float(p.health) + 3.0, 0.0, 100.0)
+	# Privatleben (Feature 44): freie Tage nähren Partnerschaft & Freundschaften
+	var pl := private_life()
+	pl.lastVacMi = Game.mi()
+	if pl.partner != null:
+		pl.partner.rel = clampf(float(pl.partner.rel) + 5.0, 0.0, 100.0)
+		Game.log_msg("Time off in Palm Springs — together, for once. It shows.", "info")
+		return
 	Game.log_msg("Time off in Palm Springs — your head is clear again.", "info")
+
+
+# =====================================================================
+# Privatleben, abstrahiert (Feature 44): Partnerschaft, Freundschaften
+# und Familie erzeugen Zeitansprüche, Rückhalt — und Konflikte.
+# =====================================================================
+func private_life() -> Dictionary:
+	return player().privateLife
+
+
+func is_married() -> bool:
+	var pl_dict = player().get("privateLife")
+	return pl_dict != null and int(pl_dict.get("marriedMi", -1)) >= 0
+
+
+# Zentrale Schaltstelle für die Brief-Ops (data/letters, op "private_life").
+func private_action(action: String, amount: float, sender: String) -> String:
+	var pl := private_life()
+	var p := player()
+	match action:
+		"courtship_accept":
+			pl.partner = {"name": sender, "rel": 55.0, "sinceMi": Game.mi()}
+			Network.memoir("You started seeing %s — something in your life that is not the business." % sender, [sender])
+			return "You and %s will see each other again." % sender
+		"courtship_decline":
+			pl.courtMi = Game.mi()
+			return ""
+		"evening":
+			if pl.partner != null:
+				pl.partner.rel = clampf(float(pl.partner.rel) + 7.0, 0.0, 100.0)
+				p.stress = clampf(float(p.stress) - 4.0, 0.0, 100.0)
+				p.energy = clampf(float(p.energy) - 2.0, 0.0, 100.0)
+			return ""
+		"tension":
+			if pl.partner != null:
+				pl.partner.rel = clampf(float(pl.partner.rel) + 10.0, 0.0, 100.0)
+				p.stress = clampf(float(p.stress) + 3.0, 0.0, 100.0)
+			return ""
+		"partner_rel":
+			if pl.partner != null:
+				pl.partner.rel = clampf(float(pl.partner.rel) + amount, 0.0, 100.0)
+			return ""
+		"proposal_accept":
+			pl.marriedMi = Game.mi()
+			p.pubRep = clampf(float(p.pubRep) + 2.0, 0.0, 100.0)
+			if pl.partner != null:
+				pl.partner.rel = clampf(float(pl.partner.rel) + 10.0, 0.0, 100.0)
+				Network.memoir("You married %s. The columns approve; the living costs don't." % str(pl.partner.name), [str(pl.partner.name)])
+			return "Married. The town reads about it over breakfast."
+		"friend_add":
+			pl.friends = mini(int(pl.friends) + 1, 3)
+			pl.lastVacMi = maxi(int(pl.lastVacMi), Game.mi() - 4)
+			return "A friendship outside the business — rarer than any favor."
+	return ""
+
+
+# Monatstakt des Privatlebens: Nähe braucht Zeit, Rückhalt zahlt zurück.
+func _tick_private_life(events: Array) -> void:
+	var st := _st()
+	var pl := private_life()
+	var p := player()
+	# Alleinstehend: hin und wieder klopft das Leben an.
+	if pl.partner == null:
+		if Game.mi() - int(pl.courtMi) >= 6 and float(p.stress) < 70.0 and Game.chance(0.08):
+			pl.courtMi = Game.mi()
+			var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.5) else Data.NPC_FIRST_M)
+			Dialogs.spawn_letter_named("courtship", "%s %s" % [first, Game.pick(Data.NPC_LAST)])
+	else:
+		var partner: Dictionary = pl.partner
+		partner.rel = clampf(float(partner.rel) - 1.5, 0.0, 100.0)
+		# Zeitanspruch: ein Abend gehört (fast) jeden Monat den beiden.
+		if Game.chance(0.5) and not st.inbox.any(func(l): return str(l.tid) == "partner_evening" and str(l.status) == "open"):
+			Dialogs.spawn_letter_named("partner_evening", str(partner.name))
+		# Rückhalt: eine gute Partnerschaft trägt durch die Krisenwochen.
+		if float(partner.rel) >= 50.0:
+			p.stress = clampf(float(p.stress) - 2.0, 0.0, 100.0)
+			p.health = clampf(float(p.health) + 0.5, 5.0, 100.0)
+		elif float(partner.rel) < 35.0 and Game.chance(0.3):
+			Dialogs.spawn_letter_named("partner_conflict", str(partner.name))
+		# Die Frage aller Fragen — einmal.
+		if not is_married() and not bool(pl.get("proposalAsked", false)) and float(partner.rel) >= 75.0 and Game.mi() - int(partner.sinceMi) >= 12:
+			pl.proposalAsked = true
+			Dialogs.spawn_letter_named("partner_proposal", str(partner.name))
+		# Bruch: irgendwann ist es vorbei — öffentlich, wie alles hier.
+		if float(partner.rel) < 20.0:
+			var partner_name := str(partner.name)
+			var was_married := is_married()
+			pl.partner = null
+			pl.proposalAsked = false
+			pl.marriedMi = -1
+			p.stress = clampf(float(p.stress) + 8.0, 0.0, 100.0)
+			p.pubRep = clampf(float(p.pubRep) - 3.0, 0.0, 100.0)
+			Network.memoir("The %s with %s ended — the columns wrote about it before your friends knew." % ["marriage" if was_married else "relationship", partner_name], [partner_name])
+			events.append({"title": "An ending", "text": "It ends the way these things end in this town: quietly at home, loudly in the columns.\n\n%s is gone, the apartment is too big, and the phone keeps ringing with business." % partner_name, "choices": [{"label": "Back to work"}]})
+			Game.log_msg("Separation from %s — the gossip pages feast for a week." % partner_name, "bad")
+	# Freundschaften außerhalb der Branche: Rückhalt, aber sie wollen gelebt werden.
+	if int(pl.friends) > 0:
+		p.stress = clampf(float(p.stress) - float(pl.friends), 0.0, 100.0)
+		if int(pl.lastVacMi) > 0 and Game.mi() - int(pl.lastVacMi) > 8:
+			pl.friends = int(pl.friends) - 1
+			pl.lastVacMi = Game.mi() - 4
+			Game.log_msg("A friendship outside the business quietly starves — you never had the time.", "bad")
 
 
 func checkup() -> void:
@@ -375,6 +489,8 @@ func begin_channel_dialog(cid, key: String) -> Dictionary:
 	st.player.energy = clampf(float(st.player.energy) - float(ch.energy), 0.0, 100.0)
 	ct.lastActWeek = Game.wi()
 	ct.lastMi = Game.mi()
+	# Persönliche Betreuung (Feature 34): DU bist erschienen
+	ct["lastPersonalMi"] = Game.mi()
 	ct.waitNoted = false
 	_fulfill_promises(ct)
 	Mogul.grant_xp("networking", 1.0, "Kept a relationship alive")
@@ -403,6 +519,10 @@ func contact_interact(cid, key: String) -> Dictionary:
 	st.player.energy = clampf(float(st.player.energy) - float(ch.energy), 0.0, 100.0)
 	ct.lastActWeek = Game.wi()
 	ct.lastMi = Game.mi()
+	# Persönliche Betreuung (Feature 34): alles außer dem Assistenten zählt
+	# als eigenes Erscheinen.
+	if key != "aide":
+		ct["lastPersonalMi"] = Game.mi()
 	ct.waitNoted = false
 	var gain := float(Game.rndi(int(ch.rel_min), int(ch.rel_max)))
 	var lines: Array = []
@@ -848,6 +968,8 @@ func assistant_briefing() -> Dictionary:
 	for cs in st.castings:
 		if int(cs.deadline) <= 2 and not bool(cs.get("hidden", false)):
 			items.append("🎬 “%s” casts in %d week(s) — open roles are waiting." % [str(cs.title), int(cs.deadline)])
+	# Unruhige Mitarbeiter (Feature 33/35): Warnzeichen vor der Kündigung
+	items.append_array(Staff.briefing_items())
 	# Anlässe & liegengebliebene Post (Feature 32): der Assistent erinnert
 	for occ in Network.open_occasions():
 		items.append("💐 %s (%s) — a gesture before %s would land well." % [str(Network.OCCASION_KINDS[str(occ.kind)].name), str(occ.ctName), Game.mi_str(occ.dueMi)])

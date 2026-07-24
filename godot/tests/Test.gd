@@ -1667,6 +1667,78 @@ func _ready() -> void:
 	Staff.ensure_staff()
 	check(Game.state.has("staff") and Game.state.delegation.has("feeCap"), "ensure_staff rüstet alte Stände nach")
 
+	# =========== Qualität, Betreuung, Biografie & Privatleben (33–35, 41–44) ===========
+	# 54. Mitarbeiterqualität, Fehler, Bindung & Abwerbung
+	Game.new_game("Qualität AG", 1950)
+	var q_staff := Staff.hire("care")
+	check(q_staff.has("loyalty") and q_staff.has("load"), "Mitarbeiter tragen Loyalität & Auslastung")
+	q_staff.load = 100.0
+	q_staff.loyalty = 10.0
+	q_staff.skill = 20
+	check(Staff.mishap_chance(q_staff) > Staff.mishap_chance({"skill": 90, "load": 0.0, "loyalty": 90.0}), "Überlastung, Illoyalität & schwache Kompetenz erhöhen die Fehlerquote")
+	Staff.give_raise(int(q_staff.id))
+	check(absf(float(q_staff.loyalty) - 25.0) < 0.01 and float(q_staff.wageBonus) > 0.0, "Gehaltserhöhung bindet (Loyalität +15, Lohn +20%)")
+	check(Staff.raise_blocked_reason(int(q_staff.id)) != "", "Erhöhungen brauchen Abstand")
+	q_staff.loyalty = 5.0
+	var rv_n2: int = Game.state.rivals.size()
+	var d_events: Array = []
+	Staff._defect(q_staff, d_events)
+	check(Game.state.staff.is_empty() and d_events.size() == 1, "Abwerbung/Abspaltung: der Mitarbeiter geht, der Spieler erfährt es")
+	check(Game.state.rivals.size() >= rv_n2, "Abspaltung gründet eine Agentur oder stärkt die Konkurrenz")
+
+	# 55. Persönliche Betreuung bedeutender Kontakte
+	var pt_ct = null
+	for ct in Game.state.contacts:
+		if Network.is_vip(ct):
+			pt_ct = ct
+	pt_ct.lastPersonalMi = Game.mi() - 6
+	pt_ct.lastMi = Game.mi()
+	Network.tick_month()
+	check(pt_ct.facts.any(func(f): return str(f.text) == "only ever sends the help"), "Wichtige Kontakte merken, wenn nur noch Personal erscheint")
+	Game.state.contactAP = 3
+	Game.state.player.cash = 5000.0
+	pt_ct.gate = {"name": "x", "rel": 90.0}
+	Persona.begin_channel_dialog(int(pt_ct.id), "meet")
+	check(int(pt_ct.lastPersonalMi) == Game.mi(), "Eigenes Erscheinen setzt die persönliche Betreuung zurück")
+
+	# 56. Biografischer Start, Spezialisierung & Statusbesitz
+	Game.new_game("Biografie AG", 1950, "anwalt")
+	check(Mogul.xp("contracts") >= 15.0, "Herkunft & Ausbildung bringen Fähigkeiten mit (Anwalt: Vertragswissen)")
+	check(Game.state.contacts.any(func(ct): return str(ct.type) == "anwalt"), "Frühere Tätigkeit bringt ein Anfangsnetzwerk mit")
+	Mogul.grant_xp("negotiation", 100.0, "Test")
+	check(Mogul.has_ability("master_negotiator"), "Level 5 schaltet die Meister-Spezialisierung frei")
+	check(str(Mogul.specialization().label) == "The Negotiator", "Der Spezialisierungs-Titel folgt dem stärksten Feld")
+	Game.state.player.cash = 100000.0
+	check(Mogul.buy_purchase("own_club") == "", "Eigener Club gekauft (Statusbesitz)")
+	var club_ledger0: int = Game.state.player.ledger.size()
+	Mogul._tick_estate_month()
+	check(Game.state.player.ledger.any(func(e): return str(e.text).contains("establishments")), "Der eigene Club wirft Einnahmen ab")
+	check(Game.state.player.ledger.size() > club_ledger0, "Unterhalt & Erträge laufen über das Privatkonto")
+
+	# 57. Privatleben: Partnerschaft, Ehe, Bruch, Freundschaften
+	Persona.private_action("courtship_accept", 0.0, "Vivian Hale")
+	check(Game.state.player.privateLife.partner != null, "Partnerschaft beginnt")
+	Persona.private_action("evening", 0.0, "")
+	check(float(Game.state.player.privateLife.partner.rel) > 55.0, "Gemeinsame Abende stärken die Nähe")
+	Persona.private_action("proposal_accept", 0.0, "")
+	check(Persona.is_married(), "Heirat registriert")
+	var lc_married := Persona.living_cost()
+	Game.state.player.privateLife.partner.rel = 10.0
+	var br_events: Array = []
+	Persona._tick_private_life(br_events)
+	check(Game.state.player.privateLife.partner == null and not Persona.is_married(), "Zerrüttung beendet Partnerschaft und Ehe — öffentlich")
+	check(br_events.size() == 1 and Persona.living_cost() < lc_married, "Der Haushalt schrumpft nach der Trennung")
+	Persona.private_action("friend_add", 0.0, "")
+	Persona.private_action("friend_add", 0.0, "")
+	check(int(Game.state.player.privateLife.friends) == 2, "Freundschaften außerhalb der Branche gezählt")
+	Game.state.player.stress = 50.0
+	Persona._tick_private_life([])
+	check(float(Game.state.player.stress) < 50.0, "Freundschaften nehmen Druck aus dem Monat")
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Privatlebens-Spielstand geladen")
+	check(int(Game.state.player.privateLife.friends) == 2, "Privatleben überlebt Save/Load")
+
 	# Modals enthalten absichtlich Callables, gehören aber nie in den Save-State.
 	# Vor dem sofortigen Testprozess-Ende Referenzen lösen, damit Godot sauber aufräumt.
 	trust_events.clear()
