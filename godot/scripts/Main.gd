@@ -2539,6 +2539,10 @@ func _render_klienten() -> void:
 			chips.append(_chip("⚠ Overworked", RED))
 		if float(c.get("campaign", 0.0)) > 0.0:
 			chips.append(_chip("🏆 FYC %d" % roundi(float(c.campaign)), GOLD))
+		if str(c.flags.get("coupleWith", "")) != "" and Game.actor_by_id.has(str(c.flags.coupleWith)):
+			chips.append(_chip("💞 %s" % Game.actor_by_id[str(c.flags.coupleWith)].name, GOLD))
+		if str(c.flags.get("feudWith", "")) != "" and Game.actor_by_id.has(str(c.flags.feudWith)):
+			chips.append(_chip("⚡ Feud: %s" % Game.actor_by_id[str(c.flags.feudWith)].name, RED))
 		if Game.voice_at_risk(c):
 			chips.append(_chip("🎙 Fragile voice", RED))
 		elif c.flags.get("voiceTrained", false):

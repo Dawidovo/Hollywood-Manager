@@ -48,8 +48,10 @@ func _ready() -> void:
 	var dna_before = c.dna.duplicate()
 	print("  DNA-Start Monroe: ", c.dna)
 
-	# 3. Gegenvorschlag (deterministisch niedriges Angebot)
-	Game.start_negotiation("gkelly")
+	# 3. Gegenvorschlag (deterministisch niedriges Angebot) — ein wirklich
+	# verfügbarer Kandidat; gesperrte Anbahnungen nullen die Verhandlung.
+	var counter_actor: Dictionary = Game.available_actors().filter(func(a): return Util.fame_at(a, Game.state.year) <= 55)[0]
+	check(not Game.start_negotiation(str(counter_actor.id)).get("locked", false), "Kandidat für den Gegenvorschlag ist verhandelbar")
 	var counter = Game.build_counter({"commission": 12, "bonus": 0, "years": 2, "perks": [], "promise": null})
 	check(counter != null and counter.has("text"), "Gegenvorschlag erzeugt: " + str(counter.text if counter else ""))
 	Game.nego = null
@@ -2009,6 +2011,43 @@ func _ready() -> void:
 	Game.state.month = 2
 	var fy_award = Game.awards_ceremony()
 	check(fy_award != null and absf(float(fy_c.campaign)) < 0.001, "Zeremonie verbraucht die Kampagne (Reset auf 0)")
+
+	# Power-Couples & Feuds im Roster
+	Game.new_game("Paare", 1950)
+	check(not Game.start_negotiation("wayne").get("locked", true) or Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null}).get("accepted", false) == false, "Gescheiterte Anbahnung hinterlässt keine stale Verhandlung")
+	Game.state.clients.clear()
+	var pr_pool: Array = Game.available_actors().filter(func(a): return Util.fame_at(a, Game.state.year) <= 55).slice(0, 12)
+	var pair_a := ""
+	var pair_b := ""
+	for pi in pr_pool.size():
+		for pj in range(pi + 1, pr_pool.size()):
+			if pair_a == "" and int(Game.chemistry(str(pr_pool[pi].id), str(pr_pool[pj].id)).personal) >= -1:
+				pair_a = str(pr_pool[pi].id)
+				pair_b = str(pr_pool[pj].id)
+	check(pair_a != "", "Ein verfügbares Paar mit tragfähiger Basis-Chemie existiert")
+	Game.start_negotiation(pair_a)
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	Game.start_negotiation(pair_b)
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var pc1: Dictionary = Game.state.clients[0]
+	var pc2: Dictionary = Game.state.clients[1]
+	check(str(pc1.aid) == pair_a and str(pc2.aid) == pair_b, "Beide Partner sind im Roster")
+	Game.state.history_pairs[Game.pair_key(pair_a, pair_b)] = {"n": 3, "p": 8}
+	var pair_events: Array = []
+	Game._tick_roster_pairs(pair_events)
+	check(pair_events.size() == 1 and str(pair_events[0].title) == "More than chemistry", "Starke Chemie + gemeinsame Filme ⇒ Couple-Ereignis")
+	pair_events[0].choices[0].fn.call()
+	check(str(pc1.flags.get("coupleWith", "")) == pair_b and str(pc2.flags.get("coupleWith", "")) == pair_a, "Traumpaar ist beidseitig verankert")
+	var pair_role1 := {"type": "lead", "gender": str(Game.actor_by_id[pair_b].g), "minFame": 5, "ageMin": -100, "ageMax": 999, "fee": 30000, "filled": {"clientId": int(pc2.id), "fee": 30000}, "rejected": []}
+	var pair_role2 := {"type": "support", "gender": str(Game.actor_by_id[pair_a].g), "minFame": 5, "ageMin": -100, "ageMax": 999, "fee": 12000, "filled": null, "rejected": []}
+	var pair_cast := {"id": 9400, "studioId": "mgm", "title": "P", "genre": "drama", "prestige": 1, "budget": 800000, "deadline": 8, "qualityMod": 0.0, "roles": [pair_role1, pair_role2]}
+	var fit_with := Game.fit_score(pair_cast, pair_role2, pc1)
+	pc1.flags.erase("coupleWith")
+	var fit_without := Game.fit_score(pair_cast, pair_role2, pc1)
+	check(fit_with > fit_without, "Power-Couple: gemeinsames Plakat gibt Casting-Bonus")
+	pc1.flags["feudWith"] = pair_b
+	var pair_elig: Array = Game.eligible_clients(pair_cast, pair_role2)
+	check(not pair_elig.any(func(e): return int(e.c.id) == int(pc1.id)), "Feud: gemeinsame Besetzung ist blockiert")
 
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.

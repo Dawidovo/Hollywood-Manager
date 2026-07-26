@@ -41,6 +41,14 @@ const PROD_MODERN_YEAR := 2015
 const PROD_MONTHS_MIN_MODERN := 3
 const PROD_MONTHS_MAX_MODERN := 5
 
+# ---------- Roster-Beziehungen: Power-Couples & Feuds ----------
+# Persönliche Chemie (−10…+10) plus gemeinsame Filme entscheiden, ob zwei
+# eigene Klienten zum Traumpaar werden oder sich verkrachen.
+const PAIR_COUPLE_CHEM := 7
+const PAIR_COUPLE_FILMS := 2
+const PAIR_FEUD_CHEM := -7
+const PAIR_COUPLE_FIT := 6.0
+
 # ---------- Award-Saison: „For Your Consideration“-Kampagnen ----------
 # Kampagnen-Fenster: November–Januar (Zeremonie im Februar). Der Boost
 # fließt in die Performance-Wertung (Zufallsanteil dort: 0–15).

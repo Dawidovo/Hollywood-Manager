@@ -1499,6 +1499,9 @@ func start_negotiation(actor_id: String) -> Dictionary:
 	var owner = rival_for_actor(actor_id)
 	var poach_req := req + (10 if owner != null else 0)
 	if state.agency.rep < poach_req:
+		# Stale-Schutz: eine gescheiterte Anbahnung darf keine alte Verhandlung
+		# zurücklassen — sonst signt ein folgender sign_client den Falschen.
+		nego = null
 		return {"locked": true, "actor": actor, "fame": fame, "reqRep": poach_req, "rivalName": str(owner.name) if owner != null else ""}
 	var ask := Util.ask_fee(fame, state.year)
 	var profile := actor_profile(actor, fame)
@@ -1565,6 +1568,8 @@ func negotiation_hint() -> String:
 	return "%s: %s" % [nego.actor.name, Util.pick(hints[nego.profile.top])]
 
 func build_counter(offer: Dictionary) -> Variant:
+	if nego == null:
+		return null
 	var d: Dictionary = nego.demands
 	var perks: Array = offer.perks.duplicate()
 	for pk in d.perks:
@@ -1594,6 +1599,8 @@ func build_counter(offer: Dictionary) -> Variant:
 	return counter
 
 func sign_client(terms: Dictionary) -> Dictionary:
+	if nego == null:
+		return {"accepted": false}
 	if terms.bonus > state.agency.cash:
 		return {"broke": true}
 	if int(terms.bonus) > 0:
@@ -1784,6 +1791,13 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	# Tonfilm-Umbruch: Studios casten 1928–1934 keine fragilen Stimmen
 	if voice_at_risk(c):
 		fit -= Balance.VOICE_FIT_MALUS
+	# Power-Couple: Studios lieben es, das Traumpaar gemeinsam zu plakatieren
+	for pr_role in casting.roles:
+		if pr_role.filled != null and pr_role.filled.get("clientId") != null:
+			var partner = client(pr_role.filled.clientId)
+			if partner != null and str(c.flags.get("coupleWith", "")) == str(partner.aid):
+				fit += Balance.PAIR_COUPLE_FIT
+				break
 	# Weekly Planner: „Vorbereitung“ gibt dem nächsten Pitch einen einmaligen Bonus
 	if float(c.flags.get("prepFit", 0.0)) > 0.0:
 		fit += float(c.flags.prepFit)
@@ -1809,10 +1823,16 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 		if str(c.get("exclusiveStudio", "")) != "" and str(c.exclusiveStudio) != str(casting.studioId):
 			continue
 		var taken := false
+		var feud_block := false
 		for r in casting.roles:
-			if r.filled != null and r.filled.get("clientId") != null and int(r.filled.clientId) == int(c.id):
-				taken = true
-		if taken:
+			if r.filled != null and r.filled.get("clientId") != null:
+				if int(r.filled.clientId) == int(c.id):
+					taken = true
+				# Feud im Roster: die beiden lassen sich nicht zusammen besetzen
+				var other = client(r.filled.clientId)
+				if other != null and (str(c.flags.get("feudWith", "")) == str(other.aid) or str(other.flags.get("feudWith", "")) == str(c.aid)):
+					feud_block = true
+		if taken or feud_block:
 			continue
 		var fit := fit_score(casting, role, c)
 		# Drehbuch-Mitsprache (Perk) und Kreativ-Veto (Klausel) lehnen schlechte Rollen ab
@@ -2227,6 +2247,7 @@ func _month_close(events: Array) -> void:
 	_tick_coverage(events, strike)
 
 	tick_clients(events)
+	_tick_roster_pairs(events)
 	tick_rumors(events)
 	tick_rivals(events)
 	# Karrierebretter: veraltete Plan-Slots verfallen lautlos
@@ -3102,6 +3123,58 @@ func gut_feeling(casting: Dictionary) -> String:
 # Paarweise, deterministisch aus Util.hashs() + gespeicherte gemeinsame Historie.
 func pair_key(a_key: String, b_key: String) -> String:
 	return "%s|%s" % [a_key, b_key] if a_key < b_key else "%s|%s" % [b_key, a_key]
+
+# ---------- Roster-Beziehungen: Power-Couples & Feuds ----------
+# Monatlich: Paare im eigenen Roster mit starker persönlicher Chemie und
+# gemeinsamer Filmhistorie werden zum Thema — im Guten wie im Schlechten.
+func _tick_roster_pairs(events: Array) -> void:
+	for i in state.clients.size():
+		for j in range(i + 1, state.clients.size()):
+			var c1: Dictionary = state.clients[i]
+			var c2: Dictionary = state.clients[j]
+			var seen_key := "pairSeen_" + str(c2.aid)
+			if c1.flags.get(seen_key, false):
+				continue
+			var chem := chemistry(str(c1.aid), str(c2.aid))
+			var films_together := int(state.history_pairs.get(pair_key(str(c1.aid), str(c2.aid)), {}).get("n", 0))
+			if int(chem.personal) >= Balance.PAIR_COUPLE_CHEM and films_together >= Balance.PAIR_COUPLE_FILMS:
+				c1.flags[seen_key] = true
+				events.append(_couple_event(c1, c2))
+			elif int(chem.personal) <= Balance.PAIR_FEUD_CHEM and films_together >= 1:
+				c1.flags[seen_key] = true
+				c1.flags["feudWith"] = str(c2.aid)
+				c2.flags["feudWith"] = str(c1.aid)
+				c1.mood = clampf(float(c1.mood) - 6.0, 0.0, 100.0)
+				c2.mood = clampf(float(c2.mood) - 6.0, 0.0, 100.0)
+				press_event("Blind item", "Which two stars of the same agency can no longer stand in the same room?")
+				log_msg("Feud in the house: %s and %s refuse to be cast together." % [client_name(c1), client_name(c2)], "bad")
+				events.append({"title": "Bad blood", "text": "It started with a borrowed dressing room and ended with thrown scripts: [b]%s[/b] and [b]%s[/b] are done with each other. From now on, neither accepts a picture the other is in." % [client_name(c1), client_name(c2)], "choices": [{"label": "Noted"}]})
+
+
+func _couple_event(c1: Dictionary, c2: Dictionary) -> Dictionary:
+	var cid1 := int(c1.id)
+	var cid2 := int(c2.id)
+	return {"title": "More than chemistry",
+		"text": "The set photographers saw it first, the maître d' confirmed it: [b]%s[/b] and [b]%s[/b] are inseparable. The question is not whether the town finds out — only who tells the story." % [client_name(c1), client_name(c2)],
+		"choices": [
+			{"label": "Announce Hollywood's newest royal couple", "fn": func():
+				var a = client(cid1)
+				var b = client(cid2)
+				if a == null or b == null:
+					return "The moment has passed."
+				for cl in [a, b]:
+					cl.flags["coupleWith"] = str((b if cl == a else a).aid)
+					cl.heat = clampf(float(cl.heat) + 2.0, -10.0, 10.0)
+					cl.fame = clampf(float(cl.fame) + 1.5, 5.0, 100.0)
+					cl.dna.romantik = clampf(float(cl.dna.romantik) + 4.0, -100.0, 100.0)
+					cl.dna.familie = clampf(float(cl.dna.familie) + 3.0, -100.0, 100.0)
+				press_event("Cover story", "%s and %s — Hollywood's new royal couple" % [client_name(a), client_name(b)])
+				return "Two careers, one headline. The fan mail doubles overnight — studios already ask for a picture with both names above the title."},
+			{"label": "Guard their privacy", "fn": func():
+				record_identity("diskret", 0.5)
+				return "Some things in this town stay yours only as long as nobody prints them. You make sure nobody prints this."},
+		]}
+
 
 func chemistry(a_key: String, b_key: String) -> Dictionary:
 	var k := pair_key(a_key, b_key)
