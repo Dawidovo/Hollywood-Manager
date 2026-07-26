@@ -252,7 +252,10 @@ func age_of(actor: Dictionary, year: float) -> int:
 	return int(year - actor.birth)
 
 func ask_fee(fame: float, year: float) -> float:
-	return maxf(infl(year) * 900000.0 * pow(fame / 100.0, 2.6), 5000.0 * infl(year))
+	# Exponent 2,35 (statt 2,6): hebt die Gagen im unteren/mittleren Ruhm-Bereich
+	# an, kaum Wirkung an der Spitze — sonst tragen Provisionen kleiner Klienten
+	# (Frühzeit-Pool: Ruhm 20–35) die Agentur nie (Balance-Chunk 19, BalanceSim).
+	return maxf(infl(year) * 900000.0 * pow(fame / 100.0, 2.35), 5000.0 * infl(year))
 
 func required_rep(fame: float) -> int:
 	var req := 0 if fame <= 45 else roundi((fame - 45.0) * 1.1)
@@ -491,7 +494,14 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	Staff.init_state()
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = rndi(20, 45)
-	book(float(roundi(120000.0 * infl(start_year))), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
+	# Startkapital: Basis × Inflation × optionaler Era-Faktor (data/eras/core.json,
+	# "startCapitalMult") — die Frühzeit braucht mehr Runway, bis kleine Klienten
+	# tragende Gagen erreichen (Balance-Chunk 19).
+	var capital_mult := 1.0
+	for era_def in Data.ERAS:
+		if int(era_def.year) == start_year:
+			capital_mult = float(era_def.get("startCapitalMult", 1.0))
+	book(float(roundi(120000.0 * infl(start_year) * capital_mult)), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
 	Persona.book(roundf(2500.0 * infl(start_year)), "Savings from the years before")
 	# Ein alter Bekannter aus den Anfangsjahren erinnert sich.
 	grant_favor("galaInvite", favor_contact_for("galaInvite"))
@@ -1257,8 +1267,15 @@ func perk_costs() -> float:
 			sum += PERKS[p].cost * f
 	return sum
 
+# Fixkosten-Basis von Anzeige UND Monatsabschluss — Studiosystem-Ära (< 1948):
+# kleine Büros, kleine Gagen, der Fixkostenblock folgt dem niedrigeren
+# Gagenniveau der Frühzeit (Balance-Chunk 19).
+func office_base_cost() -> int:
+	var era_mult := 0.6 if int(state.year) < 1948 else 1.0
+	return roundi((2200.0 + state.clients.size() * 600.0) * infl(state.year) * era_mult)
+
 func overhead() -> int:
-	return roundi((2200.0 + state.clients.size() * 600.0) * infl(state.year) + perk_costs())
+	return roundi(office_base_cost() + perk_costs())
 
 # =====================================================================
 # Finanzbuchhaltung (Ledger)
@@ -2126,7 +2143,7 @@ func _month_close(events: Array) -> void:
 	# Fixkosten des abgelaufenen Monats buchen und die Buchhaltung
 	# des Monats abschließen (Aggregat in ledgerMonthly).
 	# Wochenplaner: ≥3 „Bücher prüfen“-Slots im Monat senken die Bürokosten um 10 %
-	var base_cost := roundi((2200.0 + state.clients.size() * 600.0) * infl(state.year) * backstory_mod("office_cost_mult", 1.0))
+	var base_cost := roundi(office_base_cost() * backstory_mod("office_cost_mult", 1.0))
 	if int(state.get("plannerMonthCounts", {}).get("buecher", 0)) >= 3:
 		base_cost = roundi(base_cost * 0.9)
 	state["plannerMonthCounts"] = {}

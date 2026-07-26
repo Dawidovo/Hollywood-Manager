@@ -36,7 +36,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | 16 | [RPG II: Proben in Events](16-rpg-proben-events.md) | RPG | offen |
 | 17 | [RPG III: Quest-Journal](17-rpg-questjournal.md) | RPG | offen |
 | 18 | [RPG IV: Kontaktbuch & NPCs](18-rpg-npc-beziehungen.md) | RPG | überholt — umfangreicher umgesetzt über `Network.gd` (Kontaktbuch, Beziehungsdimensionen, Gefallen an Personen); Rest-Ideen bei Bedarf als neuer Chunk |
-| 19 | [Balance: 1925-Ökonomie](19-balance-1925-oekonomie.md) | Balance | offen (Befund aus BalanceSim: 1925 geht bei solider Spielweise in Woche 80 pleite) |
+| 19 | [Balance: 1925-Ökonomie](19-balance-1925-oekonomie.md) | Balance | erledigt (ask_fee-Exponent 2,35, Frühzeit-Büro ×0,6, Startkapital-Era-Faktor; Sim 1925: Woche 104 bei +44K statt Pleite in Woche 80) |
 | 20 | [Balance: Energie-Erosion](20-balance-energie.md) | Balance | offen (Befund aus BalanceSim: Energie fällt in allen Epochen langfristig Richtung null) |
 
 Reihenfolge-Empfehlung: 06 → 01 → 02 → 05 → 04 → 03 → 07 → 10 → 09 → 08. (Erst Tooling & Sicherheitsnetz, dann Refactorings.)

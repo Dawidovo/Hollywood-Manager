@@ -15,7 +15,7 @@ No code needed.
 | `real_titles/` | Real film titles for castings | List | `t` + `y` |
 | `names/` | NPC name pools | Object | `first_m`/`first_f`/`last` |
 | `history/` | Historical macro events | List | `year` + `month` |
-| `eras/` | Selectable start eras | List | `year` |
+| `eras/` | Selectable start eras (optional `startCapitalMult`: scales the opening capital of that era) | List | `year` |
 | `events/` | Game events & event chains | List | `id` |
 | `backstories/` | Selectable player backstories | List | `id` |
 | `ethnicities/` | Display names for ethnicities | Object | ethnicity code |

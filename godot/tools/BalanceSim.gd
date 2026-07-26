@@ -4,8 +4,8 @@ extends Node
 # Heuristiken (Signen, Pitchen, Post beantworten, Woche beenden) und
 # protokolliert die Ökonomie als CSV-Zeilen ("SIM;...") für die Auswertung.
 # Aufruf:  godot --headless --path . res://tools/BalanceSim.tscn
-# Kein Spielinhalt — reines Analysewerkzeug, verändert keine Spielstände
-# (es wird bewusst nie gespeichert).
+# Kein Spielinhalt — reines Analysewerkzeug. Achtung: end_week() speichert
+# automatisch, der Lauf überschreibt also den Autosave (wie die Testsuite).
 # =====================================================================
 
 const WEEKS_PER_RUN := 104
@@ -44,6 +44,21 @@ func _run_era(year: int) -> void:
 	_snapshot(year, WEEKS_PER_RUN)
 	print("SUM;%d;signed %d/%d;pitched %d/%d;letters %d;gameOverWeek %d" % [year,
 		stats.signOk, stats.signTry, stats.pitchOk, stats.pitchTry, stats.letters, stats.overWeek])
+	_print_ledger(year)
+
+
+# Agentur-Buchungen des gesamten Laufs nach Kategorie verdichtet —
+# zeigt, wo eine Epoche ihr Geld verdient und verliert.
+func _print_ledger(year: int) -> void:
+	var by_cat := {}
+	for m in Game.state.ledgerMonthly:
+		for cat in m.byCat:
+			by_cat[cat] = float(by_cat.get(cat, 0.0)) + float(m.byCat[cat])
+	var live: Dictionary = Game.live_month(Game.mi())
+	for cat in live.byCat:
+		by_cat[cat] = float(by_cat.get(cat, 0.0)) + float(live.byCat[cat])
+	for cat in by_cat:
+		print("LEDGER;%d;%s;%d" % [year, str(cat), roundi(float(by_cat[cat]))])
 
 
 func _snapshot(year: int, week_no: int) -> void:

@@ -2,6 +2,7 @@
 	{
 		"desc": "Hollywood is young, the pictures are silent, the stars are gods. But the talkies are casting their shadow …",
 		"name": "The Silent Era",
+		"startCapitalMult": 1.5,
 		"title": "1925",
 		"year": 1925
 	},
