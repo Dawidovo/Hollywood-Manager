@@ -31,7 +31,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | 11 | [Körperdaten I: Größe & Gewicht](11-koerperdaten-basis.md) | Feature | erledigt (Commit `8cca6d8`) |
 | 12 | [Körperdaten II: Gewichtsdynamik](12-koerperdaten-dynamik.md) | Feature | erledigt (Commit `b7b3bae`) |
 | 13 | [Verhandlungen homogenisieren](13-verhandlungen-homogenisieren.md) | UI-Qualität | erledigt (Commit `db75888` — `_nego_header`/`_nego_actions` aktiv) |
-| 14 | [Layout-Audit Buchstaben-Umbruch](14-layout-audit-buchstabenumbruch.md) | Bugfix | offen |
+| 14 | [Layout-Audit Buchstaben-Umbruch](14-layout-audit-buchstabenumbruch.md) | Bugfix | erledigt (inkl. Nachaudit der neuen Tabs; Header bricht jetzt um statt zu überlaufen) |
 | 15 | [RPG I: Attribute der Spielfigur](15-rpg-attribute.md) | RPG | offen |
 | 16 | [RPG II: Proben in Events](16-rpg-proben-events.md) | RPG | offen |
 | 17 | [RPG III: Quest-Journal](17-rpg-questjournal.md) | RPG | offen |

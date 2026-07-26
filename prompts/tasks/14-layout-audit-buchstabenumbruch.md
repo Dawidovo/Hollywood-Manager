@@ -43,3 +43,9 @@ Vorhandene Gegenmittel: `_lbl_fill()` (Label + `SIZE_EXPAND_FILL`, für HBox/HFl
 - Coverage + Coverage-Archiv, Karrierebrett, Audition, Chem-Read → ok.
 - Ereignis-Entscheidung + Ereignis-Ergebnis, Produktions-Ergebnis → ok.
 - Sichtprüfung vollständig bei 1280×800 und 2000×1100: je 24 Screenshots, alle mit verifizierter Zielauflösung und ohne Buchstabensäulen.
+
+### Nachaudit Juli 2026 (neue Tabs nach dem ersten Audit)
+
+- Post, Kontakte, Orte, Privat, Lifestyle, Investments, Dialog-Modal → ok bei 1280×800 und 2000×1100, keine Buchstabensäulen.
+- **Gefixt:** Die Kopfzeile (Statuschips) war eine starre HBox mit ~1525 px Mindestbreite — sie blähte `game_root` über die Fensterbreite auf und schob Sidebar, Save- und End-Week-Button bei 1280 px aus dem Fenster. Jetzt `HFlowContainer` (Umbruch in zweite Zeile, gleiches Muster wie die Tab-Leiste).
+- Hinweis für künftige Audits: `--resolution` von Godot greift nicht zuverlässig gegen das maximierte Fenster — für Screenshots in Zielgröße den User-Arg `--shot-resolution=BxH` (nach dem `--`) verwenden.

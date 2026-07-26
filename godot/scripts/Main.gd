@@ -965,8 +965,12 @@ func _build_game_ui() -> void:
 	header_sb.set_content_margin_all(10)
 	header.add_theme_stylebox_override("panel", header_sb)
 	game_root.add_child(header)
-	var hb := HBoxContainer.new()
-	hb.add_theme_constant_override("separation", 22)
+	# HFlowContainer: die Statuszeile bricht bei schmalen Fenstern in eine
+	# zweite Zeile um, statt Sidebar & Buttons aus dem Fenster zu schieben
+	# (die Mindestbreite einer HBox würde das ganze game_root aufblähen).
+	var hb := HFlowContainer.new()
+	hb.add_theme_constant_override("h_separation", 22)
+	hb.add_theme_constant_override("v_separation", 4)
 	header.add_child(hb)
 	var agency := _lbl("", 20, GOLD)
 	agency.autowrap_mode = TextServer.AUTOWRAP_OFF
