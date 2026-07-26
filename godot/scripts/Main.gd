@@ -2181,6 +2181,18 @@ func _render_buero() -> void:
 		if bs_weak != "":
 			c1[1].add_child(_lbl("✖ " + bs_weak, 12, RED))
 
+	# RPG-Attribute (Chunk 15): die Stärken des Managers, gewachsen durch Benutzung
+	var ac = _card("Your strengths", "🎯")
+	grid.add_child(ac[0])
+	ac[1].add_child(_lbl("Grow through use — every deal, every buried story, every favor leaves its mark.", 11, DIM))
+	for attr_key in Data.ATTRIBUTES:
+		var adef: Dictionary = Data.ATTRIBUTES[attr_key]
+		var aval := Game.attr(str(attr_key))
+		var albl := _lbl("%s %s: %d" % [str(adef.get("icon", "")), str(adef.get("name", attr_key)), aval], 13, TEXT_C)
+		albl.tooltip_text = str(adef.get("desc", ""))
+		ac[1].add_child(albl)
+		ac[1].add_child(_bar(aval, ACC))
+
 	# Konkrete Gefallen & Schulden statt eines abstrakten Netzwerk-Werts
 	var cg = _card("Favors & debts", "🤝")
 	grid.add_child(cg[0])

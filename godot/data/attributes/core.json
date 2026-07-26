@@ -1,0 +1,27 @@
+{
+	"verhandlung": {
+		"name": "Negotiation",
+		"icon": "🤝",
+		"desc": "Closing deals: grows with signed clients, successful haggles and package deals."
+	},
+	"menschenkenntnis": {
+		"name": "Insight",
+		"icon": "👁",
+		"desc": "Reading people: grows with correct predictions about careers and scripts."
+	},
+	"netzwerk": {
+		"name": "Network",
+		"icon": "🕸",
+		"desc": "Who owes you a call: grows whenever a favor comes your way."
+	},
+	"diskretion": {
+		"name": "Discretion",
+		"icon": "🤫",
+		"desc": "Burying stories quietly: grows when rumors die before the print run."
+	},
+	"geschaeftssinn": {
+		"name": "Business sense",
+		"icon": "📊",
+		"desc": "Black numbers: grows with profitable months and tidy books."
+	}
+}

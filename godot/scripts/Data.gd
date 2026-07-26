@@ -49,6 +49,7 @@ var DIALOGS: Array = []
 var LETTERS: Array = []
 var STAFF_FOCI: Dictionary = {}
 var STAFF_TRAITS: Dictionary = {}
+var ATTRIBUTES: Dictionary = {}
 
 
 func _init() -> void:
@@ -77,6 +78,7 @@ func reload() -> void:
 		{"cd": 6, "weight": {}, "conditions": {}, "choices": [], "followup_only": false},
 		["id", "title", "text"])
 	ETHNICITIES = DataLoader.load_dict("ethnicities")
+	ATTRIBUTES = DataLoader.load_dict("attributes")
 	CAREER_LEVELS = DataLoader.load_entries("career", ["id"],
 		{"salary": 600, "living": 350, "req": {}}, ["id", "name"])
 	REPUTATION_TITLES = DataLoader.load_dict("reputation")

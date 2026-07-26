@@ -19,6 +19,7 @@ No code needed.
 | `events/` | Game events & event chains | List | `id` |
 | `backstories/` | Selectable player backstories | List | `id` |
 | `ethnicities/` | Display names for ethnicities | Object | ethnicity code |
+| `attributes/` | Player attributes (name, icon, desc; values grow through use) | Object | attribute key |
 | `career/` | Career ladder (Junior → Mogul) | List | `id` |
 | `reputation/` | Earned reputation titles | Object | identity key |
 | `locations/` | Node map (places, travel, actions) | List | `id` |

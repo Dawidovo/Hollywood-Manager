@@ -51,6 +51,13 @@ const PROMISE_BROKEN_TRUST := 24.0
 const PROMISE_BROKEN_MOOD := 20.0
 const PROMISE_BROKEN_REP := 5
 
+# ---------- Spieler-Attribute (RPG-Chunk 15) ----------
+# Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit
+# abnehmendem Ertrag: voll bis SOFTCAP_1, ×0,5 bis SOFTCAP_2, ×0,25 darüber.
+const ATTR_BASE := 22.0
+const ATTR_SOFTCAP_1 := 40.0
+const ATTR_SOFTCAP_2 := 70.0
+
 # ---------- Karriere-DNA (Prägung bei Release) ----------
 const DNA_PRESTIGE_UNIKAT := 3.0
 const DNA_PRESTIGE_POPULAR := -2.0

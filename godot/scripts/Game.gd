@@ -178,6 +178,25 @@ func _tick_client_weight(c: Dictionary, actor: Dictionary, discipline: float) ->
 		delta = fallback_dir * 0.10
 	change_client_weight(c, delta)
 
+# ---------- RPG-Attribute der Spielfigur (Chunk 15) ----------
+# Kein Punkteverteilen, kein XP-Pool: Attribute wachsen ausschließlich
+# durch konkrete Handlungen (attr_gain-Hooks), mit abnehmendem Ertrag.
+func attr(key: String) -> int:
+	if state == null:
+		return roundi(Balance.ATTR_BASE)
+	return roundi(float(state.get("attributes", {}).get(key, Balance.ATTR_BASE)))
+
+func attr_gain(key: String, amount: float) -> void:
+	if state == null or not state.has("attributes"):
+		return
+	var cur := float(state.attributes.get(key, Balance.ATTR_BASE))
+	var mult := 1.0
+	if cur >= Balance.ATTR_SOFTCAP_2:
+		mult = 0.25
+	elif cur >= Balance.ATTR_SOFTCAP_1:
+		mult = 0.5
+	state.attributes[key] = clampf(cur + amount * mult, 0.0, 100.0)
+
 # ---------- Ökonomie & Karriere-Mathematik (zustandslose Teile: Util.gd) ----------
 func required_rep(fame: float) -> int:
 	var req := 0 if fame <= 45 else roundi((fame - 45.0) * 1.1)
@@ -327,6 +346,9 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	}
 	for key in IDENTITY_KEYS:
 		state.identity[key] = 0.0
+	state["attributes"] = {}
+	for key in Data.ATTRIBUTES:
+		state.attributes[key] = Balance.ATTR_BASE
 	_init_rivals(start_year)
 	Persona.init_contacts()
 	Mogul.init_state()
@@ -391,6 +413,9 @@ func _apply_backstory_start() -> void:
 		book(roundf(float(start.cash_add) * Util.infl(state.startYear)), "sonstiges", "Backstory: %s" % str(b.name))
 	state.agency.rep = clampi(int(state.agency.rep) + int(start.get("rep_add", 0)), 0, 100)
 	state.instinct = clampi(int(state.instinct) + int(start.get("instinct_add", 0)), 5, 100)
+	# RPG-Attribute (Chunk 15): die Vorgeschichte seedet die Stärken
+	for attr_key in start.get("attributes", {}):
+		attr_gain(str(attr_key), float(start.attributes[attr_key]))
 	for kind_s in start.get("favors", []):
 		grant_favor(str(kind_s), favor_contact_for(str(kind_s)), true)
 	# Biografischer Start (Feature 41): frühere Tätigkeiten bringen
@@ -1011,6 +1036,7 @@ func suppress_rumor(rid: int) -> String:
 			return "No matching favor — and the till is short the %s they ask for." % Util.fmt_money(cost)
 		book(-float(cost), "pr_recht", "Rumor suppressed: %s" % rumor_subject_name(rumor))
 	record_identity("diskret", 1.5)
+	attr_gain("diskretion", 0.5)
 	Mogul.grant_xp("crisis", 2.0, "Buried a story")
 	Mogul.grant_xp("media", 1.0, "Buried a story")
 	rumor.belief = maxf(0.0, float(rumor.belief) - 38.0)
@@ -1035,6 +1061,7 @@ func studio_talk_rumor(rid: int) -> String:
 		rumor.holders = ["Assistants"]
 	record_identity("diskret", 1.0)
 	record_identity("studiotreu", 0.5)
+	attr_gain("diskretion", 0.3)
 	return "Behind closed doors, facts, guarantees and old debts get sorted. The industry becomes far more skeptical of the rumor."
 
 func counter_rumor(rid: int) -> String:
@@ -1263,6 +1290,7 @@ func grant_favor(kind: String, from: Dictionary = {}, silent: bool = false) -> D
 		exp = mi() + Util.rndi(24, 36)
 	var fav := {"id": next_id(), "kind": kind, "from": person, "gainedMi": mi(), "expiresMi": exp, "note": str(FAVOR_KINDS[kind].desc)}
 	state.favors.append(fav)
+	attr_gain("netzwerk", 0.3)
 	Persona.touch_contact_person(person, 2.0)
 	# Soziales Kapital (Feature 13): wer dir etwas schuldet, ist Hebel
 	Network.bump_dependence(str(person.get("name", "")), 6.0)
@@ -1511,6 +1539,7 @@ func sign_client(terms: Dictionary) -> Dictionary:
 	else:
 		press_event("Client moves", "%s signs with %s" % [actor.name, state.agency.name])
 	state.agency.rep = clampi(int(state.agency.rep) + roundi(nego.fame / 22.0), 0, 100)
+	attr_gain("verhandlung", 0.5)
 	Mogul.grant_xp("negotiation", 3.0, "Signed a client")
 	Mogul.grant_xp("people", 1.0, "Signed a client")
 	Network.memoir("%s signs with the agency — %d years, %d%% commission." % [actor.name, int(terms.years), int(terms.commission)], [str(actor.name)])
@@ -1792,6 +1821,7 @@ func haggle() -> Dictionary:
 	if Util.chance(p):
 		# Spezialisierung (Feature 42): der Meisterverhandler holt mehr heraus
 		pitch_ctx.fee = roundi(pitch_ctx.fee * (Balance.HAGGLE_MASTER_MULT if Mogul.has_ability("master_negotiator") else Balance.HAGGLE_MULT))
+		attr_gain("verhandlung", 0.4)
 		return {"success": true, "fee": pitch_ctx.fee}
 	Mogul.grant_xp("negotiation", 1.0, "A failed haggle teaches")
 	# „Second pass“: wer weiß, wann Schluss ist, sprengt selten den Deal
@@ -1833,6 +1863,7 @@ func try_package(support_role_idx: int, second_client_id) -> Dictionary:
 		c2.busyUntil = mi() + ceili(float(casting.deadline) / 4.0)
 		c2.mood = clampf(c2.mood + 8.0, 0.0, 100.0)
 		check_promises_on_deal(c2, casting, role2)
+		attr_gain("verhandlung", 0.4)
 		log_msg("Package deal sealed: %s also takes a supporting role in “%s” for %s." % [client_name(c2), casting.title, Util.fmt_money(fee2)], "deal")
 		state.agency.rep = clampi(int(state.agency.rep) + 2, 0, 100)
 		grant_favor("extraAudition", favor_contact_for("extraAudition", str(casting.studioId)))
@@ -1985,6 +2016,7 @@ func _month_close(events: Array) -> void:
 	var base_cost := roundi(office_base_cost() * backstory_mod("office_cost_mult", 1.0))
 	if int(state.get("plannerMonthCounts", {}).get("buecher", 0)) >= 3:
 		base_cost = roundi(base_cost * Balance.OFFICE_BOOKS_MULT)
+		attr_gain("geschaeftssinn", 0.3)
 	state["plannerMonthCounts"] = {}
 	var perk_cost := roundi(perk_costs())
 	book(-float(base_cost), "buero", "Office, staff & fixed costs")
@@ -2000,6 +2032,10 @@ func _month_close(events: Array) -> void:
 	Network.tick_month()
 	# Mitarbeiter: Löhne, Lernen, Loyalität & Abwerbung (Features 32–36)
 	Staff.tick_month(events)
+	# RPG-Attribut Geschäftssinn (Chunk 15): schwarze Monatszahlen schulen
+	var closing_month := live_month(mi())
+	if float(closing_month.income) > float(closing_month.expenses):
+		attr_gain("geschaeftssinn", 0.3)
 	_close_ledger_month(mi())
 	state.month = int(state.month) + 1
 	if state.month > 12:
@@ -2579,6 +2615,12 @@ func _apply_save_defaults() -> void:
 			state.identity[identity_key] = 0.0
 	if not state.has("identityLastTop"):
 		state["identityLastTop"] = []
+	# Migration RPG-Attribute (Chunk 15): fehlende Werte mit Basis nachrüsten
+	if not state.has("attributes") or not (state.attributes is Dictionary):
+		state["attributes"] = {}
+	for attr_key in Data.ATTRIBUTES:
+		if not state.attributes.has(attr_key):
+			state.attributes[attr_key] = Balance.ATTR_BASE
 	if not state.has("powerFigures"):
 		state["powerFigures"] = []
 	# Migration Spielfigur-Cluster
@@ -2800,6 +2842,7 @@ func _resolve_prediction(pr: Dictionary, correct: bool, label: String) -> void:
 	pr["correct"] = correct
 	if correct:
 		state.instinct = clampi(int(state.instinct) + 3, 0, 100)
+		attr_gain("menschenkenntnis", 0.5)
 		state.agency.rep = clampi(int(state.agency.rep) + 1, 0, 100)
 		log_msg("Prediction confirmed: %s — instinct +3, reputation +1." % label, "deal")
 	else:
@@ -3755,6 +3798,7 @@ const PLANNER_PLAYER = {
 	"pflege": {"name": "Client care", "icon": "🤝", "desc": "Trust +0.15 per slot with the chosen client"},
 	"presse": {"name": "Press work", "icon": "🗞", "desc": "Early rumor detection (from 2 slots/week)"},
 	"buecher": {"name": "Check the books", "icon": "🧾", "desc": "Office costs −10% (from 3 slots/month)"},
+	"weiterbildung": {"name": "Training", "icon": "📚", "desc": "From 3 slots/week your weakest attribute grows"},
 }
 
 
@@ -3822,6 +3866,7 @@ func _apply_planner(_events: Array) -> void:
 	var counts: Dictionary = state.get("plannerMonthCounts", {})
 	var scouting := 0
 	var presse := 0
+	var weiterbildung := 0
 	var dinner_slots: Dictionary = {}
 	var pflege_slots: Dictionary = {}
 	for s in state.planner.player:
@@ -3832,6 +3877,8 @@ func _apply_planner(_events: Array) -> void:
 		match a:
 			"scouting":
 				scouting += 1
+			"weiterbildung":
+				weiterbildung += 1
 			"dinner":
 				var sid := str(s.get("t", ""))
 				if sid != "":
@@ -3858,6 +3905,14 @@ func _apply_planner(_events: Array) -> void:
 			change_trust(pc, 0.15 * float(pflege_slots[pcid]))
 	if presse >= maxi(1, 2 - int(backstory_mod("presse_slot_bonus", 0.0))):
 		_planner_presse()
+	# Weiterbildung (Chunk 15): ab 3 Slots wächst das schwächste Attribut —
+	# kein gezieltes Pumpen, der Manager arbeitet an seiner Schwäche.
+	if weiterbildung >= 3 and state.has("attributes") and not state.attributes.is_empty():
+		var weakest := ""
+		for attr_key in state.attributes:
+			if weakest == "" or float(state.attributes[attr_key]) < float(state.attributes[weakest]):
+				weakest = str(attr_key)
+		attr_gain(weakest, 0.3)
 	state["plannerMonthCounts"] = counts
 	# Klienten-Wochen auswerten
 	for c in state.clients:

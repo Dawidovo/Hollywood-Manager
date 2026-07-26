@@ -1832,6 +1832,29 @@ func _ready() -> void:
 	check(dna_d_lead > 0.0, "DNA-Prägung: Romance schiebt die Romantik-Achse ins Positive")
 	check(absf(dna_d_lead - 2.0 * dna_d_supp) < 0.001, "DNA-Prägung: Hauptrolle prägt doppelt so stark wie Nebenrolle")
 
+	# RPG-Attribute (Chunk 15): Seeding, Ertragskurve, Save/Load, Migration
+	check(Data.ATTRIBUTES.size() == 5, "Attribute-Definitionen aus data/attributes geladen")
+	Game.new_game("Attributtest", 1950, "anwalt")
+	check(Game.attr("verhandlung") > roundi(Balance.ATTR_BASE), "Backstory Anwalt seedet Verhandlung über die Basis")
+	Game.state.attributes["netzwerk"] = 80.0
+	Game.attr_gain("netzwerk", 1.0)
+	check(absf(float(Game.state.attributes.netzwerk) - 80.25) < 0.001, "attr_gain über 70: nur ×0,25 Ertrag")
+	Game.state.attributes["diskretion"] = 20.0
+	Game.attr_gain("diskretion", 0.4)
+	check(absf(float(Game.state.attributes.diskretion) - 20.4) < 0.001, "attr_gain unter 40: voller Ertrag")
+	Game.state.attributes["menschenkenntnis"] = 55.0
+	Game.attr_gain("menschenkenntnis", 1.0)
+	check(absf(float(Game.state.attributes.menschenkenntnis) - 55.5) < 0.001, "attr_gain zwischen 40 und 70: halber Ertrag")
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Attribut-Spielstand geladen")
+	check(absf(float(Game.state.attributes.netzwerk) - 80.25) < 0.001, "Attribute überleben Save/Load")
+	Game.state.erase("attributes")
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Alt-Stand ohne Attribute geladen")
+	check(Game.attr("verhandlung") == roundi(Balance.ATTR_BASE), "Migration rüstet Attribute mit Basiswerten nach")
+
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.
 	Game.start_negotiation("monroe")

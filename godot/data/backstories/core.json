@@ -21,7 +21,10 @@
 			},
 			"contacts_extra": [
 				"studio"
-			]
+			],
+			"attributes": {
+				"netzwerk": 12
+			}
 		},
 		"trait": {
 			"de": "House scent: studio dinners are one and a half times as effective.",
@@ -55,7 +58,11 @@
 			},
 			"contacts_extra": [
 				"journalist"
-			]
+			],
+			"attributes": {
+				"diskretion": 10,
+				"netzwerk": 10
+			}
 		},
 		"trait": {
 			"de": "Ear to the town: new rumors reach you instantly, press work already counts from 1 slot.",
@@ -87,7 +94,11 @@
 			},
 			"contacts_extra": [
 				"anwalt"
-			]
+			],
+			"attributes": {
+				"verhandlung": 12,
+				"geschaeftssinn": 8
+			}
 		},
 		"trait": {
 			"de": "Watertight: your contract offers come across far more convincing.",
@@ -119,7 +130,10 @@
 			},
 			"contacts_extra": [
 				"regisseur"
-			]
+			],
+			"attributes": {
+				"menschenkenntnis": 12
+			}
 		},
 		"trait": {
 			"de": "Empathy: you read talent more precisely (tighter grade spreads) and gain trust faster (×1.25).",
@@ -151,7 +165,10 @@
 			},
 			"contacts_extra": [
 				"financier"
-			]
+			],
+			"attributes": {
+				"geschaeftssinn": 12
+			}
 		},
 		"trait": {
 			"de": "Every dollar counts: office costs permanently −10%.",
