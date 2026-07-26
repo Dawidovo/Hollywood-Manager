@@ -41,6 +41,14 @@ const PROD_MODERN_YEAR := 2015
 const PROD_MONTHS_MIN_MODERN := 3
 const PROD_MONTHS_MAX_MODERN := 5
 
+# ---------- Comeback (spätes Karriere-Kunststück) ----------
+# Ein Star nach dem Zenit, ein Prestige-Projekt, eine Kampagne: zündet es
+# (Einspielfaktor oder Qualität über den Schwellen), ist er zurück.
+const COMEBACK_CAMPAIGN_COST := 8000.0
+const COMEBACK_SUCCESS_RATIO := 1.6
+const COMEBACK_SUCCESS_QUALITY := 70
+const COMEBACK_SUCCESS_FAME := 14.0
+
 # ---------- Versprechen ----------
 const PROMISE_KEPT_LOYALTY := 18.0
 const PROMISE_KEPT_TRUST := 14.0

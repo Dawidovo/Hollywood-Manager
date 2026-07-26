@@ -1167,6 +1167,10 @@ func _on_end_week() -> void:
 		_show_next_modal()
 
 
+func _on_comeback(cid: int) -> void:
+	_show_simple_modal("🌅 The second act", Game.launch_comeback(cid))
+	render()
+
 # ---------- Personal: the manager as their own system ----------
 # Runs a persona action, then re-renders.
 func _player_action(action: Callable) -> void:
@@ -2581,6 +2585,12 @@ func _render_klienten() -> void:
 			for type_s in Game.narrative_candidate_types(c):
 				narrative_buttons.add_child(_btn(str(Game.NARRATIVE_TYPES[type_s].label), _on_narrative.bind(int(c.id), str(type_s))))
 			box.add_child(narrative_buttons)
+		# Comeback (spätes Karriere-Kunststück): ein Versuch, wenn der Zenit
+		# überschritten und der Ruhm tief genug gefallen ist.
+		if Game.comeback_possible(c):
+			box.add_child(_btn("🌅 Stage a comeback (−%s)" % Util.fmt_money(Game.comeback_cost()), _on_comeback.bind(int(c.id))))
+		elif c.flags.get("comebackActive", false):
+			box.add_child(_lbl("🌅 Comeback in production — everything rides on the premiere.", 12, AMBER))
 		for pr in c.promises:
 			var icon := "✅" if pr.fulfilled else ("❌" if pr.get("broken", false) else "📜")
 			var pcol := GREEN if pr.fulfilled else (RED if pr.get("broken", false) else DIM)

@@ -1996,6 +1996,39 @@ func fulfill_promise(c: Dictionary, pr: Dictionary) -> void:
 	state.agency.rep = clampi(int(state.agency.rep) + Balance.PROMISE_KEPT_REP, 0, 100)
 	log_msg("Promise kept: %s — %s. Loyalty rises sharply." % [client_name(c), pr.label], "deal")
 
+# ---------- Comeback: das späte Karriere-Kunststück ----------
+# Ein Star nach dem Zenit bekommt EIN gezieltes Prestige-Projekt samt
+# Kampagne. Zündet es, ist er zurück im Gespräch — scheitert es, ist
+# die Geschichte auserzählt (ein Versuch pro Klient).
+func comeback_possible(c: Dictionary) -> bool:
+	var actor: Dictionary = actor_by_id.get(str(c.get("aid", "")), {})
+	if actor.is_empty() or not is_free(c):
+		return false
+	if c.flags.get("comebackDone", false) or c.flags.get("comebackActive", false):
+		return false
+	if float(state.year) <= float(actor.peak) or Util.age_of(actor, state.year) > 78:
+		return false
+	return float(c.fame) < minf(55.0, float(actor.peakFame) * 0.6)
+
+func comeback_cost() -> int:
+	return roundi(Balance.COMEBACK_CAMPAIGN_COST * Util.infl(state.year))
+
+func launch_comeback(cid) -> String:
+	var c = client(cid)
+	if c == null or not comeback_possible(c):
+		return "The moment for this has passed."
+	var cost := comeback_cost()
+	if float(state.agency.cash) < float(cost):
+		return "A comeback needs a campaign — and the till cannot cover %s." % Util.fmt_money(cost)
+	book(-float(cost), "pr_recht", "Comeback campaign: %s" % client_name(c))
+	var res: Dictionary = quick_production(c, {"prestige": 3, "qualityMod": 6.0})
+	res.prod["comeback"] = true
+	c.flags["comebackActive"] = true
+	record_identity("klientenorientiert", 1.0)
+	press_event("Careers", "One more picture: %s stakes everything on the return of %s" % [state.agency.name, client_name(c)])
+	log_msg("Comeback project: “%s” — everything rides on this one." % str(res.prod.title), "history")
+	return "The town loves nothing more than a second act. “%s” goes into production — with a campaign to match." % str(res.prod.title)
+
 func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	var actor: Dictionary = actor_by_id[c.aid]
 	var genre: String = opts.get("genre", Util.pick(actor.genres) if Util.chance(0.7) else pick_genre())
@@ -2493,6 +2526,21 @@ func release_film(prod: Dictionary) -> Dictionary:
 		c.fame = clampf(c.fame + delta, 5.0, 100.0)
 		c.heat = clampf(c.heat + delta * 0.7, -10.0, 10.0)
 		c.loyalty = clampf(c.loyalty + (3.0 if delta > 0 else -2.0), 0.0, 100.0)
+		# Comeback-Projekt: Alles-oder-nichts, über den normalen Delta hinaus
+		if bool(prod.get("comeback", false)) and r.type == "lead":
+			c.flags.erase("comebackActive")
+			c.flags["comebackDone"] = true
+			if ratio >= Balance.COMEBACK_SUCCESS_RATIO or quality >= Balance.COMEBACK_SUCCESS_QUALITY:
+				c.fame = clampf(c.fame + Balance.COMEBACK_SUCCESS_FAME, 5.0, 100.0)
+				c.heat = clampf(c.heat + 5.0, -10.0, 10.0)
+				c.dna.unikat = clampf(c.dna.unikat + 6.0, -100.0, 100.0)
+				press_event("Careers", "The comeback of the year: %s returns in “%s”" % [client_name(c), prod.title])
+				log_msg("The second act works: %s is back in the conversation." % client_name(c), "history")
+			else:
+				c.fame = clampf(c.fame - 3.0, 5.0, 100.0)
+				c.mood = clampf(c.mood - 12.0, 0.0, 100.0)
+				c.loyalty = clampf(c.loyalty - 6.0, 0.0, 100.0)
+				press_event("Careers", "The comeback that wasn't: “%s” cannot revive %s" % [prod.title, client_name(c)])
 		c.films.push_front({"title": prod.title, "year": int(state.year), "verdict": verdict, "quality": quality, "lead": r.type == "lead", "genre":prod.genre, "prestige":int(prod.prestige), "ratio":ratio, "fameDelta":delta})
 		if c.films.size() > 12:
 			c.films.pop_back()

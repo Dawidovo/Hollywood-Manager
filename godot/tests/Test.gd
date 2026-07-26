@@ -1964,6 +1964,30 @@ func _ready() -> void:
 	check(Game.state.clients.is_empty(), "Ziehen lassen: der Klient verlässt die Agentur")
 	check(Game.state.rivals.any(func(r): return r.clients.has("monroe")), "Der Rivale übernimmt den Klienten")
 
+	# Comeback: Berechtigung, Start, Auflösung
+	Game.new_game("Comeback", 1950)
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var cb_c: Dictionary = Game.state.clients[0]
+	check(not Game.comeback_possible(cb_c), "Aufsteigender Star ist kein Comeback-Kandidat")
+	var cb_actor: Dictionary = Game.actor_by_id[cb_c.aid]
+	Game.state.year = float(cb_actor.peak) + 10.0
+	cb_c.fame = 25.0
+	check(Game.comeback_possible(cb_c), "Nach dem Zenit mit tiefem Ruhm: Comeback möglich")
+	var cb_cash0 := float(Game.state.agency.cash)
+	Game.launch_comeback(int(cb_c.id))
+	check(float(Game.state.agency.cash) < cb_cash0, "Comeback-Kampagne kostet Budget")
+	check(bool(Game.state.productions[-1].get("comeback", false)) and bool(cb_c.flags.get("comebackActive", false)), "Comeback-Produktion ist markiert")
+	check(not Game.comeback_possible(cb_c), "Nur ein Comeback-Versuch zugleich")
+	var cb_prod: Dictionary = Game.state.productions[-1]
+	Game.state.market = 2.5
+	seed(21)
+	var cb_fame0 := float(cb_c.fame)
+	Game.release_film(cb_prod)
+	check(float(cb_c.fame) >= cb_fame0 + 10.0, "Gelungenes Comeback hebt den Ruhm deutlich")
+	check(bool(cb_c.flags.get("comebackDone", false)) and not cb_c.flags.has("comebackActive"), "Das Comeback ist verbraucht — ein Versuch pro Klient")
+	Game.state.market = 1.0
+
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.
 	Game.start_negotiation("monroe")
