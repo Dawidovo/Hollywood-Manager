@@ -932,6 +932,15 @@ func _on_load_save() -> void:
 	if Game.load_game():
 		Jukebox.start(int(Game.state.year))
 		_enter_game()
+	else:
+		_open_modal()
+		modal_box.add_child(_lbl("⚠ Saved game could not be loaded", 22, ACC))
+		var reason := Game.load_error if Game.load_error != "" else "Unknown error while reading the save file."
+		var reason_lbl := _lbl(reason, 13, DIM)
+		reason_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		reason_lbl.custom_minimum_size = Vector2(520, 0)
+		modal_box.add_child(reason_lbl)
+		modal_box.add_child(_btn("Back", _close_modal))
 
 func _enter_game() -> void:
 	start_screen.visible = false

@@ -21,7 +21,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | 01 | [Balance-Konstanten](01-balance-konstanten.md) | Tech Debt | offen |
 | 02 | [Game.gd: Utils extrahieren](02-game-gd-utils-extrahieren.md) | Tech Debt | offen |
 | 03 | [Game.gd: DNA-System extrahieren](03-game-gd-dna-extrahieren.md) | Tech Debt | offen |
-| 04 | [Save-Versionierung & Migration](04-save-migration.md) | Robustheit | offen |
+| 04 | [Save-Versionierung & Migration](04-save-migration.md) | Robustheit | erledigt (Versionskette `_migrate_save`, Backup `hm_save.bak.json`, Fehlerdialog, v1-Fixture-Test) |
 | 05 | [Testsuite ausbauen](05-tests-ausbauen.md) | Qualität | offen |
 | 06 | [gdlint/gdformat einführen](06-gdlint-einfuehren.md) | Tooling | erledigt (gdlint aktiv; gdformat bewusst ausgelassen — Riesen-Diff) |
 | 07 | [SonarQube-Findings abarbeiten](07-sonarqube-findings.md) | Qualität | erledigt (laufende Regel) |

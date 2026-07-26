@@ -160,6 +160,9 @@ func _ready() -> void:
 	var f_before: int = Game.state.favors.size()
 	Game._expire_favors()
 	check(Game.state.favors.size() == f_before - 1, "Verfallener Gefallen wird entfernt (Verjährung)")
+	# consume_favor kann per Zufall (25%) eine Gegenschuld erzeugen — für die
+	# deterministische Zählung unten wird das Register vorher geleert.
+	Game.state.debts.clear()
 	Game.owe_favor("galaInvite", {"type": "studio", "name": "Teststudio", "studioId": "test"})
 	check(Game.state.debts.size() == 1, "Schuld angelegt (owe_favor)")
 	Game.remove_debt(Game.state.debts[0].id)
@@ -836,6 +839,47 @@ func _ready() -> void:
 	check(int(Game.state.castings[0].deadline) == 8, "Casting-Deadline auf Wochen umgestellt (2 → 8)")
 	Game.ensure_planner()
 	check(Game.state.planner.player.size() == 21, "Planer auf 21 Slots erweitert")
+
+	# =====================================================================
+	# Save-Migration: Alt-Save-Fixture (Chunk 04) — echtes v1-JSON von Platte
+	# =====================================================================
+	var fixture_f := FileAccess.open("res://tests/fixtures/save_v1.json", FileAccess.READ)
+	check(fixture_f != null, "Alt-Save-Fixture vorhanden (tests/fixtures/save_v1.json)")
+	var fixture_text := fixture_f.get_as_text()
+	fixture_f.close()
+	var fixture_save := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+	fixture_save.store_string(fixture_text)
+	fixture_save.close()
+	Game.state = null
+	check(Game.load_game(), "Alt-Save-Fixture (v1, ohne saveVersion) geladen")
+	check(int(Game.state.saveVersion) == Game.SAVE_VERSION, "Fixture auf aktuelle Save-Version migriert")
+	var fx_c: Dictionary = Game.state.clients[0]
+	check(fx_c.has("dna") and fx_c.has("trust") and float(fx_c.weightKg) > 0.0, "Fixture-Klient: DNA, Vertrauen & Gewicht nachgerüstet")
+	check(int(Game.state.productions[0].weeksLeft) == 12 and not Game.state.productions[0].has("monthsLeft"), "Fixture-Produktion: monthsLeft 3 → weeksLeft 12")
+	check(int(Game.state.castings[0].deadline) == 8, "Fixture-Casting: Deadline auf Wochen umgestellt")
+	Game.state.strikeMonths = 0
+	Game.end_week()
+	check(int(Game.state.week) == 2 and not Game.state.over, "Fixture-Stand ist bespielbar (end_week läuft durch)")
+
+	# Korrupter Save: abweisen, Grund nennen, Backup anlegen — nie überschreiben
+	if FileAccess.file_exists(Game.SAVE_BACKUP_PATH):
+		DirAccess.remove_absolute(Game.SAVE_BACKUP_PATH)
+	var corrupt_f := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+	corrupt_f.store_string("{ kaputt und kein JSON")
+	corrupt_f.close()
+	check(not Game.load_game(), "Korrupter Save wird abgewiesen statt zu crashen")
+	check(Game.load_error != "", "Ladefehler nennt einen Grund für die UI")
+	check(FileAccess.file_exists(Game.SAVE_BACKUP_PATH), "Korrupter Save wurde als hm_save.bak.json gesichert")
+
+	# Save aus einer neueren Spielversion: abweisen + Backup
+	var newer_f := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+	newer_f.store_string(JSON.stringify({"saveVersion": Game.SAVE_VERSION + 1}))
+	newer_f.close()
+	check(not Game.load_game(), "Save aus neuerer Version wird abgewiesen")
+	check(Game.load_error.contains("newer"), "Fehlertext benennt die neuere Version")
+	# Aufräumen: definierten Spielstand für die folgenden Tests herstellen
+	Game.new_game("Nach Fixture", 1950)
+	Game.save_game()
 
 	# =====================================================================
 	# DataLoader: Merge/Override/Anreicherung, Overlay unter user://data

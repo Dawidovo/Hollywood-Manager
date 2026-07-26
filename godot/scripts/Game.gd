@@ -2620,6 +2620,11 @@ func awards_ceremony() -> Variant:
 
 # ---------- Speichern / Laden ----------
 const SAVE_PATH := "user://hm_save.json"
+const SAVE_BACKUP_PATH := "user://hm_save.bak.json"
+const SAVE_VERSION := 2
+
+# Grund des letzten Ladefehlers — die UI zeigt ihn statt still zu scheitern.
+var load_error := ""
 
 func save_game() -> void:
 	if state == null:
@@ -2631,29 +2636,62 @@ func save_game() -> void:
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
+# Nicht ladbare Saves werden nie überschrieben, sondern vorher weggesichert.
+func _backup_save() -> void:
+	var src = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if src == null:
+		return
+	var dst = FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+	dst.store_string(src.get_as_text())
+	dst.close()
+	src.close()
+
 func load_game() -> bool:
+	load_error = ""
 	if not has_save():
 		return false
 	var f = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	var parsed = JSON.parse_string(f.get_as_text())
 	f.close()
-	if parsed == null:
+	if parsed == null or not (parsed is Dictionary):
+		_backup_save()
+		load_error = "The save file could not be read (corrupt data). A copy was kept as hm_save.bak.json — the game will not overwrite it."
+		push_warning(load_error)
 		return false
-	if int(parsed.get("saveVersion", 1)) > 2:
-		push_warning("Save file comes from a newer version — refusing to load.")
+	if int(parsed.get("saveVersion", 1)) > SAVE_VERSION:
+		_backup_save()
+		load_error = "This save comes from a newer game version (v%d, this build reads up to v%d). A copy was kept as hm_save.bak.json." % [int(parsed.saveVersion), SAVE_VERSION]
+		push_warning(load_error)
 		return false
 	state = parsed
-	# v1 → v2: Umstellung auf den Wochenrhythmus.
-	if int(state.get("saveVersion", 1)) < 2:
-		state["week"] = 1
-		for prod in state.get("productions", []):
-			prod["weeksLeft"] = int(prod.get("monthsLeft", 4)) * 4
-			prod.erase("monthsLeft")
-		for cs in state.get("castings", []):
-			cs["deadline"] = int(cs.get("deadline", 2)) * 4
-		# Alte 4-Slot-Planung verwerfen — ensure_planner baut die 21-Slot-Woche auf.
-		state["planner"] = {"player": [], "clients": {}}
-		state["saveVersion"] = 2
+	_migrate_save()
+	_apply_save_defaults()
+	return true
+
+# Versionskette: pro Versionssprung ein Schritt, bis SAVE_VERSION erreicht ist.
+# Neue Sprünge unten als eigenen match-Zweig ergänzen (SAVE_VERSION mit anheben).
+func _migrate_save() -> void:
+	while int(state.get("saveVersion", 1)) < SAVE_VERSION:
+		match int(state.get("saveVersion", 1)):
+			1:
+				_migrate_v1_to_v2()
+			_:
+				state["saveVersion"] = SAVE_VERSION
+
+# v1 → v2: Umstellung auf den Wochenrhythmus.
+func _migrate_v1_to_v2() -> void:
+	state["week"] = 1
+	for prod in state.get("productions", []):
+		prod["weeksLeft"] = int(prod.get("monthsLeft", 4)) * 4
+		prod.erase("monthsLeft")
+	for cs in state.get("castings", []):
+		cs["deadline"] = int(cs.get("deadline", 2)) * 4
+	# Alte 4-Slot-Planung verwerfen — ensure_planner baut die 21-Slot-Woche auf.
+	state["planner"] = {"player": [], "clients": {}}
+	state["saveVersion"] = 2
+
+# Versionsunabhängig: fehlende Felder älterer Stände defensiv mit Defaults füllen.
+func _apply_save_defaults() -> void:
 	if not state.has("week"):
 		state["week"] = 1
 	if not state.has("backstory"):
@@ -2816,7 +2854,6 @@ func load_game() -> bool:
 			figure["rivalId"] = ""
 		if not figure.has("credits"):
 			figure["credits"] = 0
-	return true
 
 
 # =====================================================================

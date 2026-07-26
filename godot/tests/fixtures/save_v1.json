@@ -1,0 +1,34 @@
+{
+	"agency": {"name": "Fixture Talent Agency", "cash": 52000.0, "rep": 22, "debtMonths": 0},
+	"year": 1950, "month": 3, "startYear": 1950,
+	"clients": [
+		{
+			"id": 1, "aid": "bogart", "fame": 72.0, "heat": 2.0, "loyalty": 55.0,
+			"mood": 60.0, "exhaustion": 10.0, "commission": 10, "perks": [],
+			"years": 3, "contractEnd": 23438, "promises": [], "busyUntil": 0,
+			"films": [], "flags": {}, "talentBonus": 0.0, "campaign": 0.0, "awards": 0,
+			"signedAt": 23402
+		}
+	],
+	"castings": [
+		{
+			"id": 2, "studioId": "mgm", "title": "The Long Meeting", "genre": "drama",
+			"prestige": 1, "budget": 900000, "deadline": 2, "qualityMod": 0.0,
+			"roles": [
+				{"type": "lead", "gender": "m", "minFame": 40, "ageMin": 30, "ageMax": 55,
+				 "fee": 45000, "filled": null, "rejected": []}
+			]
+		}
+	],
+	"productions": [
+		{
+			"id": 3, "studioId": "mgm", "title": "Old Reel", "genre": "drama",
+			"prestige": 1, "budget": 800000, "monthsLeft": 3, "qualityMod": 0.0, "roles": []
+		}
+	],
+	"released": [], "log": [],
+	"studioRel": {"mgm": 32}, "market": 1.0, "marketHistory": [], "usedHistory": [],
+	"eventCd": {}, "followups": [], "usedTitles": [],
+	"strikeMonths": 0, "strikeExempt": false,
+	"nextId": 10, "over": false
+}
