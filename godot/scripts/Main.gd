@@ -74,6 +74,9 @@ var modal_box: VBoxContainer
 
 var current_tab := "buero"
 var modal_queue: Array = []
+# Screen-Module (Chunk 09): ausgelagerte Tabs bekommen die Main-Referenz
+# für die UI-Bausteine und rendern in content_box.
+@onready var finance_screen := preload("res://scripts/ui/FinanceScreen.gd").new(self)
 var modal_open := false
 var pool_filter := ""
 var nego_form: Dictionary = {}
@@ -1135,7 +1138,7 @@ func render() -> void:
 		"castings": _render_castings()
 		"filme": _render_filme()
 		"planer": _render_planer()
-		"finanzen": _render_finanzen()
+		"finanzen": finance_screen.render()
 		"chronik": _render_chronik()
 	_render_sidebar()
 
@@ -3500,74 +3503,7 @@ func _run_production_negotiation(prod_id: int, kind: String) -> void:
 	_show_outcome_modal("Production renegotiation", outcome)
 
 # ---------- Tab: Finances (ledger) ----------
-func _render_finanzen() -> void:
-	var st = Game.state
-	var grid := _grid(560.0)
-	grid.columns = clampi(grid.columns, 1, 2)
-	content_box.add_child(grid)
-
-	# Kennzahlen
-	var kc = _card("Key figures", "📊")
-	grid.add_child(kc[0])
-	var burn := Game.avg_burn(6)
-	var runway := Game.months_to_broke()
-	kc[1].add_child(_lbl("💰 Capital: %s" % Util.fmt_money(st.agency.cash), 14, RED if st.agency.cash < 0 else TEXT_C))
-	kc[1].add_child(_lbl("🔥 Avg. expenses (6 mo.): %s / month" % Util.fmt_money(burn), 13, DIM))
-	if runway >= 0.0 and runway < 900.0:
-		kc[1].add_child(_lbl("⏳ Runway at the current burn: ~%d months" % roundi(runway), 13, RED if runway < 6.0 else (AMBER if runway < 12.0 else GREEN)))
-	var top_cat := Game.top_income_cat(12)
-	if top_cat != "":
-		kc[1].add_child(_lbl("🏆 Biggest income source: %s" % Game.LEDGER_CATS.get(top_cat, top_cat), 13, DIM))
-
-	# Laufender Monat nach Kategorie
-	var lm: Dictionary = Game.live_month(Game.mi())
-	var mc = _card("Current month: %s" % Game.date_str(), "🗓")
-	grid.add_child(mc[0])
-	mc[1].add_child(_lbl("Income %s · expenses %s · balance %s" % [Util.fmt_money(lm.income), Util.fmt_money(lm.expenses), Util.fmt_money(lm.income - lm.expenses)], 13, GREEN if lm.income >= lm.expenses else RED))
-	var cat_max := 1.0
-	for cat in lm.byCat:
-		cat_max = maxf(cat_max, absf(float(lm.byCat[cat])))
-	for cat in lm.byCat:
-		var amt: float = lm.byCat[cat]
-		var row := HBoxContainer.new()
-		var nm := _lbl("%s %s" % ["▲" if amt >= 0 else "▼", Game.LEDGER_CATS.get(cat, cat)], 12, GREEN if amt >= 0 else RED)
-		nm.custom_minimum_size = Vector2(220 * font_scale, 0)
-		nm.autowrap_mode = TextServer.AUTOWRAP_OFF
-		row.add_child(nm)
-		var pb := _bar(absf(amt) / cat_max * 100.0, GREEN if amt >= 0 else RED, 7)
-		pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(pb)
-		var av := _lbl(Util.fmt_money(amt), 12, DIM)
-		av.autowrap_mode = TextServer.AUTOWRAP_OFF
-		row.add_child(av)
-		mc[1].add_child(row)
-	if lm.byCat.is_empty():
-		mc[1].add_child(_lbl("No bookings this month yet.", 12, DIM))
-
-	# Letzte 12 Monate
-	var hist: Array = st.ledgerMonthly.slice(maxi(0, st.ledgerMonthly.size() - 12))
-	if hist.size():
-		var hc = _card("Last %d months" % hist.size(), "📈")
-		grid.add_child(hc[0])
-		var cumulative := 0.0
-		for m in hist:
-			var saldo: float = float(m.income) - float(m.expenses)
-			cumulative += saldo
-			hc[1].add_child(_lbl("%s — ▲ %s · ▼ %s · balance %s · Σ %s" % [Game.mi_str(m.mi), Util.fmt_money(m.income), Util.fmt_money(m.expenses), Util.fmt_money(saldo), Util.fmt_money(cumulative)], 12, GREEN if saldo >= 0 else RED))
-
-	# Einzelbuchungen der letzten 3 Monate
-	var jc = _card("Itemized bookings (last 3 months)", "🧾")
-	grid.add_child(jc[0])
-	var shown := 0
-	for i in range(st.ledger.size() - 1, -1, -1):
-		var e: Dictionary = st.ledger[i]
-		if Game.mi() - int(e.mi) > 2 or shown >= 30:
-			break
-		jc[1].add_child(_lbl("%s · %s%s · %s — %s" % [Game.mi_str(e.mi), "▲" if float(e.amount) >= 0 else "▼", Util.fmt_money(absf(float(e.amount))), Game.LEDGER_CATS.get(str(e.cat), str(e.cat)), e.text], 12, GREEN if float(e.amount) >= 0 else RED))
-		shown += 1
-	if shown == 0:
-		jc[1].add_child(_lbl("No bookings yet.", 12, DIM))
+# ---------- Tab: Finanzen — extrahiert nach ui/FinanceScreen.gd (Chunk 09) ----------
 
 # ---------- Tab: Hollywood newspaper ----------
 func _render_zeitung() -> void:
