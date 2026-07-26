@@ -62,6 +62,7 @@ Events, Dialoge und Briefe teilen **eine deklarative Effekt-Sprache** (Ops wie `
 - **Screenshots:** `Godot_....exe --path godot --resolution 2000x1100 -- --shot-<name>` — das `--` vor den Shot-Args ist Pflicht, sonst Endlos-Prozess
 - **Lint:** gdlint via `tools\lint.ps1` (Konfig `godot/.gdlintrc`); läuft im Pre-Commit-Hook zusammen mit SonarQube-Quality-Gate (nur `tools/`-Python)
 - **Daten-Reformat:** `tools/ExportData.gd` schreibt die Core-JSONs frisch formatiert zurück
+- **Balance-Sim:** `--headless --path godot res://tools/BalanceSim.tscn` spielt pro Epoche 104 Wochen mit Standard-Heuristik und druckt Ökonomie-Kennzahlen als `SIM;`-CSV — vor/nach Balance-Änderungen laufen lassen (Befunde: Chunks 19/20)
 
 Spielstände/Mods: `%APPDATA%\Godot\app_userdata\Hollywood Manager\` (`hm_save.json`, `data/`).
 
