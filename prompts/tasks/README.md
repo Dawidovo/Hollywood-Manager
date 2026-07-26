@@ -28,17 +28,17 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | 08 | [Web-Prototyp einfrieren](08-web-prototyp-einfrieren.md) | Tech Debt | entschieden |
 | 09 | [Main.gd: UI in Screens aufteilen](09-main-gd-screens-aufteilen.md) | Tech Debt | offen |
 | 10 | [Fehlerbehandlung Daten/Save](10-fehlerbehandlung-daten.md) | Robustheit | offen |
-| 11 | [Körperdaten I: Größe & Gewicht](11-koerperdaten-basis.md) | Feature | offen |
-| 12 | [Körperdaten II: Gewichtsdynamik](12-koerperdaten-dynamik.md) | Feature | offen |
-| 13 | [Verhandlungen homogenisieren](13-verhandlungen-homogenisieren.md) | UI-Qualität | offen |
+| 11 | [Körperdaten I: Größe & Gewicht](11-koerperdaten-basis.md) | Feature | erledigt (Commit `8cca6d8`) |
+| 12 | [Körperdaten II: Gewichtsdynamik](12-koerperdaten-dynamik.md) | Feature | erledigt (Commit `b7b3bae`) |
+| 13 | [Verhandlungen homogenisieren](13-verhandlungen-homogenisieren.md) | UI-Qualität | erledigt (Commit `db75888` — `_nego_header`/`_nego_actions` aktiv) |
 | 14 | [Layout-Audit Buchstaben-Umbruch](14-layout-audit-buchstabenumbruch.md) | Bugfix | offen |
 | 15 | [RPG I: Attribute der Spielfigur](15-rpg-attribute.md) | RPG | offen |
 | 16 | [RPG II: Proben in Events](16-rpg-proben-events.md) | RPG | offen |
 | 17 | [RPG III: Quest-Journal](17-rpg-questjournal.md) | RPG | offen |
-| 18 | [RPG IV: Kontaktbuch & NPCs](18-rpg-npc-beziehungen.md) | RPG | offen |
+| 18 | [RPG IV: Kontaktbuch & NPCs](18-rpg-npc-beziehungen.md) | RPG | überholt — umfangreicher umgesetzt über `Network.gd` (Kontaktbuch, Beziehungsdimensionen, Gefallen an Personen); Rest-Ideen bei Bedarf als neuer Chunk |
 
 Reihenfolge-Empfehlung: 06 → 01 → 02 → 05 → 04 → 03 → 07 → 10 → 09 → 08. (Erst Tooling & Sicherheitsnetz, dann Refactorings.)
-Für die neuen Chunks 11–14: **14 zuerst** (sichtbarer Bug), dann 13 → 11 → 12 (12 setzt 11 voraus).
-RPG-Ausbau (Konzept: [../rpg_konzept.md](../rpg_konzept.md)): strikt 15 → 16 → 17 → 18 — jeder Chunk setzt den vorigen voraus.
+Für die neuen Chunks 11–14: nur noch **14** offen (sichtbarer Bug).
+RPG-Ausbau (Konzept: [../rpg_konzept.md](../rpg_konzept.md)): strikt 15 → 16 → 17 — jeder Chunk setzt den vorigen voraus; 18 ist durch das Netzwerk-System überholt.
 
 > ℹ️ **Architektur-Stand seit Juli 2026** (neuer als die Chunks 01–10): Spieldaten liegen als JSON unter `godot/data/` (Loader: `DataLoader.gd`, Doku: `godot/data/README.md`), Events laufen datengetrieben über `EventEngine.gd` (`data/events/*.json`), der Spielzug ist **wöchentlich** (`Game.end_week()`, 21-Slot-Planer), Spielstart mit wählbarer Backstory. Screenshot-Hooks: `Godot_v4.7.1-stable_win64.exe --path godot --resolution 2000x1100 -- --shot-<name>` — das `--` vor den Shot-Args ist Pflicht.
