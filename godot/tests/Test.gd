@@ -68,8 +68,8 @@ func _ready() -> void:
 
 	# 5. DNA-Casting-Effekt: Romantiker vs. Horror
 	c.dna = {"romantik": 80.0, "popular": 40.0, "verlass": 20.0, "unikat": 0.0, "familie": 50.0}
-	var fit_rom = Game.dna_fit(c, "romance", "commercial")
-	var fit_hor = Game.dna_fit(c, "horror", "commercial")
+	var fit_rom = CareerDNA.dna_fit(c, "romance", "commercial")
+	var fit_hor = CareerDNA.dna_fit(c, "horror", "commercial")
 	check(fit_rom > 5.0 and fit_hor < 0.0, "DNA-Fit: Romanze %+0.1f vs. Horror %+0.1f" % [fit_rom, fit_hor])
 
 	# 6. Monatsschleife mit Event-Auflösung (immer Option 0)
@@ -1810,7 +1810,7 @@ func _ready() -> void:
 	# Casting-Fit: Genre-Match schlägt fremdes Genre (fit_score ist RNG-frei)
 	Game.new_game("Regression", 1950)
 	var fit_c := {"id": 77777, "aid": "bogart", "perks": [], "fame": 60.0, "heat": 0.0,
-		"exhaustion": 0.0, "flags": {}, "dna": Game.initial_dna(Game.actor_by_id["bogart"]),
+		"exhaustion": 0.0, "flags": {}, "dna": CareerDNA.initial_dna(Game.actor_by_id["bogart"]),
 		"exclusiveStudio": "", "clauses": [], "talentBonus": 0.0}
 	var fit_role := {"type": "lead", "gender": "m", "minFame": 30, "ageMin": 30, "ageMax": 60, "fee": 40000, "filled": null, "rejected": []}
 	var fit_cast := {"id": 9001, "studioId": "mgm", "title": "Fit-Test", "genre": "crime", "prestige": 1, "budget": 1000000, "deadline": 8, "qualityMod": 0.0, "roles": [fit_role]}
@@ -1818,6 +1818,19 @@ func _ready() -> void:
 	fit_cast.genre = "western"
 	var fit_off := Game.fit_score(fit_cast, fit_role, fit_c)
 	check(fit_match > fit_off, "fit_score: Genre-Match (%d) schlägt fremdes Genre (%d)" % [fit_match, fit_off])
+
+	# Karriere-DNA (Chunk 03): Prägung schiebt die erwartete Achse in die
+	# erwartete Richtung, Hauptrolle (mult 1,0) prägt doppelt so stark wie
+	# Nebenrolle (mult 0,5).
+	var dna_lead := {"dna": CareerDNA.initial_dna(Game.actor_by_id["bogart"])}
+	var dna_supp := {"dna": dna_lead.dna.duplicate(true)}
+	var dna_rom0: float = float(dna_lead.dna.romantik)
+	CareerDNA.imprint_dna(dna_lead, "romance", 1.0, 1, 1.5)
+	CareerDNA.imprint_dna(dna_supp, "romance", 0.5, 1, 1.5)
+	var dna_d_lead: float = float(dna_lead.dna.romantik) - dna_rom0
+	var dna_d_supp: float = float(dna_supp.dna.romantik) - dna_rom0
+	check(dna_d_lead > 0.0, "DNA-Prägung: Romance schiebt die Romantik-Achse ins Positive")
+	check(absf(dna_d_lead - 2.0 * dna_d_supp) < 0.001, "DNA-Prägung: Hauptrolle prägt doppelt so stark wie Nebenrolle")
 
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.

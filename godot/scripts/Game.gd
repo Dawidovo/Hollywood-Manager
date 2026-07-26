@@ -29,14 +29,6 @@ const CONTRACT_YEARS = [2, 3, 5, 7]
 # Rollen prägen das öffentliche Bild; das Casting gleicht Rollenbild und
 # Karriere-DNA ab — Typecasting entsteht organisch.
 # ---------------------------------------------------------------------
-const DNA_AXES = [
-	{"key":"romantik","pos":"Romantic","neg":"Menacing"},
-	{"key":"popular", "pos":"Popular","neg":"Elitist"},
-	{"key":"verlass", "pos":"Reliable","neg":"Unpredictable"},
-	{"key":"unikat",  "pos":"Unique","neg":"Interchangeable"},
-	{"key":"familie", "pos":"Family-friendly","neg":"Controversial"},
-]
-
 const SECRET_TYPES := {
 	"beziehung": {"label":"Secret relationship", "topic":"affäre", "prep":"Arrange discreet meetings and a plausible cover story"},
 	"gesundheit": {"label":"Health problem", "topic":"gesundheit", "prep":"Coordinate treatment and shooting breaks discreetly"},
@@ -91,21 +83,6 @@ const LEDGER_CATS = {
 
 const LEDGER_MAX := 600
 const LEDGER_MONTHS_MAX := 240
-
-# Was eine Rolle dieses Genres dem öffentlichen Bild einprägt (pro Film, Hauptrolle ×1).
-const GENRE_DNA = {
-	"romance":  {"romantik":8.0,  "familie":3.0,  "popular":2.0},
-	"comedy":   {"popular":6.0,   "familie":5.0},
-	"musical":  {"familie":6.0,   "popular":4.0,  "romantik":2.0},
-	"drama":    {"popular":-3.0,  "unikat":4.0},
-	"western":  {"romantik":-3.0, "verlass":4.0,  "popular":3.0},
-	"action":   {"romantik":-4.0, "popular":5.0,  "familie":-1.0},
-	"thriller": {"romantik":-5.0, "unikat":2.0,   "familie":-2.0},
-	"horror":   {"romantik":-7.0, "familie":-5.0, "unikat":3.0},
-	"crime":    {"romantik":-6.0, "familie":-4.0, "unikat":2.0},
-	"scifi":    {"popular":4.0,   "unikat":3.0},
-	"adventure":{"popular":5.0,   "familie":3.0},
-}
 
 const IDENTITY_KEYS := ["klientenorientiert", "studiotreu", "skrupellos", "diskret", "kuenstlerisch", "kommerziell"]
 const IDENTITY_LABELS := {
@@ -222,58 +199,7 @@ func grade_range(v: float, spread: float, seed_s: String) -> String:
 	var hi := Util.grade(clampf(center + spread, 0.0, 100.0))
 	return lo if lo == hi else "%s – %s" % [lo, hi]
 
-# ---------- Karriere-DNA ----------
-func initial_dna(actor: Dictionary) -> Dictionary:
-	# Ausgangsbild aus den angestammten Genres plus deterministisches Rauschen
-	var dna := {}
-	for ax in DNA_AXES:
-		dna[ax.key] = 0.0
-	for g in actor.genres:
-		var vec: Dictionary = GENRE_DNA.get(g, {})
-		for k in vec:
-			dna[k] = clampf(dna[k] + vec[k] * 3.0, -45.0, 45.0)
-	for ax in DNA_AXES:
-		dna[ax.key] = clampf(dna[ax.key] + float(Util.hashs(str(actor.id) + ax.key) % 21) - 10.0, -55.0, 55.0)
-	return dna
-
-func imprint_dna(c: Dictionary, genre: String, mult: float, prestige: int, ratio: float) -> void:
-	var vec: Dictionary = GENRE_DNA.get(genre, {})
-	for k in vec:
-		c.dna[k] = clampf(c.dna[k] + vec[k] * mult, -100.0, 100.0)
-	if prestige >= 2:
-		c.dna.unikat = clampf(c.dna.unikat + Balance.DNA_PRESTIGE_UNIKAT * mult, -100.0, 100.0)
-		c.dna.popular = clampf(c.dna.popular + Balance.DNA_PRESTIGE_POPULAR * mult, -100.0, 100.0)
-	if ratio >= Balance.DNA_BLOCKBUSTER_RATIO:
-		c.dna.popular = clampf(c.dna.popular + Balance.DNA_BLOCKBUSTER_POPULAR * mult, -100.0, 100.0)
-	if ratio < 1.0:
-		c.dna.verlass = clampf(c.dna.verlass + Balance.DNA_FLOP_VERLASS * mult, -100.0, 100.0)
-
-# Wie gut passt das öffentliche Bild zu einer Rolle dieses Genres?
-# Rückgabe ca. -25 … +25, fließt in die Casting-Passung ein.
-func dna_fit(c: Dictionary, genre: String, studio_style: String) -> float:
-	var vec: Dictionary = GENRE_DNA.get(genre, {})
-	var s := 0.0
-	for k in vec:
-		s += (vec[k] / 8.0) * (c.dna[k] / 100.0) * 14.0
-	s += c.dna.unikat / 30.0
-	s += (-c.dna.popular if studio_style == "prestige" else c.dna.popular) / 25.0
-	return s
-
-func dna_label(c: Dictionary) -> String:
-	# Prägnanteste Achse als Kurz-Etikett („Der Bedrohliche")
-	var best_key := ""
-	var best_val := 0.0
-	for ax in DNA_AXES:
-		if absf(c.dna[ax.key]) > absf(best_val):
-			best_val = c.dna[ax.key]
-			best_key = ax.key
-	if absf(best_val) < 25.0:
-		return "Blank slate"
-	for ax in DNA_AXES:
-		if ax.key == best_key:
-			return ax.pos if best_val > 0 else ax.neg
-	return ""
-
+# ---------- Karriere-DNA: siehe Autoload CareerDNA.gd (Chunk 03) ----------
 func snapshot_client(c: Dictionary) -> void:
 	if not c.has("fameHistory"):
 		c["fameHistory"] = []
@@ -1556,7 +1482,7 @@ func sign_client(terms: Dictionary) -> Dictionary:
 		"years": int(terms.years), "contractEnd": mi() + int(terms.years) * 12,
 		"promises": [], "busyUntil": 0, "films": [], "flags": {}, "talentBonus": 0.0,
 		"campaign": 0.0, "awards": 0,
-		"dna": initial_dna(actor),
+		"dna": CareerDNA.initial_dna(actor),
 		"signedAt": mi(),
 		"trust": float(Util.rndi(28, 34)), "trustCap": 100.0, "secrets": [], "secretThresholds": [],
 		"narrative": {}, "fameHistory": [], "dnaHistory": [],
@@ -1721,7 +1647,7 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	fit -= maxf(0.0, (c.exhaustion - 50.0) / 2.5)
 	# Erweiterungspunkt: Körpergewicht wirkt bewusst noch nicht auf die Besetzung.
 	# Karriere-DNA: passt das öffentliche Bild zur Rolle?
-	fit += dna_fit(c, casting.genre, studio_style(casting.studioId))
+	fit += CareerDNA.dna_fit(c, casting.genre, studio_style(casting.studioId))
 	var style := studio_style(casting.studioId)
 	if style == "prestige" or style == "indie":
 		fit += (identity_strength("kuenstlerisch") + identity_strength("klientenorientiert")) * (4.5 if eff_talent(c) >= 88.0 else 2.5)
@@ -1764,7 +1690,7 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 		if (c.perks.has("script") or c.get("clauses", []).has("creativeApproval")) and fit < 35:
 			continue
 		out.append({"c": c, "fit": fit, "estFee": role_fee_for(casting, role, c),
-			"dna": roundi(dna_fit(c, casting.genre, studio_style(casting.studioId)))})
+			"dna": roundi(CareerDNA.dna_fit(c, casting.genre, studio_style(casting.studioId)))})
 	out.sort_custom(func(x, y2): return x.fit > y2.fit)
 	return out
 
@@ -2232,8 +2158,7 @@ func tick_clients(events: Array) -> void:
 			c.dna.familie = clampf(c.dna.familie + 0.4, -100.0, 100.0)
 		# Karriere-DNA verblasst langsam Richtung Neutral, wenn nichts nachkommt
 		if not busy:
-			for ax in DNA_AXES:
-				c.dna[ax.key] = move_toward(c.dna[ax.key], 0.0, 0.4)
+			CareerDNA.decay(c)
 		if not busy:
 			c.heat = clampf(c.heat - 1.0, -10.0, 10.0)
 			c.fame = maxf(maxf(c.fame - 0.4, Util.fame_at(actor, state.year) * 0.6), 5.0)
@@ -2430,7 +2355,7 @@ func release_film(prod: Dictionary) -> Dictionary:
 			c.films.pop_back()
 		# Karriere-DNA: jede Rolle prägt das öffentliche Bild
 		# (boardMult: erfüllter Karrierebrett-Plan prägt ×1,5 ein)
-		imprint_dna(c, prod.genre, mult * narrative_mult * float(r.filled.get("boardMult", 1.0)), int(prod.prestige), ratio)
+		CareerDNA.imprint_dna(c, prod.genre, mult * narrative_mult * float(r.filled.get("boardMult", 1.0)), int(prod.prestige), ratio)
 		advance_narrative_on_release(c, prod, r)
 		if delta >= 5.0:
 			press_event("New stars", "%s jumps %d fame points with “%s”" % [client_name(c), roundi(delta), prod.title])
@@ -2708,7 +2633,7 @@ func _apply_save_defaults() -> void:
 			log_msg("Old acquaintances from the early days get in touch: %d open favors await you." % cnt, "history")
 	for c in state.clients:
 		if not c.has("dna"):
-			c["dna"] = initial_dna(actor_by_id[c.aid])
+			c["dna"] = CareerDNA.initial_dna(actor_by_id[c.aid])
 		if not c.has("weightKg"):
 			c["weightKg"] = client_base_weight(c)
 		else:
@@ -3031,16 +2956,16 @@ func audition_competition(casting: Dictionary, role: Dictionary) -> Array:
 			var age := Util.age_of(actor, state.year)
 			if age < int(role.get("ageMin", 18)) - 6 or age > int(role.get("ageMax", 99)) + 8:
 				continue
-			var image_c := {"dna": initial_dna(actor)}
+			var image_c := {"dna": CareerDNA.initial_dna(actor)}
 			out.append({"name":str(actor.name), "aid":str(actor.id), "agency":str(rival.name),
-				"image":dna_label(image_c), "talent":float(actor.talent), "fame":float(Util.fame_at(actor, state.year))})
+				"image":CareerDNA.dna_label(image_c), "talent":float(actor.talent), "fame":float(Util.fame_at(actor, state.year))})
 	out.sort_custom(func(a, b): return Util.hashs(str(a.aid) + str(casting.title)) < Util.hashs(str(b.aid) + str(casting.title)))
 	if out.is_empty():
 		var fallback: Array = available_actors().filter(func(a): return str(a.g) == str(role.get("gender", "")))
 		if fallback.size():
 			var actor: Dictionary = fallback[Util.hashs(str(casting.title) + "competition") % mini(8, fallback.size())]
 			out.append({"name":str(actor.name), "aid":str(actor.id), "agency":"Studio favorite",
-				"image":dna_label({"dna":initial_dna(actor)}), "talent":float(actor.talent), "fame":float(Util.fame_at(actor, state.year))})
+				"image":CareerDNA.dna_label({"dna":CareerDNA.initial_dna(actor)}), "talent":float(actor.talent), "fame":float(Util.fame_at(actor, state.year))})
 	return out.slice(0, 2)
 
 func _audition_reveal(source_s: String) -> Variant:
@@ -3189,7 +3114,7 @@ func resolve_audition(forced_outcome: String = "") -> Dictionary:
 			c.flags.erase("auditionSetbacks")
 		else:
 			c.flags["auditionSetbacks"] = setbacks
-	var own_score := performance + eff_talent(c) * 0.32 + dna_fit(c, str(casting.genre), studio_style(str(casting.studioId))) * 0.65 \
+	var own_score := performance + eff_talent(c) * 0.32 + CareerDNA.dna_fit(c, str(casting.genre), studio_style(str(casting.studioId))) * 0.65 \
 		+ fit_score(casting, role, c) * 0.12 - setback
 	var rivals := audition_competition(casting, role)
 	var competition_score := 72.0
@@ -3523,7 +3448,7 @@ func start_table() -> Dictionary:
 	var c: Dictionary = pitch_ctx.client
 	var dir_name := _director_name_for(casting)
 	var chem_dir := chemistry("dir:" + dir_name, str(c.aid))
-	var dna_v := dna_fit(c, casting.genre, studio_style(str(casting.studioId)))
+	var dna_v := CareerDNA.dna_fit(c, casting.genre, studio_style(str(casting.studioId)))
 	table = {
 		"castingId": int(casting.id), "roleIdx": int(pitch_ctx.roleIdx), "clientId": int(c.id),
 		"fee": int(pitch_ctx.fee), "billing": 1, "clauses": [], "points": 3,
@@ -3599,7 +3524,7 @@ func table_concede(action: String, target: String = "") -> Dictionary:
 			var casting = _casting(table.castingId)
 			if c != null and casting != null:
 				var ch := chemistry("dir:" + str(table.parties.director.name), str(c.aid))
-				var dv := dna_fit(c, casting.genre, studio_style(str(casting.studioId)))
+				var dv := CareerDNA.dna_fit(c, casting.genre, studio_style(str(casting.studioId)))
 				_sat("director", 25.0 if (int(ch.personal) >= 0 or dv >= 3.0) else 5.0)
 	if ["fee_down", "fee_up", "billing_first", "billing_second", "clause"].has(action):
 		table["points"] = int(table.points) - 1
@@ -4388,12 +4313,12 @@ func board_analysis(c: Dictionary) -> Dictionary:
 # (Board-Match ×1,5, ratio-neutral — eine ehrliche Mittelwert-Projektion).
 func _board_project_dna(c: Dictionary) -> Dictionary:
 	var proj := {}
-	for ax in DNA_AXES:
+	for ax in CareerDNA.DNA_AXES:
 		proj[ax.key] = float(c.dna[ax.key])
 	var genres: Array = []
 	for slot in c.careerBoard.slots:
 		var m := (1.0 if str(slot.get("roleType", "lead")) == "lead" else 0.5) * 1.5
-		var vec: Dictionary = GENRE_DNA.get(str(slot.get("genre", "")), {})
+		var vec: Dictionary = CareerDNA.GENRE_DNA.get(str(slot.get("genre", "")), {})
 		for k in vec:
 			proj[k] = clampf(float(proj[k]) + float(vec[k]) * m, -100.0, 100.0)
 		if int(slot.get("prestige", 1)) >= 2:
@@ -4411,7 +4336,7 @@ func _board_project_dna(c: Dictionary) -> Dictionary:
 
 func _board_complete(c: Dictionary, ana: Dictionary) -> void:
 	c.fame = clampf(float(c.fame) + 4.0, 5.0, 100.0)
-	press_event("Careers", "The reinvention of the %s: %s completes their own three-project plan — and Hollywood marvels" % [dna_label(c), client_name(c)])
+	press_event("Careers", "The reinvention of the %s: %s completes their own three-project plan — and Hollywood marvels" % [CareerDNA.dna_label(c), client_name(c)])
 	log_msg("Career board complete: %s — fame +4 and a cover story about the reinvention." % client_name(c), "history")
 	if ana.contrasting:
 		# Transformations-Bonus: die Presse feiert die Vielseitigkeit

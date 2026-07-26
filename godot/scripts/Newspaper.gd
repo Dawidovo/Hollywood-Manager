@@ -26,10 +26,10 @@ func _has_category(headlines: Array, cat: String) -> bool:
 func _client_or_actor_label(rumor: Dictionary) -> String:
 	var c = Game.rumor_subject_client(rumor)
 	if c != null:
-		return Game.dna_label(c)
+		return CareerDNA.dna_label(c)
 	var aid := str(rumor.get("subject", ""))
 	if Game.actor_by_id.has(aid):
-		return Game.dna_label({"dna": Game.initial_dna(Game.actor_by_id[aid])})
+		return CareerDNA.dna_label({"dna": CareerDNA.initial_dna(Game.actor_by_id[aid])})
 	return "screen darling"
 
 func blind_item(rumor: Dictionary, year: int) -> String:

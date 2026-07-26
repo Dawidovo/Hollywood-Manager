@@ -29,6 +29,7 @@ Alle Systeme sind Autoloads (Singletons):
 |---|---|---|---|
 | `Balance` | `scripts/Balance.gd` | Zentrale Spielbalance-Konstanten (Wirtschaft, Gagen, Produktion, Versprechen, DNA) | klein |
 | `Util` | `scripts/Util.gd` | Zustandslose Helfer: RNG-Wrapper, `hashs`, `body_of`, `infl`/`fame_at`/`age_of`/`ask_fee`, `grade`, `fmt_money`, `attrs` | klein |
+| `CareerDNA` | `scripts/CareerDNA.gd` | Karriere-DNA: Achsen, Genre-Prägungsvektoren, `initial_dna`/`imprint_dna`/`dna_fit`/`dna_label`/`decay` | klein |
 | `Data` | `scripts/Data.gd` | Datenzugriff, delegiert an `DataLoader.gd` (JSON-Merge) | klein |
 | `Game` | `scripts/Game.gd` | Kern-Spiellogik: Verhandlung, Casting, Produktion, Box-Office, Karriere-DNA, Wochenzug | ~4500 Zeilen |
 | `Ev` | `scripts/Events.gd` | Ereignis-Inhalte/Alt-Events | ~1300 Zeilen |

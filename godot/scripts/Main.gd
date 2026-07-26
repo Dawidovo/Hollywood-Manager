@@ -2510,8 +2510,8 @@ func _render_klienten() -> void:
 			sv.add_child(sl)
 			sv.add_child(_bar(stat[1], stat[2]))
 			row.add_child(sv)
-		box.add_child(_lbl("🧬 Career DNA — public image: “%s”" % Game.dna_label(c), 13, ACC))
-		for ax in Game.DNA_AXES:
+		box.add_child(_lbl("🧬 Career DNA — public image: “%s”" % CareerDNA.dna_label(c), 13, ACC))
+		for ax in CareerDNA.DNA_AXES:
 			box.add_child(_dna_row(ax, c.dna[ax.key]))
 		var narrative: Dictionary = c.get("narrative", {})
 		if not narrative.is_empty():
@@ -2570,8 +2570,8 @@ func _render_career_board(box: VBoxContainer, c: Dictionary) -> void:
 			box.add_child(_lbl("⚠ Typecasting pull: the same profile three times — quick fame short-term, but the image hardens (risk from slot 3).", 11, AMBER))
 		else:
 			box.add_child(_lbl("A balanced sequence — neither fireworks nor pull, but control over the image.", 11, DIM))
-		var proj_label: String = Game.dna_label({"dna": ana.projected})
-		box.add_child(_lbl("Projection: “%s” → “%s” (under a normal run)" % [Game.dna_label(c), proj_label], 11, DIM))
+		var proj_label: String = CareerDNA.dna_label({"dna": ana.projected})
+		box.add_child(_lbl("Projection: “%s” → “%s” (under a normal run)" % [CareerDNA.dna_label(c), proj_label], 11, DIM))
 	elif int(ana.planned) > 0:
 		box.add_child(_lbl("%d slot(s) still free — only the full sequence shows its effect." % (Game.BOARD_SLOTS - int(ana.planned)), 11, DIM))
 	var next_open := Game.board_next_open(c)
@@ -3127,7 +3127,7 @@ func _render_audition_briefing() -> void:
 	modal_box.add_child(_lbl("🎭 The decisive audition", 22, ACC))
 	modal_box.add_child(_rich("[i]“One scene. Four decisions. Afterwards the room knows whether it forgets your name.”[/i]", 14))
 	modal_box.add_child(_lbl("“%s” · %s · director: %s" % [casting.title, "Lead" if str(role.type) == "lead" else "Supporting role", director_name], 13, DIM))
-	modal_box.add_child(_chip_row([_chip(Game.client_name(c), BLUE), _chip("🧬 " + Game.dna_label(c), ACC),
+	modal_box.add_child(_chip_row([_chip(Game.client_name(c), BLUE), _chip("🧬 " + CareerDNA.dna_label(c), ACC),
 		_chip("📖 %d decisions can be prepared" % Game.audition_preparation_limit(c), GREEN)]))
 	var competition := Game.audition_competition(casting, role)
 	if competition.size():
