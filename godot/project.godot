@@ -16,6 +16,7 @@ config/features=PackedStringArray("4.7")
 
 [autoload]
 
+Balance="*res://scripts/Balance.gd"
 Data="*res://scripts/Data.gd"
 Game="*res://scripts/Game.gd"
 Newspaper="*res://scripts/Newspaper.gd"

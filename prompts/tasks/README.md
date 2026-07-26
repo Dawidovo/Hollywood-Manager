@@ -18,7 +18,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 
 | # | Chunk | Thema | Status |
 |---|-------|-------|--------|
-| 01 | [Balance-Konstanten](01-balance-konstanten.md) | Tech Debt | offen |
+| 01 | [Balance-Konstanten](01-balance-konstanten.md) | Tech Debt | erledigt (Autoload `Balance.gd`: Wirtschaft/Gagen/Produktion/Versprechen/DNA; Events.gd bewusst ausgelassen — Alt-Inhalte, werden durch JSON-Events ersetzt) |
 | 02 | [Game.gd: Utils extrahieren](02-game-gd-utils-extrahieren.md) | Tech Debt | offen |
 | 03 | [Game.gd: DNA-System extrahieren](03-game-gd-dna-extrahieren.md) | Tech Debt | offen |
 | 04 | [Save-Versionierung & Migration](04-save-migration.md) | Robustheit | erledigt (Versionskette `_migrate_save`, Backup `hm_save.bak.json`, Fehlerdialog, v1-Fixture-Test) |

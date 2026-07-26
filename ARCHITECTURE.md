@@ -27,6 +27,7 @@ Alle Systeme sind Autoloads (Singletons):
 
 | Autoload | Datei | Zuständigkeit | Umfang |
 |---|---|---|---|
+| `Balance` | `scripts/Balance.gd` | Zentrale Spielbalance-Konstanten (Wirtschaft, Gagen, Produktion, Versprechen, DNA) | klein |
 | `Data` | `scripts/Data.gd` | Datenzugriff, delegiert an `DataLoader.gd` (JSON-Merge) | klein |
 | `Game` | `scripts/Game.gd` | Kern-Spiellogik: Verhandlung, Casting, Produktion, Box-Office, Karriere-DNA, Wochenzug | ~4500 Zeilen |
 | `Ev` | `scripts/Events.gd` | Ereignis-Inhalte/Alt-Events | ~1300 Zeilen |

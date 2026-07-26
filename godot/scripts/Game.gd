@@ -252,10 +252,7 @@ func age_of(actor: Dictionary, year: float) -> int:
 	return int(year - actor.birth)
 
 func ask_fee(fame: float, year: float) -> float:
-	# Exponent 2,35 (statt 2,6): hebt die Gagen im unteren/mittleren Ruhm-Bereich
-	# an, kaum Wirkung an der Spitze — sonst tragen Provisionen kleiner Klienten
-	# (Frühzeit-Pool: Ruhm 20–35) die Agentur nie (Balance-Chunk 19, BalanceSim).
-	return maxf(infl(year) * 900000.0 * pow(fame / 100.0, 2.35), 5000.0 * infl(year))
+	return maxf(infl(year) * Balance.FEE_BASE * pow(fame / 100.0, Balance.FEE_EXPONENT), Balance.FEE_MIN * infl(year))
 
 func required_rep(fame: float) -> int:
 	var req := 0 if fame <= 45 else roundi((fame - 45.0) * 1.1)
@@ -326,12 +323,12 @@ func imprint_dna(c: Dictionary, genre: String, mult: float, prestige: int, ratio
 	for k in vec:
 		c.dna[k] = clampf(c.dna[k] + vec[k] * mult, -100.0, 100.0)
 	if prestige >= 2:
-		c.dna.unikat = clampf(c.dna.unikat + 3.0 * mult, -100.0, 100.0)
-		c.dna.popular = clampf(c.dna.popular - 2.0 * mult, -100.0, 100.0)
-	if ratio >= 3.0:
-		c.dna.popular = clampf(c.dna.popular + 4.0 * mult, -100.0, 100.0)
+		c.dna.unikat = clampf(c.dna.unikat + Balance.DNA_PRESTIGE_UNIKAT * mult, -100.0, 100.0)
+		c.dna.popular = clampf(c.dna.popular + Balance.DNA_PRESTIGE_POPULAR * mult, -100.0, 100.0)
+	if ratio >= Balance.DNA_BLOCKBUSTER_RATIO:
+		c.dna.popular = clampf(c.dna.popular + Balance.DNA_BLOCKBUSTER_POPULAR * mult, -100.0, 100.0)
 	if ratio < 1.0:
-		c.dna.verlass = clampf(c.dna.verlass - 2.0 * mult, -100.0, 100.0)
+		c.dna.verlass = clampf(c.dna.verlass + Balance.DNA_FLOP_VERLASS * mult, -100.0, 100.0)
 
 # Wie gut passt das öffentliche Bild zu einer Rolle dieses Genres?
 # Rückgabe ca. -25 … +25, fließt in die Casting-Passung ein.
@@ -501,7 +498,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	for era_def in Data.ERAS:
 		if int(era_def.year) == start_year:
 			capital_mult = float(era_def.get("startCapitalMult", 1.0))
-	book(float(roundi(120000.0 * infl(start_year) * capital_mult)), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
+	book(float(roundi(Balance.START_CAPITAL * infl(start_year) * capital_mult)), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
 	Persona.book(roundf(2500.0 * infl(start_year)), "Savings from the years before")
 	# Ein alter Bekannter aus den Anfangsjahren erinnert sich.
 	grant_favor("galaInvite", favor_contact_for("galaInvite"))
@@ -1267,12 +1264,10 @@ func perk_costs() -> float:
 			sum += PERKS[p].cost * f
 	return sum
 
-# Fixkosten-Basis von Anzeige UND Monatsabschluss — Studiosystem-Ära (< 1948):
-# kleine Büros, kleine Gagen, der Fixkostenblock folgt dem niedrigeren
-# Gagenniveau der Frühzeit (Balance-Chunk 19).
+# Fixkosten-Basis von Anzeige UND Monatsabschluss (Werte: Balance.gd).
 func office_base_cost() -> int:
-	var era_mult := 0.6 if int(state.year) < 1948 else 1.0
-	return roundi((2200.0 + state.clients.size() * 600.0) * infl(state.year) * era_mult)
+	var era_mult := Balance.OFFICE_EARLY_ERA_MULT if int(state.year) < Balance.OFFICE_EARLY_ERA_UNTIL else 1.0
+	return roundi((Balance.OFFICE_BASE + state.clients.size() * Balance.OFFICE_PER_CLIENT) * infl(state.year) * era_mult)
 
 func overhead() -> int:
 	return roundi(office_base_cost() + perk_costs())
@@ -1952,7 +1947,7 @@ func haggle() -> Dictionary:
 	pitch_ctx.haggled = true
 	if chance(p):
 		# Spezialisierung (Feature 42): der Meisterverhandler holt mehr heraus
-		pitch_ctx.fee = roundi(pitch_ctx.fee * (1.32 if Mogul.has_ability("master_negotiator") else 1.25))
+		pitch_ctx.fee = roundi(pitch_ctx.fee * (Balance.HAGGLE_MASTER_MULT if Mogul.has_ability("master_negotiator") else Balance.HAGGLE_MULT))
 		return {"success": true, "fee": pitch_ctx.fee}
 	Mogul.grant_xp("negotiation", 1.0, "A failed haggle teaches")
 	# „Second pass“: wer weiß, wann Schluss ist, sprengt selten den Deal
@@ -1987,8 +1982,8 @@ func try_package(support_role_idx: int, second_client_id) -> Dictionary:
 	var rel: float = state.studioRel[casting.studioId]
 	var p: float = clampf(0.4 + state.agency.rep / 180.0 + fit_score(casting, role2, c2) / 300.0, 0.15, 0.9)
 	if chance(p):
-		var fee1 := roundi(pitch_ctx.fee * 1.12)
-		var fee2 := roundi(role_fee_for(casting, role2, c2) * 1.12)
+		var fee1 := roundi(pitch_ctx.fee * Balance.PACKAGE_FEE_MULT)
+		var fee2 := roundi(role_fee_for(casting, role2, c2) * Balance.PACKAGE_FEE_MULT)
 		close_deal(fee1, " (package deal)")
 		role2.filled = {"clientId": int(c2.id), "fee": fee2}
 		c2.busyUntil = mi() + ceili(float(casting.deadline) / 4.0)
@@ -2020,10 +2015,10 @@ func check_promises_on_deal(c: Dictionary, casting: Dictionary, role: Dictionary
 
 func fulfill_promise(c: Dictionary, pr: Dictionary) -> void:
 	pr.fulfilled = true
-	c.loyalty = clampf(c.loyalty + 18.0, 0.0, 100.0)
-	change_trust(c, 14.0)
-	c.mood = clampf(c.mood + 10.0, 0.0, 100.0)
-	state.agency.rep = clampi(int(state.agency.rep) + 3, 0, 100)
+	c.loyalty = clampf(c.loyalty + Balance.PROMISE_KEPT_LOYALTY, 0.0, 100.0)
+	change_trust(c, Balance.PROMISE_KEPT_TRUST)
+	c.mood = clampf(c.mood + Balance.PROMISE_KEPT_MOOD, 0.0, 100.0)
+	state.agency.rep = clampi(int(state.agency.rep) + Balance.PROMISE_KEPT_REP, 0, 100)
 	log_msg("Promise kept: %s — %s. Loyalty rises sharply." % [client_name(c), pr.label], "deal")
 
 func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
@@ -2145,7 +2140,7 @@ func _month_close(events: Array) -> void:
 	# Wochenplaner: ≥3 „Bücher prüfen“-Slots im Monat senken die Bürokosten um 10 %
 	var base_cost := roundi(office_base_cost() * backstory_mod("office_cost_mult", 1.0))
 	if int(state.get("plannerMonthCounts", {}).get("buecher", 0)) >= 3:
-		base_cost = roundi(base_cost * 0.9)
+		base_cost = roundi(base_cost * Balance.OFFICE_BOOKS_MULT)
 	state["plannerMonthCounts"] = {}
 	var perk_cost := roundi(perk_costs())
 	book(-float(base_cost), "buero", "Office, staff & fixed costs")
@@ -2234,8 +2229,8 @@ func _month_close(events: Array) -> void:
 	_expire_favors()
 	if state.agency.cash < 0:
 		state.agency.debtMonths = int(state.agency.debtMonths) + 1
-		log_msg("The agency is insolvent (%d/3 months). The banks are getting nervous." % int(state.agency.debtMonths), "bad")
-		if int(state.agency.debtMonths) >= 3:
+		log_msg("The agency is insolvent (%d/%d months). The banks are getting nervous." % [int(state.agency.debtMonths), Balance.INSOLVENCY_MONTHS], "bad")
+		if int(state.agency.debtMonths) >= Balance.INSOLVENCY_MONTHS:
 			state.over = true
 			events.append({"title": "Game Over", "text": "Three months in the red — the creditors take over. %s closes its doors for good.\n\nAchieved: %d clients, reputation %d, %d brokered films." % [state.agency.name, state.clients.size(), int(state.agency.rep), state.released.size()], "choices": [{"label": "New game", "action": "restart"}]})
 	else:
@@ -2339,10 +2334,10 @@ func tick_clients(events: Array) -> void:
 		for pr in c.promises:
 			if not pr.fulfilled and not pr.get("broken", false) and mi() > int(pr.due):
 				pr.broken = true
-				c.loyalty = clampf(c.loyalty - 35.0, 0.0, 100.0)
-				change_trust(c, -24.0)
-				c.mood = clampf(c.mood - 20.0, 0.0, 100.0)
-				state.agency.rep = clampi(int(state.agency.rep) - 5, 0, 100)
+				c.loyalty = clampf(c.loyalty - Balance.PROMISE_BROKEN_LOYALTY, 0.0, 100.0)
+				change_trust(c, -Balance.PROMISE_BROKEN_TRUST)
+				c.mood = clampf(c.mood - Balance.PROMISE_BROKEN_MOOD, 0.0, 100.0)
+				state.agency.rep = clampi(int(state.agency.rep) - Balance.PROMISE_BROKEN_REP, 0, 100)
 				log_msg("Promise broken: %s waited in vain for %s." % [actor.name, pr.label], "bad")
 				events.append({"title": "A broken promise", "text": "[i]“You gave me your word. In this town an agent's word is everything — or so I thought.”[/i]\n\n%s is deeply disappointed. Loyalty plummets, your reputation suffers." % actor.name, "choices": [{"label": "Understood"}]})
 		# Vertragsende
@@ -2410,8 +2405,8 @@ func start_production(casting: Dictionary, events: Array = []) -> void:
 		else:
 			var first = pick(Data.NPC_FIRST_M) if role.gender == "m" else pick(Data.NPC_FIRST_F)
 			role.filled = {"npc": true, "name": "%s %s" % [first, pick(Data.NPC_LAST)], "talent": rndi(35, 70), "fame": rndi(10, maxi(12, int(role.minFame)))}
-	# Streaming-Ära (2015+): kürzere Produktionszeiten (Feature 14)
-	var months := rndi(3, 5) if int(state.year) >= 2015 else rndi(4, 7)
+	# Streaming-Ära: kürzere Produktionszeiten (Feature 14, Werte: Balance.gd)
+	var months := rndi(Balance.PROD_MONTHS_MIN_MODERN, Balance.PROD_MONTHS_MAX_MODERN) if int(state.year) >= Balance.PROD_MODERN_YEAR else rndi(Balance.PROD_MONTHS_MIN, Balance.PROD_MONTHS_MAX)
 	var income := 0.0
 	for role in casting.roles:
 		if role.filled.get("clientId") != null:
