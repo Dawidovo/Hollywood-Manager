@@ -1,0 +1,195 @@
+[
+	{
+		"id": "kunstauktion",
+		"weight": 2,
+		"from_type": "gastgeberin",
+		"conditions": {
+			"min_career": 1
+		},
+		"subject": "Private viewing: one lot, one evening",
+		"body": "{sender} writes: \"Before the auction house gets it, a small circle sees it first. A European canvas, impeccable provenance — and the circle notices who bids and who only looks.\"",
+		"expire_weeks": 2,
+		"choices": [
+			{
+				"label": "Bid seriously (−{money_fmt:2500})",
+				"requirements": {
+					"min_cash_private": 2500
+				},
+				"effects": [
+					{
+						"op": "money_private",
+						"amount": -2500,
+						"inflate": true,
+						"label": "Art auction: a European canvas"
+					},
+					{
+						"op": "player",
+						"pubRep": 2,
+						"indRep": 1
+					},
+					{
+						"op": "identity",
+						"key": "kuenstlerisch",
+						"amount": 0.6
+					},
+					{
+						"op": "memoir",
+						"text": "The canvas over the fireplace cost a fortune — and pays it back every time a guest falls silent in front of it."
+					}
+				],
+				"outcome": "The hammer falls in your favor. The room applauds politely — and reassesses you on the spot."
+			},
+			{
+				"label": "Attend, admire, abstain (1⏱)",
+				"requirements": {
+					"ap": 1
+				},
+				"effects": [
+					{
+						"op": "meet_someone",
+						"origin": "at a private viewing"
+					},
+					{
+						"op": "player",
+						"energy": -2
+					}
+				],
+				"outcome": "You study the brushwork and the bidders in equal measure. Both are instructive."
+			},
+			{
+				"label": "Decline",
+				"effects": [],
+				"outcome": "Art is patient. Your bank account thanks you — the circle forgets you a little."
+			}
+		]
+	},
+	{
+		"id": "alter_freund_darlehen",
+		"weight": 2,
+		"from_type": "journalist",
+		"conditions": {
+			"chance": 0.8
+		},
+		"subject": "A letter you almost didn't recognize",
+		"body": "The handwriting is from the old days, before the office on Sunset. {sender} is short — properly short — and asks for a loan. \"You know I'm good for it. You knew me when nobody was.\"",
+		"expire_weeks": 2,
+		"choices": [
+			{
+				"label": "Send the money, no questions (−{money_fmt:800})",
+				"requirements": {
+					"min_cash_private": 800
+				},
+				"effects": [
+					{
+						"op": "money_private",
+						"amount": -800,
+						"inflate": true,
+						"label": "A loan for an old friend"
+					},
+					{
+						"op": "identity",
+						"key": "klientenorientiert",
+						"amount": 0.5
+					},
+					{
+						"op": "chance",
+						"p": 0.35,
+						"effects": [
+							{
+								"op": "favor_grant",
+								"kind": "suppressStory"
+							},
+							{
+								"op": "log",
+								"text": "The loan comes back months later — with interest of the useful kind: a friend at a print desk.",
+								"type": "deal"
+							}
+						],
+						"else": [
+							{
+								"op": "log",
+								"text": "The money is gone the way loans among old friends go. You knew that when you sent it.",
+								"type": "info"
+							}
+						]
+					}
+				],
+				"outcome": "Some debts run in the other direction: this town gave you everything, and someone carried you once. The check goes out the same day."
+			},
+			{
+				"label": "Decline — softly, but decline",
+				"effects": [
+					{
+						"op": "identity",
+						"key": "skrupellos",
+						"amount": 0.3
+					},
+					{
+						"op": "player",
+						"stress": 2
+					}
+				],
+				"outcome": "You write three drafts of the letter. All three say no. The last one at least says it kindly."
+			}
+		]
+	},
+	{
+		"id": "diskrete_rechnung",
+		"weight": 1,
+		"from_type": "fixer",
+		"conditions": {
+			"min_career": 1,
+			"chance": 0.7
+		},
+		"subject": "An invoice without a letterhead",
+		"body": "No sender, no greeting: \"A photograph exists. Taken at a party you attended. Nothing scandalous — unless someone writes the caption. The negative costs {money_fmt:1500}. Private funds, of course.\"",
+		"expire_weeks": 1,
+		"choices": [
+			{
+				"label": "Pay from your own pocket (−{money_fmt:1500})",
+				"requirements": {
+					"min_cash_private": 1500
+				},
+				"effects": [
+					{
+						"op": "money_private",
+						"amount": -1500,
+						"inflate": true,
+						"label": "A negative, purchased"
+					},
+					{
+						"op": "identity",
+						"key": "diskret",
+						"amount": 0.5
+					}
+				],
+				"outcome": "An envelope changes hands in a parking lot. The photograph was harmless — but now nobody will ever prove otherwise."
+			},
+			{
+				"label": "Call the bluff",
+				"success_chance": 0.6,
+				"effects": [
+					{
+						"op": "log",
+						"text": "Weeks pass. Nothing appears anywhere. It was a fishing expedition — and you didn't bite.",
+						"type": "info"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "player",
+						"pubRep": -3,
+						"stress": 4
+					},
+					{
+						"op": "log",
+						"text": "The photograph runs in a gossip sheet with exactly the caption you feared. Harmless — and embarrassing.",
+						"type": "bad"
+					}
+				],
+				"outcome": "Blackmailers hate nothing more than silence. Yours was the right kind.",
+				"outcome_fail": "The caption writes itself — and someone else cashes in on it."
+			}
+		]
+	}
+]
