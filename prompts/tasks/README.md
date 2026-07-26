@@ -27,7 +27,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | 07 | [SonarQube-Findings abarbeiten](07-sonarqube-findings.md) | Qualität | erledigt (laufende Regel) |
 | 08 | [Web-Prototyp einfrieren](08-web-prototyp-einfrieren.md) | Tech Debt | entschieden |
 | 09 | [Main.gd: UI in Screens aufteilen](09-main-gd-screens-aufteilen.md) | Tech Debt | in Arbeit (iterativ; Muster etabliert: `scripts/ui/FinanceScreen.gd` mit Main-Referenz — weitere Screens nach demselben Schema, je einer pro Commit) |
-| 10 | [Fehlerbehandlung Daten/Save](10-fehlerbehandlung-daten.md) | Robustheit | offen |
+| 10 | [Fehlerbehandlung Daten/Save](10-fehlerbehandlung-daten.md) | Robustheit | erledigt (Save-IO & Negativtests via Chunk 04, DataLoader skippt kaputte Einträge mit Warnung+Test; import_imdb.py: Download-Fehler, Zeilen-Skip mit Zählern, Exit 2/3, UTF-8-Konsolenfix, `.json`-Output fürs Godot-Datenformat) |
 | 11 | [Körperdaten I: Größe & Gewicht](11-koerperdaten-basis.md) | Feature | erledigt (Commit `8cca6d8`) |
 | 12 | [Körperdaten II: Gewichtsdynamik](12-koerperdaten-dynamik.md) | Feature | erledigt (Commit `b7b3bae`) |
 | 13 | [Verhandlungen homogenisieren](13-verhandlungen-homogenisieren.md) | UI-Qualität | erledigt (Commit `db75888` — `_nego_header`/`_nego_actions` aktiv) |
