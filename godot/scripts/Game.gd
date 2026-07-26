@@ -23,7 +23,6 @@ const PROMISES = {
 
 const CONTRACT_YEARS = [2, 3, 5, 7]
 
-const GRADE_BANDS = [[92,"A+"],[85,"A"],[80,"A−"],[75,"B+"],[70,"B"],[65,"B−"],[60,"C+"],[55,"C"],[50,"C−"],[45,"D+"],[40,"D"],[35,"D−"],[0,"F"]]
 
 # ---------------------------------------------------------------------
 # Karriere-DNA: fünf bipolare Image-Achsen (-100 … +100, 0 = ungeprägt).
@@ -156,50 +155,18 @@ var nego = null
 var pitch_ctx = null
 var chem_read = null
 var actor_by_id: Dictionary = {}
-var _attr_cache: Dictionary = {}
 
 func _ready() -> void:
 	randomize()
 	for a in Data.ACTORS:
 		actor_by_id[a.id] = a
 
-# ---------- Zufall & Helfer ----------
-func pick(arr: Array):
-	return arr[randi() % arr.size()]
-
-func chance(p: float) -> bool:
-	return randf() < p
-
-func rndf(a: float, b: float) -> float:
-	return randf_range(a, b)
-
-func rndi(a: int, b: int) -> int:
-	return randi_range(a, b)
-
-func hashs(s: String) -> int:
-	var h := 5381
-	for ch in s.to_utf8_buffer():
-		h = int((h * 33 + ch) % 4294967296)
-	return h
-
-func body_of(a: Dictionary) -> Dictionary:
-	var seed := hashs(str(a.get("id", "")))
-	var height_min := 168 if str(a.get("g", "m")) == "m" else 155
-	var generated_height := height_min + seed % 26
-	var height := int(a.get("height_cm", 0))
-	if height <= 0:
-		height = generated_height
-	var bmi := 19.0 + float(int(seed / 97) % 71) / 10.0
-	var weight := int(a.get("weight_kg", 0))
-	if weight <= 0:
-		weight = roundi(bmi * pow(float(height) / 100.0, 2.0))
-	return {"height": height, "weight": weight}
-
+# ---------- Zufall & zustandslose Helfer: siehe Autoload Util.gd (Chunk 02) ----------
 func client_base_weight(c: Dictionary) -> float:
 	var actor: Dictionary = actor_by_id.get(str(c.get("aid", "")), {})
 	if actor.is_empty():
 		return maxf(float(c.get("weightKg", 1.0)), 1.0)
-	return float(body_of(actor).weight)
+	return float(Util.body_of(actor).weight)
 
 func clamp_client_weight(c: Dictionary, value: float) -> float:
 	var base := client_base_weight(c)
@@ -213,10 +180,10 @@ func change_client_weight(c: Dictionary, amount: float) -> float:
 	return after - before
 
 func _tick_client_weight(c: Dictionary, actor: Dictionary, discipline: float) -> void:
-	var seed := hashs(str(actor.id) + "weight_drift")
+	var seed := Util.hashs(str(actor.id) + "weight_drift")
 	var natural_dir := 1.0 if seed % 2 == 0 else -1.0
 	var delta := natural_dir * (0.10 + float(int(seed / 2) % 3) * 0.05)
-	var age := age_of(actor, state.year)
+	var age := Util.age_of(actor, state.year)
 	if age >= 40:
 		delta += minf(0.15, 0.08 + float(age - 40) * 0.002)
 	var base := client_base_weight(c)
@@ -226,7 +193,7 @@ func _tick_client_weight(c: Dictionary, actor: Dictionary, discipline: float) ->
 	elif discipline < 40.0:
 		delta += natural_dir * 0.05
 	if float(c.exhaustion) > 60.0:
-		var stress_dir := 1.0 if hashs(str(actor.id) + "weight_stress") % 2 == 0 else -1.0
+		var stress_dir := 1.0 if Util.hashs(str(actor.id) + "weight_stress") % 2 == 0 else -1.0
 		delta += stress_dir * 0.15
 	delta = clampf(delta, -0.40, 0.40)
 	if absf(delta) < 0.10:
@@ -234,38 +201,13 @@ func _tick_client_weight(c: Dictionary, actor: Dictionary, discipline: float) ->
 		delta = fallback_dir * 0.10
 	change_client_weight(c, delta)
 
-# ---------- Ökonomie & Karriere-Mathematik ----------
-func infl(year: float) -> float:
-	return pow(1.03, year - 1925.0)
-
-func fame_at(actor: Dictionary, year: float) -> int:
-	if year < actor.debut:
-		return 0
-	var rise: float = maxf(3.0, (actor.peak - actor.debut) / 2.2)
-	var fall := 14.0
-	var d: float = year - actor.peak
-	var s: float = rise if d < 0 else fall
-	var f: float = actor.peakFame * exp(-0.5 * (d / s) * (d / s))
-	return clampi(roundi(f), 5, 100)
-
-func age_of(actor: Dictionary, year: float) -> int:
-	return int(year - actor.birth)
-
-func ask_fee(fame: float, year: float) -> float:
-	return maxf(infl(year) * Balance.FEE_BASE * pow(fame / 100.0, Balance.FEE_EXPONENT), Balance.FEE_MIN * infl(year))
-
+# ---------- Ökonomie & Karriere-Mathematik (zustandslose Teile: Util.gd) ----------
 func required_rep(fame: float) -> int:
 	var req := 0 if fame <= 45 else roundi((fame - 45.0) * 1.1)
 	# Backstory-Schwäche (z. B. Aufsteiger): A-Lister verlangen zusätzlichen Ruf
 	if fame >= 70.0:
 		req += int(backstory_mod("required_rep_add", 0.0))
 	return req
-
-func grade(v: float) -> String:
-	for band in GRADE_BANDS:
-		if v >= band[0]:
-			return band[1]
-	return "F"
 
 func grade_range(v: float, spread: float, seed_s: String) -> String:
 	# Backstory-Trait (z. B. gescheiterte:r Schauspieler:in): engere Einschätzung
@@ -274,35 +216,11 @@ func grade_range(v: float, spread: float, seed_s: String) -> String:
 		# Talenturteil (Feature 6): das scharfe Auge sieht die Note, nicht die Spanne
 		if Mogul.has_ability("sharp_eye"):
 			spread = 2.0
-	var jitter: float = float(hashs(seed_s) % 9) - 4.0
+	var jitter: float = float(Util.hashs(seed_s) % 9) - 4.0
 	var center: float = clampf(v + jitter, 3.0, 100.0)
-	var lo := grade(clampf(center - spread, 0.0, 100.0))
-	var hi := grade(clampf(center + spread, 0.0, 100.0))
+	var lo := Util.grade(clampf(center - spread, 0.0, 100.0))
+	var hi := Util.grade(clampf(center + spread, 0.0, 100.0))
 	return lo if lo == hi else "%s – %s" % [lo, hi]
-
-func fmt_money(v: float) -> String:
-	var sign := "-" if v < 0 else ""
-	v = absf(v)
-	if v >= 1e9:
-		return "%s$%sB" % [sign, _num(v / 1e9)]
-	if v >= 1e6:
-		return "%s$%sM" % [sign, _num(v / 1e6)]
-	if v >= 1e4:
-		return "%s$%dK" % [sign, roundi(v / 1000.0)]
-	return "%s$%d" % [sign, roundi(v)]
-
-func _num(x: float) -> String:
-	return str(snappedf(x, 0.01))
-
-# ---------- Verdeckte Attribute (deterministisch) ----------
-func attrs(actor: Dictionary) -> Dictionary:
-	if not _attr_cache.has(actor.id):
-		_attr_cache[actor.id] = {
-			"charisma": clampi(roundi(30.0 + (hashs(str(actor.id) + "cha") % 100) * 0.5 + (actor.peakFame - 60.0) * 0.4), 5, 98),
-			"discipline": clampi(roundi(95.0 - actor.ego * 0.55 - (hashs(str(actor.id) + "dis") % 100) * 0.25), 5, 95),
-			"presence": clampi(roundi(actor.talent * 0.35 + actor.peakFame * 0.4 + (hashs(str(actor.id) + "pre") % 100) * 0.25 - 5.0), 5, 98),
-		}
-	return _attr_cache[actor.id]
 
 # ---------- Karriere-DNA ----------
 func initial_dna(actor: Dictionary) -> Dictionary:
@@ -315,7 +233,7 @@ func initial_dna(actor: Dictionary) -> Dictionary:
 		for k in vec:
 			dna[k] = clampf(dna[k] + vec[k] * 3.0, -45.0, 45.0)
 	for ax in DNA_AXES:
-		dna[ax.key] = clampf(dna[ax.key] + float(hashs(str(actor.id) + ax.key) % 21) - 10.0, -55.0, 55.0)
+		dna[ax.key] = clampf(dna[ax.key] + float(Util.hashs(str(actor.id) + ax.key) % 21) - 10.0, -55.0, 55.0)
 	return dna
 
 func imprint_dna(c: Dictionary, genre: String, mult: float, prestige: int, ratio: float) -> void:
@@ -370,7 +288,7 @@ func snapshot_client(c: Dictionary) -> void:
 
 func narrative_candidate_types(c: Dictionary) -> Array:
 	var actor: Dictionary = actor_by_id[c.aid]
-	var age := age_of(actor, state.year)
+	var age := Util.age_of(actor, state.year)
 	var films: Array = c.get("films", [])
 	var support_n: int = films.filter(func(f): return not bool(f.get("lead", false))).size()
 	var action_n: int = films.filter(func(f): return str(f.get("genre", "")) == "action").size()
@@ -405,9 +323,9 @@ func declare_narrative(cid: int, type_s: String) -> String:
 		return "A narrative is already running for %s." % client_name(c)
 	if not narrative_candidate_types(c).has(type_s):
 		return "The career so far does not support this narrative yet."
-	var cost := roundi(7500.0 * infl(state.year))
+	var cost := roundi(7500.0 * Util.infl(state.year))
 	if float(state.agency.cash) < float(cost):
-		return "The PR campaign costs %s — too much for the till right now." % fmt_money(cost)
+		return "The PR campaign costs %s — too much for the till right now." % Util.fmt_money(cost)
 	book(-float(cost), "pr_recht", "Career narrative: %s" % client_name(c))
 	c.narrative = {"type":type_s, "startedMi":mi(), "progress":0.0, "status":"aktiv"}
 	press_event("Careers", "Chapter 1: %s — %s begins" % [client_name(c), NARRATIVE_TYPES[type_s].label])
@@ -490,7 +408,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	Dialogs.init_state()
 	Staff.init_state()
 	for s in Data.STUDIOS:
-		state.studioRel[s.id] = rndi(20, 45)
+		state.studioRel[s.id] = Util.rndi(20, 45)
 	# Startkapital: Basis × Inflation × optionaler Era-Faktor (data/eras/core.json,
 	# "startCapitalMult") — die Frühzeit braucht mehr Runway, bis kleine Klienten
 	# tragende Gagen erreichen (Balance-Chunk 19).
@@ -498,13 +416,13 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	for era_def in Data.ERAS:
 		if int(era_def.year) == start_year:
 			capital_mult = float(era_def.get("startCapitalMult", 1.0))
-	book(float(roundi(Balance.START_CAPITAL * infl(start_year) * capital_mult)), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
-	Persona.book(roundf(2500.0 * infl(start_year)), "Savings from the years before")
+	book(float(roundi(Balance.START_CAPITAL * Util.infl(start_year) * capital_mult)), "sonstiges", "Opening capital — office opening on Sunset Boulevard")
+	Persona.book(roundf(2500.0 * Util.infl(start_year)), "Savings from the years before")
 	# Ein alter Bekannter aus den Anfangsjahren erinnert sich.
 	grant_favor("galaInvite", favor_contact_for("galaInvite"))
 	log_msg("%s opens its offices on Sunset Boulevard. Time to make careers." % agency_name, "history")
 	_apply_backstory_start()
-	spawn_castings(rndi(2, 3))
+	spawn_castings(Util.rndi(2, 3))
 
 # ---------- Backstory (wählbare Vorgeschichte der Spielfigur) ----------
 func has_backstory(id_s: String) -> bool:
@@ -544,7 +462,7 @@ func _apply_backstory_start() -> void:
 		return
 	var start: Dictionary = b.get("start", {})
 	if float(start.get("cash_add", 0)) != 0.0:
-		book(roundf(float(start.cash_add) * infl(state.startYear)), "sonstiges", "Backstory: %s" % str(b.name))
+		book(roundf(float(start.cash_add) * Util.infl(state.startYear)), "sonstiges", "Backstory: %s" % str(b.name))
 	state.agency.rep = clampi(int(state.agency.rep) + int(start.get("rep_add", 0)), 0, 100)
 	state.instinct = clampi(int(state.instinct) + int(start.get("instinct_add", 0)), 5, 100)
 	for kind_s in start.get("favors", []):
@@ -555,7 +473,7 @@ func _apply_backstory_start() -> void:
 		Mogul.grant_xp(str(field), float(start.skills_xp[field]), "Backstory: %s" % str(b.name))
 	for ctype in start.get("contacts_extra", []):
 		if Data.CONTACT_PERSONS.has(str(ctype)):
-			var cname := str(pick(Data.CONTACT_PERSONS[str(ctype)]))
+			var cname := str(Util.pick(Data.CONTACT_PERSONS[str(ctype)]))
 			if not state.contacts.any(func(ct): return str(ct.name) == cname):
 				var new_ct: Dictionary = Persona._add_contact(str(ctype), cname)
 				Network.adjust(new_ct, {"liking": 10.0, "trust": 8.0}, false)
@@ -677,15 +595,15 @@ func is_rival_client(actor_id: String) -> bool:
 func pool_actors() -> Array:
 	var y = state.year
 	var out = Data.ACTORS.filter(func(a):
-		return a.debut <= y and (a.death == null or a.death > y) and age_of(a, y) <= 85 and not is_client(a.id))
-	out.sort_custom(func(a, b): return fame_at(a, y) > fame_at(b, y))
+		return a.debut <= y and (a.death == null or a.death > y) and Util.age_of(a, y) <= 85 and not is_client(a.id))
+	out.sort_custom(func(a, b): return Util.fame_at(a, y) > Util.fame_at(b, y))
 	return out
 
 func available_actors() -> Array:
 	var y = state.year
 	var out = Data.ACTORS.filter(func(a):
-		return a.debut <= y and (a.death == null or a.death > y) and age_of(a, y) <= 85 and not is_client(a.id) and not is_rival_client(a.id))
-	out.sort_custom(func(a, b): return fame_at(a, y) > fame_at(b, y))
+		return a.debut <= y and (a.death == null or a.death > y) and Util.age_of(a, y) <= 85 and not is_client(a.id) and not is_rival_client(a.id))
+	out.sort_custom(func(a, b): return Util.fame_at(a, y) > Util.fame_at(b, y))
 	return out
 
 func client(cid) -> Variant:
@@ -732,7 +650,7 @@ func _rival_candidate(rival: Dictionary) -> Variant:
 		return null
 	match str(rival.style):
 		"nachwuchs":
-			var young: Array = pool.filter(func(a): return age_of(a, state.year) <= 28)
+			var young: Array = pool.filter(func(a): return Util.age_of(a, state.year) <= 28)
 			if young.size():
 				young.sort_custom(func(a, b): return float(a.talent) > float(b.talent))
 				return young[0]
@@ -744,7 +662,7 @@ func _rival_candidate(rival: Dictionary) -> Variant:
 		"aggressiv":
 			return pool[0]
 		"studiotreu":
-			var reliable: Array = pool.filter(func(a): return float(attrs(a).discipline) >= 60.0)
+			var reliable: Array = pool.filter(func(a): return float(Util.attrs(a).discipline) >= 60.0)
 			if reliable.size():
 				return reliable[0]
 	return pool[0]
@@ -780,18 +698,18 @@ func tick_rivals(events: Array = [], force: bool = false) -> void:
 			if actor.is_empty() or (actor.death != null and float(actor.death) <= float(state.year)):
 				rival.clients.erase(actor_id)
 		var sign_chance := 0.07 if str(rival.style) == "nachwuchs" else 0.035
-		if force or chance(sign_chance):
+		if force or Util.chance(sign_chance):
 			var actor = _rival_candidate(rival)
 			if actor != null:
 				rival.clients.append(str(actor.id))
 				press_event("Rival deals", "%s signs %s" % [rival.name, actor.name])
 				log_msg("Competition: %s signs %s." % [rival.name, actor.name], "info")
-		if float(rival.grudge) >= 60.0 and state.clients.size() and (force or chance(0.18)):
-			var target: Dictionary = pick(state.clients)
+		if float(rival.grudge) >= 60.0 and state.clients.size() and (force or Util.chance(0.18)):
+			var target: Dictionary = Util.pick(state.clients)
 			var rumor := add_rumor(int(target.id), "%s is sowing doubts about the reliability of %s in the studio corridors." % [rival.name, client_name(target)], false, "skandal", ["Studios", "Assistants"], 14.0, true, "", 34.0)
 			rumor["sourceRival"] = str(rival.id)
 			press_event("Agencies", "Ice age between %s and %s: studio corridors become a battlefield" % [state.agency.name, rival.name])
-		if not force and not cooperation_added and float(rival.grudge) <= 12.0 and float(rival.rel) >= 20.0 and chance(0.04):
+		if not force and not cooperation_added and float(rival.grudge) <= 12.0 and float(rival.rel) >= 20.0 and Util.chance(0.04):
 			var coop = _rival_coop_event(rival)
 			if coop != null:
 				events.append(coop)
@@ -812,7 +730,7 @@ func power_figure_for_aid(actor_id: String) -> Variant:
 func power_figure_candidates() -> Array:
 	return state.clients.filter(func(c):
 		var actor: Dictionary = actor_by_id[c.aid]
-		return age_of(actor, state.year) >= 45 and (int(c.get("awards", 0)) >= 1 or float(c.fame) >= 80.0) and power_figure_for_aid(str(c.aid)) == null)
+		return Util.age_of(actor, state.year) >= 45 and (int(c.get("awards", 0)) >= 1 or float(c.fame) >= 80.0) and power_figure_for_aid(str(c.aid)) == null)
 
 func become_power_figure(cid: int, role_s: String, keep_close: bool = false, force_independent: bool = false) -> String:
 	var c = client(cid)
@@ -843,14 +761,14 @@ func become_power_figure(cid: int, role_s: String, keep_close: bool = false, for
 	return "%s moves into %s. At future castings, your agency remains the first address." % [actor_name, role_label]
 
 func assign_power_figure_to_casting(casting: Dictionary, force: bool = false) -> void:
-	if state.get("powerFigures", []).is_empty() or (not force and not chance(0.35)):
+	if state.get("powerFigures", []).is_empty() or (not force and not Util.chance(0.35)):
 		return
 	var available: Array = state.powerFigures.filter(func(p):
 		var actor: Dictionary = actor_by_id.get(str(p.aid), {})
 		return not actor.is_empty() and (actor.death == null or float(actor.death) > float(state.year)))
 	if available.is_empty():
 		return
-	var figure: Dictionary = pick(available)
+	var figure: Dictionary = Util.pick(available)
 	var key := "director" if str(figure.role) == "director" else "producer"
 	casting[key] = {"figureId":int(figure.id), "aid":str(figure.aid), "name":str(figure.name), "agencyFriendly":bool(figure.agencyFriendly), "rivalId":str(figure.rivalId)}
 	if bool(figure.agencyFriendly):
@@ -860,7 +778,7 @@ func assign_power_figure_to_casting(casting: Dictionary, force: bool = false) ->
 
 func random_client(filter: Callable = Callable()) -> Variant:
 	var list = state.clients if not filter.is_valid() else state.clients.filter(filter)
-	return pick(list) if list.size() else null
+	return Util.pick(list) if list.size() else null
 
 # ---------- Vertrauen, Geheimnisse & Gerüchte ----------
 func change_trust(c: Dictionary, delta: float) -> void:
@@ -901,18 +819,18 @@ func reveal_secret(c: Dictionary, type_s: String = "", severity: int = 0) -> Var
 			return null
 		if int(state.year) >= 1947 and int(state.year) <= 1956 and possible.has("politik"):
 			possible.append_array(["politik", "politik"])
-		type_s = str(pick(possible))
+		type_s = str(Util.pick(possible))
 	if not SECRET_TYPES.has(type_s) or secret_of(c, type_s) != null:
 		return null
-	var sev: int = clampi(severity if severity > 0 else rndi(1, 3), 1, 3)
+	var sev: int = clampi(severity if severity > 0 else Util.rndi(1, 3), 1, 3)
 	var secret := {"type":type_s, "severity":sev, "knownSince":mi(), "status":"geheim"}
 	c.secrets.append(secret)
 	var cid: int = int(c.id)
-	var prep_cost: int = roundi((1800.0 + sev * 1700.0) * infl(state.year))
+	var prep_cost: int = roundi((1800.0 + sev * 1700.0) * Util.infl(state.year))
 	return {"title":"In confidence: %s" % SECRET_TYPES[type_s].label,
 		"text":_secret_text(type_s, client_name(c)),
 		"choices":[
-			{"label":"Prepare: %s (%s)" % [SECRET_TYPES[type_s].prep, fmt_money(prep_cost)], "fn":func(): return prepare_secret(cid, type_s, prep_cost)},
+			{"label":"Prepare: %s (%s)" % [SECRET_TYPES[type_s].prep, Util.fmt_money(prep_cost)], "fn":func(): return prepare_secret(cid, type_s, prep_cost)},
 			{"label":"Listen and promise confidentiality", "fn":func():
 				var cl = client(cid)
 				if cl == null: return "The conversation comes too late."
@@ -928,9 +846,9 @@ func prepare_secret(cid: int, type_s: String, cost: int = -1) -> String:
 	var secret = secret_of(c, type_s)
 	if secret == null:
 		return "You cannot prepare for this without solid information."
-	var actual_cost: int = cost if cost >= 0 else roundi((1800.0 + int(secret.severity) * 1700.0) * infl(state.year))
+	var actual_cost: int = cost if cost >= 0 else roundi((1800.0 + int(secret.severity) * 1700.0) * Util.infl(state.year))
 	if float(state.agency.cash) < actual_cost:
-		return "The discreet preparation would cost %s. The till cannot cover that yet — the secret stays protected." % fmt_money(actual_cost)
+		return "The discreet preparation would cost %s. The till cannot cover that yet — the secret stays protected." % Util.fmt_money(actual_cost)
 	book(-float(actual_cost), "pr_recht", "Discreet preparation: %s (%s)" % [SECRET_TYPES[type_s].label, client_name(c)])
 	secret.status = "entschärft"
 	record_identity("diskret", 1.0)
@@ -958,7 +876,7 @@ func maybe_reveal_secret(c: Dictionary, events: Array, force: bool = false) -> b
 		if float(c.get("trust", 30.0)) < threshold or used.has(threshold):
 			continue
 		var p: float = 0.18 + float(threshold - 45) / 150.0
-		if force or chance(p):
+		if force or Util.chance(p):
 			used.append(threshold)
 			c.secretThresholds = used
 			var ev = reveal_secret(c)
@@ -969,7 +887,7 @@ func maybe_reveal_secret(c: Dictionary, events: Array, force: bool = false) -> b
 
 func add_rumor(subject, text_s: String, truth: bool, topic: String, holders: Array = [], belief: float = 10.0, known: bool = false, source_secret: String = "", industry_belief: float = -1.0) -> Dictionary:
 	# Backstory-Trait (Kolumnist:in): neue Gerüchte erreichen dich sofort
-	if not known and backstory_mod("rumor_auto_known", 0.0) > 0.0 and chance(backstory_mod("rumor_auto_known", 0.0)):
+	if not known and backstory_mod("rumor_auto_known", 0.0) > 0.0 and Util.chance(backstory_mod("rumor_auto_known", 0.0)):
 		known = true
 	var industry_start := belief if industry_belief < 0.0 else industry_belief
 	var rumor := {"id":next_id(), "subject":subject, "text":text_s, "truth":truth, "topic":topic,
@@ -1022,7 +940,7 @@ func sell_secret(cid: int, type_s: String) -> String:
 	var secret = secret_of(c, type_s)
 	if secret == null or str(secret.status) == "publik":
 		return "This story is no longer exclusive."
-	var payment: int = roundi((7000.0 + int(secret.severity) * 9000.0 + float(c.fame) * 300.0) * infl(state.year))
+	var payment: int = roundi((7000.0 + int(secret.severity) * 9000.0 + float(c.fame) * 300.0) * Util.infl(state.year))
 	book(float(payment), "pr_recht", "Exclusive story sold to the press (%s)" % client_name(c))
 	record_identity("skrupellos", 3.0)
 	secret.status = "publik"
@@ -1036,10 +954,10 @@ func sell_secret(cid: int, type_s: String) -> String:
 	rumor["soldByAgency"] = true
 	log_msg("An intimate story about %s lands in the press." % client_name(c), "bad")
 	var ending := ""
-	if chance(0.65):
+	if Util.chance(0.65):
 		state.clients.erase(c)
 		ending = " %s quits that very evening." % client_name(c)
-	return "The column pays %s. The trust is destroyed and permanently capped.%s" % [fmt_money(payment), ending]
+	return "The column pays %s. The trust is destroyed and permanently capped.%s" % [Util.fmt_money(payment), ending]
 
 func _apply_rumor_impact(rumor: Dictionary) -> void:
 	# Öffentliche Wirkung: Ruhm und Image. Die Branchenwirkung bleibt separat
@@ -1071,14 +989,14 @@ func tick_rumors(events: Array = [], force_spread: bool = false) -> void:
 	# Wahre Geheimnisse können unbemerkt aus dem Büro sickern.
 	for c in state.clients:
 		for secret in c.get("secrets", []):
-			if str(secret.status) != "publik" and not secret.get("leaked", false) and (force_spread or chance(0.025)):
+			if str(secret.status) != "publik" and not secret.get("leaked", false) and (force_spread or Util.chance(0.025)):
 				_leak_secret(c, secret)
 	# Gelegentliche Erfindungen bevorzugen bekannte Namen.
-	if not force_spread and state.clients.size() and chance(0.035):
+	if not force_spread and state.clients.size() and Util.chance(0.035):
 		var stars: Array = state.clients.duplicate()
 		stars.sort_custom(func(a, b): return float(a.fame) > float(b.fame))
-		var target: Dictionary = pick(stars.slice(0, mini(3, stars.size())))
-		var topic: String = str(pick(["affäre", "skandal", "wechsel", "gesundheit"]))
+		var target: Dictionary = Util.pick(stars.slice(0, mini(3, stars.size())))
+		var topic: String = str(Util.pick(["affäre", "skandal", "wechsel", "gesundheit"]))
 		add_rumor(int(target.id), "At a party someone claims something is brewing with %s — nobody has proof." % client_name(target), false, topic, ["Party guests"], 12.0)
 
 	for rumor in state.rumors.duplicate():
@@ -1093,8 +1011,8 @@ func tick_rumors(events: Array = [], force_spread: bool = false) -> void:
 			var max_reach := 0.0
 			for holder in rumor.holders:
 				max_reach = maxf(max_reach, float(RUMOR_CARRIERS.get(holder, {}).get("reach", 0.1)))
-			if force_spread or chance(max_reach):
-				rumor.holders.append(str(pick(candidates)))
+			if force_spread or Util.chance(max_reach):
+				rumor.holders.append(str(Util.pick(candidates)))
 		var public_momentum := 0.0
 		var industry_momentum := 0.0
 		for holder in rumor.holders:
@@ -1114,7 +1032,7 @@ func tick_rumors(events: Array = [], force_spread: bool = false) -> void:
 			var contact_bonus: float = minf(0.2, state.favors.size() * 0.025)
 			for rel in state.studioRel.values():
 				contact_bonus += float(rel) / maxf(1.0, state.studioRel.size() * 700.0)
-			if (rumor.holders.has("Assistants") and chance(0.45 + contact_bonus)) or chance(contact_bonus * 0.35):
+			if (rumor.holders.has("Assistants") and Util.chance(0.45 + contact_bonus)) or Util.chance(contact_bonus * 0.35):
 				rumor.knownToPlayer = true
 				events.append({"title":"A whisper in the anteroom", "text":"[i]“It is only talk so far — but you should know what people are saying about %s.”[/i]\n\n%s" % [rumor_subject_name(rumor), rumor.text], "choices":[{"label":"To the rumor dossier"}]})
 		if float(rumor.belief) >= 60.0 and not rumor.get("impactApplied", false):
@@ -1140,7 +1058,7 @@ func deny_rumor(rid: int) -> String:
 	var rumor = rumor_by_id(rid)
 	if rumor == null:
 		return "The rumor has already dried up."
-	if bool(rumor.truth) and chance(0.45):
+	if bool(rumor.truth) and Util.chance(0.45):
 		rumor.belief = clampf(float(rumor.belief) + 28.0, 0.0, 100.0)
 		var c = rumor_subject_client(rumor)
 		if c != null:
@@ -1161,10 +1079,10 @@ func suppress_rumor(rid: int) -> String:
 	if has_method("consume_favor"):
 		used_favor = bool(call("consume_favor", "suppressStory"))
 	# Krisenmanagement (Feature 6): der Spin-Doctor kennt die halbe Preisliste
-	var cost: int = roundi(12000.0 * infl(state.year) * (0.5 if Mogul.has_ability("spin_doctor") else 1.0))
+	var cost: int = roundi(12000.0 * Util.infl(state.year) * (0.5 if Mogul.has_ability("spin_doctor") else 1.0))
 	if not used_favor:
 		if float(state.agency.cash) < cost:
-			return "No matching favor — and the till is short the %s they ask for." % fmt_money(cost)
+			return "No matching favor — and the till is short the %s they ask for." % Util.fmt_money(cost)
 		book(-float(cost), "pr_recht", "Rumor suppressed: %s" % rumor_subject_name(rumor))
 	record_identity("diskret", 1.5)
 	Mogul.grant_xp("crisis", 2.0, "Buried a story")
@@ -1180,10 +1098,10 @@ func studio_talk_rumor(rid: int) -> String:
 	if rumor == null:
 		return "Nobody at the studios remembers the story anymore."
 	var paid_with_favor := consume_any_favor()
-	var cost := roundi(9000.0 * infl(state.year))
+	var cost := roundi(9000.0 * Util.infl(state.year))
 	if not paid_with_favor:
 		if float(state.agency.cash) < float(cost):
-			return "Discreet studio talks require a favor or %s." % fmt_money(cost)
+			return "Discreet studio talks require a favor or %s." % Util.fmt_money(cost)
 		book(-float(cost), "pr_recht", "Discreet studio talks: %s" % rumor_subject_name(rumor))
 	rumor.industryBelief = maxf(0.0, float(rumor.get("industryBelief", 0.0)) - 34.0)
 	rumor.holders = rumor.holders.filter(func(h): return str(h) not in ["Studios", "Directors"])
@@ -1197,15 +1115,15 @@ func counter_rumor(rid: int) -> String:
 	var rumor = rumor_by_id(rid)
 	if rumor == null:
 		return "It is too late for that."
-	var cost: int = roundi(5000.0 * infl(state.year))
+	var cost: int = roundi(5000.0 * Util.infl(state.year))
 	if float(state.agency.cash) < cost:
-		return "The campaign would cost %s. The till will not cover it." % fmt_money(cost)
+		return "The campaign would cost %s. The till will not cover it." % Util.fmt_money(cost)
 	book(-float(cost), "pr_recht", "Counter-rumor campaign: %s" % rumor_subject_name(rumor))
 	# Medienstrategie (Feature 6): wer das Narrativ führt, trifft härter & bleibt unerkannt
 	var control := Mogul.has_ability("narrative_control")
 	rumor.belief = maxf(0.0, float(rumor.belief) - (32.0 if control else 20.0))
 	Mogul.grant_xp("media", 2.0, "Ran a counter-campaign")
-	if chance(0.06 if control else 0.12):
+	if Util.chance(0.06 if control else 0.12):
 		for c in state.clients:
 			change_trust(c, -2.0)
 		return "The counter-rumor works — but a reporter recognizes your handwriting. Trust in the house takes a scratch."
@@ -1223,7 +1141,7 @@ func rumor_targets() -> Array:
 	targets.sort_custom(func(a, b):
 		var ar := 1 if is_rival_client(str(a.id)) else 0
 		var br := 1 if is_rival_client(str(b.id)) else 0
-		return ar > br if ar != br else fame_at(a, state.year) > fame_at(b, state.year))
+		return ar > br if ar != br else Util.fame_at(a, state.year) > Util.fame_at(b, state.year))
 	return targets
 
 func launch_rumor(actor_id: String, topic: String = "skandal") -> String:
@@ -1238,7 +1156,7 @@ func launch_rumor(actor_id: String, topic: String = "skandal") -> String:
 	rumor["launchedByAgency"] = true
 	record_identity("skrupellos", 2.0)
 	var exposure: float = clampf(0.34 - identity_strength("skrupellos") * 0.10, 0.12, 0.45)
-	if chance(exposure):
+	if Util.chance(exposure):
 		rumor["agencyExposed"] = true
 		state.agency.rep = clampi(int(state.agency.rep) - 5, 0, 100)
 		for c in state.clients:
@@ -1257,7 +1175,7 @@ func eff_talent(c: Dictionary) -> float:
 	return clampf(actor_by_id[c.aid].talent + c.get("talentBonus", 0.0) - (5.0 if c.flags.get("typecast", false) else 0.0), 5.0, 100.0)
 
 func perk_costs() -> float:
-	var f := infl(state.year)
+	var f := Util.infl(state.year)
 	var sum := 0.0
 	for c in state.clients:
 		for p in c.perks:
@@ -1267,7 +1185,7 @@ func perk_costs() -> float:
 # Fixkosten-Basis von Anzeige UND Monatsabschluss (Werte: Balance.gd).
 func office_base_cost() -> int:
 	var era_mult := Balance.OFFICE_EARLY_ERA_MULT if int(state.year) < Balance.OFFICE_EARLY_ERA_UNTIL else 1.0
-	return roundi((Balance.OFFICE_BASE + state.clients.size() * Balance.OFFICE_PER_CLIENT) * infl(state.year) * era_mult)
+	return roundi((Balance.OFFICE_BASE + state.clients.size() * Balance.OFFICE_PER_CLIENT) * Util.infl(state.year) * era_mult)
 
 func overhead() -> int:
 	return roundi(office_base_cost() + perk_costs())
@@ -1385,8 +1303,8 @@ func consume_any_favor() -> bool:
 # im Raum. Nichts in dieser Stadt ist umsonst.
 func _favor_reciprocity(fav: Dictionary) -> void:
 	Persona.touch_contact_person(fav["from"], -2.0, "You called in the favor. Fair — and noted.")
-	if chance(0.25):
-		owe_favor(str(pick(FAVOR_KINDS.keys())), fav["from"])
+	if Util.chance(0.25):
+		owe_favor(str(Util.pick(FAVOR_KINDS.keys())), fav["from"])
 		log_msg("Nothing in this town is free: %s will remember this the next time THEY need something." % fav["from"].get("name", "?"), "info")
 
 func has_favor(kind: String) -> bool:
@@ -1399,24 +1317,24 @@ func has_favor(kind: String) -> bool:
 func favor_contact_for(kind: String, studio_id: String = "") -> Dictionary:
 	var type := "produzent"
 	match kind:
-		"suppressStory": type = pick(["kolumnist", "journalist"])
+		"suppressStory": type = Util.pick(["kolumnist", "journalist"])
 		"scriptAccess": type = "regisseur"
-		"extraAudition": type = pick(["produzent", "studio"])
+		"extraAudition": type = Util.pick(["produzent", "studio"])
 		"billing": type = "produzent"
-		"galaInvite": type = pick(["studio", "produzent"])
+		"galaInvite": type = Util.pick(["studio", "produzent"])
 	if type == "studio":
 		var sid := studio_id
 		if sid == "":
-			sid = str(pick(active_studios()).id)
+			sid = str(Util.pick(active_studios()).id)
 		return {"type": "studio", "name": str(_studio(sid).name), "studioId": sid}
-	return {"type": type, "name": str(pick(Data.CONTACT_PERSONS[type]))}
+	return {"type": type, "name": str(Util.pick(Data.CONTACT_PERSONS[type]))}
 
 # Jemand schuldet DIR einen Gefallen.
 func grant_favor(kind: String, from: Dictionary = {}, silent: bool = false) -> Dictionary:
 	var person: Dictionary = from if not from.is_empty() else favor_contact_for(kind)
 	var exp := -1
-	if chance(0.8):
-		exp = mi() + rndi(24, 36)
+	if Util.chance(0.8):
+		exp = mi() + Util.rndi(24, 36)
 	var fav := {"id": next_id(), "kind": kind, "from": person, "gainedMi": mi(), "expiresMi": exp, "note": str(FAVOR_KINDS[kind].desc)}
 	state.favors.append(fav)
 	Persona.touch_contact_person(person, 2.0)
@@ -1466,8 +1384,8 @@ func use_extra_audition(role: Dictionary, client_id) -> bool:
 # (Prestige + Script-Roll, wie in release_film). Instinkt reduziert das
 # Rauschen der Einschätzung — geübte Agenten lesen Drehbücher genauer.
 func script_insight(casting: Dictionary) -> int:
-	var base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
-	var noise := (hashs(str(casting.id) + "noi") % 13) - 6
+	var base := 35 + int(casting.prestige) * 8 + (Util.hashs(str(casting.id) + "scr") % 21)
+	var noise := (Util.hashs(str(casting.id) + "noi") % 13) - 6
 	var err := roundi(float(noise) * (1.0 - float(state.get("instinct", 20)) / 100.0))
 	# Vertragswissen (Feature 6): das Klausel-Radar liest Drehbücher fast exakt
 	if Mogul.has_ability("clause_radar"):
@@ -1488,7 +1406,7 @@ func _expire_favors() -> void:
 func actor_profile(actor: Dictionary, fame: float) -> Dictionary:
 	var money: float = 20.0 + actor.ego * 0.5 + (15.0 if fame > 70 else 0.0)
 	var prestige: float = actor.talent * 0.7
-	var security: float = clampf(85.0 - fame, 5.0, 60.0) + (15.0 if age_of(actor, state.year) > 50 else 0.0)
+	var security: float = clampf(85.0 - fame, 5.0, 60.0) + (15.0 if Util.age_of(actor, state.year) > 50 else 0.0)
 	var sum := money + prestige + security
 	var top := "money"
 	if prestige >= money and prestige >= security:
@@ -1501,16 +1419,16 @@ func actor_demands(actor: Dictionary, fame: float, ask: float, profile: Dictiona
 	var perks_by_trait := {"money": ["travel", "assistant"], "prestige": ["script", "coach"], "security": ["pr", "assistant"]}
 	var traits := ["money", "prestige", "security"]
 	traits.sort_custom(func(a, b): return profile[a] > profile[b])
-	var wanted: Array = [pick(perks_by_trait[traits[0]])]
-	var second = pick(perks_by_trait[traits[1]])
-	if not wanted.has(second) and chance(0.7):
+	var wanted: Array = [Util.pick(perks_by_trait[traits[0]])]
+	var second = Util.pick(perks_by_trait[traits[1]])
+	if not wanted.has(second) and Util.chance(0.7):
 		wanted.append(second)
 	var promise = null
-	if profile.top == "prestige" and fame < 75 and chance(0.5):
+	if profile.top == "prestige" and fame < 75 and Util.chance(0.5):
 		promise = "prestige"
-	if profile.top == "security" and chance(0.5):
+	if profile.top == "security" and Util.chance(0.5):
 		promise = "lead12"
-	if actor.talent > 88 and actor.ego > 75 and chance(0.4):
+	if actor.talent > 88 and actor.ego > 75 and Util.chance(0.4):
 		promise = "oscar"
 	var years := 5
 	if profile.top == "security":
@@ -1525,13 +1443,13 @@ func actor_demands(actor: Dictionary, fame: float, ask: float, profile: Dictiona
 
 func start_negotiation(actor_id: String) -> Dictionary:
 	var actor: Dictionary = actor_by_id[actor_id]
-	var fame := fame_at(actor, state.year)
+	var fame := Util.fame_at(actor, state.year)
 	var req := required_rep(fame)
 	var owner = rival_for_actor(actor_id)
 	var poach_req := req + (10 if owner != null else 0)
 	if state.agency.rep < poach_req:
 		return {"locked": true, "actor": actor, "fame": fame, "reqRep": poach_req, "rivalName": str(owner.name) if owner != null else ""}
-	var ask := ask_fee(fame, state.year)
+	var ask := Util.ask_fee(fame, state.year)
 	var profile := actor_profile(actor, fame)
 	nego = {
 		"actor": actor, "fame": fame, "ask": ask, "profile": profile,
@@ -1593,7 +1511,7 @@ func negotiation_hint() -> String:
 		"prestige": ["“I want roles people still talk about in thirty years.”", "“Money spoils. Art endures. What are you offering me artistically?”"],
 		"security": ["“I need to know I'll still be working next year. Can you guarantee that?”", "“Don't promise me anything you can't keep.”"],
 	}
-	return "%s: %s" % [nego.actor.name, pick(hints[nego.profile.top])]
+	return "%s: %s" % [nego.actor.name, Util.pick(hints[nego.profile.top])]
 
 func build_counter(offer: Dictionary) -> Variant:
 	var d: Dictionary = nego.demands
@@ -1611,7 +1529,7 @@ func build_counter(offer: Dictionary) -> Variant:
 	if counter.commission < offer.commission:
 		parts.append("%d%% commission — not a point more" % counter.commission)
 	if counter.bonus > offer.bonus:
-		parts.append("%s signing money up front" % fmt_money(counter.bonus))
+		parts.append("%s signing money up front" % Util.fmt_money(counter.bonus))
 	if counter.years != offer.years:
 		parts.append("a %d-year term" % counter.years)
 	var new_perks = counter.perks.filter(func(pk): return not offer.perks.has(pk))
@@ -1632,15 +1550,15 @@ func sign_client(terms: Dictionary) -> Dictionary:
 	var actor: Dictionary = nego.actor
 	var c := {
 		"id": next_id(), "aid": actor.id, "fame": float(nego.fame), "heat": 0.0,
-		"loyalty": float(rndi(45, 60) + (6 if terms.bonus > 0 else 0)), "mood": 60.0, "exhaustion": 0.0,
-		"weightKg": float(body_of(actor).weight), "weightTrend": 0.0,
+		"loyalty": float(Util.rndi(45, 60) + (6 if terms.bonus > 0 else 0)), "mood": 60.0, "exhaustion": 0.0,
+		"weightKg": float(Util.body_of(actor).weight), "weightTrend": 0.0,
 		"commission": int(terms.commission), "perks": terms.get("perks", []),
 		"years": int(terms.years), "contractEnd": mi() + int(terms.years) * 12,
 		"promises": [], "busyUntil": 0, "films": [], "flags": {}, "talentBonus": 0.0,
 		"campaign": 0.0, "awards": 0,
 		"dna": initial_dna(actor),
 		"signedAt": mi(),
-		"trust": float(rndi(28, 34)), "trustCap": 100.0, "secrets": [], "secretThresholds": [],
+		"trust": float(Util.rndi(28, 34)), "trustCap": 100.0, "secrets": [], "secretThresholds": [],
 		"narrative": {}, "fameHistory": [], "dnaHistory": [],
 		"clauses": [], "exclusiveStudio": "",
 	}
@@ -1671,7 +1589,7 @@ func sign_client(terms: Dictionary) -> Dictionary:
 	Mogul.grant_xp("people", 1.0, "Signed a client")
 	Network.memoir("%s signs with the agency — %d years, %d%% commission." % [actor.name, int(terms.years), int(terms.commission)], [str(actor.name)])
 	log_msg("%s signs for %d years (%d%% commission%s%s)." % [actor.name, terms.years, terms.commission,
-		(", bonus " + fmt_money(terms.bonus)) if terms.bonus > 0 else "",
+		(", bonus " + Util.fmt_money(terms.bonus)) if terms.bonus > 0 else "",
 		", with a promise" if terms.get("promise") != null else ""], "deal")
 	nego.done = true
 	return {"accepted": true, "client": c}
@@ -1679,7 +1597,7 @@ func sign_client(terms: Dictionary) -> Dictionary:
 func make_offer(offer: Dictionary) -> Dictionary:
 	# Menschenkenntnis (Feature 6): wer Bluffs liest, erlebt weniger Launen-Rauschen
 	var noise := 3.0 if Mogul.has_ability("cold_read") else 9.0
-	var score := evaluate_offer(offer) + rndf(-noise, noise)
+	var score := evaluate_offer(offer) + Util.rndf(-noise, noise)
 	if score >= 58.0:
 		return sign_client(offer)
 	Mogul.grant_xp("negotiation", 1.0, "A rejected offer teaches")
@@ -1723,14 +1641,14 @@ func pick_genre() -> String:
 
 func make_title(genre: String) -> String:
 	var t: Dictionary = Data.TITLES[genre]
-	return "%s %s" % [pick(t.a), pick(t.b)]
+	return "%s %s" % [Util.pick(t.a), Util.pick(t.b)]
 
 func project_title(genre: String) -> String:
 	var y = state.year
 	var used: Array = state.usedTitles
 	var cand = Data.REAL_TITLES.filter(func(t): return absf(t.y - y) <= 4 and t.g.has(genre) and not used.has(t.t))
-	if cand.size() and chance(0.8):
-		var t = pick(cand)
+	if cand.size() and Util.chance(0.8):
+		var t = Util.pick(cand)
 		used.append(t.t)
 		return t.t
 	return make_title(genre)
@@ -1740,61 +1658,61 @@ func spawn_castings(count: int) -> void:
 		var cs := _make_casting()
 		# Chancen aus dem Netzwerk (Feature 20): ein Teil der Projekte wird
 		# nie öffentlich ausgeschrieben — nur ein guter Kontakt bringt sie dir.
-		if i > 0 and chance(0.45):
+		if i > 0 and Util.chance(0.45):
 			cs["hidden"] = true
-			cs["netSource"] = pick(["produzent", "regisseur", "studio"])
+			cs["netSource"] = Util.pick(["produzent", "regisseur", "studio"])
 		state.castings.append(cs)
 
 # Einzelnes Casting erzeugen (auch von der Coverage genutzt — die hält es
 # einen Monat verdeckt, bevor es regulär auf dem Markt erscheint).
 func _make_casting() -> Dictionary:
 	var y = state.year
-	var studio = pick(active_studios())
+	var studio = Util.pick(active_studios())
 	var genre := pick_genre()
-	var prestige := rndi(1, 3) if studio.style != "commercial" else rndi(0, 2)
-	if genre == "drama" and chance(0.4):
+	var prestige := Util.rndi(1, 3) if studio.style != "commercial" else Util.rndi(0, 2)
+	if genre == "drama" and Util.chance(0.4):
 		prestige = mini(3, prestige + 1)
 	var roles: Array = []
-	var lead_gender = "m" if chance(0.5) else "f"
+	var lead_gender = "m" if Util.chance(0.5) else "f"
 	roles.append(_mk_role("lead", lead_gender, prestige, y))
-	if chance(0.6):
+	if Util.chance(0.6):
 		roles.append(_mk_role("lead", "f" if lead_gender == "m" else "m", prestige, y))
-	roles.append(_mk_role("support", "m" if chance(0.5) else "f", prestige, y))
-	if chance(0.4):
-		roles.append(_mk_role("support", "m" if chance(0.5) else "f", prestige, y))
+	roles.append(_mk_role("support", "m" if Util.chance(0.5) else "f", prestige, y))
+	if Util.chance(0.4):
+		roles.append(_mk_role("support", "m" if Util.chance(0.5) else "f", prestige, y))
 	var fee_sum := 0.0
 	for r in roles:
 		fee_sum += r.fee
 	var casting := {
 		"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
 		"prestige": prestige,
-		"budget": roundi(fee_sum * rndf(3.0, 4.5) + 400000.0 * infl(y) * rndf(0.6, 1.4) * (1.0 + prestige * 0.3)),
-		"deadline": rndi(8, 12), "roles": roles, "qualityMod": 0.0,
+		"budget": roundi(fee_sum * Util.rndf(3.0, 4.5) + 400000.0 * Util.infl(y) * Util.rndf(0.6, 1.4) * (1.0 + prestige * 0.3)),
+		"deadline": Util.rndi(8, 12), "roles": roles, "qualityMod": 0.0,
 	}
 	# Seltene offene Einladung auch für eine Nebenrolle.
-	casting["auditionSupport"] = chance(0.12)
-	casting["dreamPair"] = chance(0.08)
+	casting["auditionSupport"] = Util.chance(0.12)
+	casting["dreamPair"] = Util.chance(0.08)
 	assign_power_figure_to_casting(casting)
 	return casting
 
 func _mk_role(type: String, gender: String, prestige: int, y: float) -> Dictionary:
-	var min_fame := rndi(25, 55 + prestige * 10) if type == "lead" else rndi(10, 35)
-	var age_min := rndi(18, 45)
+	var min_fame := Util.rndi(25, 55 + prestige * 10) if type == "lead" else Util.rndi(10, 35)
+	var age_min := Util.rndi(18, 45)
 	return {
 		"type": type, "gender": gender, "minFame": min_fame,
-		"ageMin": age_min, "ageMax": age_min + rndi(12, 30),
-		"fee": roundi(ask_fee(min_fame + 12, y) * (1.0 if type == "lead" else 0.35)),
+		"ageMin": age_min, "ageMax": age_min + Util.rndi(12, 30),
+		"fee": roundi(Util.ask_fee(min_fame + 12, y) * (1.0 if type == "lead" else 0.35)),
 		"filled": null, "rejected": [],
 	}
 
 func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	var actor: Dictionary = actor_by_id[c.aid]
 	var y = state.year
-	var age := age_of(actor, y)
+	var age := Util.age_of(actor, y)
 	var fit := 30.0
 	if actor.genres.has(casting.genre):
 		fit += 22.0 + (5.0 if c.perks.has("script") else 0.0)
-	fit += (attrs(actor).charisma - 50.0) / 15.0
+	fit += (Util.attrs(actor).charisma - 50.0) / 15.0
 	fit += clampf((c.fame - role.minFame) * 0.7, -25.0, 18.0)
 	fit += c.heat * 2.0
 	fit += float(state.studioRel[casting.studioId]) / 6.0
@@ -1851,7 +1769,7 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 	return out
 
 func role_fee_for(_cs: Dictionary, role: Dictionary, c: Dictionary) -> int:
-	var ask: float = ask_fee(c.fame, state.year) * (1.0 if role.type == "lead" else 0.35) * (1.0 + int(c.get("awards", 0)) * 0.08)
+	var ask: float = Util.ask_fee(c.fame, state.year) * (1.0 if role.type == "lead" else 0.35) * (1.0 + int(c.get("awards", 0)) * 0.08)
 	# Gagen-Eskalator-Klausel: jede weitere Zusammenarbeit wird teurer
 	if c.get("clauses", []).has("escalator"):
 		ask *= 1.15
@@ -1876,7 +1794,7 @@ func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
 	# Planner-„Vorbereitung“ ist einmalig — jetzt wird sie verbraucht
 	if c.flags.has("prepFit"):
 		c.flags.erase("prepFit")
-	if chance(p):
+	if Util.chance(p):
 		pitch_ctx = {"casting": casting, "roleIdx": role_idx, "role": role, "client": c, "fee": role_fee_for(casting, role, c), "haggled": false}
 		# Alternativen für die Instinkt-Prognose „Wer passt besser?“ merken (Feature 6c)
 		var alts: Array = []
@@ -1916,7 +1834,7 @@ func close_deal(fee: float, extra_log: String = "", clauses: Array = [], billing
 		log_msg("%s is now bound exclusively to %s — better fees there, no castings anywhere else." % [client_name(c), _studio(str(casting.studioId)).name], "history")
 	log_msg("Deal: %s plays %s in “%s” for %s. Commission: %s.%s" % [client_name(c),
 		"the lead" if role.type == "lead" else "a supporting role", casting.title,
-		fmt_money(fee), fmt_money(fee * c.commission / 100.0), extra_log], "deal")
+		Util.fmt_money(fee), Util.fmt_money(fee * c.commission / 100.0), extra_log], "deal")
 	check_promises_on_deal(c, casting, role)
 	press_event("Casting", "%s takes %s in “%s” for %s" % [client_name(c), "the lead" if role.type == "lead" else "a supporting role", casting.title, _studio(str(casting.studioId)).name])
 	if int(casting.prestige) >= 2:
@@ -1924,8 +1842,8 @@ func close_deal(fee: float, extra_log: String = "", clauses: Array = [], billing
 	elif studio_style(str(casting.studioId)) == "commercial":
 		record_identity("kommerziell", 0.35)
 	c.mood = clampf(c.mood + 8.0, 0.0, 100.0)
-	if chance(0.18):
-		var kind_s: String = pick(["extraAudition", "scriptAccess", "billing"])
+	if Util.chance(0.18):
+		var kind_s: String = Util.pick(["extraAudition", "scriptAccess", "billing"])
 		grant_favor(kind_s, favor_contact_for(kind_s, str(casting.studioId)))
 	Mogul.grant_xp("negotiation", 2.0, "Closed a deal")
 	if clauses.size():
@@ -1945,13 +1863,13 @@ func haggle() -> Dictionary:
 	if Mogul.has_ability("closer"):
 		p = clampf(p + 0.07, 0.1, 0.92)
 	pitch_ctx.haggled = true
-	if chance(p):
+	if Util.chance(p):
 		# Spezialisierung (Feature 42): der Meisterverhandler holt mehr heraus
 		pitch_ctx.fee = roundi(pitch_ctx.fee * (Balance.HAGGLE_MASTER_MULT if Mogul.has_ability("master_negotiator") else Balance.HAGGLE_MULT))
 		return {"success": true, "fee": pitch_ctx.fee}
 	Mogul.grant_xp("negotiation", 1.0, "A failed haggle teaches")
 	# „Second pass“: wer weiß, wann Schluss ist, sprengt selten den Deal
-	if chance(0.2 if Mogul.has_ability("second_pass") else 0.45):
+	if Util.chance(0.2 if Mogul.has_ability("second_pass") else 0.45):
 		state.studioRel[pitch_ctx.casting.studioId] = clampi(int(rel) - 6, 0, 100)
 		log_msg("Overplayed the hand: “%s” — the studio walks away from the talks with %s." % [pitch_ctx.casting.title, client_name(pitch_ctx.client)], "bad")
 		pitch_ctx = null
@@ -1981,7 +1899,7 @@ func try_package(support_role_idx: int, second_client_id) -> Dictionary:
 	var c2 = client(second_client_id)
 	var rel: float = state.studioRel[casting.studioId]
 	var p: float = clampf(0.4 + state.agency.rep / 180.0 + fit_score(casting, role2, c2) / 300.0, 0.15, 0.9)
-	if chance(p):
+	if Util.chance(p):
 		var fee1 := roundi(pitch_ctx.fee * Balance.PACKAGE_FEE_MULT)
 		var fee2 := roundi(role_fee_for(casting, role2, c2) * Balance.PACKAGE_FEE_MULT)
 		close_deal(fee1, " (package deal)")
@@ -1989,11 +1907,11 @@ func try_package(support_role_idx: int, second_client_id) -> Dictionary:
 		c2.busyUntil = mi() + ceili(float(casting.deadline) / 4.0)
 		c2.mood = clampf(c2.mood + 8.0, 0.0, 100.0)
 		check_promises_on_deal(c2, casting, role2)
-		log_msg("Package deal sealed: %s also takes a supporting role in “%s” for %s." % [client_name(c2), casting.title, fmt_money(fee2)], "deal")
+		log_msg("Package deal sealed: %s also takes a supporting role in “%s” for %s." % [client_name(c2), casting.title, Util.fmt_money(fee2)], "deal")
 		state.agency.rep = clampi(int(state.agency.rep) + 2, 0, 100)
 		grant_favor("extraAudition", favor_contact_for("extraAudition", str(casting.studioId)))
-		if chance(0.4):
-			var kind2: String = pick(["billing", "scriptAccess"])
+		if Util.chance(0.4):
+			var kind2: String = Util.pick(["billing", "scriptAccess"])
 			grant_favor(kind2, favor_contact_for(kind2, str(casting.studioId)))
 		return {"success": true}
 	state.studioRel[casting.studioId] = clampi(int(rel) - 4, 0, 100)
@@ -2023,16 +1941,16 @@ func fulfill_promise(c: Dictionary, pr: Dictionary) -> void:
 
 func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
 	var actor: Dictionary = actor_by_id[c.aid]
-	var genre: String = opts.get("genre", pick(actor.genres) if chance(0.7) else pick_genre())
-	var studio: Dictionary = opts.get("studio", pick(active_studios()))
+	var genre: String = opts.get("genre", Util.pick(actor.genres) if Util.chance(0.7) else pick_genre())
+	var studio: Dictionary = opts.get("studio", Util.pick(active_studios()))
 	var role_type: String = opts.get("roleType", "lead")
-	var fee := roundi(ask_fee(c.fame, state.year) * (1.0 if role_type == "lead" else 0.35) * opts.get("feeMult", 1.0))
+	var fee := roundi(Util.ask_fee(c.fame, state.year) * (1.0 if role_type == "lead" else 0.35) * opts.get("feeMult", 1.0))
 	# Streaming-Ära (2015+): kürzere Produktionszeiten (Feature 14)
-	var months := rndi(3, 5) if int(state.year) >= 2015 else rndi(4, 6)
+	var months := Util.rndi(3, 5) if int(state.year) >= 2015 else Util.rndi(4, 6)
 	var prod := {
 		"id": next_id(), "studioId": studio.id, "title": project_title(genre), "genre": genre,
-		"prestige": opts.get("prestige", rndi(1, 2)),
-		"budget": roundi(fee * rndf(3.0, 4.5) + 300000.0 * infl(state.year)),
+		"prestige": opts.get("prestige", Util.rndi(1, 2)),
+		"budget": roundi(fee * Util.rndf(3.0, 4.5) + 300000.0 * Util.infl(state.year)),
 		"weeksLeft": months * 4, "qualityMod": opts.get("qualityMod", 0.0),
 		"roles": [{"type": role_type, "gender": actor.g, "minFame": 30, "ageMin": 18, "ageMax": 99, "fee": fee, "filled": {"clientId": int(c.id), "fee": fee, "billing": 1}, "rejected": []}],
 	}
@@ -2053,7 +1971,7 @@ func quick_production(c: Dictionary, opts: Dictionary = {}) -> Dictionary:
 		record_identity("kuenstlerisch", 0.35)
 	elif studio_style(str(prod.studioId)) == "commercial":
 		record_identity("kommerziell", 0.35)
-	log_msg("Instant deal: %s in “%s” (%s) — %s fee, %s commission." % [client_name(c), prod.title, studio.name, fmt_money(fee), fmt_money(income)], "deal")
+	log_msg("Instant deal: %s in “%s” (%s) — %s fee, %s commission." % [client_name(c), prod.title, studio.name, Util.fmt_money(fee), Util.fmt_money(income)], "deal")
 	return {"fee": fee, "income": income, "title": prod.title, "studioName": studio.name, "prod": prod}
 
 # =====================================================================
@@ -2205,7 +2123,7 @@ func _month_close(events: Array) -> void:
 		_tick_signals(events)
 
 	if not strike:
-		spawn_castings(rndi(1, 2) + (1 if state.agency.rep >= 50 else 0))
+		spawn_castings(Util.rndi(1, 2) + (1 if state.agency.rep >= 50 else 0))
 		while state.castings.size() > 10:
 			state.castings.pop_front()
 
@@ -2255,7 +2173,7 @@ func maybe_fire_event(events: Array) -> void:
 		total += x.w
 		if x.w >= 3.0:
 			seasonal = true
-	if not chance(0.33 if seasonal else 0.14):
+	if not Util.chance(0.33 if seasonal else 0.14):
 		return
 	var r := randf() * total
 	var chosen: Dictionary = candidates[0]
@@ -2277,7 +2195,7 @@ func tick_clients(events: Array) -> void:
 			state.clients.erase(c)
 			continue
 		var busy := not is_free(c)
-		var disc: float = attrs(actor).discipline
+		var disc: float = Util.attrs(actor).discipline
 		# Kleine monatliche Schritte; große Sprünge kommen aus Entscheidungen.
 		_tick_client_weight(c, actor, disc)
 		var trust_growth := 0.28 + minf(0.28, c.perks.size() * 0.07) + (0.10 if busy else 0.0)
@@ -2308,7 +2226,7 @@ func tick_clients(events: Array) -> void:
 				c.dna.unikat = clampf(c.dna.unikat - 0.4, -100.0, 100.0)
 		# Werbevertrag-Klausel (Feature 8): regelmäßiges Einkommen, Image +, Laune −
 		if c.get("clauses", []).has("endorsement"):
-			var ad_income := roundi((900.0 + float(c.fame) * 30.0) * infl(state.year) * float(c.commission) / 100.0)
+			var ad_income := roundi((900.0 + float(c.fame) * 30.0) * Util.infl(state.year) * float(c.commission) / 100.0)
 			book(float(ad_income), "sonstiges", "Endorsement deal: %s" % client_name(c))
 			c.mood = clampf(c.mood - 1.0, 0.0, 100.0)
 			c.dna.familie = clampf(c.dna.familie + 0.4, -100.0, 100.0)
@@ -2318,7 +2236,7 @@ func tick_clients(events: Array) -> void:
 				c.dna[ax.key] = move_toward(c.dna[ax.key], 0.0, 0.4)
 		if not busy:
 			c.heat = clampf(c.heat - 1.0, -10.0, 10.0)
-			c.fame = maxf(maxf(c.fame - 0.4, fame_at(actor, state.year) * 0.6), 5.0)
+			c.fame = maxf(maxf(c.fame - 0.4, Util.fame_at(actor, state.year) * 0.6), 5.0)
 			c.mood = clampf(c.mood - 2.0, 0.0, 100.0)
 			if c.mood < 35:
 				c.loyalty = clampf(c.loyalty - 2.0, 0.0, 100.0)
@@ -2369,15 +2287,15 @@ func tick_clients(events: Array) -> void:
 					]})
 				c.contractEnd = mi() + 2
 		# Kündigung
-		if c.loyalty < 20 and chance(0.4):
+		if c.loyalty < 20 and Util.chance(0.4):
 			state.clients.erase(c)
 			state.agency.rep = clampi(int(state.agency.rep) - 3, 0, 100)
 			log_msg("%s leaves the agency. “My lawyers will be in touch.”" % actor.name, "bad")
 			events.append({"title": "Client lost", "text": "%s has terminated the contract and is moving to the competition." % actor.name, "choices": [{"label": "Continue"}]})
 			continue
-		if age_of(actor, state.year) > 85:
+		if Util.age_of(actor, state.year) > 85:
 			state.clients.erase(c)
-			log_msg("%s retires from the business at %d." % [actor.name, age_of(actor, state.year)], "info")
+			log_msg("%s retires from the business at %d." % [actor.name, Util.age_of(actor, state.year)], "info")
 
 # ---------- Produktion & Box-Office ----------
 func start_production(casting: Dictionary, events: Array = []) -> void:
@@ -2389,24 +2307,24 @@ func start_production(casting: Dictionary, events: Array = []) -> void:
 		for rival in state.get("rivals", []):
 			for actor_id in rival.clients:
 				var rival_actor: Dictionary = actor_by_id.get(str(actor_id), {})
-				if not rival_actor.is_empty() and rival_actor.g == role.gender and fame_at(rival_actor, y) >= role.minFame * 0.6 and age_of(rival_actor, y) >= role.ageMin - 6 and age_of(rival_actor, y) <= role.ageMax + 8:
+				if not rival_actor.is_empty() and rival_actor.g == role.gender and Util.fame_at(rival_actor, y) >= role.minFame * 0.6 and Util.age_of(rival_actor, y) >= role.ageMin - 6 and Util.age_of(rival_actor, y) <= role.ageMax + 8:
 					rival_candidates.append({"actor":rival_actor, "rival":rival})
-		if rival_candidates.size() and chance(0.68):
-			var rc: Dictionary = pick(rival_candidates)
+		if rival_candidates.size() and Util.chance(0.68):
+			var rc: Dictionary = Util.pick(rival_candidates)
 			var ra: Dictionary = rc.actor
-			role.filled = {"npc":true, "name":ra.name, "talent":ra.talent, "fame":fame_at(ra, y), "actorId":ra.id, "rivalId":rc.rival.id}
+			role.filled = {"npc":true, "name":ra.name, "talent":ra.talent, "fame":Util.fame_at(ra, y), "actorId":ra.id, "rivalId":rc.rival.id}
 			press_event("Casting", "%s pushes %s through in “%s”" % [rc.rival.name, ra.name, casting.title])
 			continue
 		var candidates = available_actors().filter(func(a):
-			return a.g == role.gender and fame_at(a, y) >= role.minFame * 0.6 and age_of(a, y) >= role.ageMin - 6 and age_of(a, y) <= role.ageMax + 8)
-		if candidates.size() and chance(0.7):
-			var a = pick(candidates.slice(0, 8))
-			role.filled = {"npc": true, "name": a.name, "talent": a.talent, "fame": fame_at(a, y)}
+			return a.g == role.gender and Util.fame_at(a, y) >= role.minFame * 0.6 and Util.age_of(a, y) >= role.ageMin - 6 and Util.age_of(a, y) <= role.ageMax + 8)
+		if candidates.size() and Util.chance(0.7):
+			var a = Util.pick(candidates.slice(0, 8))
+			role.filled = {"npc": true, "name": a.name, "talent": a.talent, "fame": Util.fame_at(a, y)}
 		else:
-			var first = pick(Data.NPC_FIRST_M) if role.gender == "m" else pick(Data.NPC_FIRST_F)
-			role.filled = {"npc": true, "name": "%s %s" % [first, pick(Data.NPC_LAST)], "talent": rndi(35, 70), "fame": rndi(10, maxi(12, int(role.minFame)))}
+			var first = Util.pick(Data.NPC_FIRST_M) if role.gender == "m" else Util.pick(Data.NPC_FIRST_F)
+			role.filled = {"npc": true, "name": "%s %s" % [first, Util.pick(Data.NPC_LAST)], "talent": Util.rndi(35, 70), "fame": Util.rndi(10, maxi(12, int(role.minFame)))}
 	# Streaming-Ära: kürzere Produktionszeiten (Feature 14, Werte: Balance.gd)
-	var months := rndi(Balance.PROD_MONTHS_MIN_MODERN, Balance.PROD_MONTHS_MAX_MODERN) if int(state.year) >= Balance.PROD_MODERN_YEAR else rndi(Balance.PROD_MONTHS_MIN, Balance.PROD_MONTHS_MAX)
+	var months := Util.rndi(Balance.PROD_MONTHS_MIN_MODERN, Balance.PROD_MONTHS_MAX_MODERN) if int(state.year) >= Balance.PROD_MODERN_YEAR else Util.rndi(Balance.PROD_MONTHS_MIN, Balance.PROD_MONTHS_MAX)
 	var income := 0.0
 	for role in casting.roles:
 		if role.filled.get("clientId") != null:
@@ -2417,7 +2335,7 @@ func start_production(casting: Dictionary, events: Array = []) -> void:
 				change_trust(c, 1.25)
 	if income > 0:
 		book(float(roundi(income)), "provision", "Commissions, shooting start “%s”" % casting.title)
-		log_msg("Shooting starts on “%s” — commissions worth %s come in." % [casting.title, fmt_money(income)], "deal")
+		log_msg("Shooting starts on “%s” — commissions worth %s come in." % [casting.title, Util.fmt_money(income)], "deal")
 	var prod = casting.duplicate(true)
 	# WICHTIG: Rollen-Referenzen behalten? Produktion arbeitet auf Kopie — Klienten-IDs bleiben gültig.
 	prod["weeksLeft"] = months * 4
@@ -2433,7 +2351,7 @@ func start_production(casting: Dictionary, events: Array = []) -> void:
 
 func release_film(prod: Dictionary) -> Dictionary:
 	# Skript-Basis deterministisch (wie script_insight): 35 + Prestige*8 + Roll 0..20
-	var script: float = 35.0 + int(prod.prestige) * 8.0 + float(hashs(str(prod.id) + "scr") % 21)
+	var script: float = 35.0 + int(prod.prestige) * 8.0 + float(Util.hashs(str(prod.id) + "scr") % 21)
 	if prod.has("director"):
 		script += 4.0
 	if prod.has("producer"):
@@ -2451,7 +2369,7 @@ func release_film(prod: Dictionary) -> Dictionary:
 	cast_q /= talents.size()
 	# Beziehungschemie (Feature 12): Leinwandchemie der Leads ±8, Regie-Chemie ±3
 	var chem_q := lead_chem_quality(prod) + director_chem_quality(prod)
-	var quality := clampi(roundi(script * 0.45 + cast_q * 0.5 + fit_bonus + prod.get("qualityMod", 0.0) + chem_q + rndf(-5.0, 5.0)), 5, 100)
+	var quality := clampi(roundi(script * 0.45 + cast_q * 0.5 + fit_bonus + prod.get("qualityMod", 0.0) + chem_q + Util.rndf(-5.0, 5.0)), 5, 100)
 	var star_power := 0.0
 	var lead_n := 0
 	for r in prod.roles:
@@ -2459,9 +2377,9 @@ func release_film(prod: Dictionary) -> Dictionary:
 			continue
 		lead_n += 1
 		var c = client(r.filled.get("clientId")) if r.filled.get("clientId") != null else null
-		star_power += (c.fame * 0.75 + attrs(actor_by_id[c.aid]).presence * 0.25) if c != null else r.filled.get("fame", 25.0)
+		star_power += (c.fame * 0.75 + Util.attrs(actor_by_id[c.aid]).presence * 0.25) if c != null else r.filled.get("fame", 25.0)
 	star_power /= maxi(1, lead_n)
-	var revenue := roundi(prod.budget * (0.25 + quality / 45.0 + star_power / 70.0) * state.market * rndf(0.55, 1.75))
+	var revenue := roundi(prod.budget * (0.25 + quality / 45.0 + star_power / 70.0) * state.market * Util.rndf(0.55, 1.75))
 	var ratio: float = float(revenue) / prod.budget
 	var verdict := "Flop" if ratio < 1.0 else ("Solid success" if ratio < 2.0 else ("Hit" if ratio < 3.2 else "Blockbuster"))
 	# Coverage-Prognose „Rolle wird geschnitten“: der Schnitt-Wurf fällt beim
@@ -2559,7 +2477,7 @@ func release_film(prod: Dictionary) -> Dictionary:
 			log_msg("In hindsight: the set signals from “%s” deceived — set talk stays set talk." % prod.title, "info")
 	# Heimvideo (Feature 14, 1980+): Flops können nachträglich Geld einspielen
 	if int(state.year) >= 1980 and ratio < 1.0 and fame_deltas.size():
-		state.followups.append({"type": "homevideo", "title": prod.title, "studioId": str(prod.studioId), "budget": int(prod.budget), "due": mi() + rndi(6, 18)})
+		state.followups.append({"type": "homevideo", "title": prod.title, "studioId": str(prod.studioId), "budget": int(prod.budget), "due": mi() + Util.rndi(6, 18)})
 	if affected.size():
 		state.agency.rep = clampi(int(state.agency.rep) + (2 if ratio >= 2.0 else (-1 if ratio < 1.0 else 0)), 0, 100)
 	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) + (5 if ratio >= 2.0 else (-3 if ratio < 1.0 else 1)), 0, 100)
@@ -2574,9 +2492,9 @@ func release_film(prod: Dictionary) -> Dictionary:
 					break
 			if figure != null:
 				figure.credits = int(figure.credits) + 1
-	log_msg("Premiere “%s” (%s): %s — %s box office at quality %d." % [prod.title, studio_name, verdict, fmt_money(revenue), quality], "bad" if ratio < 1.0 else "deal")
+	log_msg("Premiere “%s” (%s): %s — %s box office at quality %d." % [prod.title, studio_name, verdict, Util.fmt_money(revenue), quality], "bad" if ratio < 1.0 else "deal")
 	return {"title": "Premiere: “%s”" % prod.title,
-		"text": "%s · %s · Quality %d/100\n\nBox office: %s (budget %s) — %s%s" % [studio_name, Data.GENRES[prod.genre].label, quality, fmt_money(revenue), fmt_money(prod.budget), verdict, ("\n\nYour clients: " + ", ".join(affected)) if affected.size() else ""],
+		"text": "%s · %s · Quality %d/100\n\nBox office: %s (budget %s) — %s%s" % [studio_name, Data.GENRES[prod.genre].label, quality, Util.fmt_money(revenue), Util.fmt_money(prod.budget), verdict, ("\n\nYour clients: " + ", ".join(affected)) if affected.size() else ""],
 		"choices": [{"label": "Continue"}]}
 
 func _studio(sid: String) -> Dictionary:
@@ -2604,7 +2522,7 @@ func awards_ceremony() -> Variant:
 			var c = client(r.filled.get("clientId")) if r.filled.get("clientId") != null else null
 			var nm: String = client_name(c) if c != null else r.filled.get("name", "?")
 			var talent: float = eff_talent(c) if c != null else r.filled.get("talent", 50.0)
-			perfs.append({"c": c, "name": nm, "score": talent * 0.5 + f.quality * 0.4 + (c.get("campaign", 0.0) if c != null else 0.0) + rndf(0.0, 15.0), "film": f.title})
+			perfs.append({"c": c, "name": nm, "score": talent * 0.5 + f.quality * 0.4 + (c.get("campaign", 0.0) if c != null else 0.0) + Util.rndf(0.0, 15.0), "film": f.title})
 	perfs.sort_custom(func(a, b): return a.score > b.score)
 	if perfs.size():
 		var best: Dictionary = perfs[0]
@@ -2783,7 +2701,7 @@ func _apply_save_defaults() -> void:
 		var nw := int(state.network)
 		var cnt := nw / 15
 		for i in cnt:
-			var kind_s: String = pick(["extraAudition", "suppressStory", "scriptAccess", "billing", "galaInvite"])
+			var kind_s: String = Util.pick(["extraAudition", "suppressStory", "scriptAccess", "billing", "galaInvite"])
 			grant_favor(kind_s, favor_contact_for(kind_s), true)
 		state.erase("network")
 		if cnt > 0:
@@ -3007,7 +2925,7 @@ func gut_feeling(casting: Dictionary) -> String:
 	var trained := Mogul.has_ability("gut_plus")
 	if int(state.get("instinct", 20)) < (40 if trained else 55):
 		return ""
-	var base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
+	var base := 35 + int(casting.prestige) * 8 + (Util.hashs(str(casting.id) + "scr") % 21)
 	var precise := " (script feels like a %d/100)" % base if trained else ""
 	if base >= 62:
 		return "🧠 Your gut says: hit material.%s" % precise
@@ -3016,14 +2934,14 @@ func gut_feeling(casting: Dictionary) -> String:
 	return "🧠 Your gut says: could go either way.%s" % precise
 
 # ---------- Feature 12: Beziehungschemie ----------
-# Paarweise, deterministisch aus hashs() + gespeicherte gemeinsame Historie.
+# Paarweise, deterministisch aus Util.hashs() + gespeicherte gemeinsame Historie.
 func pair_key(a_key: String, b_key: String) -> String:
 	return "%s|%s" % [a_key, b_key] if a_key < b_key else "%s|%s" % [b_key, a_key]
 
 func chemistry(a_key: String, b_key: String) -> Dictionary:
 	var k := pair_key(a_key, b_key)
-	var screen := (hashs(k + "scr") % 21) - 10
-	var personal := (hashs(k + "per") % 21) - 10
+	var screen := (Util.hashs(k + "scr") % 21) - 10
+	var personal := (Util.hashs(k + "per") % 21) - 10
 	var hist: Dictionary = state.get("history_pairs", {}).get(k, {})
 	personal = clampi(personal + int(hist.get("p", 0)), -10, 10)
 	return {"screen": screen, "personal": personal}
@@ -3056,7 +2974,7 @@ func _director_key(prod_or_casting: Dictionary) -> String:
 		if d is Dictionary:
 			return "dir:" + str(d.get("name", "?"))
 		return "dir:" + str(d)
-	return "dir:" + str(Data.CONTACT_PERSONS.regisseur[hashs(str(prod_or_casting.get("title", prod_or_casting.get("id", 0)))) % Data.CONTACT_PERSONS.regisseur.size()])
+	return "dir:" + str(Data.CONTACT_PERSONS.regisseur[Util.hashs(str(prod_or_casting.get("title", prod_or_casting.get("id", 0)))) % Data.CONTACT_PERSONS.regisseur.size()])
 
 func _director_name_for(casting: Dictionary) -> String:
 	var k := _director_key(casting)
@@ -3100,7 +3018,7 @@ func audition_profile(director_name: String, prod_title: String) -> Dictionary:
 	var seed_s := director_name + prod_title
 	for dim in AUDITION_DIMS:
 		var values: Array = AUDITION_OPTIONS[dim]
-		profile[dim] = str(values[hashs(seed_s + ":" + dim) % values.size()])
+		profile[dim] = str(values[Util.hashs(seed_s + ":" + dim) % values.size()])
 	return profile
 
 func audition_competition(casting: Dictionary, role: Dictionary) -> Array:
@@ -3110,19 +3028,19 @@ func audition_competition(casting: Dictionary, role: Dictionary) -> Array:
 			var actor: Dictionary = actor_by_id.get(str(aid), {})
 			if actor.is_empty() or str(actor.get("g", "")) != str(role.get("gender", "")):
 				continue
-			var age := age_of(actor, state.year)
+			var age := Util.age_of(actor, state.year)
 			if age < int(role.get("ageMin", 18)) - 6 or age > int(role.get("ageMax", 99)) + 8:
 				continue
 			var image_c := {"dna": initial_dna(actor)}
 			out.append({"name":str(actor.name), "aid":str(actor.id), "agency":str(rival.name),
-				"image":dna_label(image_c), "talent":float(actor.talent), "fame":float(fame_at(actor, state.year))})
-	out.sort_custom(func(a, b): return hashs(str(a.aid) + str(casting.title)) < hashs(str(b.aid) + str(casting.title)))
+				"image":dna_label(image_c), "talent":float(actor.talent), "fame":float(Util.fame_at(actor, state.year))})
+	out.sort_custom(func(a, b): return Util.hashs(str(a.aid) + str(casting.title)) < Util.hashs(str(b.aid) + str(casting.title)))
 	if out.is_empty():
 		var fallback: Array = available_actors().filter(func(a): return str(a.g) == str(role.get("gender", "")))
 		if fallback.size():
-			var actor: Dictionary = fallback[hashs(str(casting.title) + "competition") % mini(8, fallback.size())]
+			var actor: Dictionary = fallback[Util.hashs(str(casting.title) + "competition") % mini(8, fallback.size())]
 			out.append({"name":str(actor.name), "aid":str(actor.id), "agency":"Studio favorite",
-				"image":dna_label({"dna":initial_dna(actor)}), "talent":float(actor.talent), "fame":float(fame_at(actor, state.year))})
+				"image":dna_label({"dna":initial_dna(actor)}), "talent":float(actor.talent), "fame":float(Util.fame_at(actor, state.year))})
 	return out.slice(0, 2)
 
 func _audition_reveal(source_s: String) -> Variant:
@@ -3135,7 +3053,7 @@ func _audition_reveal(source_s: String) -> Variant:
 	var director_name := _director_name_for(casting)
 	var profile := audition_profile(director_name, str(casting.title))
 	var used: Array = aud.get("revealed", []).map(func(h): return str(h.get("dim", "")))
-	var start := hashs(str(casting.title) + source_s + str(aud.clientId)) % AUDITION_DIMS.size()
+	var start := Util.hashs(str(casting.title) + source_s + str(aud.clientId)) % AUDITION_DIMS.size()
 	for offset in AUDITION_DIMS.size():
 		var dim: String = str(AUDITION_DIMS[(start + offset) % AUDITION_DIMS.size()])
 		if used.has(dim):
@@ -3260,7 +3178,7 @@ func resolve_audition(forced_outcome: String = "") -> Dictionary:
 			prepared_n += 1
 			performance += 18.0 if matched else 6.0
 		else:
-			var roll := float(hashs("%s:%s:%s:%s" % [casting.title, c.aid, dim, choice.value]) % 11) - 5.0
+			var roll := float(Util.hashs("%s:%s:%s:%s" % [casting.title, c.aid, dim, choice.value]) % 11) - 5.0
 			performance += (13.0 if matched else 3.0) + roll
 	var setback := 0.0
 	var setbacks: Dictionary = c.flags.get("auditionSetbacks", {})
@@ -3277,7 +3195,7 @@ func resolve_audition(forced_outcome: String = "") -> Dictionary:
 	var competition_score := 72.0
 	for rival in rivals:
 		competition_score = maxf(competition_score, 35.0 + float(rival.talent) * 0.38 + float(rival.fame) * 0.18 \
-			+ float(hashs(str(casting.title) + str(rival.aid) + "aud") % 17))
+			+ float(Util.hashs(str(casting.title) + str(rival.aid) + "aud") % 17))
 	var margin := own_score - competition_score
 	var outcome := "win" if margin >= 0.0 else ("narrow" if margin >= -12.0 else "clear")
 	if forced_outcome in ["win", "narrow", "clear"]:
@@ -3377,10 +3295,10 @@ func chem_read_candidate_pairs(casting_id: int) -> Array:
 func _chem_npc(casting: Dictionary, role: Dictionary) -> Dictionary:
 	var pool: Array = available_actors().filter(func(a): return str(a.g) == str(role.gender))
 	if pool.size():
-		var actor: Dictionary = pool[hashs(str(casting.title) + str(role.gender) + "chem_npc") % mini(8, pool.size())]
+		var actor: Dictionary = pool[Util.hashs(str(casting.title) + str(role.gender) + "chem_npc") % mini(8, pool.size())]
 		return {"name":str(actor.name), "key":"npc:" + str(actor.name), "talent":float(actor.talent),
-			"fame":float(fame_at(actor, state.year))}
-	var name_s := "%s %s" % [pick(Data.NPC_FIRST_M) if str(role.gender) == "m" else pick(Data.NPC_FIRST_F), pick(Data.NPC_LAST)]
+			"fame":float(Util.fame_at(actor, state.year))}
+	var name_s := "%s %s" % [Util.pick(Data.NPC_FIRST_M) if str(role.gender) == "m" else Util.pick(Data.NPC_FIRST_F), Util.pick(Data.NPC_LAST)]
 	return {"name":name_s, "key":"npc:" + name_s, "talent":55.0, "fame":25.0}
 
 func chem_read_studio_pair(casting_id: int) -> Dictionary:
@@ -3392,7 +3310,7 @@ func chem_read_studio_pair(casting_id: int) -> Dictionary:
 		return {}
 	var own_left := eligible_clients(casting, casting.roles[int(indices[0])])
 	var own_right := eligible_clients(casting, casting.roles[int(indices[1])])
-	var own_on_left := own_left.size() > 0 and (own_right.is_empty() or hashs(str(casting.title) + "studio_side") % 2 == 0)
+	var own_on_left := own_left.size() > 0 and (own_right.is_empty() or Util.hashs(str(casting.title) + "studio_side") % 2 == 0)
 	if own_on_left:
 		var own: Dictionary = own_left[0]
 		var npc := _chem_npc(casting, casting.roles[int(indices[1])])
@@ -3414,7 +3332,7 @@ func chemistry_signal(screen_value: int, with_noise: bool = true, seed_s: String
 	var shown_sign := true_sign
 	var reliable := true
 	if with_noise and true_sign != 0:
-		reliable = hashs(seed_s + "signal") % 100 < 75
+		reliable = Util.hashs(seed_s + "signal") % 100 < 75
 		if not reliable:
 			shown_sign = -true_sign
 	var lines := {
@@ -3423,7 +3341,7 @@ func chemistry_signal(screen_value: int, with_noise: bool = true, seed_s: String
 		0: ["Professional and clean — but still without that spark you can't rehearse.", "The scene lands, but the air between them stays neutral."],
 	}
 	var choices: Array = lines[shown_sign]
-	return {"text":str(choices[hashs(seed_s + "prose") % choices.size()]), "sign":shown_sign, "reliable":reliable}
+	return {"text":str(choices[Util.hashs(seed_s + "prose") % choices.size()]), "sign":shown_sign, "reliable":reliable}
 
 func chem_read_score(casting: Dictionary, pair: Dictionary, scene_s: String) -> float:
 	var chem := chemistry(str(pair.aKey), str(pair.bKey))
@@ -3435,7 +3353,7 @@ func chem_read_score(casting: Dictionary, pair: Dictionary, scene_s: String) -> 
 		"conflict": scene_score = screen * 1.8 + maxf(0.0, -personal) * 1.5 + maxf(0.0, personal) * 0.35
 		"comedy": scene_score = screen * 1.8 + personal * 1.5
 	var individual := (float(pair.aTalent) + float(pair.bTalent)) * 0.18 + (float(pair.aFit) + float(pair.bFit)) * 0.12
-	var roll := float(hashs(str(casting.title) + str(pair.key) + scene_s + "chem_read") % 11) - 5.0
+	var roll := float(Util.hashs(str(casting.title) + str(pair.key) + scene_s + "chem_read") % 11) - 5.0
 	return individual + scene_score + roll
 
 func _chem_history_text(pair: Dictionary) -> String:
@@ -3739,7 +3657,7 @@ const SIGNAL_BAD = ["Bad dailies", "Budget overrun", "Rumors of reshoots", "Tens
 
 # Versteckte Qualitätsbasis + Signal-Container anlegen
 func _init_production_uncertainty(prod: Dictionary) -> void:
-	var script_base := 35.0 + int(prod.prestige) * 8.0 + float(hashs(str(prod.id) + "scr") % 21)
+	var script_base := 35.0 + int(prod.prestige) * 8.0 + float(Util.hashs(str(prod.id) + "scr") % 21)
 	var tq := script_base * 0.45
 	var tn := 0.0
 	var nn := 0
@@ -3784,7 +3702,7 @@ func _tick_signals(_events: Array, force: bool = false) -> void:
 		var keys := _prod_people_keys(prod, false)
 		for i in keys.size():
 			for j in range(i + 1, keys.size()):
-				if int(chemistry(str(keys[i]), str(keys[j])).personal) <= -5 and chance(0.22):
+				if int(chemistry(str(keys[i]), str(keys[j])).personal) <= -5 and Util.chance(0.22):
 					prod.qualityMod = float(prod.get("qualityMod", 0.0)) - 1.0
 					for r2 in prod.roles:
 						if r2.filled != null and r2.filled.get("clientId") != null:
@@ -3792,11 +3710,11 @@ func _tick_signals(_events: Array, force: bool = false) -> void:
 							if cc2 != null:
 								cc2.exhaustion = clampf(cc2.exhaustion + 6.0, 0.0, 100.0)
 					log_msg("Tension on the set of “%s” — the shoot suffers from personal animosities." % prod.title, "bad")
-		if not force and not chance(0.75):
+		if not force and not Util.chance(0.75):
 			continue
 		var good_actual := float(prod.trueQ) >= 55.0
-		var positive := good_actual == chance(accuracy)
-		prod.signals.append({"t": str(pick(SIGNAL_GOOD if positive else SIGNAL_BAD)), "pos": positive, "mi": mi()})
+		var positive := good_actual == Util.chance(accuracy)
+		prod.signals.append({"t": str(Util.pick(SIGNAL_GOOD if positive else SIGNAL_BAD)), "pos": positive, "mi": mi()})
 		while prod.signals.size() > 4:
 			prod.signals.pop_front()
 
@@ -3822,7 +3740,7 @@ func prod_renegotiate(prod_id: int) -> String:
 		return "Already renegotiated — a second time would burst the frame."
 	prod.reactions["reneg"] = true
 	var p := 0.55 + float(state.studioRel[prod.studioId]) / 300.0
-	if chance(p):
+	if Util.chance(p):
 		var gained := 0
 		for r in prod.roles:
 			if r.filled != null and r.filled.get("clientId") != null:
@@ -3833,7 +3751,7 @@ func prod_renegotiate(prod_id: int) -> String:
 					gained += extra
 		if gained > 0:
 			book(float(gained), "provision", "Renegotiation on good set signals (“%s”)" % prod.title)
-		return "The studio gives in: +20%% fee on the running contracts (%s right away). Hit rumors want to be rewarded." % fmt_money(gained)
+		return "The studio gives in: +20%% fee on the running contracts (%s right away). Hit rumors want to be rewarded." % Util.fmt_money(gained)
 	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) - 5, 0, 100)
 	return "The studio blocks: “The contract stands.” The relationship cools noticeably."
 
@@ -3863,8 +3781,8 @@ func prod_pull_client(prod_id: int) -> String:
 	target.exhaustion = clampf(target.exhaustion - 20.0, 0.0, 100.0)
 	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) - 8, 0, 100)
 	target_role.filled = {"npc": true, "name": "Replacement cast", "talent": 55, "fame": 30}
-	log_msg("%s exits “%s” — severance %s, the studio is annoyed." % [client_name(target), prod.title, fmt_money(sev)], "bad")
-	return "%s is out. Severance %s paid, the fame stays untouched — but %s will remember this." % [client_name(target), fmt_money(sev), _studio(str(prod.studioId)).name]
+	log_msg("%s exits “%s” — severance %s, the studio is annoyed." % [client_name(target), prod.title, Util.fmt_money(sev)], "bad")
+	return "%s is out. Severance %s paid, the fame stays untouched — but %s will remember this." % [client_name(target), Util.fmt_money(sev), _studio(str(prod.studioId)).name]
 
 # Reaktion 3: Beteiligung fordern (Wette auf Erfolg) — 1× pro Film
 func prod_demand_share(prod_id: int) -> String:
@@ -4044,7 +3962,7 @@ func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
 	var n_pr := int(counts.get("pr", 0))
 	if n_pr > 0:
 		c.heat = clampf(c.heat + 0.08 * n_pr, -10.0, 10.0)
-		book(-float(roundi(20.0 * n_pr * infl(state.year))), "pr_recht", "PR appointments: %s" % client_name(c))
+		book(-float(roundi(20.0 * n_pr * Util.infl(state.year))), "pr_recht", "PR appointments: %s" % client_name(c))
 	var n_tr := int(counts.get("training", 0))
 	if n_tr > 0:
 		c.talentBonus = minf(10.0, float(c.get("talentBonus", 0.0)) + 0.015 * n_tr)
@@ -4053,10 +3971,10 @@ func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
 	if n_gala > 0:
 		var gala_dir := -1.0 if weight_next < base_weight else 1.0
 		weight_next += gala_dir * 0.02 * n_gala
-		book(-float(roundi(60.0 * n_gala * infl(state.year))), "events", "Gala evenings: %s" % client_name(c))
+		book(-float(roundi(60.0 * n_gala * Util.infl(state.year))), "events", "Gala evenings: %s" % client_name(c))
 		# Höchstens ein Gefallen pro Woche — Galas sind kein Bauernhof
-		if chance(1.0 - pow(0.95, float(n_gala))):
-			var kind_s: String = pick(["galaInvite", "extraAudition", "billing"])
+		if Util.chance(1.0 - pow(0.95, float(n_gala))):
+			var kind_s: String = Util.pick(["galaInvite", "extraAudition", "billing"])
 			grant_favor(kind_s, favor_contact_for(kind_s))
 		else:
 			c.heat = clampf(c.heat + 0.05 * n_gala, -10.0, 10.0)
@@ -4119,7 +4037,7 @@ func _tick_coverage(_events: Array, strike: bool = false) -> void:
 		return
 	# 3. Neues Blatt? ~60 % pro Monat, garantiert mindestens einmal pro Quartal
 	state["coverageQueue"] = int(state.get("coverageQueue", 0)) + 1
-	if state.coverage.get("current") == null and (chance(0.6) or int(state.coverageQueue) >= 3):
+	if state.coverage.get("current") == null and (Util.chance(0.6) or int(state.coverageQueue) >= 3):
 		_issue_coverage()
 
 func _issue_coverage() -> void:
@@ -4156,7 +4074,7 @@ func _coverage_role_idx(casting: Dictionary) -> int:
 		risk += 0.2
 	if int(role.minFame) <= 18:
 		risk += 0.15
-	role["cutRisk"] = chance(risk)
+	role["cutRisk"] = Util.chance(risk)
 	return idx
 
 func _coverage_logline(casting: Dictionary) -> String:
@@ -4177,7 +4095,7 @@ func _coverage_statements(casting: Dictionary, role_idx: int) -> Array:
 	var rel := 0.7 + float(state.get("instinct", 20)) / 1000.0
 	var pool: Array = []
 	# 1. Verdeckte Skriptbasis (dieselbe Formel wie script_insight / release_film)
-	var script_base := 35 + int(casting.prestige) * 8 + (hashs(str(casting.id) + "scr") % 21)
+	var script_base := 35 + int(casting.prestige) * 8 + (Util.hashs(str(casting.id) + "scr") % 21)
 	var script_band := 1  # 0 schwach, 1 mittel, 2 stark
 	if script_base <= 47:
 		script_band = 0
@@ -4192,7 +4110,7 @@ func _coverage_statements(casting: Dictionary, role_idx: int) -> Array:
 	var fee_sum := 0.0
 	for r in casting.roles:
 		fee_sum += float(r.fee)
-	var typical := fee_sum * 3.75 + 400000.0 * infl(state.year) * (1.0 + int(casting.prestige) * 0.3)
+	var typical := fee_sum * 3.75 + 400000.0 * Util.infl(state.year) * (1.0 + int(casting.prestige) * 0.3)
 	var budget_band := 1
 	if float(casting.budget) > typical * 1.15:
 		budget_band = 2
@@ -4205,7 +4123,7 @@ func _coverage_statements(casting: Dictionary, role_idx: int) -> Array:
 	], rel))
 	# 3. Regie-Historie (deterministisch aus dem Namen abgeleitet)
 	var dir_name := _director_name_for(casting)
-	var track := hashs("track:" + dir_name) % 100
+	var track := Util.hashs("track:" + dir_name) % 100
 	var dir_band := 1
 	if track <= 40:
 		dir_band = 0
@@ -4217,7 +4135,7 @@ func _coverage_statements(casting: Dictionary, role_idx: int) -> Array:
 		"%s is coming off a success — the studio lets things run." % dir_name,
 	], rel))
 	# 4. Geplante Klauseln: Hardliner-Flag des Studios
-	var hardliner := hashs(str(casting.id) + "hard") % 100 < 35
+	var hardliner := Util.hashs(str(casting.id) + "hard") % 100 < 35
 	pool.append(_bool_statement("klauseln", hardliner,
 		"The studio internally insists on far-reaching options — sequel clauses and morality paragraphs are ready.",
 		"The studio is traditionally relaxed about contract language.", rel))
@@ -4237,15 +4155,15 @@ func _coverage_statements(casting: Dictionary, role_idx: int) -> Array:
 # sonst wird eine andere Band-Behauptung gezeigt (Rauschen).
 func _band_statement(key: String, band: int, texts: Array, rel: float) -> Dictionary:
 	var shown := band
-	if not chance(rel):
+	if not Util.chance(rel):
 		var others := [0, 1, 2]
 		others.erase(band)
-		shown = int(pick(others))
+		shown = int(Util.pick(others))
 	return {"text": str(texts[shown]), "truthKey": key, "truth": shown == band, "marked": ""}
 
 func _bool_statement(key: String, fact: bool, true_text: String, false_text: String, rel: float) -> Dictionary:
 	var shown := fact
-	if not chance(rel):
+	if not Util.chance(rel):
 		shown = not fact
 	return {"text": true_text if shown else false_text, "truthKey": key, "truth": shown == fact, "marked": ""}
 
@@ -4281,12 +4199,12 @@ func coverage_mark(stmt_idx: int, cat: String) -> String:
 
 # Der Schnitt-Wurf beim Release — Wahrscheinlichkeit hängt am Rollengrößen-Flag.
 func _coverage_cut_roll(_prod: Dictionary, role: Dictionary) -> bool:
-	return chance(0.75 if bool(role.get("cutRisk", false)) else 0.12)
+	return Util.chance(0.75 if bool(role.get("cutRisk", false)) else 0.12)
 
 func _resolve_coverage_prediction(pr: Dictionary, prod: Dictionary, ratio: float, quality: int) -> void:
 	var cat := str(pr.subject.get("cat", ""))
 	var q := quality if quality >= 0 else 50
-	var script_base := 35.0 + int(prod.prestige) * 8.0 + float(hashs(str(prod.id) + "scr") % 21)
+	var script_base := 35.0 + int(prod.prestige) * 8.0 + float(Util.hashs(str(prod.id) + "scr") % 21)
 	var pos := 0
 	var neg := 0
 	for sg in prod.get("signals", []):

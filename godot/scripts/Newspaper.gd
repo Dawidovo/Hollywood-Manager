@@ -100,7 +100,7 @@ func _real_fallbacks(headlines: Array) -> void:
 			var pool: Array = Game.available_actors()
 			if pool.size():
 				var actor: Dictionary = pool[0]
-				headlines.append(_headline("Talent", "%s is, at fame %d, the most sought-after free name in town" % [actor.name, Game.fame_at(actor, Game.state.year)]))
+				headlines.append(_headline("Talent", "%s is, at fame %d, the most sought-after free name in town" % [actor.name, Util.fame_at(actor, Game.state.year)]))
 
 func build_newspaper() -> Dictionary:
 	if Game.state == null:

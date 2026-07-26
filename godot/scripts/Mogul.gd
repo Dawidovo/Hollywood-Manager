@@ -8,7 +8,7 @@ extends Node
 # the partner/takeover/mogul endgame.
 # Data-driven: homes, purchases, skills, stocks and deal templates come
 # from data/*.json and can be extended via user://data/ mods.
-# All amounts are in 1925 dollars and scaled with Game.infl().
+# All amounts are in 1925 dollars and scaled with Util.infl().
 # =====================================================================
 
 const STOCK_HIST_MAX := 24
@@ -165,7 +165,7 @@ func home_def() -> Dictionary:
 
 
 func home_price(id_s: String) -> float:
-	return roundf(float(Data.ESTATE_HOME_BY_ID[id_s].price) * Game.infl(_st().year))
+	return roundf(float(Data.ESTATE_HOME_BY_ID[id_s].price) * Util.infl(_st().year))
 
 
 # Resale value of the current home (market cycles matter).
@@ -173,7 +173,7 @@ func home_value() -> float:
 	var h := home_def()
 	if float(h.get("price", 0)) <= 0.0:
 		return 0.0
-	return roundf(float(h.price) * Game.infl(_st().year) * float(_st().market) * 0.9)
+	return roundf(float(h.price) * Util.infl(_st().year) * float(_st().market) * 0.9)
 
 
 # Why buying this home is impossible right now ("" = fine).
@@ -184,7 +184,7 @@ func home_blocked_reason(id_s: String) -> String:
 		return "You already live here"
 	var need := home_price(id_s) - home_value()
 	if float(_p().cash) < need:
-		return "Privately short on cash (%s needed)" % Game.fmt_money(maxf(need, 0.0))
+		return "Privately short on cash (%s needed)" % Util.fmt_money(maxf(need, 0.0))
 	return ""
 
 
@@ -217,7 +217,7 @@ func owns(pid: String) -> bool:
 
 
 func purchase_price(pid: String) -> float:
-	return roundf(float(Data.ESTATE_PURCHASE_BY_ID[pid].price) * Game.infl(_st().year))
+	return roundf(float(Data.ESTATE_PURCHASE_BY_ID[pid].price) * Util.infl(_st().year))
 
 
 func purchase_blocked_reason(pid: String) -> String:
@@ -256,7 +256,7 @@ func purchase_value(pid: String) -> float:
 		return 0.0
 	var months := Game.mi() - int(_st().estate.ownedMeta.get(pid, {}).get("boughtMi", Game.mi()))
 	var appreciation := 1.0 + float(def.get("appreciation", 0.0)) * float(maxi(months, 0))
-	return roundf(float(def.price) * Game.infl(_st().year) * resale * appreciation * float(_st().market))
+	return roundf(float(def.price) * Util.infl(_st().year) * resale * appreciation * float(_st().market))
 
 
 func sell_purchase(pid: String) -> void:
@@ -266,7 +266,7 @@ func sell_purchase(pid: String) -> void:
 	var value := purchase_value(pid)
 	if value > 0.0:
 		Persona.book(value, "Sold: %s" % str(def.name))
-		Game.log_msg("Sold: %s brings in %s." % [str(def.name), Game.fmt_money(value)], "info")
+		Game.log_msg("Sold: %s brings in %s." % [str(def.name), Util.fmt_money(value)], "info")
 	else:
 		Game.log_msg("Cancelled: %s." % str(def.name), "info")
 	_st().estate.owned.erase(pid)
@@ -297,7 +297,7 @@ func upkeep_total() -> float:
 	var total := float(home_def().get("upkeep", 0))
 	for pid in _st().estate.owned:
 		total += float(Data.ESTATE_PURCHASE_BY_ID.get(pid, {}).get("upkeep", 0))
-	return roundf(total * Game.infl(_st().year))
+	return roundf(total * Util.infl(_st().year))
 
 
 # ---------- Hooks used by Persona (travel & contact channels) ----------
@@ -341,7 +341,7 @@ func reception_cost() -> float:
 	# Spezialisierung (Feature 42): beim Meister-Netzwerker zahlt der Ruf mit
 	if has_ability("master_networker"):
 		mult *= 0.5
-	return roundf(25.0 * float(home_def().get("capacity", 0)) * Game.infl(_st().year) * mult)
+	return roundf(25.0 * float(home_def().get("capacity", 0)) * Util.infl(_st().year) * mult)
 
 
 func host_reception() -> String:
@@ -365,11 +365,11 @@ func host_reception() -> String:
 	_p().energy = clampf(float(_p().energy) - 5.0, 0.0, 100.0)
 	grant_xp("networking", 2.0, "Hosted a reception")
 	var text := "An evening at %s %s: %s leave warmer than they arrived (relationship +3, influence +1.5)." % [str(h.icon), str(h.name), ", ".join(lines)]
-	if Game.chance(0.3):
-		var kind: String = Game.pick(["extraAudition", "billing", "galaInvite", "scriptAccess"])
+	if Util.chance(0.3):
+		var kind: String = Util.pick(["extraAudition", "billing", "galaInvite", "scriptAccess"])
 		var fav: Dictionary = Game.grant_favor(kind, Game.favor_contact_for(kind))
 		text += "\n\nOver dessert, a promise: %s owes you a favor (%s)." % [fav["from"].get("name", "?"), str(Game.FAVOR_KINDS[kind].name)]
-	if Game.chance(float(h.get("paparazzi", 0.0)) * paparazzi_mult() * 2.0):
+	if Util.chance(float(h.get("paparazzi", 0.0)) * paparazzi_mult() * 2.0):
 		_p().pubRep = clampf(float(_p().pubRep) - 2.0, 0.0, 100.0)
 		Game.add_rumor("agency", "Photographers counted the empty bottles outside the party at %s." % str(st.agency.name), true, "skandal", ["Party guests"], 15.0, true)
 		text += "\n\n⚠ A photographer waited at the gate — not every picture is flattering (public reputation −2)."
@@ -394,13 +394,13 @@ func _tick_estate_month() -> void:
 	# Eigener Club & Co. (Feature 43): mancher Besitz wirft etwas ab
 	var income := effect_sum("incomeMonthly")
 	if income > 0.0:
-		Persona.book(roundf(income * Game.infl(st.year)), "Proceeds: your own establishments")
+		Persona.book(roundf(income * Util.infl(st.year)), "Proceeds: your own establishments")
 	p.pubRep = clampf(float(p.pubRep) + float(h.get("prestige", 0)) * 0.08 + effect_sum("pubRepMonthly"), 0.0, 100.0)
 	p.indRep = clampf(float(p.indRep) + effect_sum("indRepMonthly"), 0.0, 100.0)
 	p.discretion = clampf(float(p.discretion) + float(h.get("privacy", 0)) * 0.05, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) + effect_sum("stressMonthly"), 0.0, 100.0)
 	# Paparazzi: a big address draws long lenses.
-	if Game.chance(float(h.get("paparazzi", 0.0)) * paparazzi_mult()):
+	if Util.chance(float(h.get("paparazzi", 0.0)) * paparazzi_mult()):
 		p.pubRep = clampf(float(p.pubRep) - 2.0, 0.0, 100.0)
 		p.discretion = clampf(float(p.discretion) - 3.0, 0.0, 100.0)
 		Game.add_rumor("agency", "Long lenses at the driveway: pictures from the private life of %s's boss are making the rounds." % str(st.agency.name), true, "skandal", ["Journalists"], 15.0, true)
@@ -452,7 +452,7 @@ func ensure_prices() -> void:
 	for s in stock_defs():
 		var id_s := str(s.id)
 		if not st.invest.prices.has(id_s):
-			st.invest.prices[id_s] = snappedf(float(s.price) * Game.infl(st.year) * Game.rndf(0.85, 1.2), 0.01)
+			st.invest.prices[id_s] = snappedf(float(s.price) * Util.infl(st.year) * Util.rndf(0.85, 1.2), 0.01)
 			st.invest.hist[id_s] = [float(st.invest.prices[id_s])]
 
 
@@ -550,11 +550,11 @@ func maybe_market_tip(ct: Dictionary) -> String:
 				insider = true
 				break
 	if def.is_empty():
-		def = Game.pick(defs)
-		insider = Game.chance(0.4)
-	var dir := 1 if Game.chance(0.65) else -1
-	var pct := Game.rndf(0.08, 0.2)
-	add_tip(str(def.id), dir, pct, Game.mi() + Game.rndi(1, 3), str(ct.name), insider)
+		def = Util.pick(defs)
+		insider = Util.chance(0.4)
+	var dir := 1 if Util.chance(0.65) else -1
+	var pct := Util.rndf(0.08, 0.2)
+	add_tip(str(def.id), dir, pct, Game.mi() + Util.rndi(1, 3), str(ct.name), insider)
 	var flavor := "quietly optimistic about" if dir > 0 else "getting out of"
 	var warn := " Officially, you never heard it." if insider else ""
 	return "💹 Between two glasses, %s mentions being %s %s.%s" % [str(ct.name), flavor, str(def.name), warn]
@@ -568,14 +568,14 @@ func has_advisor() -> bool:
 func advisor_fee() -> float:
 	if not has_advisor():
 		return 0.0
-	return roundf((80.0 + float(_st().invest.advisor.skill)) * Game.infl(_st().year))
+	return roundf((80.0 + float(_st().invest.advisor.skill)) * Util.infl(_st().year))
 
 
 func hire_advisor() -> void:
 	if has_advisor():
 		return
-	var first: String = Game.pick(Data.NPC_FIRST_M if Game.chance(0.7) else Data.NPC_FIRST_F)
-	_st().invest.advisor = {"name": "%s %s" % [first, Game.pick(Data.NPC_LAST)], "skill": Game.rndi(40, 75), "hiredMi": Game.mi()}
+	var first: String = Util.pick(Data.NPC_FIRST_M if Util.chance(0.7) else Data.NPC_FIRST_F)
+	_st().invest.advisor = {"name": "%s %s" % [first, Util.pick(Data.NPC_LAST)], "skill": Util.rndi(40, 75), "hiredMi": Game.mi()}
 	Game.log_msg("%s now manages your money — you save time, and lose a little control." % str(_st().invest.advisor.name), "info")
 
 
@@ -594,14 +594,14 @@ func _tick_advisor_month() -> void:
 	Persona.book(-advisor_fee(), "Fee: financial manager %s" % str(adv.name))
 	# Acts on open (non-insider) tips — the discreet ones stay your call.
 	for tip in st.invest.tips:
-		if bool(tip.resolved) or bool(tip.insider) or not Game.chance(float(adv.skill) / 100.0):
+		if bool(tip.resolved) or bool(tip.insider) or not Util.chance(float(adv.skill) / 100.0):
 			continue
 		if int(tip.dir) > 0 and float(_p().cash) > 400.0:
-			buy_stock(str(tip.companyId), minf(float(_p().cash) * 0.2, 2000.0 * Game.infl(st.year)))
+			buy_stock(str(tip.companyId), minf(float(_p().cash) * 0.2, 2000.0 * Util.infl(st.year)))
 		elif int(tip.dir) < 0 and shares_of(str(tip.companyId)) > 0:
 			sell_stock(str(tip.companyId))
 	# Questionable positions: delegation means someone else's judgement.
-	if Game.chance(0.06) and not st.invest.holdings.is_empty():
+	if Util.chance(0.06) and not st.invest.holdings.is_empty():
 		var id_s := str(st.invest.holdings.keys()[0])
 		st.invest.prices[id_s] = snappedf(price(id_s) * 0.92, 0.01)
 		Game.log_msg("%s put your money into a shaky venture — the position loses 8%%." % str(adv.name), "bad")
@@ -617,7 +617,7 @@ func _tick_invest_month(events: Array) -> void:
 		var id_s := str(s.id)
 		listed[id_s] = true
 		var p := price(id_s)
-		p *= 1.0 + float(s.drift) + float(s.vol) * Game.rndf(-1.0, 1.0) + (float(st.market) - 1.0) * 0.25
+		p *= 1.0 + float(s.drift) + float(s.vol) * Util.rndf(-1.0, 1.0) + (float(st.market) - 1.0) * 0.25
 		st.invest.prices[id_s] = snappedf(maxf(p, 0.5), 0.01)
 	# A collapsing market drags the ticker down hard — 1929 hurts twice.
 	if float(st.market) < 0.8 and not bool(st.invest.crashNoted):
@@ -646,7 +646,7 @@ func _tick_invest_month(events: Array) -> void:
 			var discovery := 0.3 if int(st.year) >= 1934 else 0.18
 			if has_ability("back_channels"):
 				discovery *= 0.7
-			if Game.chance(discovery):
+			if Util.chance(discovery):
 				_p().pubRep = clampf(float(_p().pubRep) - 8.0, 0.0, 100.0)
 				_p().indRep = clampf(float(_p().indRep) - 5.0, 0.0, 100.0)
 				_p().discretion = clampf(float(_p().discretion) - 10.0, 0.0, 100.0)
@@ -739,7 +739,7 @@ func invest_stake(ref_id: int, type_s: String) -> String:
 	_st().filmStakes.append({"id": Game.next_id(), "refId": ref_id, "title": str(target.title),
 		"type": type_s, "amount": cost, "madeMi": Game.mi(), "conflict": _own_client_in(target), "boosted": false})
 	grant_xp("finance", 2.0, "Financed a picture")
-	Game.log_msg("You put %s of your own money into “%s” — now it's personal." % [Game.fmt_money(cost), str(target.title)], "info")
+	Game.log_msg("You put %s of your own money into “%s” — now it's personal." % [Util.fmt_money(cost), str(target.title)], "info")
 	return ""
 
 
@@ -754,7 +754,7 @@ func boost_marketing(ref_id: int) -> String:
 			prod = pr
 	if prod.is_empty():
 		return "Only running productions can take marketing money"
-	var cost := roundf(2000.0 * Game.infl(_st().year))
+	var cost := roundf(2000.0 * Util.infl(_st().year))
 	if float(_p().cash) < cost:
 		return "Privately short on cash"
 	Persona.book(-cost, "Marketing push: “%s”" % str(prod.title))
@@ -799,9 +799,9 @@ func on_release(prod: Dictionary, revenue: int, ratio: float, _quality: int) -> 
 			Persona.book(payout, "Film stake payout: “%s”" % str(prod.title))
 		var profit := payout - float(stk.amount)
 		Game.log_msg("Your stake in “%s” settles: %s%s." % [str(prod.title),
-			"+" if profit >= 0.0 else "−", Game.fmt_money(absf(profit))], "deal" if profit >= 0.0 else "bad")
+			"+" if profit >= 0.0 else "−", Util.fmt_money(absf(profit))], "deal" if profit >= 0.0 else "bad")
 		grant_xp("finance", 2.0 + (1.0 if profit > 0.0 else 0.0), "A stake settled")
-		if bool(stk.conflict) and Game.chance(0.3):
+		if bool(stk.conflict) and Util.chance(0.3):
 			for r in prod.roles:
 				if r.get("filled") != null and r.filled.get("clientId") != null:
 					var c = Game.client(r.filled.clientId)
@@ -858,9 +858,9 @@ func begin_deal_dialog(cid, deal_id: String) -> Dictionary:
 		return {"ok": false, "text": "You are not in Los Angeles."}
 	if int(st.contactAP) < 1:
 		return {"ok": false, "text": "No contact time left this week."}
-	var cost := roundf(float(def.get("cost", 0)) * Game.infl(st.year))
+	var cost := roundf(float(def.get("cost", 0)) * Util.infl(st.year))
 	if float(_p().cash) < cost:
-		return {"ok": false, "text": "Privately short on cash — this deal needs %s up front." % Game.fmt_money(cost)}
+		return {"ok": false, "text": "Privately short on cash — this deal needs %s up front." % Util.fmt_money(cost)}
 	st.contactAP = int(st.contactAP) - 1
 	_p().energy = clampf(float(_p().energy) - 3.0, 0.0, 100.0)
 	Dialogs.note_scene()
@@ -878,13 +878,13 @@ func propose_deal(cid, deal_id: String) -> Dictionary:
 		return {"ok": false, "text": "You are not in Los Angeles."}
 	if int(st.contactAP) < 1:
 		return {"ok": false, "text": "No contact time left this week."}
-	var cost := roundf(float(def.get("cost", 0)) * Game.infl(st.year))
+	var cost := roundf(float(def.get("cost", 0)) * Util.infl(st.year))
 	if float(_p().cash) < cost:
-		return {"ok": false, "text": "Privately short on cash — this deal needs %s up front." % Game.fmt_money(cost)}
+		return {"ok": false, "text": "Privately short on cash — this deal needs %s up front." % Util.fmt_money(cost)}
 	st.contactAP = int(st.contactAP) - 1
 	_p().energy = clampf(float(_p().energy) - 3.0, 0.0, 100.0)
 	var p := clampf(0.25 + float(ct.rel) / 200.0 + float(_p().influence) / 200.0, 0.15, 0.9)
-	if not Game.chance(p):
+	if not Util.chance(p):
 		ct.rel = clampf(float(ct.rel) - 2.0, 0.0, 100.0)
 		grant_xp("negotiation", 1.0, "A refusal teaches too")
 		return {"ok": false, "text": "%s hears you out, swirls the glass — and changes the subject. Not this time.\n\n(A refusal costs a little standing, but you learned how the wind blows.)" % str(ct.name)}
@@ -893,13 +893,13 @@ func propose_deal(cid, deal_id: String) -> Dictionary:
 
 func _accept_deal(ct: Dictionary, def: Dictionary) -> String:
 	var st := _st()
-	var cost := roundf(float(def.get("cost", 0)) * Game.infl(st.year))
+	var cost := roundf(float(def.get("cost", 0)) * Util.infl(st.year))
 	if cost > 0.0:
 		Persona.book(-cost, "Backroom: %s" % str(def.name))
 	var give: Dictionary = def.get("give", {})
 	var rec := {"id": Game.next_id(), "dealId": str(def.id), "with": {"type": str(ct.type), "name": str(ct.name)},
 		"madeMi": Game.mi(), "dueMi": Game.mi() + int(give.get("months", 3)), "channel": "club",
-		"witnesses": Game.rndi(0, 2), "paper": bool(def.paper), "status": "open", "used": false, "blockCasting": -1}
+		"witnesses": Util.rndi(0, 2), "paper": bool(def.paper), "status": "open", "used": false, "blockCasting": -1}
 	var lines: Array = ["Handshake in the back room: [b]%s[/b] with %s." % [str(def.name), str(ct.name)]]
 	lines.append(_apply_deal_get(rec, def, ct))
 	if not give.is_empty():
@@ -934,13 +934,13 @@ func _apply_deal_get(rec: Dictionary, def: Dictionary, ct: Dictionary) -> String
 				if str(ct.name).contains(str(s.name)):
 					sid = str(s.id)
 			if sid == "":
-				sid = str(Game.pick(Game.active_studios()).id)
+				sid = str(Util.pick(Game.active_studios()).id)
 			st.studioRel[sid] = clampi(int(st.studioRel.get(sid, 40)) + int(gains.get("amount", 8)), 0, 100)
 			Game.spawn_castings(1)
 			# Hands off one current casting — the newest one they brought.
 			var give: Dictionary = def.get("give", {})
 			if str(give.get("op", "")) == "no_pitch" and st.castings.size() > 1:
-				rec.blockCasting = int(st.castings[Game.rndi(0, st.castings.size() - 2)].id)
+				rec.blockCasting = int(st.castings[Util.rndi(0, st.castings.size() - 2)].id)
 			return "You get: %s (%s)." % [str(gains.get("label", "")), str(Game._studio(sid).name)]
 		"intel":
 			var revealed := false
@@ -1055,7 +1055,7 @@ func _tick_backroom_month(events: Array) -> void:
 		var risk := float(def.risk) * (1.5 if bool(rec.paper) else 1.0) * (1.0 + 0.3 * float(rec.witnesses))
 		if has_ability("back_channels"):
 			risk *= 0.7
-		if Game.chance(risk):
+		if Util.chance(risk):
 			rec.status = "exposed"
 			var illegal := bool(def.illegal)
 			_p().pubRep = clampf(float(_p().pubRep) - (8.0 if illegal else 4.0), 0.0, 100.0)
@@ -1098,24 +1098,24 @@ func _obligation_event(rec: Dictionary, def: Dictionary) -> Dictionary:
 	var honor_fn: Callable
 	match str(give.op):
 		"give_role":
-			var cost := roundf(1200.0 * Game.infl(_st().year))
-			honor_label = "Make room (%s)" % Game.fmt_money(cost)
+			var cost := roundf(1200.0 * Util.infl(_st().year))
+			honor_label = "Make room (%s)" % Util.fmt_money(cost)
 			honor_fn = func():
 				Game.book(-cost, "abfindung", "Backroom: made room for a protégé")
 				rec.status = "honored"
 				_deal_contact(rec, 10.0, "You delivered. Word counts for something with you.")
 				grant_xp("leadership", 1.0, "Honored an arrangement")
 		"open_favor":
-			var cost2 := roundf(3000.0 * Game.infl(_st().year))
-			honor_label = "Settle the debt (favor or %s)" % Game.fmt_money(cost2)
+			var cost2 := roundf(3000.0 * Util.infl(_st().year))
+			honor_label = "Settle the debt (favor or %s)" % Util.fmt_money(cost2)
 			honor_fn = func():
 				if not Game.consume_any_favor():
 					Persona.book(-cost2, "Backroom: an old debt settled")
 				rec.status = "honored"
 				_deal_contact(rec, 8.0, "Debt settled — cleanly and without fuss.")
 		"award_support":
-			var cost3 := roundf(2500.0 * Game.infl(_st().year))
-			honor_label = "Back their candidate (%s)" % Game.fmt_money(cost3)
+			var cost3 := roundf(2500.0 * Util.infl(_st().year))
+			honor_label = "Back their candidate (%s)" % Util.fmt_money(cost3)
 			honor_fn = func():
 				Game.book(-cost3, "pr_recht", "Backroom: award-season support")
 				Game.record_identity("studiotreu", 1.0)
@@ -1127,7 +1127,7 @@ func _obligation_event(rec: Dictionary, def: Dictionary) -> Dictionary:
 		Network.memoir("You broke your word to %s — the arrangement “%s” died with it." % [partner, str(def.name)], [partner])
 		_p().stress = clampf(float(_p().stress) + 4.0, 0.0, 100.0)
 		Game.record_identity("skrupellos", 1.5)
-		if Game.chance(0.5):
+		if Util.chance(0.5):
 			Game.add_rumor("agency", "%s is said to make promises that expire with the last glass." % _st().agency.name, true, "skandal", ["Party guests"], 20.0, true)
 		Game.log_msg("Broken word: %s will remember it — and talk about it." % partner, "bad")
 	return {"title": "An arrangement comes due", "text": "%s reminds you of your side of “[b]%s[/b]”: %s." % [partner, str(def.name), str(give.get("label", ""))],
@@ -1141,9 +1141,9 @@ func on_promotion(events: Array) -> void:
 	var st := _st()
 	var career := int(_p().career)
 	if career == 3:
-		var cost := roundf(25000.0 * Game.infl(st.year))
-		events.append({"title": "The partnership buy-in", "text": "The name on the door can be yours — for real. A buy-in of [b]%s[/b] (private money) makes you a true partner: from then on, 10%% of every profitable month flows into your own account.\n\nOr you stay a salaried man with a grand title." % Game.fmt_money(cost),
-			"choices": [{"label": "Buy in (%s)" % Game.fmt_money(cost), "fn": func(): accept_buyin(cost)},
+		var cost := roundf(25000.0 * Util.infl(st.year))
+		events.append({"title": "The partnership buy-in", "text": "The name on the door can be yours — for real. A buy-in of [b]%s[/b] (private money) makes you a true partner: from then on, 10%% of every profitable month flows into your own account.\n\nOr you stay a salaried man with a grand title." % Util.fmt_money(cost),
+			"choices": [{"label": "Buy in (%s)" % Util.fmt_money(cost), "fn": func(): accept_buyin(cost)},
 				{"label": "Stay salaried"}]})
 	if career >= 5 and not bool(st.endgame.mogulShown):
 		st.endgame.mogulShown = true
@@ -1154,7 +1154,7 @@ func on_promotion(events: Array) -> void:
 func accept_buyin(cost: float) -> void:
 	var st := _st()
 	if float(_p().cash) < cost:
-		Game.log_msg("The buy-in fails: your private account cannot cover %s." % Game.fmt_money(cost), "bad")
+		Game.log_msg("The buy-in fails: your private account cannot cover %s." % Util.fmt_money(cost), "bad")
 		return
 	Persona.book(-cost, "Partnership buy-in")
 	st.endgame.partnerShare = PARTNER_SHARE
@@ -1168,7 +1168,7 @@ func is_partner() -> bool:
 
 # ---------- Taking over a rival agency ----------
 func takeover_cost(rival: Dictionary) -> float:
-	return roundf((20000.0 + 15000.0 * rival.get("clients", []).size() + float(rival.get("grudge", 0.0)) * 80.0) * Game.infl(_st().year))
+	return roundf((20000.0 + 15000.0 * rival.get("clients", []).size() + float(rival.get("grudge", 0.0)) * 80.0) * Util.infl(_st().year))
 
 
 func takeover_blocked_reason(rival_id: String) -> String:
@@ -1204,14 +1204,14 @@ func takeover(rival_id: String) -> String:
 	grant_xp("negotiation", 2.0, "Bought a rival agency")
 	Game.press_event("Agencies", "%s swallows %s — the market just got smaller" % [st.agency.name, rival.name])
 	Game.log_msg("Takeover: %s is history. %d of their clients drift back into the open market." % [str(rival.name), freed], "history")
-	if Game.chance(0.35):
+	if Util.chance(0.35):
 		Game.log_msg("Not everyone stays: their best agent walks out the door with two clients under the arm.", "bad")
 	return ""
 
 
 # ---------- A stake in a studio ----------
 func studio_stake_cost() -> float:
-	return roundf(120000.0 * Game.infl(_st().year))
+	return roundf(120000.0 * Util.infl(_st().year))
 
 
 func studio_stake_blocked_reason(sid: String) -> String:
@@ -1307,5 +1307,5 @@ func briefing_items() -> Array:
 	for stk in st.filmStakes:
 		for prod in st.productions:
 			if int(prod.id) == int(stk.refId) and int(prod.get("weeksLeft", 99)) <= 4:
-				items.append("🎬 “%s” opens soon — your %s is riding on it." % [str(stk.title), Game.fmt_money(float(stk.amount))])
+				items.append("🎬 “%s” opens soon — your %s is riding on it." % [str(stk.title), Util.fmt_money(float(stk.amount))])
 	return items

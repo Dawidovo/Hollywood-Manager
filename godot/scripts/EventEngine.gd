@@ -86,7 +86,7 @@ func check_conditions(conds: Dictionary, ctx: Dictionary = {}) -> bool:
 			return false
 	if bool(conds.get("requires_studio", false)) and Game.active_studios().is_empty():
 		return false
-	if conds.has("chance") and not Game.chance(float(conds.chance)):
+	if conds.has("chance") and not Util.chance(float(conds.chance)):
 		return false
 	return true
 
@@ -132,12 +132,12 @@ func build_event(def: Dictionary, ctx: Dictionary = {}) -> Variant:
 		var cands := _client_candidates(conds.requires_client)
 		if cands.is_empty():
 			return null
-		ctx["cid"] = int(Game.pick(cands).id)
+		ctx["cid"] = int(Util.pick(cands).id)
 	if not ctx.has("sid") and bool(conds.get("requires_studio", false)):
 		var studios: Array = Game.active_studios()
 		if studios.is_empty():
 			return null
-		ctx["sid"] = str(Game.pick(studios).id)
+		ctx["sid"] = str(Util.pick(studios).id)
 	var choices_out: Array = []
 	for ch in def.get("choices", []):
 		var reqs: Dictionary = ch.get("requirements", {})
@@ -161,7 +161,7 @@ func _choice_fn(ch: Dictionary, ctx: Dictionary) -> Callable:
 	return func() -> String:
 		var ok := true
 		if ch.has("success_chance"):
-			ok = Game.chance(float(ch.success_chance))
+			ok = Util.chance(float(ch.success_chance))
 		var effects: Array = ch.get("effects", []) if ok else ch.get("effects_fail", ch.get("effects", []))
 		apply_effects(effects, ctx)
 		var out := str(ch.get("outcome", "")) if ok else str(ch.get("outcome_fail", ch.get("outcome", "")))
@@ -189,12 +189,12 @@ func subst(s: String, ctx: Dictionary) -> String:
 		s = s.replace("{sender}", str(ctx.get("sender", "an unknown hand")))
 	s = s.replace("{agency}", str(st.agency.name)).replace("{year}", str(int(st.year)))
 	for m in _money_re.search_all(s):
-		s = s.replace(m.get_string(0), Game.fmt_money(_money(float(m.get_string(1)))))
+		s = s.replace(m.get_string(0), Util.fmt_money(_money(float(m.get_string(1)))))
 	return s
 
 
 func _money(base: float) -> float:
-	return roundf(base * Game.infl(Game.state.year))
+	return roundf(base * Util.infl(Game.state.year))
 
 
 # ---------- Effekt-Interpreter ----------
@@ -282,7 +282,7 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 		# ---------- Dialog-/Brief-Ops (Feature: Dialogsystem, alle moddbar) ----------
 		"chance":
 			# Zufallszweig: {"op":"chance","p":0.3,"effects":[...],"else":[...]}
-			if Game.chance(float(ef.get("p", 0.5))):
+			if Util.chance(float(ef.get("p", 0.5))):
 				apply_effects(ef.get("effects", []), ctx)
 			else:
 				apply_effects(ef.get("else", []), ctx)
@@ -321,7 +321,7 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 		"tip":
 			var src: Dictionary = Persona.contact_by_id(ctx.get("ctid", -1))
 			if src.is_empty() and Game.state.contacts.size():
-				src = Game.pick(Game.state.contacts)
+				src = Util.pick(Game.state.contacts)
 			var tip_line: String = Mogul.maybe_market_tip(src) if not src.is_empty() else ""
 			_say(tip_line if tip_line != "" else "The money talk stays vague tonight.", ctx)
 		"rumor_reveal":
@@ -383,7 +383,7 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 				Network.adjust(ct8, {"trust": -6.0, "irritation": 8.0})
 				Network.add_fact(ct8, "does not honor their debts", -1, 2.0)
 			Game.record_identity("skrupellos", 1.0)
-			if Game.chance(0.4):
+			if Util.chance(0.4):
 				Game.add_rumor("agency", "They say %s takes help gladly — and forgets it just as gladly." % st.agency.name, true, "skandal", ["Party guests"], 20.0, true)
 			_say("Refused debts do not disappear in this town. They compound — in whispers.", ctx)
 		_:
@@ -403,7 +403,7 @@ func _debt_from_sender(ctx: Dictionary) -> Dictionary:
 # "a|b|c" ⇒ zufällige Auswahl, sonst der Wert selbst
 func _pick_kind(kind: String) -> String:
 	if kind.contains("|"):
-		return str(Game.pick(kind.split("|")))
+		return str(Util.pick(kind.split("|")))
 	return kind
 
 

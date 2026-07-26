@@ -21,19 +21,19 @@ func _ready() -> void:
 	check(pool.any(func(a): return a.id == "bogart"), "Bogart 1950 verfügbar")
 	check(not pool.any(func(a): return a.id == "chalamet"), "Chalamet 1950 nicht verfügbar")
 	var body_m_actor := {"id": "body_test_m", "g": "m", "height_cm": 0, "weight_kg": 0}
-	var body_m_a := Game.body_of(body_m_actor)
-	var body_m_b := Game.body_of(body_m_actor)
-	var body_f := Game.body_of({"id": "body_test_f", "g": "f", "height_cm": 0, "weight_kg": 0})
+	var body_m_a := Util.body_of(body_m_actor)
+	var body_m_b := Util.body_of(body_m_actor)
+	var body_f := Util.body_of({"id": "body_test_f", "g": "f", "height_cm": 0, "weight_kg": 0})
 	check(body_m_a == body_m_b, "Körperdaten sind je Schauspieler deterministisch")
 	check(int(body_m_a.height) >= 168 and int(body_m_a.height) <= 193, "Prozedurale Männergröße liegt im plausiblen Bereich")
 	check(int(body_f.height) >= 155 and int(body_f.height) <= 180, "Prozedurale Frauengröße liegt im plausiblen Bereich")
 	var body_m_bmi := float(body_m_a.weight) / pow(float(body_m_a.height) / 100.0, 2.0)
 	var body_f_bmi := float(body_f.weight) / pow(float(body_f.height) / 100.0, 2.0)
 	check(body_m_bmi >= 18.5 and body_m_bmi <= 26.5 and body_f_bmi >= 18.5 and body_f_bmi <= 26.5, "Prozedurale Gewichte entsprechen einem plausiblen BMI")
-	var bogart_body := Game.body_of(Game.actor_by_id["bogart"])
+	var bogart_body := Util.body_of(Game.actor_by_id["bogart"])
 	check(int(bogart_body.height) == 173 and int(bogart_body.weight) == 70, "JSON-Körperdaten überschreiben prozedurale Werte (Bogart)")
 	check(Data.ACTORS.any(func(a): return str(a.id) == "bogart" and int(a.height_cm) > 0 and int(a.weight_kg) > 0), "DataLoader: body_core-Paket an Bogart gemergt")
-	var wayne_fame = Game.fame_at(Game.actor_by_id["wayne"], 1950)
+	var wayne_fame = Util.fame_at(Game.actor_by_id["wayne"], 1950)
 	check(Game.start_negotiation("wayne").get("locked", false), "Ruf-Schranke: Wayne (Ruhm %d) gesperrt" % wayne_fame)
 
 	# 2. Verhandlung + DNA-Startprofil
@@ -44,7 +44,7 @@ func _ready() -> void:
 	check(res.get("accepted", false), "Monroe unterschrieben")
 	var c = Game.state.clients[0]
 	check(c.dna.size() == 5, "Karriere-DNA initialisiert (5 Achsen)")
-	check(c.has("weightKg") and c.has("weightTrend") and absf(float(c.weightKg) - float(Game.body_of(Game.actor_by_id["monroe"]).weight)) < 0.01, "Signing initialisiert aktuelles Gewicht und Trend")
+	check(c.has("weightKg") and c.has("weightTrend") and absf(float(c.weightKg) - float(Util.body_of(Game.actor_by_id["monroe"]).weight)) < 0.01, "Signing initialisiert aktuelles Gewicht und Trend")
 	var dna_before = c.dna.duplicate()
 	print("  DNA-Start Monroe: ", c.dna)
 
@@ -86,7 +86,7 @@ func _ready() -> void:
 			event_titles.append(e.title)
 			if e.choices[0].has("fn"):
 				e.choices[0].fn.call()
-	check(true, "18 Monate simuliert bis %s, Kasse %s" % [Game.date_str(), Game.fmt_money(Game.state.agency.cash)])
+	check(true, "18 Monate simuliert bis %s, Kasse %s" % [Game.date_str(), Util.fmt_money(Game.state.agency.cash)])
 	print("  Events: ", ", ".join(event_titles.slice(0, 12)))
 
 	# 7. Save/Load-Roundtrip inkl. DNA
@@ -234,7 +234,7 @@ func _ready() -> void:
 			else:
 				exp -= float(e.amount)
 	check(agg != null and absf(float(agg.income) - inc) < 1.0 and absf(float(agg.expenses) - exp) < 1.0, "Aggregat stimmt mit Einzelbuchungen überein")
-	check(Game.avg_burn(6) > 0.0, "Burn-Rate berechnet: %s/Mon." % Game.fmt_money(Game.avg_burn(6)))
+	check(Game.avg_burn(6) > 0.0, "Burn-Rate berechnet: %s/Mon." % Util.fmt_money(Game.avg_burn(6)))
 
 	# 16. Ledger-Kappung + Save/Load-Roundtrip von Gefallen & Aggregaten
 	for i in 700:
@@ -247,7 +247,7 @@ func _ready() -> void:
 	check(Game.state.favors.size() == fav_n and Game.state.ledgerMonthly.size() >= 1, "Gefallen & Monatsaggregate überleben Save/Load")
 
 	# 17. Noten & Titel
-	check(Game.grade(95) == "A+" and Game.grade(30) == "F", "Notenskala")
+	check(Util.grade(95) == "A+" and Util.grade(30) == "F", "Notenskala")
 	check(Data.REAL_TITLES.size() > 150, "Echte Titel geladen: %d" % Data.REAL_TITLES.size())
 	check(Data.ACTORS.size() == 200, "Schauspieler: %d" % Data.ACTORS.size())
 
@@ -982,7 +982,7 @@ func _ready() -> void:
 	# 22. Spielfigur: getrennte Privat-/Agenturfinanzen, Zustand, Karriere
 	Game.new_game("Managertest", 1950)
 	var pl: Dictionary = Game.state.player
-	check(float(pl.cash) > 0.0, "Spielfigur startet mit privatem Erspartem (%s)" % Game.fmt_money(pl.cash))
+	check(float(pl.cash) > 0.0, "Spielfigur startet mit privatem Erspartem (%s)" % Util.fmt_money(pl.cash))
 	check(int(pl.career) == 0 and str(Persona.career_def().name) == "Junior Agent", "Karriere beginnt als Junior-Agent")
 	check(Persona.title() == "No reputation yet", "Ruf-Titel ist anfangs unerspielt")
 	var pl_cash0 := float(pl.cash)
@@ -1129,7 +1129,7 @@ func _ready() -> void:
 	mp.cash = 100000.0
 	check(Mogul.home_id() == "room", "Start im möblierten Zimmer")
 	check(Mogul.buy_home("hills") == "", "Umzug in die Hollywood Hills")
-	check(Mogul.upkeep_total() > 0.0, "Lebensstil-Unterhalt fällig: %s/Monat" % Game.fmt_money(Mogul.upkeep_total()))
+	check(Mogul.upkeep_total() > 0.0, "Lebensstil-Unterhalt fällig: %s/Monat" % Util.fmt_money(Mogul.upkeep_total()))
 	check(Mogul.buy_purchase("car") == "", "Automobil & Chauffeur gekauft")
 	mp.energy = 50.0
 	Mogul.tick_week()
@@ -1799,10 +1799,10 @@ func _ready() -> void:
 	# Package-Deal, Box-Office-Determinismus, Wortbruch, Insolvenz
 	# =====================================================================
 	var fa_bg: Dictionary = Game.actor_by_id["bogart"]
-	check(Game.fame_at(fa_bg, float(int(fa_bg.debut) - 5)) == 0, "fame_at: vor dem Debüt 0")
-	check(Game.fame_at(fa_bg, float(fa_bg.peak)) == int(fa_bg.peakFame), "fame_at: am Karrierehoch = peakFame")
-	check(Game.fame_at(fa_bg, float(fa_bg.peak) - 6.0) < int(fa_bg.peakFame) and Game.fame_at(fa_bg, float(fa_bg.peak) + 8.0) < int(fa_bg.peakFame), "fame_at: Kurve steigt zum Hoch und fällt danach")
-	check(Game.fame_at(fa_bg, 2005.0) == 5, "fame_at: lange nach der Karriere nur Sockelruhm")
+	check(Util.fame_at(fa_bg, float(int(fa_bg.debut) - 5)) == 0, "fame_at: vor dem Debüt 0")
+	check(Util.fame_at(fa_bg, float(fa_bg.peak)) == int(fa_bg.peakFame), "fame_at: am Karrierehoch = peakFame")
+	check(Util.fame_at(fa_bg, float(fa_bg.peak) - 6.0) < int(fa_bg.peakFame) and Util.fame_at(fa_bg, float(fa_bg.peak) + 8.0) < int(fa_bg.peakFame), "fame_at: Kurve steigt zum Hoch und fällt danach")
+	check(Util.fame_at(fa_bg, 2005.0) == 5, "fame_at: lange nach der Karriere nur Sockelruhm")
 
 	Game.new_game("Pool 1980", 1980)
 	check(not Game.available_actors().any(func(a): return str(a.id) == "bogart"), "Verstorbene Schauspieler fehlen im Pool (Bogart 1980)")

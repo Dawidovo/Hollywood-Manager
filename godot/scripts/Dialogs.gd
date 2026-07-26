@@ -264,9 +264,9 @@ func _pick_text(texts: Array) -> String:
 		return ""
 	var st := _st()
 	var used: Array = st.get("usedLines", [])
-	var fresh: Array = texts.filter(func(t): return not used.has(Game.hashs(str(t))))
-	var chosen := str(Game.pick(fresh if fresh.size() else texts))
-	used.append(Game.hashs(chosen))
+	var fresh: Array = texts.filter(func(t): return not used.has(Util.hashs(str(t))))
+	var chosen := str(Util.pick(fresh if fresh.size() else texts))
+	used.append(Util.hashs(chosen))
 	while used.size() > 60:
 		used.pop_front()
 	return chosen
@@ -284,7 +284,7 @@ func choice_blocked_reason(ch: Dictionary) -> String:
 	for field in conds.get("skill_level", {}):
 		if Mogul.level(str(field)) < int(conds.skill_level[field]):
 			return "Needs %s level %d" % [str(Data.SKILL_FIELDS.get(str(field), {}).get("name", field)), int(conds.skill_level[field])]
-	if conds.has("min_cash_private") and float(_st().player.cash) < roundf(float(conds.min_cash_private) * Game.infl(_st().year)):
+	if conds.has("min_cash_private") and float(_st().player.cash) < roundf(float(conds.min_cash_private) * Util.infl(_st().year)):
 		return "Privately short on cash"
 	var fav := str(conds.get("has_favor", ""))
 	if fav != "" and not Game.has_favor(fav):
@@ -321,7 +321,7 @@ func choose(idx: int) -> Dictionary:
 		var check: Dictionary = ch.check
 		if check.has("skill"):
 			Mogul.grant_xp(str(check.skill), 0.5, "Tried, in conversation")
-		next = str(check.get("success", "end")) if Game.chance(check_p(check)) else str(check.get("fail", "end"))
+		next = str(check.get("success", "end")) if Util.chance(check_p(check)) else str(check.get("fail", "end"))
 	run.lines.append_array(EvEngine.lines)
 	EvEngine.lines.clear()
 	if next == "end" or not run.def.get("nodes", {}).has(next):
@@ -376,9 +376,9 @@ func _resolve_sender(def: Dictionary) -> Dictionary:
 		if str(ct.type) == from_type:
 			return {"name": str(ct.name), "type": from_type, "ctid": int(ct.id)}
 	if Data.CONTACT_PERSONS.has(from_type):
-		return {"name": str(Game.pick(Data.CONTACT_PERSONS[from_type])), "type": from_type}
-	var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.5) else Data.NPC_FIRST_M)
-	return {"name": "%s %s" % [first, Game.pick(Data.NPC_LAST)], "type": "stranger"}
+		return {"name": str(Util.pick(Data.CONTACT_PERSONS[from_type])), "type": from_type}
+	var first: String = Util.pick(Data.NPC_FIRST_F if Util.chance(0.5) else Data.NPC_FIRST_M)
+	return {"name": "%s %s" % [first, Util.pick(Data.NPC_LAST)], "type": "stranger"}
 
 
 func _letter_conditions_ok(def: Dictionary) -> bool:
@@ -390,7 +390,7 @@ func _letter_conditions_ok(def: Dictionary) -> bool:
 	var req_type := str(conds.get("requires_contact_type", ""))
 	if req_type != "" and not _st().contacts.any(func(ct): return str(ct.type) == req_type):
 		return false
-	if conds.has("chance") and not Game.chance(float(conds.chance)):
+	if conds.has("chance") and not Util.chance(float(conds.chance)):
 		return false
 	return true
 
@@ -457,7 +457,7 @@ func tick_week() -> void:
 			EvEngine.lines.clear()
 	# Zustellung
 	if open_letters().size() < INBOX_MAX_OPEN:
-		var want := 1 + (1 if Game.chance(0.4) else 0)
+		var want := 1 + (1 if Util.chance(0.4) else 0)
 		for i in want:
 			var pool: Array = []
 			for def in Data.LETTERS:
@@ -474,7 +474,7 @@ func tick_week() -> void:
 					pool.append(def)
 			if pool.is_empty():
 				break
-			spawn_letter(str(Game.pick(pool).id), true)
+			spawn_letter(str(Util.pick(pool).id), true)
 	# Postfilter (Feature 32): der Assistent beantwortet Routinepost selbst —
 	# alles, wofür eine Vorlage eine Assistenten-Option vorsieht.
 	if Persona.has_assistant() and Persona.rule("mailfilter"):
@@ -516,7 +516,7 @@ func letter_choice_blocked(_letter: Dictionary, ch: Dictionary) -> String:
 	var reqs: Dictionary = ch.get("requirements", {})
 	if int(reqs.get("ap", 0)) > int(_st().contactAP):
 		return "No contact time left this week"
-	if reqs.has("min_cash_private") and float(_st().player.cash) < roundf(float(reqs.min_cash_private) * Game.infl(_st().year)):
+	if reqs.has("min_cash_private") and float(_st().player.cash) < roundf(float(reqs.min_cash_private) * Util.infl(_st().year)):
 		return "Privately short on cash"
 	if bool(reqs.get("requires_assistant", false)) and not Persona.has_assistant():
 		return "You employ no assistant"
@@ -549,7 +549,7 @@ func letter_choose(lid, idx: int) -> Dictionary:
 		return {"ok": true, "dialog": str(ch.dialog), "ctx": ctx}
 	var ok := true
 	if ch.has("success_chance"):
-		ok = Game.chance(float(ch.success_chance))
+		ok = Util.chance(float(ch.success_chance))
 	EvEngine.lines.clear()
 	EvEngine.apply_effects(ch.get("effects", []) if ok else ch.get("effects_fail", ch.get("effects", [])), ctx)
 	var extra: Array = EvEngine.lines.duplicate()

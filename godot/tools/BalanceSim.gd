@@ -86,7 +86,7 @@ func _answer_letters(stats: Dictionary) -> void:
 func _sign_clients(stats: Dictionary) -> void:
 	while Game.state.clients.size() < MAX_CLIENTS:
 		var pool := Game.available_actors().filter(func(a):
-			return Game.fame_at(a, Game.state.year) <= 55)
+			return Util.fame_at(a, Game.state.year) <= 55)
 		if pool.is_empty():
 			return
 		var n: Dictionary = Game.start_negotiation(str(pool[0].id))

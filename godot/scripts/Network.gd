@@ -92,8 +92,8 @@ func seed_contact(ct: Dictionary) -> void:
 		match str(ct.type):
 			"financier": kind = "Attorney"
 			"verleger": kind = "Assistant"
-		var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.7) else Data.NPC_FIRST_M)
-		ct["gate"] = {"name": "%s %s %s" % [kind, first, Game.pick(Data.NPC_LAST)], "rel": float(Game.rndi(10, 30))}
+		var first: String = Util.pick(Data.NPC_FIRST_F if Util.chance(0.7) else Data.NPC_FIRST_M)
+		ct["gate"] = {"name": "%s %s %s" % [kind, first, Util.pick(Data.NPC_LAST)], "rel": float(Util.rndi(10, 30))}
 	if not ct.has("gateWeek"):
 		ct["gateWeek"] = -99
 	if not ct.has("markerMi"):
@@ -118,10 +118,10 @@ func _weave_links() -> void:
 			continue
 		var others: Array = st.contacts.filter(func(o): return str(o.name) != str(ct.name))
 		others.shuffle()
-		for other in others.slice(0, Game.rndi(1, 2)):
+		for other in others.slice(0, Util.rndi(1, 2)):
 			if ct.links.any(func(l): return str(l.to) == str(other.name)):
 				continue
-			var kind: String = Game.pick(["freund", "geschaeft", "club", "geschaeft", "freund", "familie"])
+			var kind: String = Util.pick(["freund", "geschaeft", "club", "geschaeft", "freund", "familie"])
 			ct.links.append({"to": str(other.name), "kind": kind})
 			if not (other.links is Array):
 				other["links"] = []
@@ -226,7 +226,7 @@ func gate_blocks(ct: Dictionary) -> bool:
 
 
 func charm_cost() -> float:
-	return roundf(15.0 * Game.infl(_st().year))
+	return roundf(15.0 * Util.infl(_st().year))
 
 
 # Flowers, theatre tickets, remembering a birthday: cheap, weekly, and
@@ -242,7 +242,7 @@ func charm_gate(cid) -> Dictionary:
 	Persona.book(-charm_cost(), "Flowers & courtesies: %s" % str(gate_of(ct).name))
 	ct.gateWeek = Game.wi()
 	var gate: Dictionary = gate_of(ct)
-	gate.rel = clampf(float(gate.rel) + float(Game.rndi(7, 13)), 0.0, 100.0)
+	gate.rel = clampf(float(gate.rel) + float(Util.rndi(7, 13)), 0.0, 100.0)
 	Mogul.grant_xp("networking", 1.0, "Was kind to the small people")
 	Persona._memory(ct, "Your kindness to %s did not go unnoticed." % str(gate.name))
 	if float(gate.rel) >= GATE_BLOCK_REL:
@@ -254,9 +254,9 @@ func charm_gate(cid) -> Dictionary:
 func _tick_gates_month() -> void:
 	for ct in _st().contacts:
 		var gate := gate_of(ct)
-		if gate.is_empty() or float(gate.rel) < 70.0 or not Game.chance(0.25):
+		if gate.is_empty() or float(gate.rel) < 70.0 or not Util.chance(0.25):
 			continue
-		if Game.chance(0.5):
+		if Util.chance(0.5):
 			var tip_line: String = Mogul.maybe_market_tip(ct)
 			if tip_line != "":
 				Game.log_msg("%s slips you a word in passing: something is moving at %s's desk." % [str(gate.name), str(ct.name)], "info")
@@ -332,8 +332,8 @@ func introduce(notable_name: String, introducer_cid) -> Dictionary:
 	Mogul.grant_xp("networking", 2.0, "A door opened through a friend")
 	memoir("%s introduced you to %s — a door that money alone would not have opened." % [str(intro.name), str(ct.name)], [str(intro.name), str(ct.name)])
 	var text := "Over lunch, %s makes the introduction: [b]%s[/b] now takes your calls.\n\n%s" % [str(intro.name), str(ct.name), str(notable.get("desc", ""))]
-	if Game.chance(0.5):
-		Game.owe_favor(str(Game.pick(["galaInvite", "extraAudition"])), {"type": str(intro.type), "name": str(intro.name)})
+	if Util.chance(0.5):
+		Game.owe_favor(str(Util.pick(["galaInvite", "extraAudition"])), {"type": str(intro.type), "name": str(intro.name)})
 		text += "\n\n⚠ Of course, nothing in this town is free: you owe %s one now." % str(intro.name)
 	Game.log_msg("New in your book: %s (introduced by %s)." % [str(ct.name), str(intro.name)], "deal")
 	return {"ok": true, "text": text}
@@ -383,7 +383,7 @@ func call_marker(cid) -> Dictionary:
 		"kolumnist", "journalist", "verleger": kind = "suppressStory"
 		"regisseur": kind = "scriptAccess"
 		"produzent": kind = "billing"
-		"studio", "financier", "gastgeberin", "anwalt": kind = str(Game.pick(["galaInvite", "extraAudition"]))
+		"studio", "financier", "gastgeberin", "anwalt": kind = str(Util.pick(["galaInvite", "extraAudition"]))
 	Game.grant_favor(kind, {"type": str(ct.type), "name": str(ct.name)}, true)
 	Persona._memory(ct, "You called in a marker. Debt paid — noted.")
 	memoir("You called in a marker with %s: %s." % [str(ct.name), str(Game.FAVOR_KINDS[kind].name)], [str(ct.name)])
@@ -438,15 +438,15 @@ func _spawn_occasions() -> void:
 	var pool: Array = st.contacts.duplicate()
 	pool.shuffle()
 	for ct in pool:
-		if not Game.chance(0.12):
+		if not Util.chance(0.12):
 			continue
 		if st.occasions.any(func(o): return str(o.status) == "open" and str(o.ctName) == str(ct.name)):
 			continue
 		var kinds := ["birthday", "callback", "crisis"]
 		if ["regisseur", "produzent", "studio"].has(str(ct.type)):
 			kinds.append("premiere")
-		var kind: String = Game.pick(kinds)
-		var due := Game.mi() + Game.rndi(1, 2)
+		var kind: String = Util.pick(kinds)
+		var due := Game.mi() + Util.rndi(1, 2)
 		st.occasions.append({"id": Game.next_id(), "ctName": str(ct.name), "kind": kind,
 			"madeMi": Game.mi(), "dueMi": due, "status": "open"})
 		# Bedeutungsstaffelung (Feature 24/25): Krisen wichtiger Menschen
@@ -471,7 +471,7 @@ func occasion_blocked_reason(occ: Dictionary) -> String:
 	var def: Dictionary = OCCASION_KINDS[str(occ.kind)]
 	if int(_st().contactAP) < int(def.ap):
 		return "No contact time left this week"
-	if float(_st().player.cash) < roundf(float(def.cost) * Game.infl(_st().year)):
+	if float(_st().player.cash) < roundf(float(def.cost) * Util.infl(_st().year)):
 		return "Privately short on cash"
 	return ""
 
@@ -489,7 +489,7 @@ func occasion_respond(occ_id) -> Dictionary:
 			occ.status = "done"
 			return {"ok": false, "text": "They are no longer in your book."}
 		var def: Dictionary = OCCASION_KINDS[str(occ.kind)]
-		var cost := roundf(float(def.cost) * Game.infl(st.year))
+		var cost := roundf(float(def.cost) * Util.infl(st.year))
 		if cost > 0.0:
 			Persona.book(-cost, "%s %s — %s" % [str(def.icon), str(def.name), str(ct.name)])
 		st.contactAP = int(st.contactAP) - int(def.ap)
@@ -528,7 +528,7 @@ func _tick_occasions() -> void:
 		# Delegation (Feature 4 meets 16): the assistant covers the small stuff.
 		if Persona.has_assistant() and Persona.rule("occasions") and ["birthday", "callback"].has(str(occ.kind)) and not ct.is_empty():
 			occ.status = "delegated"
-			Game.book(-roundf(10.0 * Game.infl(st.year)), "buero", "Assistant: flowers & callbacks")
+			Game.book(-roundf(10.0 * Util.infl(st.year)), "buero", "Assistant: flowers & callbacks")
 			adjust(ct, {"liking": 1.5}, false)
 			Persona._memory(ct, "Your assistant handled it — noted, with a thin smile.")
 			continue
@@ -597,14 +597,14 @@ func ask_info(cid) -> Dictionary:
 			elif not found:
 				var cs2: Array = st.castings.filter(func(c): return not bool(c.get("hidden", false)))
 				if cs2.size():
-					var pickc: Dictionary = Game.pick(cs2)
+					var pickc: Dictionary = Util.pick(cs2)
 					lines.append("On “%s” they whisper: the script reads like a %d out of 100." % [str(pickc.title), Game.script_insight(pickc)])
 				else:
 					lines.append("The town is quiet. Even the liars have nothing.")
 		"studio":
 			if st.productions.size():
-				var prod: Dictionary = Game.pick(st.productions)
-				var base := 35.0 + float(prod.prestige) * 8.0 + float(Game.hashs(str(prod.id) + "scr") % 21)
+				var prod: Dictionary = Util.pick(st.productions)
+				var base := 35.0 + float(prod.prestige) * 8.0 + float(Util.hashs(str(prod.id) + "scr") % 21)
 				var honest := "the dailies are genuinely good — the studio quietly raises expectations" if base + float(prod.get("qualityMod", 0.0)) >= 55.0 else "the dailies worry people — do not plan on a triumph"
 				lines.append("Behind closed doors, on “%s”: %s." % [str(prod.title), honest])
 			else:
@@ -625,13 +625,13 @@ func ask_info(cid) -> Dictionary:
 			var tip_line := Mogul.maybe_market_tip(ct)
 			lines.append(tip_line if tip_line != "" else "The money is nervous, they say — nothing concrete this week.")
 		"gastgeberin":
-			if Game.chance(0.5):
+			if Util.chance(0.5):
 				Game.grant_favor("galaInvite", {"type": str(ct.type), "name": str(ct.name)})
 				lines.append("An envelope with your name on it: an invitation to an evening where everyone who matters will be.")
 			else:
 				var others: Array = st.contacts.filter(func(o): return str(o.name) != str(ct.name))
 				if others.size():
-					var boost: Dictionary = Game.pick(others)
+					var boost: Dictionary = Util.pick(others)
 					adjust(boost, {"closeness": 3.0}, false)
 					lines.append("She mentions, in passing, what %s really thinks of you — useful, flattering, and only slightly indiscreet (closeness +3)." % str(boost.name))
 	Persona._memory(ct, "Passed you information — quietly.")
@@ -739,7 +739,7 @@ func _spread_facts(force: bool = false) -> void:
 				continue
 			var p := 0.3 + (0.15 if int(f.tone) < 0 else 0.0)
 			for link in ct.get("links", []):
-				if not force and not Game.chance(p):
+				if not force and not Util.chance(p):
 					continue
 				var other := contact_by_name(str(link.to))
 				if other.is_empty() or other.get("facts", []).any(func(g): return str(g.text) == str(f.text)):
@@ -759,7 +759,7 @@ func _tick_reveal_castings(force: bool = false) -> void:
 		for ct in st.contacts:
 			if str(ct.type) != str(cs.netSource) or float(ct.rel) < 45.0:
 				continue
-			if force or Game.chance(0.5 + dim(ct, "trust") / 200.0):
+			if force or Util.chance(0.5 + dim(ct, "trust") / 200.0):
 				cs.hidden = false
 				cs.netSource = ""
 				Persona._memory(ct, "Tipped you off about “%s” before the town knew." % str(cs.title))
@@ -790,10 +790,10 @@ func _meet_someone(origin: String) -> Dictionary:
 				candidates.append({"type": str(type_s), "name": str(cname)})
 	if candidates.is_empty():
 		return {}
-	var pickp: Dictionary = Game.pick(candidates)
+	var pickp: Dictionary = Util.pick(candidates)
 	var ct := Persona._add_contact(str(pickp.type), str(pickp.name))
-	ct.dims.liking = float(Game.rndi(20, 32))
-	ct.dims.trust = float(Game.rndi(12, 22))
+	ct.dims.liking = float(Util.rndi(20, 32))
+	ct.dims.trust = float(Util.rndi(12, 22))
 	ct.rel = derived_rel(ct)
 	Persona._memory(ct, "You met %s." % origin)
 	memoir("You met %s %s." % [str(ct.name), origin], [str(ct.name)])
@@ -824,21 +824,21 @@ func attend_gala() -> Dictionary:
 	var met := _meet_someone("at the gala")
 	if not met.is_empty():
 		lines.append("A handshake by the bar becomes a name in your book: [b]%s[/b] takes your calls now." % str(met.name))
-	if Game.chance(0.4) and st.contacts.size() > 0:
-		var pr_ct: Dictionary = Game.pick(st.contacts)
-		lines.append(Persona._make_promise(pr_ct, "", Game.rndi(0, 2)))
-	if Game.chance(0.35):
-		var kind: String = Game.pick(["extraAudition", "billing", "scriptAccess", "suppressStory"])
+	if Util.chance(0.4) and st.contacts.size() > 0:
+		var pr_ct: Dictionary = Util.pick(st.contacts)
+		lines.append(Persona._make_promise(pr_ct, "", Util.rndi(0, 2)))
+	if Util.chance(0.35):
+		var kind: String = Util.pick(["extraAudition", "billing", "scriptAccess", "suppressStory"])
 		var fav := Game.grant_favor(kind, Game.favor_contact_for(kind))
 		lines.append("Between two toasts, %s leans in: they owe you one (%s)." % [fav["from"].get("name", "?"), str(Game.FAVOR_KINDS[kind].name)])
-	if Game.chance(0.3) and st.contacts.size() > 0:
-		var tip_line := Mogul.maybe_market_tip(Game.pick(st.contacts))
+	if Util.chance(0.3) and st.contacts.size() > 0:
+		var tip_line := Mogul.maybe_market_tip(Util.pick(st.contacts))
 		if tip_line != "":
 			lines.append(tip_line)
-	if Game.chance(0.25):
+	if Util.chance(0.25):
 		Game.spawn_castings(1)
 		lines.append("A producer corners you about a project that is not announced yet — it is on your desk in the morning.")
-	if Game.chance(0.3):
+	if Util.chance(0.3):
 		Game.grant_favor("galaInvite", Game.favor_contact_for("galaInvite"), true)
 		lines.append("Before you leave, a hostess touches your arm: you are on the list for the next one, too.")
 	Mogul.grant_xp("networking", 2.0, "Worked a gala")
@@ -870,7 +870,7 @@ func promote_contact(ct: Dictionary) -> String:
 	var new_type := str(CAREER_STEPS[str(ct.type)])
 	var new_name := _retitle(old_name, new_type)
 	if new_type == "studio":
-		var studio: Dictionary = Game.pick(Game.active_studios())
+		var studio: Dictionary = Util.pick(Game.active_studios())
 		new_name = "Studio boss %s" % " ".join(old_name.split(" ").slice(maxi(0, old_name.split(" ").size() - 2)))
 		Persona._memory(ct, "Now runs the shop at %s." % str(studio.name))
 	# Promises and occasions follow the person, not the business card.
@@ -890,8 +890,8 @@ func promote_contact(ct: Dictionary) -> String:
 	ct.vip = Data.CONTACT_VIP_TYPES.has(new_type)
 	if bool(ct.vip):
 		# Their new anteroom already knows your name — if they like you.
-		var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.7) else Data.NPC_FIRST_M)
-		ct["gate"] = {"name": "Secretary %s %s" % [first, Game.pick(Data.NPC_LAST)],
+		var first: String = Util.pick(Data.NPC_FIRST_F if Util.chance(0.7) else Data.NPC_FIRST_M)
+		ct["gate"] = {"name": "Secretary %s %s" % [first, Util.pick(Data.NPC_LAST)],
 			"rel": clampf(20.0 + dim(ct, "liking") * 0.4, 0.0, 100.0)}
 	adjust(ct, {"respect": 8.0, "closeness": -4.0}, false)
 	if opinion_score(ct) > 0.0 or dim(ct, "liking") >= 50.0:
@@ -930,8 +930,8 @@ func gate_rises(vip_ct: Dictionary) -> Dictionary:
 		Persona._memory(ct, "You sent flowers when they ran an anteroom. They have not forgotten.")
 	else:
 		Persona._memory(ct, "Knows you from the anteroom days — vaguely.")
-	var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.7) else Data.NPC_FIRST_M)
-	vip_ct["gate"] = {"name": "Secretary %s %s" % [first, Game.pick(Data.NPC_LAST)], "rel": float(Game.rndi(10, 25))}
+	var first: String = Util.pick(Data.NPC_FIRST_F if Util.chance(0.7) else Data.NPC_FIRST_M)
+	vip_ct["gate"] = {"name": "Secretary %s %s" % [first, Util.pick(Data.NPC_LAST)], "rel": float(Util.rndi(10, 25))}
 	memoir("%s left the anteroom and became a producer — careers start small in this town." % str(ct.name), [str(ct.name)])
 	Game.log_msg("%s trades the anteroom for a producer's office. Small people rarely stay small." % str(ct.name), "deal")
 	return ct
@@ -939,9 +939,9 @@ func gate_rises(vip_ct: Dictionary) -> Dictionary:
 
 # Your former assistant does not vanish — this town recycles everyone.
 func assistant_departs(a: Dictionary, force: bool = false) -> void:
-	if a.is_empty() or (not force and not Game.chance(0.6)):
+	if a.is_empty() or (not force and not Util.chance(0.6)):
 		return
-	var type_s: String = Game.pick(["produzent", "journalist"])
+	var type_s: String = Util.pick(["produzent", "journalist"])
 	var ct := Persona._add_contact(type_s, "%s %s" % [str(Data.CONTACT_ROLES.get(type_s, type_s)), str(a.name)])
 	var months := Game.mi() - int(a.get("hiredMi", Game.mi()))
 	ct.dims.liking = clampf(25.0 + float(a.skill) * 0.2, 0.0, 100.0)
@@ -956,11 +956,11 @@ func _tick_npc_careers() -> void:
 	var st := _st()
 	# At most one rise per month — careers take years, not weeks.
 	for ct in st.contacts:
-		if CAREER_STEPS.has(str(ct.type)) and Game.chance(0.015):
+		if CAREER_STEPS.has(str(ct.type)) and Util.chance(0.015):
 			promote_contact(ct)
 			return
 	for ct in st.contacts:
-		if not gate_of(ct).is_empty() and Game.chance(0.008):
+		if not gate_of(ct).is_empty() and Util.chance(0.008):
 			gate_rises(ct)
 			return
 
@@ -999,7 +999,7 @@ func tick_month() -> void:
 	_tick_gates_month()
 	# Information: trusted press contacts pass stories along.
 	for ct in st.contacts:
-		if ct.get("circles", []).has("presse") and dim(ct, "trust") >= 60.0 and Game.chance(0.3):
+		if ct.get("circles", []).has("presse") and dim(ct, "trust") >= 60.0 and Util.chance(0.3):
 			for rumor in st.rumors:
 				if not bool(rumor.knownToPlayer):
 					rumor.knownToPlayer = true
@@ -1008,7 +1008,7 @@ func tick_month() -> void:
 			break
 	# A trusted lawyer quietly buries an old debt now and then.
 	for ct in st.contacts:
-		if str(ct.type) == "anwalt" and dim(ct, "trust") >= 60.0 and not st.debts.is_empty() and Game.chance(0.25):
+		if str(ct.type) == "anwalt" and dim(ct, "trust") >= 60.0 and not st.debts.is_empty() and Util.chance(0.25):
 			var debt: Dictionary = st.debts[0]
 			Game.remove_debt(debt.id)
 			Game.log_msg("%s makes an old obligation disappear — cleanly, on paper, forever." % str(ct.name), "deal")
@@ -1016,7 +1016,7 @@ func tick_month() -> void:
 	# Gefallen sind Verpflichtungen (Feature 31): alte Schulden werden
 	# eingefordert — höflich, per Brief, genau einmal.
 	for debt in st.debts:
-		if Game.mi() - int(debt.gainedMi) < 6 or bool(debt.get("called", false)) or not Game.chance(0.35):
+		if Game.mi() - int(debt.gainedMi) < 6 or bool(debt.get("called", false)) or not Util.chance(0.35):
 			continue
 		debt["called"] = true
 		var creditor := contact_by_name(str(debt["from"].get("name", "")))

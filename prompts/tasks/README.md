@@ -19,7 +19,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | # | Chunk | Thema | Status |
 |---|-------|-------|--------|
 | 01 | [Balance-Konstanten](01-balance-konstanten.md) | Tech Debt | erledigt (Autoload `Balance.gd`: Wirtschaft/Gagen/Produktion/Versprechen/DNA; Events.gd bewusst ausgelassen — Alt-Inhalte, werden durch JSON-Events ersetzt) |
-| 02 | [Game.gd: Utils extrahieren](02-game-gd-utils-extrahieren.md) | Tech Debt | offen |
+| 02 | [Game.gd: Utils extrahieren](02-game-gd-utils-extrahieren.md) | Tech Debt | erledigt (Autoload `Util.gd`: RNG/hashs/body_of/infl/fame_at/age_of/ask_fee/grade/fmt_money/attrs, ~450 Aufrufstellen umgestellt, BalanceSim bit-identisch; −82 statt −150 Zeilen — `required_rep`/`grade_range` lesen inzwischen State und bleiben laut Spec-Regel in Game.gd) |
 | 03 | [Game.gd: DNA-System extrahieren](03-game-gd-dna-extrahieren.md) | Tech Debt | offen |
 | 04 | [Save-Versionierung & Migration](04-save-migration.md) | Robustheit | erledigt (Versionskette `_migrate_save`, Backup `hm_save.bak.json`, Fehlerdialog, v1-Fixture-Test) |
 | 05 | [Testsuite ausbauen](05-tests-ausbauen.md) | Qualität | erledigt (500+ Checks; Kern-Regressionen fame_at/Fit/Package/Box-Office-Determinismus/Wortbruch/Insolvenz; Exit-Code ≠ 0 verifiziert) |

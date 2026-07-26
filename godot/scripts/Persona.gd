@@ -7,7 +7,7 @@ extends Node
 # assistant with delegation rules.
 # Data-driven: career levels, reputation titles, contacts and locations
 # come from data/*.json and can be extended via user://data/ mods.
-# All amounts are in 1925 dollars and scaled with Game.infl().
+# All amounts are in 1925 dollars and scaled with Util.infl().
 # =====================================================================
 
 const PLAYER_LEDGER_MAX := 120
@@ -67,13 +67,13 @@ func career_def() -> Dictionary:
 
 
 func salary() -> float:
-	return roundf(float(career_def().salary) * Game.infl(_st().year))
+	return roundf(float(career_def().salary) * Util.infl(_st().year))
 
 
 func living_cost() -> float:
 	# Familie (Feature 44): ein gemeinsamer Haushalt lebt größer
 	var family_mult := 1.12 if is_married() else 1.0
-	return roundf(float(career_def().living) * Game.infl(_st().year) * family_mult)
+	return roundf(float(career_def().living) * Util.infl(_st().year) * family_mult)
 
 
 # Earned reputation title, derived from the moral identity — you don't
@@ -116,8 +116,8 @@ func promotion_requirements() -> Array:
 	if req.has("influence"):
 		out.append({"label": "Influence %d" % int(req.influence), "met": float(p.influence) >= float(req.influence)})
 	if req.has("wealth"):
-		var need := roundf(float(req.wealth) * Game.infl(st.year))
-		out.append({"label": "Private wealth %s" % Game.fmt_money(need), "met": float(p.cash) >= need})
+		var need := roundf(float(req.wealth) * Util.infl(st.year))
+		out.append({"label": "Private wealth %s" % Util.fmt_money(need), "met": float(p.cash) >= need})
 	return out
 
 
@@ -139,7 +139,7 @@ func _check_promotion(events: Array) -> void:
 	p.influence = clampf(float(p.influence) + 8.0, 0.0, 100.0)
 	Game.log_msg("Promotion: you are now considered a %s. Salary and expectations rise." % str(lvl.name), "history")
 	Game.press_event("Business", "People move: %s is now talked about as a %s." % [_st().agency.name, str(lvl.name)])
-	events.append({"title": "Promotion", "text": "The industry knows your name now: [b]%s[/b].\n\nYour salary rises to %s a month — and your lifestyle follows (%s living costs)." % [str(lvl.name), Game.fmt_money(salary()), Game.fmt_money(living_cost())], "choices": [{"label": "Continue"}]})
+	events.append({"title": "Promotion", "text": "The industry knows your name now: [b]%s[/b].\n\nYour salary rises to %s a month — and your lifestyle follows (%s living costs)." % [str(lvl.name), Util.fmt_money(salary()), Util.fmt_money(living_cost())], "choices": [{"label": "Continue"}]})
 	# Endgame (Feature 9): partnership buy-in & mogul recognition
 	Mogul.on_promotion(events)
 
@@ -189,7 +189,7 @@ func tick_month(events: Array) -> void:
 	if float(p.cash) < 0.0:
 		var interest := roundf(float(p.cash) * 0.02)
 		book(interest, "Interest on private debt")
-		Game.log_msg("Privately in the red: %s of debt weighs on you." % Game.fmt_money(-float(p.cash)), "bad")
+		Game.log_msg("Privately in the red: %s of debt weighs on you." % Util.fmt_money(-float(p.cash)), "bad")
 	# Health follows chronic stress.
 	if float(p.stress) >= 70.0:
 		p.health = clampf(float(p.health) - (float(p.stress) - 60.0) * 0.25, 5.0, 100.0)
@@ -205,7 +205,7 @@ func tick_month(events: Array) -> void:
 	if float(p.health) <= 15.0 and not p.monthFlags.has("collapse"):
 		p.monthFlags["collapse"] = true
 		Network.memoir("A collapse puts you in a clinic — the columns write about it for weeks.")
-		book(-roundf(800.0 * Game.infl(st.year)), "Clinic stay after collapse")
+		book(-roundf(800.0 * Util.infl(st.year)), "Clinic stay after collapse")
 		p.health = 45.0
 		p.energy = 60.0
 		p.stress = clampf(float(p.stress) - 35.0, 0.0, 100.0)
@@ -244,7 +244,7 @@ func vacation() -> void:
 		return
 	var p := player()
 	p.monthFlags["vacation"] = true
-	book(-roundf(220.0 * Game.infl(_st().year)), "Weekend in Palm Springs")
+	book(-roundf(220.0 * Util.infl(_st().year)), "Weekend in Palm Springs")
 	p.energy = clampf(float(p.energy) + 22.0, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) - 22.0, 0.0, 100.0)
 	p.health = clampf(float(p.health) + 3.0, 0.0, 100.0)
@@ -319,21 +319,21 @@ func _tick_private_life(events: Array) -> void:
 	var p := player()
 	# Alleinstehend: hin und wieder klopft das Leben an.
 	if pl.partner == null:
-		if Game.mi() - int(pl.courtMi) >= 6 and float(p.stress) < 70.0 and Game.chance(0.08):
+		if Game.mi() - int(pl.courtMi) >= 6 and float(p.stress) < 70.0 and Util.chance(0.08):
 			pl.courtMi = Game.mi()
-			var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.5) else Data.NPC_FIRST_M)
-			Dialogs.spawn_letter_named("courtship", "%s %s" % [first, Game.pick(Data.NPC_LAST)])
+			var first: String = Util.pick(Data.NPC_FIRST_F if Util.chance(0.5) else Data.NPC_FIRST_M)
+			Dialogs.spawn_letter_named("courtship", "%s %s" % [first, Util.pick(Data.NPC_LAST)])
 	else:
 		var partner: Dictionary = pl.partner
 		partner.rel = clampf(float(partner.rel) - 1.5, 0.0, 100.0)
 		# Zeitanspruch: ein Abend gehört (fast) jeden Monat den beiden.
-		if Game.chance(0.5) and not st.inbox.any(func(l): return str(l.tid) == "partner_evening" and str(l.status) == "open"):
+		if Util.chance(0.5) and not st.inbox.any(func(l): return str(l.tid) == "partner_evening" and str(l.status) == "open"):
 			Dialogs.spawn_letter_named("partner_evening", str(partner.name))
 		# Rückhalt: eine gute Partnerschaft trägt durch die Krisenwochen.
 		if float(partner.rel) >= 50.0:
 			p.stress = clampf(float(p.stress) - 2.0, 0.0, 100.0)
 			p.health = clampf(float(p.health) + 0.5, 5.0, 100.0)
-		elif float(partner.rel) < 35.0 and Game.chance(0.3):
+		elif float(partner.rel) < 35.0 and Util.chance(0.3):
 			Dialogs.spawn_letter_named("partner_conflict", str(partner.name))
 		# Die Frage aller Fragen — einmal.
 		if not is_married() and not bool(pl.get("proposalAsked", false)) and float(partner.rel) >= 75.0 and Game.mi() - int(partner.sinceMi) >= 12:
@@ -365,7 +365,7 @@ func checkup() -> void:
 		return
 	var p := player()
 	p.monthFlags["checkup"] = true
-	book(-roundf(150.0 * Game.infl(_st().year)), "Doctor's checkup in Beverly Hills")
+	book(-roundf(150.0 * Util.infl(_st().year)), "Doctor's checkup in Beverly Hills")
 	p.health = clampf(float(p.health) + 10.0, 0.0, 100.0)
 	Game.log_msg("Checkup at the doctor's — solid results, juicy bill.", "info")
 
@@ -380,7 +380,7 @@ func draw() -> void:
 	player().monthFlags["draw"] = true
 	Game.book(-amount, "gehalt", "Private draw by the manager")
 	book(amount, "Private draw from the agency")
-	Game.log_msg("Private draw: %s moves from the agency to your own account." % Game.fmt_money(amount), "info")
+	Game.log_msg("Private draw: %s moves from the agency to your own account." % Util.fmt_money(amount), "info")
 
 
 # Private injection: your own money bails out (or fattens) the agency.
@@ -390,7 +390,7 @@ func inject(amount: float) -> void:
 		return
 	book(-amount, "Private injection into the agency")
 	Game.book(amount, "sonstiges", "Private injection by the manager")
-	Game.log_msg("You put %s of your own money into the agency." % Game.fmt_money(amount), "info")
+	Game.log_msg("You put %s of your own money into the agency." % Util.fmt_money(amount), "info")
 
 
 # =====================================================================
@@ -402,16 +402,16 @@ func init_contacts() -> void:
 	var st := _st()
 	st.contacts = []
 	for ctype in Data.CONTACT_START_ROSTER:
-		var cname := str(Game.pick(Data.CONTACT_PERSONS[ctype]))
+		var cname := str(Util.pick(Data.CONTACT_PERSONS[ctype]))
 		if st.contacts.any(func(ct): return str(ct.name) == cname):
 			continue
 		_add_contact(str(ctype), cname)
-	var sid := str(Game.pick(Game.active_studios()).id)
+	var sid := str(Util.pick(Game.active_studios()).id)
 	_add_contact("studio", "Studio boss of %s" % Game._studio(sid).name)
 
 
 func _add_contact(ctype: String, cname: String) -> Dictionary:
-	var ct := {"id": Game.next_id(), "type": ctype, "name": cname, "rel": float(Game.rndi(15, 35)),
+	var ct := {"id": Game.next_id(), "type": ctype, "name": cname, "rel": float(Util.rndi(15, 35)),
 		"lastMi": Game.mi(), "lastActWeek": -99, "log": [], "waitNoted": false}
 	_st().contacts.append(ct)
 	# Netzwerk (Features 11/12/14): Dimensionen, Kreise, ggf. Vorzimmer
@@ -451,7 +451,7 @@ func ap_per_week() -> int:
 
 
 func channel_cost(key: String) -> float:
-	return roundf(float(Data.CONTACT_CHANNELS[key].cost) * Game.infl(_st().year) * Mogul.channel_cost_mult(key))
+	return roundf(float(Data.CONTACT_CHANNELS[key].cost) * Util.infl(_st().year) * Mogul.channel_cost_mult(key))
 
 
 # Why a channel is unavailable for this contact right now ("" = fine).
@@ -528,11 +528,11 @@ func contact_interact(cid, key: String) -> Dictionary:
 	if key != "aide":
 		ct["lastPersonalMi"] = Game.mi()
 	ct.waitNoted = false
-	var gain := float(Game.rndi(int(ch.rel_min), int(ch.rel_max)))
+	var gain := float(Util.rndi(int(ch.rel_min), int(ch.rel_max)))
 	var lines: Array = []
 	match key:
 		"call":
-			if Game.chance(0.15):
+			if Util.chance(0.15):
 				gain = -2.0
 				st.player.stress = clampf(float(st.player.stress) + 2.0, 0.0, 100.0)
 				lines.append("With no time to think, a tactless remark slips out — the call goes sour.")
@@ -543,7 +543,7 @@ func contact_interact(cid, key: String) -> Dictionary:
 		"meet":
 			lines.append("A long dinner, genuine attention — this is how trust is built.")
 			_memory(ct, "You showed up in person — people don't forget that.")
-			if Game.chance(0.25):
+			if Util.chance(0.25):
 				lines.append(_make_promise(ct))
 		"letter":
 			# Feature 23: der Brief wirkt erst, wenn er ankommt — dafür mehr.
@@ -556,13 +556,13 @@ func contact_interact(cid, key: String) -> Dictionary:
 			lines.append("A precise message, cleanly worded.")
 			_memory(ct, "Reached out in writing.")
 			# Back channels (Feature 6): discreet couriers leak half as often
-			if Game.chance(0.05 if Mogul.has_ability("back_channels") else 0.1):
+			if Util.chance(0.05 if Mogul.has_ability("back_channels") else 0.1):
 				st.player.discretion = clampf(float(st.player.discretion) - 5.0, 0.0, 100.0)
 				Game.add_rumor("agency", "A private note from %s to %s is circulating in copies." % [st.agency.name, ct.name], true, "skandal", ["Journalists"], 20.0, true)
 				lines.append("The message got passed around — copies are circulating (discretion −5).")
 		"gift":
 			# The true wish (Feature 6): you always know what lands
-			if float(ct.rel) < 25.0 and not Mogul.has_ability("true_wish") and Game.chance(0.5):
+			if float(ct.rel) < 25.0 and not Mogul.has_ability("true_wish") and Util.chance(0.5):
 				gain = -4.0
 				lines.append("The gift reads as a clumsy attempt to buy goodwill — frowns instead of thanks.")
 				_memory(ct, "Inappropriate gift at the wrong moment.")
@@ -570,7 +570,7 @@ func contact_interact(cid, key: String) -> Dictionary:
 				lines.append("A thoughtful gesture that sticks in the memory.")
 				_memory(ct, "Received a tasteful gift.")
 		"aide":
-			if Game.chance(0.25):
+			if Util.chance(0.25):
 				gain = 0.0
 				lines.append("They let your assistant feel that they expected the boss.")
 			else:
@@ -579,30 +579,30 @@ func contact_interact(cid, key: String) -> Dictionary:
 		"club":
 			lines.append("In the club's back room people talk more openly than in any office.")
 			_memory(ct, "An evening at the private club — confidential and long.")
-			if Game.chance(0.25):
+			if Util.chance(0.25):
 				var kinds := ["extraAudition", "suppressStory", "scriptAccess", "billing", "galaInvite"]
-				var fav := Game.grant_favor(str(Game.pick(kinds)), {"type": str(ct.type), "name": str(ct.name)})
+				var fav := Game.grant_favor(str(Util.pick(kinds)), {"type": str(ct.type), "name": str(ct.name)})
 				lines.append("Over the second glass, %s makes you a promise: %s." % [str(ct.name), str(Game.FAVOR_KINDS[str(fav.kind)].name)])
-			if Game.chance(0.2):
+			if Util.chance(0.2):
 				for rumor in st.rumors:
 					if not bool(rumor.knownToPlayer):
 						rumor.knownToPlayer = true
 						lines.append("A name drops in passing — a rumor reaches you that you'd never have heard otherwise.")
 						break
-			if Game.chance(0.3):
+			if Util.chance(0.3):
 				# Club-Zusagen haben Ohren am Nebentisch (Feature 30)
 				lines.append(_make_promise(ct, "", 1))
 			# Market whispers (Feature 7): the club is where tips are born
-			if Game.chance(0.2):
+			if Util.chance(0.2):
 				var tip_line: String = Mogul.maybe_market_tip(ct)
 				if tip_line != "":
 					lines.append(tip_line)
 			# Chance encounters (Feature 21): the bar introduces people
-			if Game.chance(0.12):
+			if Util.chance(0.12):
 				var enc: String = Network.club_encounter()
 				if enc != "":
 					lines.append(enc)
-			if Game.chance(0.15):
+			if Util.chance(0.15):
 				st.player.discretion = clampf(float(st.player.discretion) - 3.0, 0.0, 100.0)
 				lines.append("Someone with good ears sat at the next table (discretion −3).")
 	# Mehrdimensional (Feature 12): jeder Kanal bewegt andere Saiten
@@ -622,10 +622,10 @@ func contact_interact(cid, key: String) -> Dictionary:
 func _make_promise(ct: Dictionary, kind: String = "", witnesses: int = 0, written: bool = false) -> String:
 	var kinds := Data.CONTACT_PROMISE_KINDS
 	if kind == "" or not kinds.has(kind):
-		kind = str(Game.pick(kinds.keys())) if kinds.size() else "callback"
+		kind = str(Util.pick(kinds.keys())) if kinds.size() else "callback"
 	var def: Dictionary = kinds.get(kind, {"name": "Stay in touch", "icon": "🤞", "months_min": 2, "months_max": 4,
 		"text": "You promised {contact} to be in touch again soon."})
-	var due := Game.mi() + Game.rndi(int(def.get("months_min", 2)), int(def.get("months_max", 4)))
+	var due := Game.mi() + Util.rndi(int(def.get("months_min", 2)), int(def.get("months_max", 4)))
 	_st().promises.append({"id": Game.next_id(), "to": str(ct.name), "kind": kind,
 		"madeMi": Game.mi(), "dueMi": due, "witnesses": witnesses, "written": written,
 		"text": str(def.text).replace("{contact}", str(ct.name)), "status": "open"})
@@ -671,7 +671,7 @@ func _tick_contacts_month(events: Array) -> void:
 					Network.add_fact(ct, "broke a promise to them", -1, 2.0 + 1.0 * w)
 					_memory(ct, "You broke your promise.")
 			# Schriftliche Zusagen hinterlassen Beweise, bezeugte Gerede.
-			if bool(pr.get("written", false)) and Game.chance(0.5):
+			if bool(pr.get("written", false)) and Util.chance(0.5):
 				st.player.pubRep = clampf(float(st.player.pubRep) - 2.0, 0.0, 100.0)
 				Game.add_rumor("agency", "%s is said to break written promises — and someone kept the letter." % str(st.agency.name), true, "skandal", ["Journalists"], 25.0, true)
 			Network.memoir("Promise broken: %s waited in vain%s." % [str(pr.to), " — in front of witnesses" if w > 0 else ""], [str(pr.to)])
@@ -688,11 +688,11 @@ func _tick_contacts_month(events: Array) -> void:
 	var warm: Array = st.contacts.filter(func(ct): return float(ct.rel) >= 65.0)
 	warm.shuffle()
 	for ct in warm:
-		if not Game.chance(0.15):
+		if not Util.chance(0.15):
 			continue
 		match str(ct.type):
 			"produzent":
-				Game.grant_favor(Game.pick(["extraAudition", "billing"]), {"type": "produzent", "name": str(ct.name)})
+				Game.grant_favor(Util.pick(["extraAudition", "billing"]), {"type": "produzent", "name": str(ct.name)})
 			"regisseur":
 				Game.grant_favor("scriptAccess", {"type": "regisseur", "name": str(ct.name)})
 			"kolumnist", "journalist":
@@ -755,7 +755,7 @@ func is_away() -> bool:
 
 func travel_cost(id_s: String) -> float:
 	# Jet share & Manhattan apartment (Feature 5) discount or waive the trip
-	return roundf(float(Data.LOCATION_BY_ID[id_s].cost) * Game.infl(_st().year) * Mogul.travel_cost_mult(id_s))
+	return roundf(float(Data.LOCATION_BY_ID[id_s].cost) * Util.infl(_st().year) * Mogul.travel_cost_mult(id_s))
 
 
 # Why a trip is impossible right now ("" = possible).
@@ -815,9 +815,9 @@ func _apply_effects(effects: Dictionary) -> void:
 			"stress": p.stress = clampf(float(p.stress) + v, 0.0, 100.0)
 			"energy": p.energy = clampf(float(p.energy) + v, 0.0, 100.0)
 			"health": p.health = clampf(float(p.health) + v, 5.0, 100.0)
-			"cash": book(v * Game.infl(st.year), "Location action")
+			"cash": book(v * Util.infl(st.year), "Location action")
 			"instinct": st.instinct = clampi(int(st.instinct) + int(v), 5, 100)
-			"book": Game.book(roundf(v * Game.infl(st.year)), "reisen", "Expenses on location")
+			"book": Game.book(roundf(v * Util.infl(st.year)), "reisen", "Expenses on location")
 			"identity": Game.record_identity(str(effects[key]), 0.5)
 
 
@@ -831,14 +831,14 @@ func do_location_action() -> String:
 	_apply_effects(act.get("effects", {}))
 	# Lucky branch: e.g. festival favors on the Croisette.
 	var lucky: Dictionary = act.get("lucky", {})
-	if not lucky.is_empty() and Game.chance(float(lucky.get("chance", 0.0))):
+	if not lucky.is_empty() and Util.chance(float(lucky.get("chance", 0.0))):
 		if lucky.has("favor"):
-			Game.grant_favor(str(Game.pick(lucky.favor)), Game.favor_contact_for("extraAudition"))
+			Game.grant_favor(str(Util.pick(lucky.favor)), Game.favor_contact_for("extraAudition"))
 		_apply_effects(lucky.get("effects", {}))
 		return str(lucky.get("text", ""))
 	# Risk branch: e.g. being spotted in Vegas.
 	var risk: Dictionary = act.get("risk", {})
-	if not risk.is_empty() and Game.chance(float(risk.get("chance", 0.0))):
+	if not risk.is_empty() and Util.chance(float(risk.get("chance", 0.0))):
 		_apply_effects(risk.get("effects", {}))
 		if risk.has("rumor"):
 			Game.add_rumor("agency", str(risk.rumor).replace("{agency}", str(st.agency.name)), true, "skandal", ["Party guests"], 15.0, true)
@@ -885,15 +885,15 @@ func assistant() -> Dictionary:
 func assistant_wage() -> float:
 	if not has_assistant():
 		return 0.0
-	return roundf((ASSISTANT_BASE_WAGE + float(assistant().skill) * 1.5) * Game.infl(_st().year))
+	return roundf((ASSISTANT_BASE_WAGE + float(assistant().skill) * 1.5) * Util.infl(_st().year))
 
 
 # Hiring: one candidate from the name pool; skill decides wage & effect.
 func hire_assistant() -> Dictionary:
 	if has_assistant():
 		return assistant()
-	var first: String = Game.pick(Data.NPC_FIRST_F if Game.chance(0.6) else Data.NPC_FIRST_M)
-	var cand := {"name": "%s %s" % [first, Game.pick(Data.NPC_LAST)], "skill": Game.rndi(35, 65),
+	var first: String = Util.pick(Data.NPC_FIRST_F if Util.chance(0.6) else Data.NPC_FIRST_M)
+	var cand := {"name": "%s %s" % [first, Util.pick(Data.NPC_LAST)], "skill": Util.rndi(35, 65),
 		"hiredMi": Game.mi(), "rules": {"upkeep": true, "briefing": true, "occasions": false, "mailfilter": false, "travel": true}}
 	_st().assistant = cand
 	Game.log_msg("%s starts as your assistant — the front desk is finally covered." % str(cand.name), "deal")
@@ -935,7 +935,7 @@ func _tick_assistant_week() -> void:
 			if quota <= 0:
 				break
 			if Game.mi() - int(ct.lastMi) >= 2 and int(ct.lastActWeek) != Game.wi():
-				Game.book(-roundf(5.0 * Game.infl(st.year)), "buero", "Assistant: courtesies & couriers")
+				Game.book(-roundf(5.0 * Util.infl(st.year)), "buero", "Assistant: courtesies & couriers")
 				Network.adjust(ct, {"liking": 1.0 + float(a.skill) / 50.0}, false)
 				ct.lastMi = Game.mi()
 				ct.waitNoted = false

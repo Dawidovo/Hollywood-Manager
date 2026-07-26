@@ -722,12 +722,12 @@ func _ethnicity_de(a: Dictionary) -> String:
 # Meta-Zeile eines Schauspielers: Geschlecht · Alter · Geburtsjahr [· Ethnie] · Genres
 # Bewusst OHNE Todesjahr — reale Todesdaten werden dem Spieler nicht gespoilert.
 func _actor_meta(a: Dictionary, year: int, client_data: Dictionary = {}) -> String:
-	var parts: Array = [_gender_symbol(a), "%d yrs" % Game.age_of(a, year), "*%d" % int(a.birth)]
+	var parts: Array = [_gender_symbol(a), "%d yrs" % Util.age_of(a, year), "*%d" % int(a.birth)]
 	var eth_s := _ethnicity_de(a)
 	if eth_s != "":
 		parts.append(eth_s)
 	parts.append(" · ".join(a.genres.map(_genre_de)))
-	var body := Game.body_of(a)
+	var body := Util.body_of(a)
 	parts.append("%d cm" % int(body.height))
 	if client_data.is_empty():
 		parts.append("%d kg" % int(body.weight))
@@ -1090,7 +1090,7 @@ func render() -> void:
 	header_stats.agency.text = st.agency.name
 	header_stats.agency.add_theme_color_override("font_color", ACC)
 	header_stats.date.text = Game.date_str()
-	header_stats.cash.text = Game.fmt_money(st.agency.cash)
+	header_stats.cash.text = Util.fmt_money(st.agency.cash)
 	header_stats.cash.add_theme_color_override("font_color", RED if st.agency.cash < 0 else ACC)
 	header_stats.rep.text = "%d/100" % int(st.agency.rep)
 	header_stats.network.text = "%d%s" % [st.favors.size(), (" · ⚠%d owed" % st.debts.size()) if st.debts.size() else ""]
@@ -1202,12 +1202,12 @@ func _render_privat() -> void:
 	var fv = _card("Private finances", "💼")
 	grid.add_child(fv[0])
 	var cash := float(p.cash)
-	fv[1].add_child(_lbl(("Private wealth: %s" if cash >= 0.0 else "Private debt: %s") % Game.fmt_money(absf(cash)), 17, GREEN if cash >= 0.0 else RED))
-	fv[1].add_child(_lbl("Salary: %s/month + %d%% royalty on commissions" % [Game.fmt_money(Persona.salary()), roundi(Persona.ROYALTY * 100.0)], 12, DIM))
-	fv[1].add_child(_lbl("Living costs: %s/month — the lifestyle grows with the title" % Game.fmt_money(Persona.living_cost()), 12, DIM))
+	fv[1].add_child(_lbl(("Private wealth: %s" if cash >= 0.0 else "Private debt: %s") % Util.fmt_money(absf(cash)), 17, GREEN if cash >= 0.0 else RED))
+	fv[1].add_child(_lbl("Salary: %s/month + %d%% royalty on commissions" % [Util.fmt_money(Persona.salary()), roundi(Persona.ROYALTY * 100.0)], 12, DIM))
+	fv[1].add_child(_lbl("Living costs: %s/month — the lifestyle grows with the title" % Util.fmt_money(Persona.living_cost()), 12, DIM))
 	if cash < 0.0:
 		fv[1].add_child(_lbl("⚠ Private debt accrues 2% interest per month.", 12, RED))
-	var draw := _btn("Private draw: +%s to your own account" % Game.fmt_money(Persona.salary()), _player_action.bind(Persona.draw), true)
+	var draw := _btn("Private draw: +%s to your own account" % Util.fmt_money(Persona.salary()), _player_action.bind(Persona.draw), true)
 	draw.disabled = not Persona.can_act("draw") or float(st.agency.cash) < Persona.salary()
 	fv[1].add_child(draw)
 	fv[1].add_child(_lbl("Private injection into the agency:", 12, DIM))
@@ -1216,7 +1216,7 @@ func _render_privat() -> void:
 	fv[1].add_child(inj_row)
 	for mult in [1, 3, 10]:
 		var amount: float = Persona.salary() * float(mult)
-		var ib := _btn(Game.fmt_money(amount), _player_action.bind(Persona.inject.bind(amount)))
+		var ib := _btn(Util.fmt_money(amount), _player_action.bind(Persona.inject.bind(amount)))
 		ib.disabled = cash < amount
 		inj_row.add_child(ib)
 	var entries: Array = p.ledger.slice(maxi(0, p.ledger.size() - 6))
@@ -1225,7 +1225,7 @@ func _render_privat() -> void:
 		entries.reverse()
 		for e in entries:
 			var amt := float(e.amount)
-			fv[1].add_child(_lbl("%s%s — %s" % ["+" if amt >= 0.0 else "−", Game.fmt_money(absf(amt)), str(e.text)], 11, GREEN if amt >= 0.0 else RED))
+			fv[1].add_child(_lbl("%s%s — %s" % ["+" if amt >= 0.0 else "−", Util.fmt_money(absf(amt)), str(e.text)], 11, GREEN if amt >= 0.0 else RED))
 
 	# Condition: energy, stress, health + recovery actions
 	var zv = _card("Condition", "🧘")
@@ -1234,10 +1234,10 @@ func _render_privat() -> void:
 	_stat_row(zv[1], "😰 Stress", float(p.stress), RED if float(p.stress) > 70.0 else AMBER)
 	_stat_row(zv[1], "❤ Health", float(p.health), GREEN if float(p.health) >= 40.0 else RED)
 	zv[1].add_child(_lbl("Workload drains energy, crises build stress. Chronic stress eats your health — all the way to the clinic.", 11, DIM))
-	var vac := _btn("🌴 Time off in Palm Springs (−%s)" % Game.fmt_money(roundf(220.0 * Game.infl(st.year))), _player_action.bind(Persona.vacation))
+	var vac := _btn("🌴 Time off in Palm Springs (−%s)" % Util.fmt_money(roundf(220.0 * Util.infl(st.year))), _player_action.bind(Persona.vacation))
 	vac.disabled = not Persona.can_act("vacation")
 	zv[1].add_child(vac)
-	var doc := _btn("🩺 Doctor's checkup (−%s)" % Game.fmt_money(roundf(150.0 * Game.infl(st.year))), _player_action.bind(Persona.checkup))
+	var doc := _btn("🩺 Doctor's checkup (−%s)" % Util.fmt_money(roundf(150.0 * Util.infl(st.year))), _player_action.bind(Persona.checkup))
 	doc.disabled = not Persona.can_act("checkup")
 	zv[1].add_child(doc)
 	zv[1].add_child(_lbl("Once per month each.", 11, DIM))
@@ -1256,10 +1256,10 @@ func _render_privat() -> void:
 	grid.add_child(av[0])
 	if not Persona.has_assistant():
 		av[1].add_child(_lbl("Nobody covers the front desk. An assistant relieves stress, keeps neglected contacts warm and puts a morning note on your desk.", 12, DIM))
-		av[1].add_child(_btn("Hire an assistant (wages ≈ %s/month)" % Game.fmt_money(roundf((Persona.ASSISTANT_BASE_WAGE + 75.0) * Game.infl(st.year))), _player_action.bind(Persona.hire_assistant), true))
+		av[1].add_child(_btn("Hire an assistant (wages ≈ %s/month)" % Util.fmt_money(roundf((Persona.ASSISTANT_BASE_WAGE + 75.0) * Util.infl(st.year))), _player_action.bind(Persona.hire_assistant), true))
 	else:
 		var a: Dictionary = Persona.assistant()
-		av[1].add_child(_lbl("%s — skill %d/100 · wages %s/month (agency)" % [str(a.name), int(a.skill), Game.fmt_money(Persona.assistant_wage())], 13, TEXT_C))
+		av[1].add_child(_lbl("%s — skill %d/100 · wages %s/month (agency)" % [str(a.name), int(a.skill), Util.fmt_money(Persona.assistant_wage())], 13, TEXT_C))
 		av[1].add_child(_lbl("Delegation rules — what may be handled without you:", 12, DIM))
 		var up := _btn(("☑ " if Persona.rule("upkeep") else "☐ ") + "Relationship upkeep: check in on neglected contacts weekly", _player_action.bind(Persona.set_rule.bind("upkeep", not Persona.rule("upkeep"))))
 		av[1].add_child(up)
@@ -1286,7 +1286,7 @@ func _render_privat() -> void:
 		sf[1].add_child(srow)
 		var skill_s := str(int(s.skill)) if Mogul.level("leadership") >= 2 else Game.grade_range(float(s.skill), 8.0, "staff" + str(s.id))
 		var trait_s: String = str(Data.STAFF_TRAITS.get(str(s.trait), {}).get("name", "?")) if Staff.bias_visible() else "character: unclear"
-		srow.add_child(_lbl("%s %s — %s · skill %s · %s · wages %s/mo" % [str(fdef.get("icon", "🗂")), str(s.name), str(fdef.get("name", s.focus)), skill_s, trait_s, Game.fmt_money(Staff.wage(s))], 13, TEXT_C))
+		srow.add_child(_lbl("%s %s — %s · skill %s · %s · wages %s/mo" % [str(fdef.get("icon", "🗂")), str(s.name), str(fdef.get("name", s.focus)), skill_s, trait_s, Util.fmt_money(Staff.wage(s))], 13, TEXT_C))
 		# Qualität & Bindung (Feature 33): Loyalität und Auslastung zählen
 		var loy := float(s.get("loyalty", 55.0))
 		var load := float(s.get("load", 0.0))
@@ -1322,7 +1322,7 @@ func _render_privat() -> void:
 	cap_l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	cap_row.add_child(cap_l)
 	for cap in [5000, 15000, 50000]:
-		var cb2 := _btn(("● " if int(st.delegation.feeCap) == cap else "○ ") + Game.fmt_money(roundf(cap * Game.infl(st.year))), _set_delegation.bind("feeCap", cap))
+		var cb2 := _btn(("● " if int(st.delegation.feeCap) == cap else "○ ") + Util.fmt_money(roundf(cap * Util.infl(st.year))), _set_delegation.bind("feeCap", cap))
 		cap_row.add_child(cb2)
 	var vip_row := HBoxContainer.new()
 	vip_row.add_theme_constant_override("separation", 6)
@@ -1465,7 +1465,7 @@ func _render_kontakte() -> void:
 	var st = Game.state
 	var head = _card("Relationship work", "📇")
 	content_box.add_child(head[0])
-	head[1].add_child(_lbl("Contact time this week: %d/%d ⏱ — personal appointments cost more time than a phone call. All costs come out of your private account (currently %s)." % [int(st.contactAP), Persona.ap_per_week(), Game.fmt_money(st.player.cash)], 13))
+	head[1].add_child(_lbl("Contact time this week: %d/%d ⏱ — personal appointments cost more time than a phone call. All costs come out of your private account (currently %s)." % [int(st.contactAP), Persona.ap_per_week(), Util.fmt_money(st.player.cash)], 13))
 	head[1].add_child(_lbl("People remember: whether you came yourself or sent the assistant, what you promised — and how long you kept them waiting.", 12, DIM))
 	# Kommunikationsbudget (Feature 29): wenige große Szenen pro Woche
 	var scenes: int = int(st.get("weekScenes", 0))
@@ -1490,10 +1490,10 @@ func _render_kontakte() -> void:
 			orow.add_theme_constant_override("separation", 8)
 			ov[1].add_child(orow)
 			orow.add_child(_lbl_fill("%s %s — %s (respond by %s)" % [str(odef.icon), str(odef.name), str(occ.ctName), Game.mi_str(occ.dueMi)], 12, TEXT_C))
-			var ocost := roundf(float(odef.cost) * Game.infl(st.year))
+			var ocost := roundf(float(odef.cost) * Util.infl(st.year))
 			var olabel := str(odef.act)
 			if ocost > 0.0:
-				olabel += " (−%s)" % Game.fmt_money(ocost)
+				olabel += " (−%s)" % Util.fmt_money(ocost)
 			if int(odef.ap) > 0:
 				olabel += " %d⏱" % int(odef.ap)
 			var ob := _btn(olabel, _on_occasion.bind(int(occ.id)))
@@ -1607,7 +1607,7 @@ func _render_kontakte() -> void:
 			var cost := Persona.channel_cost(key)
 			var label := "%s %s" % [str(ch.icon), str(ch.name)]
 			if cost > 0.0:
-				label += " (−%s)" % Game.fmt_money(cost)
+				label += " (−%s)" % Util.fmt_money(cost)
 			if int(ch.ap) > 0:
 				label += " %d⏱" % int(ch.ap)
 			var b := _btn(label, _on_contact_channel.bind(int(ct.id), str(key)))
@@ -1630,7 +1630,7 @@ func _render_kontakte() -> void:
 			flow.add_child(sh_b)
 		# Gatekeeper pflegen (Feature 14): Freundlichkeit zum Vorzimmer zahlt sich aus
 		if not Network.gate_of(ct).is_empty():
-			var gb := _btn("🌷 Charm the anteroom (−%s)" % Game.fmt_money(Network.charm_cost()), _on_charm_gate.bind(int(ct.id)))
+			var gb := _btn("🌷 Charm the anteroom (−%s)" % Util.fmt_money(Network.charm_cost()), _on_charm_gate.bind(int(ct.id)))
 			gb.tooltip_text = "Flowers, tickets, a remembered birthday. Cheap — and it decides whether your calls get through."
 			gb.disabled = int(ct.get("gateWeek", -99)) == Game.wi() or float(st.player.cash) < Network.charm_cost()
 			flow.add_child(gb)
@@ -1747,10 +1747,10 @@ func _open_backroom_picker(cid: int) -> void:
 		var give: Dictionary = def.get("give", {})
 		if not give.is_empty():
 			box.add_child(_lbl("You owe: %s" % str(give.get("label", "")), 11, AMBER))
-		var cost := roundf(float(def.get("cost", 0)) * Game.infl(Game.state.year))
+		var cost := roundf(float(def.get("cost", 0)) * Util.infl(Game.state.year))
 		var label := "Propose it"
 		if cost > 0.0:
-			label += " (−%s private)" % Game.fmt_money(cost)
+			label += " (−%s private)" % Util.fmt_money(cost)
 		box.add_child(_btn(label, _do_backroom.bind(cid, str(def.id)), true))
 	modal_box.add_child(_btn("Leave it", _modal_done))
 
@@ -1878,7 +1878,7 @@ func _render_orte() -> void:
 			var cost := Persona.travel_cost(id_s)
 			var label := "✈ Travel there" if id_s != "la" else "✈ Back to Los Angeles"
 			if cost > 0.0:
-				label += " (−%s)" % Game.fmt_money(cost)
+				label += " (−%s)" % Util.fmt_money(cost)
 			var tb := _btn(label, _on_travel.bind(id_s), id_s == "la")
 			var reason: String = Persona.travel_blocked_reason(id_s)
 			tb.disabled = reason != ""
@@ -1906,10 +1906,10 @@ func _render_lifestyle() -> void:
 	var head = _card("Lifestyle", "🏠")
 	content_box.add_child(head[0])
 	head[1].add_child(_lbl("You live at: %s %s (tier %d)" % [str(home.icon), str(home.name), int(home.tier)], 16, ACC))
-	head[1].add_child(_lbl("Running lifestyle costs: %s/month (home & purchases, paid privately). Private account: %s." % [Game.fmt_money(Mogul.upkeep_total()), Game.fmt_money(st.player.cash)], 12, DIM))
+	head[1].add_child(_lbl("Running lifestyle costs: %s/month (home & purchases, paid privately). Private account: %s." % [Util.fmt_money(Mogul.upkeep_total()), Util.fmt_money(st.player.cash)], 12, DIM))
 	head[1].add_child(_lbl("An address is a statement: prestige lifts your public name, privacy protects secrets, capacity lets you host — and whoever lives beneath their title pays for it in standing. Moving down is noticed.", 11, DIM))
 	if Mogul.can_host():
-		head[1].add_child(_btn("🥂 Host a reception (−%s, once a month)" % Game.fmt_money(Mogul.reception_cost()), _on_host_reception, true))
+		head[1].add_child(_btn("🥂 Host a reception (−%s, once a month)" % Util.fmt_money(Mogul.reception_cost()), _on_host_reception, true))
 	elif int(home.get("capacity", 0)) >= 3:
 		head[1].add_child(_lbl("A reception has already filled this month's calendar.", 11, DIM))
 
@@ -1925,15 +1925,15 @@ func _render_lifestyle() -> void:
 		var current := id_s == Mogul.home_id()
 		box.add_child(_lbl("%s %s%s" % [str(h.icon), str(h.name), "  ← you live here" if current else ""], 14, ACC if current else TEXT_C))
 		box.add_child(_lbl(str(h.desc), 11, DIM))
-		var stats := "Prestige %d · Privacy %d · Guests %d · Upkeep %s/mo" % [int(h.prestige), int(h.privacy), int(h.capacity), Game.fmt_money(roundf(float(h.upkeep) * Game.infl(st.year)))]
+		var stats := "Prestige %d · Privacy %d · Guests %d · Upkeep %s/mo" % [int(h.prestige), int(h.privacy), int(h.capacity), Util.fmt_money(roundf(float(h.upkeep) * Util.infl(st.year)))]
 		if float(h.get("paparazzi", 0.0)) > 0.0:
 			stats += " · 📸 risk"
 		box.add_child(_lbl(stats, 11, DIM))
 		if not current:
 			var price := Mogul.home_price(id_s)
-			var label := "Move in (−%s" % Game.fmt_money(price)
+			var label := "Move in (−%s" % Util.fmt_money(price)
 			if Mogul.home_value() > 0.0:
-				label += ", old home sells for %s" % Game.fmt_money(Mogul.home_value())
+				label += ", old home sells for %s" % Util.fmt_money(Mogul.home_value())
 			label += ")"
 			if int(h.tier) < int(home.get("tier", 0)):
 				label += " ⚠ downgrade"
@@ -1953,13 +1953,13 @@ func _render_lifestyle() -> void:
 		pv[1].add_child(box2)
 		var owned := Mogul.owns(pid)
 		box2.add_child(_lbl("%s %s%s" % [str(pdef.icon), str(pdef.name), "  ✔ yours" if owned else ""], 14, ACC if owned else TEXT_C))
-		box2.add_child(_lbl("%s Upkeep %s/mo." % [str(pdef.desc), Game.fmt_money(roundf(float(pdef.upkeep) * Game.infl(st.year)))], 11, DIM))
+		box2.add_child(_lbl("%s Upkeep %s/mo." % [str(pdef.desc), Util.fmt_money(roundf(float(pdef.upkeep) * Util.infl(st.year)))], 11, DIM))
 		if owned:
 			var value := Mogul.purchase_value(pid)
-			var sell_label := "Sell (+%s)" % Game.fmt_money(value) if value > 0.0 else "Cancel"
+			var sell_label := "Sell (+%s)" % Util.fmt_money(value) if value > 0.0 else "Cancel"
 			box2.add_child(_btn(sell_label, _player_action.bind(Mogul.sell_purchase.bind(pid))))
 		else:
-			var b2 := _btn("Buy (−%s private)" % Game.fmt_money(Mogul.purchase_price(pid)), _estate_action.bind(Mogul.buy_purchase.bind(pid)))
+			var b2 := _btn("Buy (−%s private)" % Util.fmt_money(Mogul.purchase_price(pid)), _estate_action.bind(Mogul.buy_purchase.bind(pid)))
 			var reason2 := Mogul.purchase_blocked_reason(pid)
 			b2.disabled = reason2 != ""
 			b2.tooltip_text = reason2
@@ -1990,14 +1990,14 @@ func _render_invest() -> void:
 	var p: Dictionary = st.player
 	var head = _card("Your money", "📈")
 	content_box.add_child(head[0])
-	head[1].add_child(_lbl("Private account: %s · Portfolio: %s" % [Game.fmt_money(p.cash), Game.fmt_money(Mogul.portfolio_value())], 16, ACC))
+	head[1].add_child(_lbl("Private account: %s · Portfolio: %s" % [Util.fmt_money(p.cash), Util.fmt_money(Mogul.portfolio_value())], 16, ACC))
 	head[1].add_child(_lbl("Everything here runs on private money — the agency till stays untouched. The interesting part is never the ticker itself: it is who whispers to you, and whom you owe when it pays off.", 11, DIM))
 	if Mogul.has_advisor():
 		var adv: Dictionary = st.invest.advisor
-		head[1].add_child(_lbl("💼 %s manages the portfolio (skill %d, fee %s/mo): acts on open tips — but their judgement is not always yours." % [str(adv.name), int(adv.skill), Game.fmt_money(Mogul.advisor_fee())], 12, TEXT_C))
+		head[1].add_child(_lbl("💼 %s manages the portfolio (skill %d, fee %s/mo): acts on open tips — but their judgement is not always yours." % [str(adv.name), int(adv.skill), Util.fmt_money(Mogul.advisor_fee())], 12, TEXT_C))
 		head[1].add_child(_btn("Dismiss the financial manager", _player_action.bind(Mogul.fire_advisor)))
 	else:
-		head[1].add_child(_btn("💼 Hire a financial manager (fee ≈ %s/mo)" % Game.fmt_money(roundf(140.0 * Game.infl(st.year))), _player_action.bind(Mogul.hire_advisor)))
+		head[1].add_child(_btn("💼 Hire a financial manager (fee ≈ %s/mo)" % Util.fmt_money(roundf(140.0 * Util.infl(st.year))), _player_action.bind(Mogul.hire_advisor)))
 
 	# Open tips
 	var open_tips: Array = st.invest.tips.filter(func(t): return not bool(t.resolved))
@@ -2038,12 +2038,12 @@ func _render_invest() -> void:
 			row.add_child(drift_l)
 		var held := Mogul.shares_of(id_s)
 		if held > 0:
-			var held_l := _lbl("%d× (%s)" % [held, Game.fmt_money(held * Mogul.price(id_s))], 12, ACC)
+			var held_l := _lbl("%d× (%s)" % [held, Util.fmt_money(held * Mogul.price(id_s))], 12, ACC)
 			held_l.autowrap_mode = TextServer.AUTOWRAP_OFF
 			row.add_child(held_l)
 		for budget in [500, 2500]:
-			var amount := roundf(float(budget) * Game.infl(st.year))
-			var bb := _btn("Buy %s" % Game.fmt_money(amount), _on_trade.bind(id_s, "buy", amount))
+			var amount := roundf(float(budget) * Util.infl(st.year))
+			var bb := _btn("Buy %s" % Util.fmt_money(amount), _on_trade.bind(id_s, "buy", amount))
 			bb.disabled = float(p.cash) < amount
 			row.add_child(bb)
 		if held > 0:
@@ -2054,24 +2054,24 @@ func _render_invest() -> void:
 	content_box.add_child(fv[0])
 	fv[1].add_child(_lbl("Equity (5% of budget) pays out with the box office. Profit points cost less (2%) but only pay on a real hit. Putting your own client into a picture you financed is lucrative — and a conflict of interest someone may notice.", 11, DIM))
 	for stk in st.filmStakes:
-		fv[1].add_child(_lbl("💼 “%s”: %s as %s%s%s" % [str(stk.title), Game.fmt_money(float(stk.amount)), "equity" if str(stk.type) == "equity" else "profit points", "  ⚠ conflict of interest" if bool(stk.conflict) else "", "  📣 boosted" if bool(stk.boosted) else ""], 12, AMBER if bool(stk.conflict) else TEXT_C))
+		fv[1].add_child(_lbl("💼 “%s”: %s as %s%s%s" % [str(stk.title), Util.fmt_money(float(stk.amount)), "equity" if str(stk.type) == "equity" else "profit points", "  ⚠ conflict of interest" if bool(stk.conflict) else "", "  📣 boosted" if bool(stk.boosted) else ""], 12, AMBER if bool(stk.conflict) else TEXT_C))
 	for target in Mogul.stake_targets():
 		var ref: Dictionary = target.ref
 		var have: Dictionary = Mogul.stake_for(int(ref.id))
 		var row2 := HBoxContainer.new()
 		row2.add_theme_constant_override("separation", 8)
 		fv[1].add_child(row2)
-		var t_l := _lbl("“%s” (%s, budget %s)" % [str(ref.title), "casting" if str(target.phase) == "casting" else "shooting", Game.fmt_money(float(ref.get("budget", 0)))], 12, TEXT_C)
+		var t_l := _lbl("“%s” (%s, budget %s)" % [str(ref.title), "casting" if str(target.phase) == "casting" else "shooting", Util.fmt_money(float(ref.get("budget", 0)))], 12, TEXT_C)
 		t_l.custom_minimum_size = Vector2(300 * font_scale, 0)
 		row2.add_child(t_l)
 		if have.is_empty():
 			for type_s in [["equity", "Equity"], ["points", "Points"]]:
 				var cost := Mogul.stake_cost(ref, str(type_s[0]))
-				var b3 := _btn("%s (−%s)" % [str(type_s[1]), Game.fmt_money(cost)], _on_stake.bind(int(ref.id), str(type_s[0])))
+				var b3 := _btn("%s (−%s)" % [str(type_s[1]), Util.fmt_money(cost)], _on_stake.bind(int(ref.id), str(type_s[0])))
 				b3.disabled = Mogul.stake_blocked_reason(int(ref.id), str(type_s[0])) != ""
 				row2.add_child(b3)
 		elif str(target.phase) == "production" and not bool(have.boosted):
-			row2.add_child(_btn("📣 Marketing push (−%s)" % Game.fmt_money(roundf(2000.0 * Game.infl(st.year))), _estate_action.bind(Mogul.boost_marketing.bind(int(ref.id)))))
+			row2.add_child(_btn("📣 Marketing push (−%s)" % Util.fmt_money(roundf(2000.0 * Util.infl(st.year))), _estate_action.bind(Mogul.boost_marketing.bind(int(ref.id)))))
 
 	# Empire: takeovers & studio stakes (Feature 9)
 	if int(p.career) >= 4:
@@ -2085,18 +2085,18 @@ func _render_invest() -> void:
 			ev[1].add_child(row3)
 			row3.add_child(_lbl_fill("%s — %d clients, grudge %d" % [str(rival.name), rival.clients.size(), roundi(float(rival.grudge))], 12, TEXT_C))
 			var cost4 := Mogul.takeover_cost(rival)
-			var tb := _btn("Buy them out (−%s private)" % Game.fmt_money(cost4), _estate_action.bind(Mogul.takeover.bind(str(rival.id))))
+			var tb := _btn("Buy them out (−%s private)" % Util.fmt_money(cost4), _estate_action.bind(Mogul.takeover.bind(str(rival.id))))
 			tb.disabled = Mogul.takeover_blocked_reason(str(rival.id)) != ""
 			tb.tooltip_text = Mogul.takeover_blocked_reason(str(rival.id))
 			row3.add_child(tb)
 		if int(p.career) >= 5:
-			ev[1].add_child(_lbl("A studio stake (10%%) costs %s: dividends on every release, permanent open doors — and a conflict of interest the whole town knows about." % Game.fmt_money(Mogul.studio_stake_cost()), 11, DIM))
+			ev[1].add_child(_lbl("A studio stake (10%%) costs %s: dividends on every release, permanent open doors — and a conflict of interest the whole town knows about." % Util.fmt_money(Mogul.studio_stake_cost()), 11, DIM))
 			for studio in Game.active_studios():
 				var sid := str(studio.id)
 				if st.endgame.studioStakes.has(sid):
 					ev[1].add_child(_lbl("✔ %s — you sit at their table." % str(studio.name), 12, GREEN))
 					continue
-				var sb := _btn("Buy into %s (−%s)" % [str(studio.name), Game.fmt_money(Mogul.studio_stake_cost())], _estate_action.bind(Mogul.buy_studio_stake.bind(sid)))
+				var sb := _btn("Buy into %s (−%s)" % [str(studio.name), Util.fmt_money(Mogul.studio_stake_cost())], _estate_action.bind(Mogul.buy_studio_stake.bind(sid)))
 				sb.disabled = Mogul.studio_stake_blocked_reason(sid) != ""
 				sb.tooltip_text = Mogul.studio_stake_blocked_reason(sid)
 				ev[1].add_child(sb)
@@ -2164,10 +2164,10 @@ func _render_buero() -> void:
 	var c1 = _card(st.agency.name, "🏢")
 	grid.add_child(c1[0])
 	c1[1].add_child(_lbl("Founded %d · %s" % [int(st.startYear), Game.date_str()], 12, DIM))
-	c1[1].add_child(_lbl("💰 Capital: %s" % Game.fmt_money(st.agency.cash), 14, RED if st.agency.cash < 0 else TEXT_C))
+	c1[1].add_child(_lbl("💰 Capital: %s" % Util.fmt_money(st.agency.cash), 14, RED if st.agency.cash < 0 else TEXT_C))
 	c1[1].add_child(_lbl("⭐ Reputation: %d/100 — decides which stars will talk to you" % int(st.agency.rep), 14))
 	c1[1].add_child(_bar(st.agency.rep, ACC))
-	c1[1].add_child(_lbl("Office costs/month: %s (of which perks: %s)" % [Game.fmt_money(Game.overhead()), Game.fmt_money(Game.perk_costs())], 13, DIM))
+	c1[1].add_child(_lbl("Office costs/month: %s (of which perks: %s)" % [Util.fmt_money(Game.overhead()), Util.fmt_money(Game.perk_costs())], 13, DIM))
 	var bs_def := Game.backstory_def()
 	if not bs_def.is_empty():
 		c1[1].add_child(_lbl("%s Backstory: %s" % [str(bs_def.get("icon", "🎬")), str(bs_def.name)], 13, ACC))
@@ -2492,9 +2492,9 @@ func _render_klienten() -> void:
 		box.add_child(_chip_row(chips))
 		box.add_child(_lbl(_actor_meta(a, st.year, c), 12, DIM))
 		box.add_child(_lbl("Talent %s · Charisma %s · Discipline %s · Presence %s" % [
-			Game.grade_range(Game.eff_talent(c), 4, str(a.id) + "tal"), Game.grade_range(Game.attrs(a).charisma, 4, str(a.id) + "cha"),
-			Game.grade_range(Game.attrs(a).discipline, 4, str(a.id) + "dis"), Game.grade_range(Game.attrs(a).presence, 4, str(a.id) + "pre")], 12, DIM))
-		box.add_child(_lbl("📄 %d%% commission · until %s · 💰 fee %s" % [int(c.commission), Game.mi_str(c.contractEnd), Game.fmt_money(Game.ask_fee(c.fame, st.year))], 12, DIM))
+			Game.grade_range(Game.eff_talent(c), 4, str(a.id) + "tal"), Game.grade_range(Util.attrs(a).charisma, 4, str(a.id) + "cha"),
+			Game.grade_range(Util.attrs(a).discipline, 4, str(a.id) + "dis"), Game.grade_range(Util.attrs(a).presence, 4, str(a.id) + "pre")], 12, DIM))
+		box.add_child(_lbl("📄 %d%% commission · until %s · 💰 fee %s" % [int(c.commission), Game.mi_str(c.contractEnd), Util.fmt_money(Util.ask_fee(c.fame, st.year))], 12, DIM))
 		if c.perks.size():
 			box.add_child(_lbl("🎁 " + ", ".join(c.perks.map(func(p): return Game.PERKS[p].name)), 12, GREEN))
 		var row := GridContainer.new()
@@ -2709,7 +2709,7 @@ func _on_rumor_action(rid: int, action: String) -> void:
 	_show_simple_modal("The story behind the story", outcome)
 
 func _on_rumor_launch(actor_id: String) -> void:
-	_show_simple_modal("A sentence makes the rounds", Game.launch_rumor(actor_id, str(Game.pick(["skandal", "wechsel", "affäre"]))))
+	_show_simple_modal("A sentence makes the rounds", Game.launch_rumor(actor_id, str(Util.pick(["skandal", "wechsel", "affäre"]))))
 
 func _on_secret_action(cid: int, type_s: String, action: String) -> void:
 	var outcome := Game.prepare_secret(cid, type_s) if action == "prepare" else Game.sell_secret(cid, type_s)
@@ -2748,7 +2748,7 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 	var grid := _grid(440.0)
 	list.add_child(grid)
 	for a in all.slice(0, 48):
-		var fame := Game.fame_at(a, st.year)
+		var fame := Util.fame_at(a, st.year)
 		var owner = Game.rival_for_actor(str(a.id))
 		var req := Game.required_rep(fame) + (10 if owner != null else 0)
 		var locked: bool = st.agency.rep < req
@@ -2773,9 +2773,9 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 		box.add_child(_lbl("⭐ Fame %d/100" % fame, 12, DIM))
 		box.add_child(_bar(fame, ACC))
 		box.add_child(_lbl("Talent %s · Charisma %s · Discipline %s · Presence %s" % [
-			Game.grade_range(a.talent, 9, str(a.id) + "tal"), Game.grade_range(Game.attrs(a).charisma, 9, str(a.id) + "cha"),
-			Game.grade_range(Game.attrs(a).discipline, 9, str(a.id) + "dis"), Game.grade_range(Game.attrs(a).presence, 9, str(a.id) + "pre")], 12, DIM))
-		box.add_child(_lbl("💰 Fee level ca. %s" % Game.fmt_money(Game.ask_fee(fame, st.year)), 12, DIM))
+			Game.grade_range(a.talent, 9, str(a.id) + "tal"), Game.grade_range(Util.attrs(a).charisma, 9, str(a.id) + "cha"),
+			Game.grade_range(Util.attrs(a).discipline, 9, str(a.id) + "dis"), Game.grade_range(Util.attrs(a).presence, 9, str(a.id) + "pre")], 12, DIM))
+		box.add_child(_lbl("💰 Fee level ca. %s" % Util.fmt_money(Util.ask_fee(fame, st.year)), 12, DIM))
 		if locked:
 			var lb := _btn("🔒 Reputation %d required" % req, func(): pass)
 			lb.disabled = true
@@ -2796,11 +2796,11 @@ func _open_negotiation(actor_id: String) -> void:
 func _render_negotiation(hint: String) -> void:
 	var n = Game.nego
 	var a: Dictionary = n.actor
-	var body := Game.body_of(a)
+	var body := Util.body_of(a)
 	_open_modal()
 	var mood_chip := _nego_mood_chip(Game.evaluate_offer(_offer()))
 	var header := _nego_header("🤝 Signing talks: %s" % a.name,
-		"%s · ⭐ fame %d · talent %s · %d yrs · %d cm · %d kg · fee level %s" % [_gender_symbol(a), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Game.age_of(a, Game.state.year), int(body.height), int(body.weight), Game.fmt_money(n.ask)], [
+		"%s · ⭐ fame %d · talent %s · %d yrs · %d cm · %d kg · fee level %s" % [_gender_symbol(a), n.fame, Game.grade_range(a.talent, 6, str(a.id) + "tal"), Util.age_of(a, Game.state.year), int(body.height), int(body.weight), Util.fmt_money(n.ask)], [
 			_chip("Round %d/%d" % [int(n.round), int(n.maxRounds)], BLUE),
 			mood_chip,
 		])
@@ -2830,14 +2830,14 @@ func _render_negotiation(hint: String) -> void:
 	comm.value_changed.connect(func(v): nego_form.commission = int(v); comm_lbl.text = "Commission: %d%%" % int(v); _update_mood())
 	left.add_child(comm)
 	var max_bonus: int = maxi(1000, roundi(n.ask * 0.4 / 1000.0) * 1000)
-	var bonus_lbl := _lbl("Signing bonus: %s" % Game.fmt_money(nego_form.bonus), 13)
+	var bonus_lbl := _lbl("Signing bonus: %s" % Util.fmt_money(nego_form.bonus), 13)
 	left.add_child(bonus_lbl)
 	var bonus := HSlider.new()
 	bonus.min_value = 0
 	bonus.max_value = max_bonus
 	bonus.step = maxi(1000, roundi(max_bonus / 40000.0) * 1000)
 	bonus.value = nego_form.bonus
-	bonus.value_changed.connect(func(v): nego_form.bonus = int(v); bonus_lbl.text = "Signing bonus: %s" % Game.fmt_money(v); _update_mood())
+	bonus.value_changed.connect(func(v): nego_form.bonus = int(v); bonus_lbl.text = "Signing bonus: %s" % Util.fmt_money(v); _update_mood())
 	left.add_child(bonus)
 	left.add_child(_lbl("Contract term:", 13))
 	var years := OptionButton.new()
@@ -2860,7 +2860,7 @@ func _render_negotiation(hint: String) -> void:
 	for pk in Game.PERKS:
 		var perk: Dictionary = Game.PERKS[pk]
 		var cb := CheckBox.new()
-		var cost_s: String = (" · %s/mo." % Game.fmt_money(perk.cost * Game.infl(Game.state.year))) if perk.cost > 0 else " · free"
+		var cost_s: String = (" · %s/mo." % Util.fmt_money(perk.cost * Util.infl(Game.state.year))) if perk.cost > 0 else " · free"
 		cb.text = perk.name + cost_s
 		cb.tooltip_text = perk.desc
 		cb.button_pressed = nego_form.perks.has(pk)
@@ -2943,7 +2943,7 @@ func _show_signed(terms: Dictionary) -> void:
 	var perks_s: String = (", perks: " + ", ".join(terms.perks.map(func(p): return Game.PERKS[p].name))) if terms.perks.size() else ""
 	var clause_s: String = ("\n\n📑 Agreed clauses: " + ", ".join(terms.get("clauses", []).map(func(cl): return Game.clause_label(str(cl))))) if terms.get("clauses", []).size() else ""
 	var prom_s: String = ("\n\n📜 Your promise (%s) has been put on record." % Game.PROMISES[terms.promise].label) if terms.get("promise") != null else ""
-	_show_outcome_modal("Signing talks", "[b]Contract signed![/b]\n\n[i]“All right then. Make me immortal.”[/i]\n\n%s is now a client — %d%% commission, %d years%s%s.%s%s" % [a.name, int(terms.commission), int(terms.years), (", %s bonus" % Game.fmt_money(terms.bonus)) if terms.bonus > 0 else "", perks_s, clause_s, prom_s])
+	_show_outcome_modal("Signing talks", "[b]Contract signed![/b]\n\n[i]“All right then. Make me immortal.”[/i]\n\n%s is now a client — %d%% commission, %d years%s%s.%s%s" % [a.name, int(terms.commission), int(terms.years), (", %s bonus" % Util.fmt_money(terms.bonus)) if terms.bonus > 0 else "", perks_s, clause_s, prom_s])
 	# Star-Prognose (Feature 6b): beim Signing unter Ruhm 40 das Bauchgefühl befragen
 	var pev = Game.pop_pending_star_prediction()
 	if pev != null:
@@ -2978,7 +2978,7 @@ func _render_castings() -> void:
 			_chip("⏳ %d wk" % int(cs.deadline), RED if int(cs.deadline) <= 4 else DIM),
 			_chip("🏛 Relations %d" % int(rel), GREEN if rel >= 60 else (RED if rel < 30 else DIM)),
 		]))
-		box.add_child(_lbl("%s · Budget %s" % [studio.name, Game.fmt_money(cs.budget)], 12, DIM))
+		box.add_child(_lbl("%s · Budget %s" % [studio.name, Util.fmt_money(cs.budget)], 12, DIM))
 		if cs.has("director"):
 			box.add_child(_lbl("🎬 Director: %s%s" % [cs.director.name, " · favors your agency" if bool(cs.director.agencyFriendly) else " · from a rival house"], 12, GREEN if bool(cs.director.agencyFriendly) else RED))
 		if cs.has("producer"):
@@ -2991,7 +2991,7 @@ func _render_castings() -> void:
 			var row := HBoxContainer.new()
 			row.add_theme_constant_override("separation", 10)
 			box.add_child(row)
-			var desc := "%s %s (%s, %d–%d yrs) · from ⭐ %d · ca. %s" % ["🎯" if r.type == "lead" else "▫", "Lead" if r.type == "lead" else "Supporting role", "♂" if r.gender == "m" else "♀", int(r.ageMin), int(r.ageMax), int(r.minFame), Game.fmt_money(r.fee)]
+			var desc := "%s %s (%s, %d–%d yrs) · from ⭐ %d · ca. %s" % ["🎯" if r.type == "lead" else "▫", "Lead" if r.type == "lead" else "Supporting role", "♂" if r.gender == "m" else "♀", int(r.ageMin), int(r.ageMax), int(r.minFame), Util.fmt_money(r.fee)]
 			var dl := _lbl(desc, 12, TEXT_C if r.type == "lead" else DIM)
 			dl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			dl.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -3000,7 +3000,7 @@ func _render_castings() -> void:
 				row.add_child(_btn("Pitch a client", _open_pitch.bind(int(cs.id), i)))
 			elif r.filled.get("clientId") != null:
 				var cl = Game.client(r.filled.clientId)
-				var st_lbl := _lbl("✅ %s (%s)" % [Game.client_name(cl) if cl else "?", Game.fmt_money(r.filled.fee)], 12, GREEN)
+				var st_lbl := _lbl("✅ %s (%s)" % [Game.client_name(cl) if cl else "?", Util.fmt_money(r.filled.fee)], 12, GREEN)
 				st_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF  # sonst Buchstaben-Umbruch neben Expand-Label
 				row.add_child(st_lbl)
 			else:
@@ -3014,7 +3014,7 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 	var options = Game.eligible_clients(cs, role).filter(func(e): return not role.rejected.has(int(e.c.id)))
 	_open_modal()
 	modal_box.add_child(_nego_header("🎬 Studio pitch: “%s”" % cs.title,
-		"%s · from ⭐ %d · base fee ca. %s" % ["🎯 Lead" if role.type == "lead" else "▫ Supporting role", int(role.minFame), Game.fmt_money(role.fee)], [
+		"%s · from ⭐ %d · base fee ca. %s" % ["🎯 Lead" if role.type == "lead" else "▫ Supporting role", int(role.minFame), Util.fmt_money(role.fee)], [
 			_chip(str(Game._studio(str(cs.studioId)).name), BLUE),
 			_chip("%d candidates" % int(options.size()), DIM),
 			_chip("%d wk deadline" % int(cs.deadline), RED if int(cs.deadline) <= 4 else DIM),
@@ -3049,7 +3049,7 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 					csum += float(Game.chemistry(str(e.c.aid), str(pk3)).screen)
 				var cavg := csum / partner_keys.size()
 				chem_s = " · 🧪" + ("🟢" if cavg >= 3 else ("🔴" if cavg <= -3 else "🟡"))
-			var nl := _lbl("%s %s — fit %d%% · %s %+d · 💰 %s · 🔋 %d%s" % [ficon, Game.client_name(e.c), e.fit, dicon, e.dna, Game.fmt_money(e.estFee), roundi(e.c.exhaustion), chem_s], 13, TEXT_C if e.fit >= 35 else DIM)
+			var nl := _lbl("%s %s — fit %d%% · %s %+d · 💰 %s · 🔋 %d%s" % [ficon, Game.client_name(e.c), e.fit, dicon, e.dna, Util.fmt_money(e.estFee), roundi(e.c.exhaustion), chem_s], 13, TEXT_C if e.fit >= 35 else DIM)
 			nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(nl)
 			row.add_child(_btn("Propose", _do_pitch.bind(casting_id, role_idx, int(e.c.id))))
@@ -3214,7 +3214,7 @@ func _render_audition_result(result: Dictionary) -> void:
 		modal_box.add_child(_rich("[i]“For the lead it was a blink of an eye. But we want to keep talking.”[/i]\n\nNo lasting damage to reputation or career.", 15))
 		var fallbacks: Array = result.get("fallbacks", [])
 		for fallback in fallbacks:
-			modal_box.add_child(_btn("Accept supporting-role offer · %s" % Game.fmt_money(fallback.fee),
+			modal_box.add_child(_btn("Accept supporting-role offer · %s" % Util.fmt_money(fallback.fee),
 				_take_audition_support.bind(int(result.castingId), int(result.clientId), int(fallback.roleIdx)), true))
 		if bool(result.get("favor", false)):
 			modal_box.add_child(_lbl("Instead, the studio owes you an extra audition.", 13, GREEN))
@@ -3331,13 +3331,13 @@ func _render_studio_offer(note: String) -> void:
 	var fit_score := Game.fit_score(ctx.casting, ctx.role, ctx.client)
 	modal_box.add_child(_nego_header("💼 Studio pitch: offer",
 		"“%s” · %s for %s" % [str(ctx.casting.title), "lead" if str(ctx.role.type) == "lead" else "supporting role", Game.client_name(ctx.client)], [
-			_chip("Fee %s" % Game.fmt_money(ctx.fee), BLUE),
+			_chip("Fee %s" % Util.fmt_money(ctx.fee), BLUE),
 			_chip("Renegotiated" if bool(ctx.haggled) else "First offer", DIM),
 			_nego_mood_chip(fit_score),
 		]))
 	if note != "":
 		modal_box.add_child(_rich("[i]%s[/i]" % note, 14))
-	modal_box.add_child(_rich("The studio wants [b]%s[/b] for “%s” — fee: [color=#%s]%s[/color] (your commission: %s)." % [Game.client_name(ctx.client), ctx.casting.title, ACC.to_html(false), Game.fmt_money(ctx.fee), Game.fmt_money(ctx.fee * ctx.client.commission / 100.0)], 15))
+	modal_box.add_child(_rich("The studio wants [b]%s[/b] for “%s” — fee: [color=#%s]%s[/color] (your commission: %s)." % [Game.client_name(ctx.client), ctx.casting.title, ACC.to_html(false), Util.fmt_money(ctx.fee), Util.fmt_money(ctx.fee * ctx.client.commission / 100.0)], 15))
 	# Rollen-Klauseln (Feature 8): lösen Jahre später Ereignisse aus
 	modal_box.add_child(_lbl("📑 Contract clauses for this deal:", 13))
 	var clause_flow := HFlowContainer.new()
@@ -3396,7 +3396,7 @@ func _accept_studio_offer() -> void:
 	Game.pitch_ctx["offerClauses"] = _offer_clauses.duplicate()
 	Game.accept_offer()
 	_offer_clauses = []
-	_show_outcome_modal("Studio pitch", "[b]Offer accepted[/b]\n\n%s plays in “%s” for %s. Your commission: %s." % [client_name, film_title, Game.fmt_money(fee), Game.fmt_money(provision)])
+	_show_outcome_modal("Studio pitch", "[b]Offer accepted[/b]\n\n%s plays in “%s” for %s. Your commission: %s." % [client_name, film_title, Util.fmt_money(fee), Util.fmt_money(provision)])
 
 func _cancel_pitch() -> void:
 	Game.pitch_ctx = null
@@ -3408,13 +3408,13 @@ func _do_haggle() -> void:
 	if res.get("lost", false):
 		_show_outcome_modal("Studio pitch", "[b]Negotiation collapsed[/b]\n\n[i]“Tell your client to find another picture.”[/i]")
 		return
-	_render_studio_offer("“All right. %s. But not a cent more.”" % Game.fmt_money(res.get("fee", 0)) if res.success else "“No. The offer stands — take it or leave it.”")
+	_render_studio_offer("“All right. %s. But not a cent more.”" % Util.fmt_money(res.get("fee", 0)) if res.success else "“No. The offer stands — take it or leave it.”")
 
 func _render_package() -> void:
 	var ctx = Game.pitch_ctx
 	_open_modal()
 	modal_box.add_child(_nego_header("👥 Studio pitch: package deal",
-		"Main deal: %s · %s. Choose the second client." % [Game.client_name(ctx.client), Game.fmt_money(ctx.fee)], [
+		"Main deal: %s · %s. Choose the second client." % [Game.client_name(ctx.client), Util.fmt_money(ctx.fee)], [
 			_chip("Package", BLUE),
 		]))
 	for o in Game.package_options():
@@ -3453,7 +3453,7 @@ func _render_filme() -> void:
 						names.append("👤 " + (Game.client_name(cl) if cl else "?"))
 					else:
 						names.append(r.filled.get("name", "?"))
-			cv[1].add_child(_lbl("%s · %s · Budget %s" % [Game._studio(p.studioId).name, _genre_de(p.genre), Game.fmt_money(p.budget)], 12, DIM))
+			cv[1].add_child(_lbl("%s · %s · Budget %s" % [Game._studio(p.studioId).name, _genre_de(p.genre), Util.fmt_money(p.budget)], 12, DIM))
 			cv[1].add_child(_lbl("Cast: " + ", ".join(names), 12, DIM))
 			Game.ensure_prod_fields(p)
 			cv[1].add_child(_chip_row([_chip("🎬 Release in ~%d wk" % int(p.weeksLeft), BLUE)]))
@@ -3483,7 +3483,7 @@ func _render_filme() -> void:
 		for f in st.released.slice(0, 30):
 			var col := "#c0504d" if f.ratio < 1.0 else ("#7da05c" if f.ratio >= 2.0 else "#a89b7e")
 			var vicon := "💥" if f.verdict == "Blockbuster" else ("✅" if f.ratio >= 2.0 else ("❌" if f.ratio < 1.0 else "▫"))
-			txt += "%d  %s “%s” (%s) — Q %d · %s · [color=%s]%s %s[/color]\n" % [int(f.year), GENRE_ICONS.get(f.genre, ""), f.title, Game._studio(f.studioId).name, int(f.quality), Game.fmt_money(f.revenue), col, vicon, f.verdict]
+			txt += "%d  %s “%s” (%s) — Q %d · %s · [color=%s]%s %s[/color]\n" % [int(f.year), GENRE_ICONS.get(f.genre, ""), f.title, Game._studio(f.studioId).name, int(f.quality), Util.fmt_money(f.revenue), col, vicon, f.verdict]
 		content_box.add_child(_rich(txt, 13))
 	if st.productions.is_empty() and st.released.is_empty():
 		var cv = _card("No films yet", "🎞")
@@ -3511,8 +3511,8 @@ func _render_finanzen() -> void:
 	grid.add_child(kc[0])
 	var burn := Game.avg_burn(6)
 	var runway := Game.months_to_broke()
-	kc[1].add_child(_lbl("💰 Capital: %s" % Game.fmt_money(st.agency.cash), 14, RED if st.agency.cash < 0 else TEXT_C))
-	kc[1].add_child(_lbl("🔥 Avg. expenses (6 mo.): %s / month" % Game.fmt_money(burn), 13, DIM))
+	kc[1].add_child(_lbl("💰 Capital: %s" % Util.fmt_money(st.agency.cash), 14, RED if st.agency.cash < 0 else TEXT_C))
+	kc[1].add_child(_lbl("🔥 Avg. expenses (6 mo.): %s / month" % Util.fmt_money(burn), 13, DIM))
 	if runway >= 0.0 and runway < 900.0:
 		kc[1].add_child(_lbl("⏳ Runway at the current burn: ~%d months" % roundi(runway), 13, RED if runway < 6.0 else (AMBER if runway < 12.0 else GREEN)))
 	var top_cat := Game.top_income_cat(12)
@@ -3523,7 +3523,7 @@ func _render_finanzen() -> void:
 	var lm: Dictionary = Game.live_month(Game.mi())
 	var mc = _card("Current month: %s" % Game.date_str(), "🗓")
 	grid.add_child(mc[0])
-	mc[1].add_child(_lbl("Income %s · expenses %s · balance %s" % [Game.fmt_money(lm.income), Game.fmt_money(lm.expenses), Game.fmt_money(lm.income - lm.expenses)], 13, GREEN if lm.income >= lm.expenses else RED))
+	mc[1].add_child(_lbl("Income %s · expenses %s · balance %s" % [Util.fmt_money(lm.income), Util.fmt_money(lm.expenses), Util.fmt_money(lm.income - lm.expenses)], 13, GREEN if lm.income >= lm.expenses else RED))
 	var cat_max := 1.0
 	for cat in lm.byCat:
 		cat_max = maxf(cat_max, absf(float(lm.byCat[cat])))
@@ -3538,7 +3538,7 @@ func _render_finanzen() -> void:
 		pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(pb)
-		var av := _lbl(Game.fmt_money(amt), 12, DIM)
+		var av := _lbl(Util.fmt_money(amt), 12, DIM)
 		av.autowrap_mode = TextServer.AUTOWRAP_OFF
 		row.add_child(av)
 		mc[1].add_child(row)
@@ -3554,7 +3554,7 @@ func _render_finanzen() -> void:
 		for m in hist:
 			var saldo: float = float(m.income) - float(m.expenses)
 			cumulative += saldo
-			hc[1].add_child(_lbl("%s — ▲ %s · ▼ %s · balance %s · Σ %s" % [Game.mi_str(m.mi), Game.fmt_money(m.income), Game.fmt_money(m.expenses), Game.fmt_money(saldo), Game.fmt_money(cumulative)], 12, GREEN if saldo >= 0 else RED))
+			hc[1].add_child(_lbl("%s — ▲ %s · ▼ %s · balance %s · Σ %s" % [Game.mi_str(m.mi), Util.fmt_money(m.income), Util.fmt_money(m.expenses), Util.fmt_money(saldo), Util.fmt_money(cumulative)], 12, GREEN if saldo >= 0 else RED))
 
 	# Einzelbuchungen der letzten 3 Monate
 	var jc = _card("Itemized bookings (last 3 months)", "🧾")
@@ -3564,7 +3564,7 @@ func _render_finanzen() -> void:
 		var e: Dictionary = st.ledger[i]
 		if Game.mi() - int(e.mi) > 2 or shown >= 30:
 			break
-		jc[1].add_child(_lbl("%s · %s%s · %s — %s" % [Game.mi_str(e.mi), "▲" if float(e.amount) >= 0 else "▼", Game.fmt_money(absf(float(e.amount))), Game.LEDGER_CATS.get(str(e.cat), str(e.cat)), e.text], 12, GREEN if float(e.amount) >= 0 else RED))
+		jc[1].add_child(_lbl("%s · %s%s · %s — %s" % [Game.mi_str(e.mi), "▲" if float(e.amount) >= 0 else "▼", Util.fmt_money(absf(float(e.amount))), Game.LEDGER_CATS.get(str(e.cat), str(e.cat)), e.text], 12, GREEN if float(e.amount) >= 0 else RED))
 		shown += 1
 	if shown == 0:
 		jc[1].add_child(_lbl("No bookings yet.", 12, DIM))
@@ -3710,7 +3710,7 @@ func _render_table(note: String) -> void:
 	modal_box.add_child(_nego_header("🎩 Multi-party negotiation",
 		"“%s” · lead for %s · withdrawing costs nothing extra" % [ctx.casting.title, Game.client_name(ctx.client)], [
 			_chip("%d concessions" % int(t.points), RED if int(t.points) < 1 else BLUE),
-			_chip("Fee %s" % Game.fmt_money(t.fee), GREEN),
+			_chip("Fee %s" % Util.fmt_money(t.fee), GREEN),
 			_chip("%s billing" % ("First" if int(t.billing) == 1 else "Second"), DIM),
 			_nego_mood_chip(weakest_mood),
 		]))
@@ -3793,7 +3793,7 @@ func _close_table() -> void:
 	var res := Game.close_table()
 	if res.get("success", false):
 		Game.table = null
-		_show_outcome_modal("Multi-party negotiation", "[b]Contract closed[/b]\n\n%s takes the lead in “%s” for %s." % [client_name, film_title, Game.fmt_money(fee)])
+		_show_outcome_modal("Multi-party negotiation", "[b]Contract closed[/b]\n\n%s takes the lead in “%s” for %s." % [client_name, film_title, Util.fmt_money(fee)])
 		return
 	if res.has("veto"):
 		_render_table_veto(res)
