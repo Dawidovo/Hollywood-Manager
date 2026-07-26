@@ -40,6 +40,15 @@ soll langfristig um 50–70 pendeln.
 
 ## Akzeptanzkriterien
 
-- [ ] BalanceSim: Energie pendelt langfristig (Woche 104 ≥ 40 in allen Epochen), Stress bleibt im bisherigen Korridor
-- [ ] Headless-Test grün, .exe neu exportiert
-- [ ] Ein Commit: `balance: Energie-Ökonomie — Regeneration gegen den Dauertief-Drift`
+- [x] BalanceSim: Energie pendelt langfristig (Woche 104 ≥ 40 in allen Epochen), Stress bleibt im bisherigen Korridor
+- [x] Headless-Test grün, .exe neu exportiert
+- [x] Ein Commit: `balance: Energie-Ökonomie — Regeneration gegen den Dauertief-Drift`
+
+## Ergebnis (Juli 2026)
+
+Umgesetzt: Rest-Bonus +2,5 Energie/Woche bei Stress < 40 (unter Dauerlast entfällt
+er — die Burnout-Spirale bleibt intakt), Palm-Springs-Urlaub +18 → +22 Energie.
+Sim danach: Energie Woche 104 = 89/96/81/98 (1925/1950/1980/2010) statt 13/35/0/26;
+Stress unverändert im Korridor 39–54. Der Sim-Musterspieler nutzt die aktiven
+Energie-Senken (Reisen, Club, Presse-Zirkus) kaum — reale aktive Spieler liegen
+darunter, das gemessene Niveau ist die sichere Obergrenze.

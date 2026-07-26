@@ -149,7 +149,11 @@ func tick_week() -> void:
 	var st := _st()
 	var p: Dictionary = st.player
 	var workload: float = st.clients.size() * 1.0 + st.productions.size() * 0.5 + st.castings.size() * 0.25
-	p.energy = clampf(float(p.energy) + 9.0 - workload * 1.1, 0.0, 100.0)
+	# Erholung belohnt rausgenommenen Druck: unter Stress 40 regeneriert der
+	# Körper spürbar mit — unter Dauerlast bleibt die Abwärtsspirale bestehen
+	# (Balance-Chunk 20: Energie soll pendeln, nicht strukturell erodieren).
+	var rest_bonus := 2.5 if float(p.stress) < 40.0 else 0.0
+	p.energy = clampf(float(p.energy) + 9.0 + rest_bonus - workload * 1.1, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) - 4.0 + workload * 0.8 + (4.0 if st.agency.cash < 0 else 0.0), 0.0, 100.0)
 	# Ausgehende Briefe (Feature 23): die Wirkung kommt mit der Zustellung.
 	for mail in st.get("outMail", []).duplicate():
@@ -241,7 +245,7 @@ func vacation() -> void:
 	var p := player()
 	p.monthFlags["vacation"] = true
 	book(-roundf(220.0 * Game.infl(_st().year)), "Weekend in Palm Springs")
-	p.energy = clampf(float(p.energy) + 18.0, 0.0, 100.0)
+	p.energy = clampf(float(p.energy) + 22.0, 0.0, 100.0)
 	p.stress = clampf(float(p.stress) - 22.0, 0.0, 100.0)
 	p.health = clampf(float(p.health) + 3.0, 0.0, 100.0)
 	# Privatleben (Feature 44): freie Tage nähren Partnerschaft & Freundschaften

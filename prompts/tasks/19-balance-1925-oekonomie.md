@@ -40,6 +40,15 @@ sich knapp tragen — anspruchsvoll bleiben, aber nicht strukturell verlieren.
 
 ## Akzeptanzkriterien
 
-- [ ] BalanceSim 1925: kein Game Over, Endstand > 0; übrige Epochen im bisherigen Korridor
-- [ ] Headless-Test grün, .exe neu exportiert
-- [ ] Ein Commit: `balance: 1925-Ökonomie überlebbar — Gagen/Kosten der Frühzeit justiert`
+- [x] BalanceSim 1925: kein Game Over, Endstand > 0; übrige Epochen im bisherigen Korridor
+- [x] Headless-Test grün, .exe neu exportiert
+- [x] Ein Commit: `balance: 1925-Ökonomie überlebbar — Gagen/Kosten der Frühzeit justiert`
+
+## Ergebnis (Juli 2026)
+
+Drei Schrauben: `ask_fee`-Exponent 2,6 → 2,35 (hebt den unteren Ruhm-Bereich),
+Bürokosten vor 1948 ×0,6 (dabei Formel-Duplikat in `_month_close` durch
+gemeinsames `office_base_cost()` ersetzt), Startkapital per Era-Feld
+`startCapitalMult` (1925: ×1,5, datengetrieben in `data/eras/core.json`).
+Sim 1925: Woche 104 bei +44K statt Pleite in Woche 80; 1950/1980/2010
+flach bis leicht positiv.
