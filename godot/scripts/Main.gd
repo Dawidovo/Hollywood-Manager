@@ -2512,6 +2512,10 @@ func _render_klienten() -> void:
 			chips.append(_chip("❄ Cold %d" % roundi(c.heat), BLUE))
 		if c.exhaustion > 60:
 			chips.append(_chip("⚠ Overworked", RED))
+		if Game.voice_at_risk(c):
+			chips.append(_chip("🎙 Fragile voice", RED))
+		elif c.flags.get("voiceTrained", false):
+			chips.append(_chip("🎙 Voice trained", GREEN))
 		if c.flags.get("typecast", false):
 			chips.append(_chip("🎭 Typecast", AMBER))
 		if c.flags.get("typecastRisk", false):

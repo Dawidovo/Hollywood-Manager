@@ -133,6 +133,12 @@ func _client_candidates(req) -> Array:
 		var weight_dev_min := float(r.get("weight_dev_min", 0.0))
 		if weight_dev_min > 0.0 and absf(float(c.get("weightKg", Game.client_base_weight(c))) - Game.client_base_weight(c)) < weight_dev_min:
 			return false
+		# Tonfilm-Umbruch: Filter auf die Sprechstimme des Schauspielers
+		if r.has("voice_max") and Util.voice_of(Game.actor_by_id.get(str(c.aid), {})) > int(r.voice_max):
+			return false
+		# Generisch: Klienten mit gesetztem Flag ausschließen (z. B. schon getestet)
+		if r.has("without_flag") and c.flags.get(str(r.without_flag), false):
+			return false
 		return true)
 
 

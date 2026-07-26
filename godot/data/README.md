@@ -87,6 +87,8 @@ axis ±5 % per strength level, clamped 5–95 %). Success runs `effects`/
 use (more on success). `check` replaces `success_chance` (never both).
 Conditions and choice `requirements` also accept
 `"min_attr": {"verhandlung": 40}` (requirements: button greys out).
+`requires_client` additionally filters on `voice_max` (speaking voice,
+talkie era) and `without_flag` (skip clients that carry a given flag).
 
 **Quest journal**: an event may carry
 `"quest": {"title": "…", "icon": "🧾", "step": "…"}`. When such an event

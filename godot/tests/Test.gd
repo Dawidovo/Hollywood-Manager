@@ -1901,6 +1901,36 @@ func _ready() -> void:
 	Game.load_game()
 	check(Game.state.quests.size() == 1 and str(Game.state.quests[0].status) == "abgeschlossen", "Aufträge überleben Save/Load")
 
+	# Tonfilm-Umbruch: deterministische Stimme, Risiko-Fenster, Casting-Malus
+	var v_probe := Util.voice_of({"id": "bogart"})
+	check(v_probe == Util.voice_of({"id": "bogart"}) and v_probe >= 20 and v_probe <= 100, "Sprechstimme ist deterministisch und im Wertebereich")
+	var weak_actor := {}
+	for wa in Data.ACTORS:
+		if Util.voice_of(wa) < Balance.VOICE_WEAK_THRESHOLD:
+			weak_actor = wa
+			break
+	check(not weak_actor.is_empty(), "Der Pool enthält fragile Stimmen")
+	var vc := {"aid": str(weak_actor.id), "flags": {}}
+	Game.state.year = 1925
+	check(not Game.voice_at_risk(vc), "Vor dem Tonfilm ist die Stimme egal")
+	Game.state.year = 1930
+	check(Game.voice_at_risk(vc), "1930: fragile Stimme ohne Training ist ein Risiko")
+	vc.flags["voiceTrained"] = true
+	check(not Game.voice_at_risk(vc), "Sprechtraining beendet das Risiko")
+	vc.flags.clear()
+	Game.state.year = 1940
+	check(not Game.voice_at_risk(vc), "Nach der Übergangszeit ist der Markt sortiert")
+	Game.state.year = 1930
+	var v_role := {"type": "lead", "gender": str(weak_actor.g), "minFame": 10, "ageMin": -100, "ageMax": 999, "fee": 30000, "filled": null, "rejected": []}
+	var v_cast := {"id": 9300, "studioId": "mgm", "title": "V", "genre": "drama", "prestige": 1, "budget": 500000, "deadline": 8, "qualityMod": 0.0, "roles": [v_role]}
+	var v_client := {"id": 9301, "aid": str(weak_actor.id), "perks": [], "fame": 50.0, "heat": 0.0,
+		"exhaustion": 0.0, "flags": {}, "dna": CareerDNA.initial_dna(weak_actor), "exclusiveStudio": "", "clauses": [], "talentBonus": 0.0}
+	var v_fit_risk := Game.fit_score(v_cast, v_role, v_client)
+	v_client.flags["voiceTrained"] = true
+	var v_fit_ok := Game.fit_score(v_cast, v_role, v_client)
+	check(v_fit_ok - v_fit_risk >= 10, "Tonfilm-Fenster: fragile Stimme kostet Casting-Passung (%d vs %d)" % [v_fit_risk, v_fit_ok])
+	check(Data.EVENTS.any(func(e): return str(e.id) == "tonfilm_tontest"), "Tonfilm-Eventkette geladen")
+
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.
 	Game.start_negotiation("monroe")

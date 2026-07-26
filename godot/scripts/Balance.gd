@@ -51,6 +51,16 @@ const PROMISE_BROKEN_TRUST := 24.0
 const PROMISE_BROKEN_MOOD := 20.0
 const PROMISE_BROKEN_REP := 5
 
+# ---------- Tonfilm-Umbruch (1927+) ----------
+# Schwache Sprechstimmen (Util.voice_of < THRESHOLD) geraten in der
+# Übergangszeit unter Druck: Casting-Malus und Ruhm-Drift, bis der Klient
+# per Sprechtraining (Flag voiceTrained) gerettet ist.
+const VOICE_WEAK_THRESHOLD := 38
+const TALKIE_YEAR := 1928
+const TALKIE_TRANSITION_END := 1934
+const VOICE_FIT_MALUS := 12.0
+const VOICE_FAME_DRIFT := 1.2
+
 # ---------- Spieler-Attribute (RPG-Chunk 15) ----------
 # Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit
 # abnehmendem Ertrag: voll bis SOFTCAP_1, ×0,5 bis SOFTCAP_2, ×0,25 darüber.

@@ -139,6 +139,19 @@ func _ready() -> void:
 		actor_by_id[a.id] = a
 
 # ---------- Zufall & zustandslose Helfer: siehe Autoload Util.gd (Chunk 02) ----------
+# Tonfilm-Umbruch: steht die Karriere dieses Klienten wegen seiner
+# Sprechstimme auf dem Spiel? (Übergangsfenster, schwache Stimme, kein
+# Training absolviert — die Stummfilm-Nische akzeptiert das Risiko bewusst.)
+func voice_at_risk(c: Dictionary) -> bool:
+	if int(state.year) < Balance.TALKIE_YEAR or int(state.year) > Balance.TALKIE_TRANSITION_END:
+		return false
+	if c.flags.get("voiceTrained", false) or c.flags.get("voiceNiche", false):
+		return false
+	var actor: Dictionary = actor_by_id.get(str(c.get("aid", "")), {})
+	if actor.is_empty():
+		return false
+	return Util.voice_of(actor) < Balance.VOICE_WEAK_THRESHOLD
+
 func client_base_weight(c: Dictionary) -> float:
 	var actor: Dictionary = actor_by_id.get(str(c.get("aid", "")), {})
 	if actor.is_empty():
@@ -1684,6 +1697,9 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 		fit += (identity_strength("studiotreu") + identity_strength("kommerziell")) * 3.5
 	fit -= rival_casting_block(str(casting.studioId))
 	fit -= rumor_fit_penalty(c)
+	# Tonfilm-Umbruch: Studios casten 1928–1934 keine fragilen Stimmen
+	if voice_at_risk(c):
+		fit -= Balance.VOICE_FIT_MALUS
 	# Weekly Planner: „Vorbereitung“ gibt dem nächsten Pitch einen einmaligen Bonus
 	if float(c.flags.get("prepFit", 0.0)) > 0.0:
 		fit += float(c.flags.prepFit)
@@ -2192,6 +2208,13 @@ func tick_clients(events: Array) -> void:
 			book(float(ad_income), "sonstiges", "Endorsement deal: %s" % client_name(c))
 			c.mood = clampf(c.mood - 1.0, 0.0, 100.0)
 			c.dna.familie = clampf(c.dna.familie + 0.4, -100.0, 100.0)
+		# Tonfilm-Umbruch: fragile Stimmen verlieren in der Übergangszeit
+		# monatlich Ruhm, bis Training oder Nische die Karriere sichern.
+		if voice_at_risk(c):
+			c.fame = maxf(c.fame - Balance.VOICE_FAME_DRIFT, 5.0)
+			if not c.flags.get("voiceNoted", false):
+				c.flags["voiceNoted"] = true
+				log_msg("The microphones are merciless: whispers about %s's voice make the rounds." % client_name(c), "bad")
 		# Karriere-DNA verblasst langsam Richtung Neutral, wenn nichts nachkommt
 		if not busy:
 			CareerDNA.decay(c)

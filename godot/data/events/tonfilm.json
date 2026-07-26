@@ -1,0 +1,160 @@
+[
+	{
+		"id": "tonfilm_tontest",
+		"cd": 8,
+		"weight": {
+			"base": 1.6
+		},
+		"conditions": {
+			"min_year": 1927,
+			"max_year": 1933,
+			"requires_client": {
+				"voice_max": 38,
+				"without_flag": "voiceTested"
+			}
+		},
+		"quest": {
+			"title": "The talkies are coming: {client}",
+			"icon": "🎙",
+			"step": "The sound test went badly. Decide how to save this career."
+		},
+		"title": "The sound test",
+		"text": "{client} steps up to the microphone for a routine sound test. The technicians exchange glances. The voice that filled silent close-ups sounds thin and brittle through the horn speakers — and word travels fast in this town.",
+		"choices": [
+			{
+				"label": "Book the best voice coach in town ({money_fmt:6000})",
+				"requirements": {
+					"min_cash": 6000
+				},
+				"effects": [
+					{
+						"op": "money",
+						"amount": -6000,
+						"inflate": true,
+						"cat": "pr_recht",
+						"label": "Voice coaching: {client}"
+					},
+					{
+						"op": "flag_set",
+						"key": "voiceTested"
+					},
+					{
+						"op": "followup",
+						"event": "tonfilm_training",
+						"delay_weeks": 12
+					}
+				],
+				"outcome": "Three hours a day, scales and Shakespeare. In three months you will know whether it worked."
+			},
+			{
+				"label": "Coach the delivery yourself",
+				"check": {
+					"attr": "menschenkenntnis",
+					"dc": 55
+				},
+				"effects": [
+					{
+						"op": "flag_set",
+						"key": "voiceTested"
+					},
+					{
+						"op": "flag_set",
+						"key": "voiceTrained"
+					},
+					{
+						"op": "log",
+						"text": "You knew exactly what {client} needed to hear — and how. The second test sounds like a different person.",
+						"type": "deal"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "flag_set",
+						"key": "voiceTested"
+					},
+					{
+						"op": "mood",
+						"amount": -8
+					}
+				],
+				"outcome": "You break the fear, not the voice: slower, lower, closer to the microphone. It works.",
+				"outcome_fail": "Your amateur session leaves {client} more rattled than before. This needs a professional."
+			},
+			{
+				"label": "Pivot to silent prestige and character parts",
+				"effects": [
+					{
+						"op": "flag_set",
+						"key": "voiceTested"
+					},
+					{
+						"op": "flag_set",
+						"key": "voiceNiche"
+					},
+					{
+						"op": "dna",
+						"key": "unikat",
+						"amount": 6
+					},
+					{
+						"op": "fame",
+						"amount": -3
+					}
+				],
+				"outcome": "No microphones, no risk: you rebuild {client} as a face the talkies cannot replace. Smaller lights — but lights."
+			},
+			{
+				"label": "Ignore the whispers",
+				"effects": [
+					{
+						"op": "flag_set",
+						"key": "voiceTested"
+					}
+				],
+				"outcome": "Maybe the talkies are a fad. Maybe. The whispers stay."
+			}
+		]
+	},
+	{
+		"id": "tonfilm_training",
+		"followup_only": true,
+		"quest": {
+			"step": "The coach drills {client} three hours a day. The test reel will decide."
+		},
+		"title": "The test reel",
+		"text": "Twelve weeks of drills. The coach says {client} is ready — the studio wants proof on film before anyone signs anything.",
+		"choices": [
+			{
+				"label": "Shoot the talkie test reel",
+				"success_chance": 0.8,
+				"effects": [
+					{
+						"op": "flag_set",
+						"key": "voiceTrained"
+					},
+					{
+						"op": "fame",
+						"amount": 2
+					},
+					{
+						"op": "log",
+						"text": "The reel screens twice on the lot. By evening, {client} has a voice — officially.",
+						"type": "deal"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "mood",
+						"amount": -6
+					},
+					{
+						"op": "fame",
+						"amount": -2
+					}
+				],
+				"outcome": "Lower, slower, dangerous — the voice fits the face now. The studios put the whispers away.",
+				"outcome_fail": "Under the lights the old fear returns. The reel vanishes into a drawer — and the whispers grow louder."
+			}
+		]
+	}
+]

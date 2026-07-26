@@ -48,6 +48,12 @@ func body_of(a: Dictionary) -> Dictionary:
 	return {"height": height, "weight": weight}
 
 
+# Sprechstimme (Tonfilm-Umbruch): deterministisch je Schauspieler, 20–100.
+# Unter Balance.VOICE_WEAK_THRESHOLD wird die Stimme ab 1928 zum Problem.
+func voice_of(a: Dictionary) -> int:
+	return 20 + hashs(str(a.get("id", "")) + "voice") % 81
+
+
 # ---------- Ökonomie & Karriere-Mathematik ----------
 func infl(year: float) -> float:
 	return pow(1.03, year - 1925.0)
