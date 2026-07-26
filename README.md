@@ -2,6 +2,8 @@
 
 Eine Menü-Wirtschaftssimulation: Du führst eine Hollywood-Talentagentur — von der Stummfilm-Ära bis zur Streaming-Gegenwart, mit echten Schauspielern aller Epochen.
 
+> 🤖 **Für KI-Sessions & neue Mitarbeitende:** Zuerst [ARCHITECTURE.md](ARCHITECTURE.md) (Stand & Struktur) und [DECISIONS.md](DECISIONS.md) (bindende Entscheidungen) lesen — das ersetzt das Durchsuchen des Repos.
+
 ## Godot-Version (Hauptversion)
 
 Die vollwertige Desktop-Anwendung liegt in `godot/` (Godot 4.7, GDScript, komplette UI in Code):
