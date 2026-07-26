@@ -33,7 +33,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | 13 | [Verhandlungen homogenisieren](13-verhandlungen-homogenisieren.md) | UI-Qualität | erledigt (Commit `db75888` — `_nego_header`/`_nego_actions` aktiv) |
 | 14 | [Layout-Audit Buchstaben-Umbruch](14-layout-audit-buchstabenumbruch.md) | Bugfix | erledigt (inkl. Nachaudit der neuen Tabs; Header bricht jetzt um statt zu überlaufen) |
 | 15 | [RPG I: Attribute der Spielfigur](15-rpg-attribute.md) | RPG | erledigt (5 Attribute aus `data/attributes/`, Backstory-Seeds, Wachstums-Hooks, Weiterbildung im Planner, Karte im Agentur-Tab, Migration + Tests) |
-| 16 | [RPG II: Proben in Events](16-rpg-proben-events.md) | RPG | offen |
+| 16 | [RPG II: Proben in Events](16-rpg-proben-events.md) | RPG | erledigt (`check`-Schema mit sichtbarem Icon+Prozent-Label, `min_attr`-Bedingung, 6 Proben in JSON inkl. Schaufenster-Event `brown_derby_abend`, Doku + Tests) |
 | 17 | [RPG III: Quest-Journal](17-rpg-questjournal.md) | RPG | offen |
 | 18 | [RPG IV: Kontaktbuch & NPCs](18-rpg-npc-beziehungen.md) | RPG | überholt — umfangreicher umgesetzt über `Network.gd` (Kontaktbuch, Beziehungsdimensionen, Gefallen an Personen); Rest-Ideen bei Bedarf als neuer Chunk |
 | 19 | [Balance: 1925-Ökonomie](19-balance-1925-oekonomie.md) | Balance | erledigt (ask_fee-Exponent 2,35, Frühzeit-Büro ×0,6, Startkapital-Era-Faktor; Sim 1925: Woche 104 bei +44K statt Pleite in Woche 80) |

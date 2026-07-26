@@ -75,6 +75,8 @@ func check_conditions(conds: Dictionary, ctx: Dictionary = {}) -> bool:
 		return true
 	if not _limits_ok(conds):
 		return false
+	if conds.has("min_attr") and not _min_attr_ok(conds.min_attr):
+		return false
 	var fav := str(conds.get("has_favor", ""))
 	if fav != "" and not Game.has_favor(fav):
 		return false
@@ -89,6 +91,34 @@ func check_conditions(conds: Dictionary, ctx: Dictionary = {}) -> bool:
 	if conds.has("chance") and not Util.chance(float(conds.chance)):
 		return false
 	return true
+
+
+# Mindest-Attribute: {"verhandlung": 40, ...} — alle müssen erfüllt sein.
+func _min_attr_ok(req) -> bool:
+	if not (req is Dictionary):
+		return true
+	for key in req:
+		if Game.attr(str(key)) < int(req[key]):
+			return false
+	return true
+
+
+# ---------- Sichtbare Proben (RPG-Chunk 16) ----------
+# Chance: Attribut = DC ⇒ 50 %, jeder Punkt Differenz ±1 %; optionale
+# Identitäts-Achse wirkt situativ (±5 % je Stärkegrad). Clamp 5–95 %.
+func check_chance(check: Dictionary) -> float:
+	var chance_v := 0.5 + float(Game.attr(str(check.get("attr", ""))) - int(check.get("dc", 50))) / 100.0
+	var idk := str(check.get("identity", ""))
+	if idk != "":
+		chance_v += Game.identity_strength(idk) * 0.05
+	return clampf(chance_v, 0.05, 0.95)
+
+
+# „[👁 Insight · 62 %] …“ — Proben sind immer sichtbar, nie versteckt:
+# eine schlechte Chance ist eine Spielerentscheidung, kein Geheimnis.
+func check_label(check: Dictionary) -> String:
+	var adef: Dictionary = Data.ATTRIBUTES.get(str(check.get("attr", "")), {})
+	return "[%s %s · %d %%]" % [str(adef.get("icon", "🎲")), str(adef.get("name", check.get("attr", "?"))), roundi(check_chance(check) * 100.0)]
 
 
 func _client_candidates(req) -> Array:
@@ -147,9 +177,14 @@ func build_event(def: Dictionary, ctx: Dictionary = {}) -> Variant:
 		var bs := str(reqs.get("backstory", ""))
 		if bs != "" and str(Game.state.get("backstory", "")) != bs:
 			continue
-		var entry := {"label": subst(str(ch.get("label", "Weiter")), ctx), "fn": _choice_fn(ch, ctx)}
-		# Geld-Anforderungen bleiben sichtbar, sind aber ausgegraut
+		var label_s := subst(str(ch.get("label", "Weiter")), ctx)
+		if ch.has("check"):
+			label_s = "%s %s" % [check_label(ch.check), label_s]
+		var entry := {"label": label_s, "fn": _choice_fn(ch, ctx)}
+		# Geld-/Attributs-Anforderungen bleiben sichtbar, sind aber ausgegraut
 		if reqs.has("min_cash") and float(Game.state.agency.cash) < _money(float(reqs.min_cash)):
+			entry["disabled"] = true
+		if reqs.has("min_attr") and not _min_attr_ok(reqs.min_attr):
 			entry["disabled"] = true
 		choices_out.append(entry)
 	if choices_out.is_empty():
@@ -160,7 +195,13 @@ func build_event(def: Dictionary, ctx: Dictionary = {}) -> Variant:
 func _choice_fn(ch: Dictionary, ctx: Dictionary) -> Callable:
 	return func() -> String:
 		var ok := true
-		if ch.has("success_chance"):
+		if ch.has("check"):
+			if ch.has("success_chance"):
+				push_warning("EvEngine: Choice trägt check UND success_chance — check gewinnt.")
+			ok = Util.chance(check_chance(ch.check))
+			# Aus Proben lernt man — aus Fehlschlägen etwas weniger.
+			Game.attr_gain(str(ch.check.get("attr", "")), 0.4 if ok else 0.15)
+		elif ch.has("success_chance"):
 			ok = Util.chance(float(ch.success_chance))
 		var effects: Array = ch.get("effects", []) if ok else ch.get("effects_fail", ch.get("effects", []))
 		apply_effects(effects, ctx)

@@ -2,22 +2,38 @@
 	{
 		"id": "favor",
 		"cd": 8,
-		"weight": {"base": 0.7},
-		"conditions": {"requires_studio": true},
+		"weight": {
+			"base": 0.7
+		},
+		"conditions": {
+			"requires_studio": true
+		},
 		"title": "A favor",
 		"text": "{studio} asks for a favor: a client should appear unpaid at a gala premiere.",
 		"choices": [
 			{
 				"label": "Agree",
 				"effects": [
-					{"op": "studio_rel", "amount": 8},
-					{"op": "favor_grant", "kind": "extraAudition|billing|scriptAccess", "from": "studio"}
+					{
+						"op": "studio_rel",
+						"amount": 8
+					},
+					{
+						"op": "favor_grant",
+						"kind": "extraAudition|billing|scriptAccess",
+						"from": "studio"
+					}
 				],
 				"outcome": "{studio} will remember — and is now officially in your debt. Relationships are the hard currency of this town."
 			},
 			{
 				"label": "Decline",
-				"effects": [{"op": "studio_rel", "amount": -3}],
+				"effects": [
+					{
+						"op": "studio_rel",
+						"amount": -3
+					}
+				],
 				"outcome": "They politely let it go. The studio takes note."
 			}
 		]
@@ -25,17 +41,31 @@
 	{
 		"id": "press",
 		"cd": 8,
-		"weight": {"base": 0.7},
-		"conditions": {"requires_client": true},
+		"weight": {
+			"base": 0.7
+		},
+		"conditions": {
+			"requires_client": true
+		},
 		"title": "Press coup",
 		"text": "A big magazine offers a cover story about {client} — in exchange for exclusive access.",
 		"choices": [
 			{
 				"label": "Say yes",
 				"effects": [
-					{"op": "heat", "amount": 4},
-					{"op": "fame", "amount": 2},
-					{"op": "dna", "key": "popular", "amount": 3}
+					{
+						"op": "heat",
+						"amount": 4
+					},
+					{
+						"op": "fame",
+						"amount": 2
+					},
+					{
+						"op": "dna",
+						"key": "popular",
+						"amount": 3
+					}
 				],
 				"outcome": "The issue sells brilliantly. {client} is hotter than ever."
 			},
@@ -43,6 +73,32 @@
 				"label": "Decline",
 				"effects": [],
 				"outcome": "You pass. Privacy is worth something too."
+			},
+			{
+				"label": "Trade the story for a better one",
+				"check": {
+					"attr": "netzwerk",
+					"dc": 40
+				},
+				"effects": [
+					{
+						"op": "favor_grant",
+						"kind": "suppressStory"
+					},
+					{
+						"op": "log",
+						"text": "The columnist takes your better story — and owes you one.",
+						"type": "deal"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "rep",
+						"amount": -1
+					}
+				],
+				"outcome": "You know who needs what this week. The trade works — and the favor lands in your book.",
+				"outcome_fail": "Your better story turns out to be old news. The columnist prints the original — with your name misspelled."
 			}
 		]
 	},
@@ -51,38 +107,117 @@
 		"cd": 20,
 		"weight": {
 			"base": 0.8,
-			"mods": [{"if": {"min_year": 1935}, "add": 0.3}]
+			"mods": [
+				{
+					"if": {
+						"min_year": 1935
+					},
+					"add": 0.3
+				}
+			]
 		},
-		"conditions": {"min_year": 1929, "min_rep": 15, "requires_client": {"min_fame": 30}, "requires_studio": true},
+		"conditions": {
+			"min_year": 1929,
+			"min_rep": 15,
+			"requires_client": {
+				"min_fame": 30
+			},
+			"requires_studio": true
+		},
 		"title": "Mail from the tax office",
 		"text": "[i]“We would have a few questions about the expense reports …”[/i]\n\nAn auditor is interested in the spending around {client}. {studio} is getting nervous — nobody likes officials on set.",
 		"choices": [
 			{
 				"label": "Bring in the lawyers ({money_fmt:8000})",
-				"requirements": {"min_cash": 8000},
+				"requirements": {
+					"min_cash": 8000
+				},
 				"success_chance": 0.7,
 				"effects": [
-					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Tax law firm"},
-					{"op": "rep", "amount": 1}
+					{
+						"op": "money",
+						"amount": -8000,
+						"inflate": true,
+						"cat": "pr_recht",
+						"label": "Tax law firm"
+					},
+					{
+						"op": "rep",
+						"amount": 1
+					}
 				],
 				"effects_fail": [
-					{"op": "money", "amount": -8000, "inflate": true, "cat": "pr_recht", "label": "Tax law firm"},
-					{"op": "followup", "event": "steuer_nachspiel", "delay_weeks": 6}
+					{
+						"op": "money",
+						"amount": -8000,
+						"inflate": true,
+						"cat": "pr_recht",
+						"label": "Tax law firm"
+					},
+					{
+						"op": "followup",
+						"event": "steuer_nachspiel",
+						"delay_weeks": 6
+					}
 				],
 				"outcome": "The firm handles it discreetly. One binder changes cabinets, and the auditor finds: nothing.",
 				"outcome_fail": "The firm cashes in — but the auditor digs in. That was not the end of it."
 			},
 			{
 				"label": "Call in a favor: one phone call is enough",
-				"requirements": {"has_favor": "suppressStory"},
-				"effects": [{"op": "favor_consume", "kind": "suppressStory"}],
+				"requirements": {
+					"has_favor": "suppressStory"
+				},
+				"effects": [
+					{
+						"op": "favor_consume",
+						"kind": "suppressStory"
+					}
+				],
 				"outcome": "The auditor gets transferred — to Sacramento, they say. Hollywood stays Hollywood."
+			},
+			{
+				"label": "Size up the auditor over coffee",
+				"check": {
+					"attr": "menschenkenntnis",
+					"dc": 45,
+					"identity": "klientenorientiert"
+				},
+				"effects": [
+					{
+						"op": "rep",
+						"amount": 1
+					},
+					{
+						"op": "log",
+						"text": "You read the auditor like a script: ambitious, tired, open to a tidy story. The file closes.",
+						"type": "deal"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "followup",
+						"event": "steuer_nachspiel",
+						"delay_weeks": 6
+					}
+				],
+				"outcome": "Two coffees, one conversation about horse racing — and the audit ends in a handshake.",
+				"outcome_fail": "You misjudge the man completely. He leaves the coffee untouched and opens a second binder."
 			},
 			{
 				"label": "Sit it out",
 				"effects": [
-					{"op": "trust", "amount": -4},
-					{"op": "rumor", "text": "{client} is said to be in trouble with the tax office.", "truth": true, "topic": "skandal", "belief": 25}
+					{
+						"op": "trust",
+						"amount": -4
+					},
+					{
+						"op": "rumor",
+						"text": "{client} is said to be in trouble with the tax office.",
+						"truth": true,
+						"topic": "skandal",
+						"belief": 25
+					}
 				],
 				"outcome": "You do nothing — and exactly that gets around. {client} thinks you could have made a call."
 			}
@@ -96,21 +231,53 @@
 		"choices": [
 			{
 				"label": "Pay the settlement ({money_fmt:15000})",
-				"requirements": {"min_cash": 15000},
+				"requirements": {
+					"min_cash": 15000
+				},
 				"effects": [
-					{"op": "money", "amount": -15000, "inflate": true, "cat": "pr_recht", "label": "Tax settlement"},
-					{"op": "mood", "amount": 4}
+					{
+						"op": "money",
+						"amount": -15000,
+						"inflate": true,
+						"cat": "pr_recht",
+						"label": "Tax settlement"
+					},
+					{
+						"op": "mood",
+						"amount": 4
+					}
 				],
 				"outcome": "Expensive, quiet, final. {client} sends a box of cigars as thanks."
 			},
 			{
 				"label": "Let it go to trial",
 				"success_chance": 0.5,
-				"effects": [{"op": "rep", "amount": 2}, {"op": "trust", "amount": 3}],
+				"effects": [
+					{
+						"op": "rep",
+						"amount": 2
+					},
+					{
+						"op": "trust",
+						"amount": 3
+					}
+				],
 				"effects_fail": [
-					{"op": "rep", "amount": -3},
-					{"op": "fame", "amount": -4},
-					{"op": "rumor", "text": "The tax trial against {client} fills the columns.", "truth": true, "topic": "skandal", "belief": 45}
+					{
+						"op": "rep",
+						"amount": -3
+					},
+					{
+						"op": "fame",
+						"amount": -4
+					},
+					{
+						"op": "rumor",
+						"text": "The tax trial against {client} fills the columns.",
+						"truth": true,
+						"topic": "skandal",
+						"belief": 45
+					}
 				],
 				"outcome": "Acquittal! The papers celebrate {client} as the victim of overzealous officials — and you as the agency with nerves of steel.",
 				"outcome_fail": "The trial becomes a gauntlet. The headlines stick."

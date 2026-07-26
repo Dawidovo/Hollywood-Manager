@@ -1,0 +1,95 @@
+[
+	{
+		"id": "brown_derby_abend",
+		"cd": 16,
+		"weight": {
+			"base": 0.9
+		},
+		"conditions": {
+			"min_rep": 10
+		},
+		"title": "An evening at the Brown Derby",
+		"text": "The booth next to yours: a studio accountant, a nervous producer and a columnist pretending not to listen. Three conversations you could walk into — pick your table.",
+		"choices": [
+			{
+				"label": "Talk the producer into a screen test for your roster",
+				"check": {
+					"attr": "verhandlung",
+					"dc": 50
+				},
+				"effects": [
+					{
+						"op": "casting_spawn",
+						"amount": 1
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "rep",
+						"amount": -1
+					}
+				],
+				"outcome": "By dessert the producer is sketching a part on the napkin. A project lands on your desk.",
+				"outcome_fail": "You push a beat too hard. The producer remembers a prior engagement — and the room notices."
+			},
+			{
+				"label": "Quiet the columnist's newest story",
+				"check": {
+					"attr": "diskretion",
+					"dc": 45,
+					"identity": "diskret"
+				},
+				"effects": [
+					{
+						"op": "identity",
+						"key": "diskret",
+						"amount": 0.5
+					},
+					{
+						"op": "log",
+						"text": "A story dies over a shared dessert. Nobody will ever know it existed.",
+						"type": "info"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "rumor_reveal"
+					}
+				],
+				"outcome": "You trade one harmless anecdote for one dangerous silence. Fair market rates.",
+				"outcome_fail": "The columnist smiles, takes notes — and now knows what you consider dangerous."
+			},
+			{
+				"label": "Work the room for a new name",
+				"check": {
+					"attr": "netzwerk",
+					"dc": 40
+				},
+				"effects": [
+					{
+						"op": "meet_someone",
+						"origin": "over a late table at the Brown Derby"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "player",
+						"energy": -3
+					}
+				],
+				"outcome": "Handshakes, first names, a card slipped across the tablecloth.",
+				"outcome_fail": "A long evening of familiar faces and small talk that leads nowhere."
+			},
+			{
+				"label": "Just have dinner",
+				"effects": [
+					{
+						"op": "player",
+						"stress": -3
+					}
+				],
+				"outcome": "For once the town can wait until tomorrow. The steak is excellent."
+			}
+		]
+	}
+]

@@ -78,6 +78,16 @@ See `events/core.json` — a declarative format with `conditions`, `weight`,
 the effect `{"op": "followup", "event": "<id>", "delay_weeks": N}`. Chain links
 carry `"followup_only": true` and never appear in the random pool.
 
+**Attribute checks** (RPG): a choice may carry
+`"check": {"attr": "menschenkenntnis", "dc": 45, "identity": "diskret"}` —
+the button then shows icon, attribute name and success percentage
+(attribute = dc ⇒ 50 %, each point of difference ±1 %, optional identity
+axis ±5 % per strength level, clamped 5–95 %). Success runs `effects`/
+`outcome`, failure `effects_fail`/`outcome_fail`; the attribute grows on
+use (more on success). `check` replaces `success_chance` (never both).
+Conditions and choice `requirements` also accept
+`"min_attr": {"verhandlung": 40}` (requirements: button greys out).
+
 ## Career, reputation, locations & contacts (manager systems)
 
 These four categories drive the "manager as a person" systems and are fully

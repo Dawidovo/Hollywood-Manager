@@ -2,40 +2,87 @@
 	{
 		"id": "rollen_transformation",
 		"cd": 24,
-		"weight": {"base": 0.45, "mods": [{"if": {"min_year": 1950}, "add": 0.15}]},
-		"conditions": {"requires_client": {"min_fame": 35, "free": true}, "requires_studio": true},
+		"weight": {
+			"base": 0.45,
+			"mods": [
+				{
+					"if": {
+						"min_year": 1950
+					},
+					"add": 0.15
+				}
+			]
+		},
+		"conditions": {
+			"requires_client": {
+				"min_fame": 35,
+				"free": true
+			},
+			"requires_studio": true
+		},
 		"title": "The role demands everything",
 		"text": "{studio} offers {client} a prestige role. The director demands a visible transformation: ten kilograms lighter or heavier by the premiere.",
 		"choices": [
 			{
 				"label": "Agree: lose ten kilos",
 				"effects": [
-					{"op": "exhaustion", "amount": 7},
-					{"op": "trust", "amount": 2},
-					{"op": "followup", "event": "rollen_transformation_abnahme", "delay_weeks": 12}
+					{
+						"op": "exhaustion",
+						"amount": 7
+					},
+					{
+						"op": "trust",
+						"amount": 2
+					},
+					{
+						"op": "followup",
+						"event": "rollen_transformation_abnahme",
+						"delay_weeks": 12
+					}
 				],
 				"outcome": "{client} takes on the challenge. Trainers, costume fittings and strict weekly plans now rule the days."
 			},
 			{
 				"label": "Agree: gain ten kilos",
 				"effects": [
-					{"op": "exhaustion", "amount": 7},
-					{"op": "trust", "amount": 2},
-					{"op": "followup", "event": "rollen_transformation_zunahme", "delay_weeks": 12}
+					{
+						"op": "exhaustion",
+						"amount": 7
+					},
+					{
+						"op": "trust",
+						"amount": 2
+					},
+					{
+						"op": "followup",
+						"event": "rollen_transformation_zunahme",
+						"delay_weeks": 12
+					}
 				],
 				"outcome": "{client} says yes. The transformation becomes the talk of the set long before a camera rolls."
 			},
 			{
 				"label": "Negotiate a double and costume work",
 				"effects": [
-					{"op": "studio_rel", "amount": -6},
-					{"op": "trust", "amount": 1}
+					{
+						"op": "studio_rel",
+						"amount": -6
+					},
+					{
+						"op": "trust",
+						"amount": 1
+					}
 				],
 				"outcome": "The costume department finds a way. {client} is relieved, but {studio} considers the solution an expensive compromise."
 			},
 			{
 				"label": "Turn down the role",
-				"effects": [{"op": "studio_rel", "amount": -2}],
+				"effects": [
+					{
+						"op": "studio_rel",
+						"amount": -2
+					}
+				],
 				"outcome": "The role moves on. Nobody is thrilled, but the line was clear."
 			}
 		]
@@ -50,16 +97,40 @@
 				"label": "See it through to the premiere",
 				"success_chance": 0.65,
 				"effects": [
-					{"op": "weight", "amount": -10},
-					{"op": "exhaustion", "amount": 12},
-					{"op": "fame", "amount": 5},
-					{"op": "heat", "amount": 2}
+					{
+						"op": "weight",
+						"amount": -10
+					},
+					{
+						"op": "exhaustion",
+						"amount": 12
+					},
+					{
+						"op": "fame",
+						"amount": 5
+					},
+					{
+						"op": "heat",
+						"amount": 2
+					}
 				],
 				"effects_fail": [
-					{"op": "weight", "amount": -10},
-					{"op": "exhaustion", "amount": 18},
-					{"op": "mood", "amount": -5},
-					{"op": "fame", "amount": 1}
+					{
+						"op": "weight",
+						"amount": -10
+					},
+					{
+						"op": "exhaustion",
+						"amount": 18
+					},
+					{
+						"op": "mood",
+						"amount": -5
+					},
+					{
+						"op": "fame",
+						"amount": 1
+					}
 				],
 				"outcome": "The premiere becomes a triumph. The transformation earns {client} new admiration and a hefty fame boost.",
 				"outcome_fail": "The effort is respected, the film is not. What remains: ten lost kilos and deep exhaustion."
@@ -67,9 +138,18 @@
 			{
 				"label": "Abort the transformation early",
 				"effects": [
-					{"op": "weight", "amount": -4},
-					{"op": "studio_rel", "amount": -7},
-					{"op": "mood", "amount": 3}
+					{
+						"op": "weight",
+						"amount": -4
+					},
+					{
+						"op": "studio_rel",
+						"amount": -7
+					},
+					{
+						"op": "mood",
+						"amount": 3
+					}
 				],
 				"outcome": "{client} quits the strict program. {studio} fumes, but everyday life gets easier immediately."
 			}
@@ -85,16 +165,40 @@
 				"label": "See it through to the premiere",
 				"success_chance": 0.65,
 				"effects": [
-					{"op": "weight", "amount": 10},
-					{"op": "exhaustion", "amount": 12},
-					{"op": "fame", "amount": 5},
-					{"op": "heat", "amount": 2}
+					{
+						"op": "weight",
+						"amount": 10
+					},
+					{
+						"op": "exhaustion",
+						"amount": 12
+					},
+					{
+						"op": "fame",
+						"amount": 5
+					},
+					{
+						"op": "heat",
+						"amount": 2
+					}
 				],
 				"effects_fail": [
-					{"op": "weight", "amount": 10},
-					{"op": "exhaustion", "amount": 18},
-					{"op": "mood", "amount": -5},
-					{"op": "fame", "amount": 1}
+					{
+						"op": "weight",
+						"amount": 10
+					},
+					{
+						"op": "exhaustion",
+						"amount": 18
+					},
+					{
+						"op": "mood",
+						"amount": -5
+					},
+					{
+						"op": "fame",
+						"amount": 1
+					}
 				],
 				"outcome": "The premiere becomes a triumph. The transformation earns {client} new admiration and a hefty fame boost.",
 				"outcome_fail": "The effort is respected, the film is not. What remains: ten extra kilos and deep exhaustion."
@@ -102,9 +206,18 @@
 			{
 				"label": "Abort the transformation early",
 				"effects": [
-					{"op": "weight", "amount": 4},
-					{"op": "studio_rel", "amount": -7},
-					{"op": "mood", "amount": 3}
+					{
+						"op": "weight",
+						"amount": 4
+					},
+					{
+						"op": "studio_rel",
+						"amount": -7
+					},
+					{
+						"op": "mood",
+						"amount": 3
+					}
 				],
 				"outcome": "{client} quits the strict program. {studio} fumes, but everyday life gets easier immediately."
 			}
@@ -113,38 +226,108 @@
 	{
 		"id": "boulevard_figur",
 		"cd": 18,
-		"weight": {"base": 0.65},
-		"conditions": {"requires_client": {"min_fame": 20, "weight_dev_min": 8}},
+		"weight": {
+			"base": 0.65
+		},
+		"conditions": {
+			"requires_client": {
+				"min_fame": 20,
+				"weight_dev_min": 8
+			}
+		},
 		"title": "The figure in the headlines",
 		"text": "A tabloid mocks {client}'s changed figure. The pictures are chosen cruelly, the headline is worse.",
 		"choices": [
 			{
 				"label": "Counter with a PR campaign ({money_fmt:6000})",
-				"requirements": {"min_cash": 6000},
+				"requirements": {
+					"min_cash": 6000
+				},
 				"effects": [
-					{"op": "money", "amount": -6000, "inflate": true, "cat": "pr_recht", "label": "Figure PR for {client}"},
-					{"op": "trust", "amount": 2},
-					{"op": "rep", "amount": 1}
+					{
+						"op": "money",
+						"amount": -6000,
+						"inflate": true,
+						"cat": "pr_recht",
+						"label": "Figure PR for {client}"
+					},
+					{
+						"op": "trust",
+						"amount": 2
+					},
+					{
+						"op": "rep",
+						"amount": 1
+					}
 				],
 				"outcome": "The campaign turns the tone: spite becomes a debate about role models. {client} knows who had their back."
 			},
 			{
 				"label": "Sit out the talk",
 				"effects": [
-					{"op": "mood", "amount": -4},
-					{"op": "rumor", "text": "The tabloids tear into {client}'s changed figure.", "truth": false, "topic": "skandal", "belief": 28}
+					{
+						"op": "mood",
+						"amount": -4
+					},
+					{
+						"op": "rumor",
+						"text": "The tabloids tear into {client}'s changed figure.",
+						"truth": false,
+						"topic": "skandal",
+						"belief": 28
+					}
 				],
 				"outcome": "After a few days the pictures vanish from the front page. For {client}, the mockery sits deeper."
 			},
 			{
 				"label": "Stage a diet story",
 				"effects": [
-					{"op": "weight", "amount": -2},
-					{"op": "exhaustion", "amount": 5},
-					{"op": "heat", "amount": 2},
-					{"op": "dna", "key": "popular", "amount": 2}
+					{
+						"op": "weight",
+						"amount": -2
+					},
+					{
+						"op": "exhaustion",
+						"amount": 5
+					},
+					{
+						"op": "heat",
+						"amount": 2
+					},
+					{
+						"op": "dna",
+						"key": "popular",
+						"amount": 2
+					}
 				],
 				"outcome": "The magazine gets training photos and an exclusive plan. The story sells — and {client} pays with strength and nerves."
+			},
+			{
+				"label": "Bury the column before the print run",
+				"check": {
+					"attr": "diskretion",
+					"dc": 50,
+					"identity": "diskret"
+				},
+				"effects": [
+					{
+						"op": "log",
+						"text": "One call to the print floor, one to the editor's creditor. The column never runs.",
+						"type": "deal"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "fame",
+						"amount": -2
+					},
+					{
+						"op": "mood",
+						"amount": -6
+					}
+				],
+				"outcome": "The piece vanishes between edition planning and print — nobody will miss it.",
+				"outcome_fail": "The editor smells the intervention and runs the piece one page earlier — with relish."
 			}
 		]
 	}

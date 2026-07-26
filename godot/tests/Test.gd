@@ -1855,6 +1855,28 @@ func _ready() -> void:
 	check(Game.load_game(), "Alt-Stand ohne Attribute geladen")
 	check(Game.attr("verhandlung") == roundi(Balance.ATTR_BASE), "Migration rüstet Attribute mit Basiswerten nach")
 
+	# RPG-Proben (Chunk 16): Chance-Formel, Sichtbarkeit, Pfade, min_attr
+	Game.state.attributes["menschenkenntnis"] = 45.0
+	check(absf(EvEngine.check_chance({"attr": "menschenkenntnis", "dc": 45}) - 0.5) < 0.001, "Probe: Attribut = DC ⇒ 50 %")
+	check(absf(EvEngine.check_chance({"attr": "menschenkenntnis", "dc": 145}) - 0.05) < 0.001, "Probe: Untergrenze 5 %")
+	check(absf(EvEngine.check_chance({"attr": "menschenkenntnis", "dc": -100}) - 0.95) < 0.001, "Probe: Obergrenze 95 %")
+	var probe_def := {"id": "probe_test", "title": "T", "text": "T", "choices": [
+		{"label": "Probe", "check": {"attr": "verhandlung", "dc": -1000},
+		"effects": [{"op": "rep", "amount": 1}], "effects_fail": [{"op": "rep", "amount": -1}],
+		"outcome": "ok", "outcome_fail": "fail"}]}
+	var probe_ev: Dictionary = EvEngine.build_event(probe_def)
+	check(str(probe_ev.choices[0].label).begins_with("["), "Proben-Button trägt sichtbares Label-Präfix")
+	check(str(probe_ev.choices[0].label).contains("%"), "Proben-Label enthält Prozentangabe")
+	var probe_attr0 := float(Game.state.attributes.verhandlung)
+	var probe_rep0 := int(Game.state.agency.rep)
+	seed(11)
+	var probe_out := str(probe_ev.choices[0].fn.call())
+	check(probe_out == "ok" and int(Game.state.agency.rep) == probe_rep0 + 1, "Probe mit 95 %: Erfolgspfad läuft (Seed)")
+	check(float(Game.state.attributes.verhandlung) > probe_attr0, "Erfolgreiche Probe lässt das Attribut wachsen")
+	check(not EvEngine.check_conditions({"min_attr": {"verhandlung": 99}}), "min_attr sperrt bei zu niedrigem Attribut")
+	check(EvEngine.check_conditions({"min_attr": {"verhandlung": 5}}), "min_attr öffnet bei erfülltem Attribut")
+	check(Data.EVENTS.any(func(e): return str(e.id) == "brown_derby_abend"), "Schaufenster-Event rpg_proben.json geladen")
+
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.
 	Game.start_negotiation("monroe")
