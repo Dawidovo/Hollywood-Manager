@@ -338,7 +338,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		"plannerMonthCounts": {},
 		"coverage": {"current": null, "history": []}, "coverageQueue": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
-		"eventCd": {}, "followups": [], "usedTitles": [],
+		"eventCd": {}, "followups": [], "usedTitles": [], "quests": [],
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
 		"player": Persona.default_player(),
@@ -2615,6 +2615,9 @@ func _apply_save_defaults() -> void:
 			state.identity[identity_key] = 0.0
 	if not state.has("identityLastTop"):
 		state["identityLastTop"] = []
+	# Migration Quest-Journal (Chunk 17)
+	if not state.has("quests") or not (state.quests is Array):
+		state["quests"] = []
 	# Migration RPG-Attribute (Chunk 15): fehlende Werte mit Basis nachrüsten
 	if not state.has("attributes") or not (state.attributes is Dictionary):
 		state["attributes"] = {}

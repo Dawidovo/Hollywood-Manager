@@ -260,6 +260,18 @@ func _ready() -> void:
 		await get_tree().process_frame
 		content_scroll.scroll_vertical = 100000
 		await _take_shot("zeitungsarchiv")
+	elif args.has("--shot-quests"):
+		_on_era_selected(1950)
+		# Steuer-Kette real anstoßen: Followup-Effekt legt den Journal-Eintrag an
+		var quest_def: Dictionary = EvEngine.def_by_id("steuerpruefung")
+		EvEngine._quest_on_followup({"event": "steuer_nachspiel", "delay_weeks": 6}, {"_eventId": "steuerpruefung"})
+		EvEngine._quest_on_followup({"event": "junior_gegenleistung", "delay_weeks": 8}, {"_eventId": "junior_alter_chef"})
+		var done_ctx := {"_eventId": "aufsteiger_alte_schulden"}
+		EvEngine._quest_on_followup({"event": "aufsteiger_glaeubiger_kommt", "delay_weeks": 4}, done_ctx)
+		EvEngine._quest_after_choice(done_ctx, [], "The creditor leaves with a check and a handshake — the old days are finally paid off.")
+		assert(quest_def != null)
+		_switch_tab("quests")
+		await _take_shot("quests")
 	elif args.has("--shot-nego"):
 		_on_era_selected(1950)
 		_open_negotiation("monroe")
@@ -1118,7 +1130,7 @@ func render() -> void:
 		["kontakte", "📇 Contacts (%d⏱)" % int(st.contactAP)],
 		["post", "%s %s (%d)" % [Dialogs.mail_icon(), Dialogs.mail_word(), Dialogs.open_letters().size()]],
 		["orte", "🗺 Places"], ["klienten", "👥 Clients (%d)" % st.clients.size()], ["rumors", "🗣 Rumors (%d)" % known_rumors],
-		["zeitung", "🗞 Newspaper"], ["pool", "🎭 Talent pool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Films"], ["planer", "🗓 Planner"], ["finanzen", "💰 Finances"], ["chronik", "📰 Chronicle"]]
+		["zeitung", "🗞 Newspaper"], ["quests", "📜 Journal"], ["pool", "🎭 Talent pool"], ["castings", "🎬 Castings (%d)" % st.castings.filter(func(cs): return not bool(cs.get("hidden", false))).size()], ["filme", "🎞 Films"], ["planer", "🗓 Planner"], ["finanzen", "💰 Finances"], ["chronik", "📰 Chronicle"]]
 	for t in tabs:
 		tab_bar.add_child(_btn(t[1], _switch_tab.bind(t[0]), t[0] == current_tab))
 
@@ -1134,6 +1146,7 @@ func render() -> void:
 		"klienten": _render_klienten()
 		"rumors": _render_rumors()
 		"zeitung": _render_zeitung()
+		"quests": _render_quests()
 		"pool": _render_pool()
 		"castings": _render_castings()
 		"filme": _render_filme()
@@ -2125,6 +2138,10 @@ func _render_sidebar() -> void:
 		any = true
 	if not any:
 		cv[1].add_child(_lbl("Nothing in the works. Time to hustle.", 12, DIM))
+	# Quest-Journal (Chunk 17): offene Aufträge als Einzeiler in der Pipeline
+	var open_quests: int = st.get("quests", []).filter(func(q): return str(q.status) == "aktiv").size()
+	if open_quests > 0:
+		cv[1].add_child(_lbl("📜 %d open stor%s — see the Journal tab" % [open_quests, "y" if open_quests == 1 else "ies"], 12, ACC))
 	# Set-Signale laufender Produktionen (Feature 13) — unzuverlässig, aber laut
 	var sig_lines: Array = []
 	for p in st.productions:
@@ -3544,6 +3561,37 @@ func _render_zeitung() -> void:
 		archive_grid.add_child(archive_card[0])
 		for headline in old_issue.headlines.slice(0, 5):
 			archive_card[1].add_child(_lbl("%s · %s" % [str(headline.cat), str(headline.text)], 12, DIM))
+
+# ---------- Tab: Quest-Journal (RPG-Chunk 17) ----------
+func _render_quests() -> void:
+	var st = Game.state
+	content_box.add_child(_lbl("📜 Open stories", 22, ACC))
+	content_box.add_child(_lbl("Event chains you are part of — what has started will play out, one way or another.", 13, DIM))
+	var active: Array = st.get("quests", []).filter(func(q): return str(q.status) == "aktiv")
+	var done: Array = st.get("quests", []).filter(func(q): return str(q.status) == "abgeschlossen")
+	if active.is_empty():
+		var ec = _card("All quiet", "🌙")
+		content_box.add_child(ec[0])
+		ec[1].add_child(_lbl("No open stories — yet. This town rarely leaves it that way.", 13, DIM))
+	var qgrid := _grid(520.0)
+	content_box.add_child(qgrid)
+	for q in active:
+		var qc = _card(str(q.title), str(q.get("icon", "📜")))
+		qgrid.add_child(qc[0])
+		qc[1].add_child(_lbl(str(q.step), 13, TEXT_C))
+		var meta_s := "since %s" % Game.mi_str(int(q.startedMi))
+		if int(q.get("dueMi", -1)) > Game.mi():
+			meta_s += " · next beat in ~%d wk" % maxi(1, (int(q.dueMi) - Game.mi()) * 4)
+		qc[1].add_child(_lbl(meta_s, 11, DIM))
+	if done.size():
+		content_box.add_child(_lbl("Archive · %d closed" % done.size(), 17, ACC))
+		var agrid := _grid(520.0)
+		content_box.add_child(agrid)
+		for q in done.slice(maxi(0, done.size() - 10)):
+			var arch = _card(str(q.title), str(q.get("icon", "📜")))
+			agrid.add_child(arch[0])
+			arch[1].add_child(_lbl(str(q.step), 12, DIM))
+			arch[1].add_child(_lbl("closed %s" % Game.mi_str(int(q.get("doneMi", q.startedMi))), 11, DIM))
 
 # ---------- Tab: Chronicle ----------
 func _render_chronik() -> void:

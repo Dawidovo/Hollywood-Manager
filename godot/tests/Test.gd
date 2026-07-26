@@ -1877,6 +1877,30 @@ func _ready() -> void:
 	check(EvEngine.check_conditions({"min_attr": {"verhandlung": 5}}), "min_attr öffnet bei erfülltem Attribut")
 	check(Data.EVENTS.any(func(e): return str(e.id) == "brown_derby_abend"), "Schaufenster-Event rpg_proben.json geladen")
 
+	# Quest-Journal (Chunk 17): Kette mit quest-Block wird verfolgbar
+	Game.new_game("Questtest", 1950)
+	check(Game.state.quests.is_empty(), "Neues Spiel startet ohne offene Aufträge")
+	var q_start := {"id": "steuerpruefung", "title": "T", "text": "T", "choices": [
+		{"label": "Weiter", "effects": [{"op": "followup", "event": "steuer_nachspiel", "delay_weeks": 6}], "outcome": "läuft"}]}
+	var q_ev: Dictionary = EvEngine.build_event(q_start)
+	q_ev.choices[0].fn.call()
+	check(Game.state.quests.size() == 1 and str(Game.state.quests[0].status) == "aktiv", "Kettenstart mit quest-Block legt aktiven Auftrag an")
+	check(str(Game.state.quests[0].step) != "", "Auftrag trägt einen Schritttext")
+	check(Game.state.followups[0].ctx.has("_questId"), "Followup transportiert die Quest-Id weiter")
+	var q_end := {"id": "steuer_nachspiel", "title": "T", "text": "T", "choices": [
+		{"label": "Ende", "effects": [{"op": "rep", "amount": 1}], "outcome": "Der Prüfer zieht ab."}]}
+	var q_ev2: Dictionary = EvEngine.build_event(q_end, {"_questId": "steuerpruefung"})
+	q_ev2.choices[0].fn.call()
+	check(str(Game.state.quests[0].status) == "abgeschlossen", "Kettenende ohne Followup schließt den Auftrag")
+	var q_plain := {"id": "no_quest_event", "title": "T", "text": "T", "choices": [
+		{"label": "Weiter", "effects": [{"op": "followup", "event": "irgendwas", "delay_weeks": 2}], "outcome": "ok"}]}
+	EvEngine.build_event(q_plain).choices[0].fn.call()
+	check(Game.state.quests.size() == 1, "Event ohne quest-Block erzeugt keinen Journal-Eintrag")
+	Game.save_game()
+	Game.state = null
+	Game.load_game()
+	check(Game.state.quests.size() == 1 and str(Game.state.quests[0].status) == "abgeschlossen", "Aufträge überleben Save/Load")
+
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.
 	Game.start_negotiation("monroe")

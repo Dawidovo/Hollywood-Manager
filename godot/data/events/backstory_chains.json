@@ -2,24 +2,50 @@
 	{
 		"id": "junior_alter_chef",
 		"cd": 60,
-		"weight": {"base": 1.3},
-		"conditions": {"backstory": "ex_studio_junior", "requires_studio": true, "min_rep": 10},
+		"weight": {
+			"base": 1.3
+		},
+		"conditions": {
+			"backstory": "ex_studio_junior",
+			"requires_studio": true,
+			"min_rep": 10
+		},
 		"title": "The old boss calls",
 		"text": "[i]“Well, look who it is — my best errand boy makes careers now?”[/i]\n\nYour former superior sits on the board of {studio} these days. He has a project gone sideways — unofficially, of course.",
 		"choices": [
 			{
 				"label": "Help out — for old times' sake",
 				"effects": [
-					{"op": "studio_rel", "amount": 6},
-					{"op": "followup", "event": "junior_gegenleistung", "delay_weeks": 8}
+					{
+						"op": "studio_rel",
+						"amount": 6
+					},
+					{
+						"op": "followup",
+						"event": "junior_gegenleistung",
+						"delay_weeks": 8
+					}
 				],
 				"outcome": "You solve the problem silently. He only nods — but in this town, a nod from the very top is worth more than a contract."
 			},
 			{
 				"label": "Name a price",
 				"success_chance": 0.6,
-				"effects": [{"op": "money", "amount": 6000, "inflate": true, "cat": "events", "label": "Discreet help for the old boss"}],
-				"effects_fail": [{"op": "studio_rel", "amount": -5}],
+				"effects": [
+					{
+						"op": "money",
+						"amount": 6000,
+						"inflate": true,
+						"cat": "events",
+						"label": "Discreet help for the old boss"
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "studio_rel",
+						"amount": -5
+					}
+				],
 				"outcome": "He laughs — and pays. “You did learn something with us.”",
 				"outcome_fail": "“I thought we were friends.” The call is short, the aftertaste long."
 			},
@@ -28,7 +54,12 @@
 				"effects": [],
 				"outcome": "You hang up politely. Some doors are best closed by yourself."
 			}
-		]
+		],
+		"quest": {
+			"title": "The old boss",
+			"icon": "🎬",
+			"step": "Your former boss wants a quiet favor — the kind you don't write down."
+		}
 	},
 	{
 		"id": "junior_gegenleistung",
@@ -38,36 +69,71 @@
 		"choices": [
 			{
 				"label": "Accept the invitation",
-				"effects": [{"op": "favor_grant", "kind": "galaInvite"}],
+				"effects": [
+					{
+						"op": "favor_grant",
+						"kind": "galaInvite"
+					}
+				],
 				"outcome": "A closed event, hand-picked guests — exactly the kind of evening careers are made on."
 			},
 			{
 				"label": "Ask for script access instead",
-				"effects": [{"op": "favor_grant", "kind": "scriptAccess"}],
+				"effects": [
+					{
+						"op": "favor_grant",
+						"kind": "scriptAccess"
+					}
+				],
 				"outcome": "“Bookworm, as always.” From now on the scripts land on your desk a beat earlier."
 			}
-		]
+		],
+		"quest": {
+			"step": "Time to collect — or to disappoint a man who knows your beginnings."
+		}
 	},
 	{
 		"id": "kolumnist_alte_quelle",
 		"cd": 60,
-		"weight": {"base": 1.3},
-		"conditions": {"backstory": "kolumnist", "requires_client": true},
+		"weight": {
+			"base": 1.3
+		},
+		"conditions": {
+			"backstory": "kolumnist",
+			"requires_client": true
+		},
 		"title": "The old source",
 		"text": "[i]“I heard something. Back in the day you'd have bought me a steak for this.”[/i]\n\nYour best source from your columnist days sits in the diner and slides you a napkin with three sentences about {client} — explosive, unconfirmed, ready to print.",
 		"choices": [
 			{
 				"label": "Buy the steak ({money_fmt:500})",
-				"requirements": {"min_cash": 500},
+				"requirements": {
+					"min_cash": 500
+				},
 				"effects": [
-					{"op": "money", "amount": -500, "inflate": true, "cat": "events", "label": "A steak for the old source"},
-					{"op": "followup", "event": "kolumnist_quelle_folge", "delay_weeks": 6}
+					{
+						"op": "money",
+						"amount": -500,
+						"inflate": true,
+						"cat": "events",
+						"label": "A steak for the old source"
+					},
+					{
+						"op": "followup",
+						"event": "kolumnist_quelle_folge",
+						"delay_weeks": 6
+					}
 				],
 				"outcome": "She tells you everything — and promises to call when more surfaces. Old networks don't rust."
 			},
 			{
 				"label": "Make the napkin disappear",
-				"effects": [{"op": "trust", "amount": 6}],
+				"effects": [
+					{
+						"op": "trust",
+						"amount": 6
+					}
+				],
 				"outcome": "You burn the note in the ashtray. {client} hears about it — and never forgets."
 			},
 			{
@@ -75,7 +141,12 @@
 				"effects": [],
 				"outcome": "“A shame. You were the best.” She pays for her own coffee and leaves."
 			}
-		]
+		],
+		"quest": {
+			"title": "The old source",
+			"icon": "🗞",
+			"step": "Your source from the column days is whispering again."
+		}
 	},
 	{
 		"id": "kolumnist_quelle_folge",
@@ -85,55 +156,122 @@
 		"choices": [
 			{
 				"label": "Keep it as leverage",
-				"effects": [{"op": "favor_grant", "kind": "suppressStory"}],
+				"effects": [
+					{
+						"op": "favor_grant",
+						"kind": "suppressStory"
+					}
+				],
 				"outcome": "Knowledge is the only currency that never loses value. You put the folder in the safe."
 			},
 			{
 				"label": "Leak it to the press",
-				"effects": [{"op": "rep", "amount": 2}, {"op": "instinct", "amount": 2}],
+				"effects": [
+					{
+						"op": "rep",
+						"amount": 2
+					},
+					{
+						"op": "instinct",
+						"amount": 2
+					}
+				],
 				"outcome": "The headline lands. Nobody can trace it back to you — but the town remembers not to underestimate you."
 			},
 			{
 				"label": "Destroy the material",
-				"effects": [{"op": "rep", "amount": 1}],
+				"effects": [
+					{
+						"op": "rep",
+						"amount": 1
+					}
+				],
 				"outcome": "Some deals you don't make. Your source doesn't understand — your reflection does."
 			}
-		]
+		],
+		"quest": {
+			"step": "The source delivers. The question is what it will cost you."
+		}
 	},
 	{
 		"id": "anwalt_alte_akte",
 		"cd": 60,
-		"weight": {"base": 1.3},
-		"conditions": {"backstory": "anwalt", "requires_client": true, "requires_studio": true},
+		"weight": {
+			"base": 1.3
+		},
+		"conditions": {
+			"backstory": "anwalt",
+			"requires_client": true,
+			"requires_studio": true
+		},
 		"title": "The old file",
 		"text": "[i]“You drew up that contract back then. You know what paragraph 12 says.”[/i]\n\nA lawyer from {studio} shows up with a file bearing your handwriting — one that would help the studio against {client}. They ask for your “interpretation”.",
 		"choices": [
 			{
 				"label": "Point out the loophole you built in back then",
-				"effects": [{"op": "trust", "amount": 8}, {"op": "studio_rel", "amount": -4}],
+				"effects": [
+					{
+						"op": "trust",
+						"amount": 8
+					},
+					{
+						"op": "studio_rel",
+						"amount": -4
+					}
+				],
 				"outcome": "You planned ahead even then. Paragraph 12 has a subsection b — and it belongs to your client. {studio} backs off through gritted teeth."
 			},
 			{
 				"label": "Work with the studio — discreetly",
 				"success_chance": 0.55,
 				"effects": [
-					{"op": "studio_rel", "amount": 8},
-					{"op": "favor_grant", "kind": "scriptAccess", "from": "studio"}
+					{
+						"op": "studio_rel",
+						"amount": 8
+					},
+					{
+						"op": "favor_grant",
+						"kind": "scriptAccess",
+						"from": "studio"
+					}
 				],
 				"effects_fail": [
-					{"op": "trust", "amount": -10},
-					{"op": "rumor", "text": "{client} is said to have been betrayed by their own agent.", "truth": true, "topic": "skandal", "belief": 35},
-					{"op": "followup", "event": "anwalt_akte_folgen", "delay_weeks": 5}
+					{
+						"op": "trust",
+						"amount": -10
+					},
+					{
+						"op": "rumor",
+						"text": "{client} is said to have been betrayed by their own agent.",
+						"truth": true,
+						"topic": "skandal",
+						"belief": 35
+					},
+					{
+						"op": "followup",
+						"event": "anwalt_akte_folgen",
+						"delay_weeks": 5
+					}
 				],
 				"outcome": "The studio gets its interpretation, you get open doors. Nobody has to know.",
 				"outcome_fail": "Somebody talks. In this town, somebody always talks."
 			},
 			{
 				"label": "Declare a conflict of interest and stay silent",
-				"effects": [{"op": "rep", "amount": 1}],
+				"effects": [
+					{
+						"op": "rep",
+						"amount": 1
+					}
+				],
 				"outcome": "“I represent the other side today.” Clean, correct, boring — and exactly right."
 			}
-		]
+		],
+		"quest": {
+			"title": "The old file",
+			"icon": "⚖️",
+			"step": "A file from your law years has resurfaced — with your initials on it."
+		}
 	},
 	{
 		"id": "anwalt_akte_folgen",
@@ -144,8 +282,18 @@
 			{
 				"label": "Threaten a libel suit",
 				"success_chance": 0.6,
-				"effects": [{"op": "rep", "amount": 1}],
-				"effects_fail": [{"op": "rep", "amount": -2}],
+				"effects": [
+					{
+						"op": "rep",
+						"amount": 1
+					}
+				],
+				"effects_fail": [
+					{
+						"op": "rep",
+						"amount": -2
+					}
+				],
 				"outcome": "Nothing silences a newsroom faster than a lawyer who knows the damages.",
 				"outcome_fail": "The threat comes across thin-skinned — and makes the story all the more interesting."
 			},
@@ -154,31 +302,63 @@
 				"effects": [],
 				"outcome": "You let the matter ebb away. It takes time — but Hollywood has a short memory."
 			}
-		]
+		],
+		"quest": {
+			"step": "The file talks. Decide who gets to listen."
+		}
 	},
 	{
 		"id": "gescheitert_alte_rolle",
 		"cd": 60,
-		"weight": {"base": 1.3},
-		"conditions": {"backstory": "gescheitert", "requires_client": {"free": true}, "requires_studio": true},
+		"weight": {
+			"base": 1.3
+		},
+		"conditions": {
+			"backstory": "gescheitert",
+			"requires_client": {
+				"free": true
+			},
+			"requires_studio": true
+		},
 		"title": "The role that was yours",
 		"text": "[i]“We're recasting the property. You know it, after all — you were on the shortlist back then.”[/i]\n\n{studio} is filming the very project your own acting career broke on. The director asks whether {client} would be interested.",
 		"choices": [
 			{
 				"label": "Prepare {client} with everything you learned back then",
 				"effects": [
-					{"op": "flag_set", "key": "prepFit", "value": 12},
-					{"op": "trust", "amount": 5},
-					{"op": "followup", "event": "gescheitert_premiere", "delay_weeks": 10}
+					{
+						"op": "flag_set",
+						"key": "prepFit",
+						"value": 12
+					},
+					{
+						"op": "trust",
+						"amount": 5
+					},
+					{
+						"op": "followup",
+						"event": "gescheitert_premiere",
+						"delay_weeks": 10
+					}
 				],
 				"outcome": "You know every line, every trap, every directorial whim of this material. {client} gets the best preparation money can't buy."
 			},
 			{
 				"label": "Avoid the project — too many ghosts",
-				"effects": [{"op": "mood", "amount": -2}],
+				"effects": [
+					{
+						"op": "mood",
+						"amount": -2
+					}
+				],
 				"outcome": "Some wounds are better left unopened. {client} doesn't quite understand — you do."
 			}
-		]
+		],
+		"quest": {
+			"title": "The role that was yours",
+			"icon": "🎭",
+			"step": "The part you once lost is being recast. Everyone remembers."
+		}
 	},
 	{
 		"id": "gescheitert_premiere",
@@ -188,47 +368,104 @@
 		"choices": [
 			{
 				"label": "Go — head held high",
-				"effects": [{"op": "rep", "amount": 2}, {"op": "instinct", "amount": 2}],
+				"effects": [
+					{
+						"op": "rep",
+						"amount": 2
+					},
+					{
+						"op": "instinct",
+						"amount": 2
+					}
+				],
 				"outcome": "You sit in row three, where your name once taped to the chair. When the lights come up, they applaud your client — and a few nod at you. That is enough."
 			},
 			{
 				"label": "Stay away and work",
-				"effects": [{"op": "money", "amount": 1500, "inflate": true, "cat": "provision", "label": "Night shift instead of a premiere"}],
+				"effects": [
+					{
+						"op": "money",
+						"amount": 1500,
+						"inflate": true,
+						"cat": "provision",
+						"label": "Night shift instead of a premiere"
+					}
+				],
 				"outcome": "While the town celebrates, you lock down two new deals by phone. Revenge can also be a bank statement."
 			}
-		]
+		],
+		"quest": {
+			"step": "A premiere full of ghosts is coming up — yours among them."
+		}
 	},
 	{
 		"id": "aufsteiger_alte_schulden",
 		"cd": 60,
-		"weight": {"base": 1.3},
-		"conditions": {"backstory": "aufsteiger", "min_year": 1900},
+		"weight": {
+			"base": 1.3
+		},
+		"conditions": {
+			"backstory": "aufsteiger",
+			"min_year": 1900
+		},
 		"title": "A creditor from the old days",
 		"text": "[i]“Without me you'd still be delivering newspapers. Time for that to pay off.”[/i]\n\nThe man who lent you your first money years ago stands in the office — with a smile that isn't one.",
 		"choices": [
 			{
 				"label": "Pay him off — with interest ({money_fmt:12000})",
-				"requirements": {"min_cash": 12000},
-				"effects": [{"op": "money", "amount": -12000, "inflate": true, "cat": "sonstiges", "label": "Old debts settled"}],
+				"requirements": {
+					"min_cash": 12000
+				},
+				"effects": [
+					{
+						"op": "money",
+						"amount": -12000,
+						"inflate": true,
+						"cat": "sonstiges",
+						"label": "Old debts settled"
+					}
+				],
 				"outcome": "You count the bills onto the table without moving a muscle. “We're even.” And this time it's true."
 			},
 			{
 				"label": "Offer him something better: access",
 				"effects": [
-					{"op": "favor_owe", "kind": "galaInvite"},
-					{"op": "followup", "event": "aufsteiger_glaeubiger_kommt", "delay_weeks": 12}
+					{
+						"op": "favor_owe",
+						"kind": "galaInvite"
+					},
+					{
+						"op": "followup",
+						"event": "aufsteiger_glaeubiger_kommt",
+						"delay_weeks": 12
+					}
 				],
 				"outcome": "“I have enough money. But nobody has ever taken me to a premiere like that …” You now owe him an evening in the front row."
 			},
 			{
 				"label": "Have him thrown out",
 				"effects": [
-					{"op": "rumor", "text": "The rise of {agency} is said to be built on borrowed money.", "truth": true, "topic": "skandal", "belief": 30},
-					{"op": "followup", "event": "aufsteiger_glaeubiger_kommt", "delay_weeks": 6}
+					{
+						"op": "rumor",
+						"text": "The rise of {agency} is said to be built on borrowed money.",
+						"truth": true,
+						"topic": "skandal",
+						"belief": 30
+					},
+					{
+						"op": "followup",
+						"event": "aufsteiger_glaeubiger_kommt",
+						"delay_weeks": 6
+					}
 				],
 				"outcome": "He leaves without resistance. At the door he turns around: “You know that I know stories, right?”"
 			}
-		]
+		],
+		"quest": {
+			"title": "Old debts",
+			"icon": "💵",
+			"step": "A creditor from the old days has found your new address."
+		}
 	},
 	{
 		"id": "aufsteiger_glaeubiger_kommt",
@@ -238,18 +475,40 @@
 		"choices": [
 			{
 				"label": "Pay him off for good ({money_fmt:15000})",
-				"requirements": {"min_cash": 15000},
-				"effects": [{"op": "money", "amount": -15000, "inflate": true, "cat": "sonstiges", "label": "Old debts — final line"}],
+				"requirements": {
+					"min_cash": 15000
+				},
+				"effects": [
+					{
+						"op": "money",
+						"amount": -15000,
+						"inflate": true,
+						"cat": "sonstiges",
+						"label": "Old debts — final line"
+					}
+				],
 				"outcome": "This time with a receipt, witnesses and a handshake. The chapter is closed."
 			},
 			{
 				"label": "Bring him into the business — a silent partner",
 				"effects": [
-					{"op": "money", "amount": 20000, "inflate": true, "cat": "investition", "label": "A silent partner's stake"},
-					{"op": "rep", "amount": -2}
+					{
+						"op": "money",
+						"amount": 20000,
+						"inflate": true,
+						"cat": "investition",
+						"label": "A silent partner's stake"
+					},
+					{
+						"op": "rep",
+						"amount": -2
+					}
 				],
 				"outcome": "Fresh capital, no questions — and one more shadow at your back. Polite society wrinkles its nose."
 			}
-		]
+		],
+		"quest": {
+			"step": "The creditor is done waiting."
+		}
 	}
 ]

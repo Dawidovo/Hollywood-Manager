@@ -88,6 +88,14 @@ use (more on success). `check` replaces `success_chance` (never both).
 Conditions and choice `requirements` also accept
 `"min_attr": {"verhandlung": 40}` (requirements: button greys out).
 
+**Quest journal**: an event may carry
+`"quest": {"title": "…", "icon": "🧾", "step": "…"}`. When such an event
+fires a `followup`, the chain appears as a trackable story in the Journal
+tab; every chain link can set the current `quest.step`. A link resolved
+without a further `followup` closes the story (the chosen `outcome`
+becomes the closing line). Events without a `quest` block never appear
+in the journal.
+
 ## Career, reputation, locations & contacts (manager systems)
 
 These four categories drive the "manager as a person" systems and are fully

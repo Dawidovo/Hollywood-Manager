@@ -221,7 +221,12 @@
 				],
 				"outcome": "You do nothing — and exactly that gets around. {client} thinks you could have made a call."
 			}
-		]
+		],
+		"quest": {
+			"title": "Mail from the tax office",
+			"icon": "🧾",
+			"step": "The audit is running — wait it out or intervene."
+		}
 	},
 	{
 		"id": "steuer_nachspiel",
@@ -282,6 +287,9 @@
 				"outcome": "Acquittal! The papers celebrate {client} as the victim of overzealous officials — and you as the agency with nerves of steel.",
 				"outcome_fail": "The trial becomes a gauntlet. The headlines stick."
 			}
-		]
+		],
+		"quest": {
+			"step": "The auditor is back with a second binder."
+		}
 	}
 ]

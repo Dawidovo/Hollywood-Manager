@@ -153,6 +153,7 @@ func eval_weight(def: Dictionary) -> float:
 # ---------- Aufbau des Modals ----------
 func build_event(def: Dictionary, ctx: Dictionary = {}) -> Variant:
 	ctx = ctx.duplicate(true)
+	ctx["_eventId"] = str(def.get("id", ""))
 	var conds: Dictionary = def.get("conditions", {})
 	# Kontext binden: Klient und Studio wählen bzw. aus der Kette übernehmen
 	if ctx.has("cid"):
@@ -205,8 +206,9 @@ func _choice_fn(ch: Dictionary, ctx: Dictionary) -> Callable:
 			ok = Util.chance(float(ch.success_chance))
 		var effects: Array = ch.get("effects", []) if ok else ch.get("effects_fail", ch.get("effects", []))
 		apply_effects(effects, ctx)
-		var out := str(ch.get("outcome", "")) if ok else str(ch.get("outcome_fail", ch.get("outcome", "")))
-		return subst(out, ctx)
+		var out := subst(str(ch.get("outcome", "")) if ok else str(ch.get("outcome_fail", ch.get("outcome", ""))), ctx)
+		_quest_after_choice(ctx, effects, out)
+		return out
 
 
 # ---------- Platzhalter ----------
@@ -317,8 +319,12 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 			# Eventkette: delay_weeks bleibt das Datenformat; intern derzeit
 			# Monatsauflösung (aufgerundet), Umstellung auf Wochen folgt.
 			var delay_w := int(ef.get("delay_weeks", 4))
+			_quest_on_followup(ef, ctx)
+			var fu_ctx := {"cid": ctx.get("cid"), "sid": ctx.get("sid")}
+			if ctx.has("_questId"):
+				fu_ctx["_questId"] = str(ctx._questId)
 			st.followups.append({"type": "json", "event": str(ef.get("event", "")),
-				"ctx": {"cid": ctx.get("cid"), "sid": ctx.get("sid")},
+				"ctx": fu_ctx,
 				"due": Game.mi() + maxi(1, roundi(delay_w / 4.0))})
 		# ---------- Dialog-/Brief-Ops (Feature: Dialogsystem, alle moddbar) ----------
 		"chance":
@@ -429,6 +435,54 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 			_say("Refused debts do not disappear in this town. They compound — in whispers.", ctx)
 		_:
 			push_warning("EvEngine: Unbekannte Effekt-Op „%s“ — übersprungen." % str(ef.get("op", "")))
+
+
+# ---------- Quest-Journal (RPG-Chunk 17) ----------
+# Nur JSON-Ketten, deren Start-Event einen "quest"-Block trägt, erscheinen
+# im Journal — Alltagsrauschen bleibt draußen. Der Kettenstart benennt den
+# Auftrag; jedes Glied kann per quest.step den aktuellen Schritt setzen.
+func quest_by_id(quest_id: String) -> Dictionary:
+	for q in Game.state.get("quests", []):
+		if str(q.id) == quest_id:
+			return q
+	return {}
+
+
+func _quest_on_followup(ef: Dictionary, ctx: Dictionary) -> void:
+	if not Game.state.has("quests"):
+		return
+	var trigger_def := def_by_id(str(ctx.get("_eventId", "")))
+	var quest_id := str(ctx.get("_questId", str(ctx.get("_eventId", ""))))
+	var existing := quest_by_id(quest_id)
+	if existing.is_empty() and not trigger_def.has("quest"):
+		return
+	var target_def := def_by_id(str(ef.get("event", "")))
+	var step := str(target_def.get("quest", {}).get("step", "To be continued …"))
+	var due := Game.mi() + maxi(1, roundi(int(ef.get("delay_weeks", 4)) / 4.0))
+	if existing.is_empty():
+		var meta: Dictionary = trigger_def.get("quest", {})
+		Game.state.quests.append({"id": quest_id,
+			"title": subst(str(meta.get("title", trigger_def.get("title", quest_id))), ctx),
+			"icon": str(meta.get("icon", "📜")), "step": subst(step, ctx),
+			"startedMi": Game.mi(), "dueMi": due, "status": "aktiv"})
+	else:
+		existing.step = subst(step, ctx)
+		existing.dueMi = due
+		existing.status = "aktiv"
+	ctx["_questId"] = quest_id
+
+
+# Kettenglied ohne weiteren followup in der gewählten Choice ⇒ Auftrag zu.
+func _quest_after_choice(ctx: Dictionary, effects: Array, outcome: String) -> void:
+	var quest := quest_by_id(str(ctx.get("_questId", "")))
+	if quest.is_empty() or str(quest.status) != "aktiv":
+		return
+	if effects.any(func(ef): return ef is Dictionary and str(ef.get("op", "")) == "followup"):
+		return
+	quest.status = "abgeschlossen"
+	quest["doneMi"] = Game.mi()
+	quest.step = outcome.left(90) + ("…" if outcome.length() > 90 else "")
+	Game.log_msg("Story closed: %s" % str(quest.title), "deal")
 
 
 # Älteste Schuld gegenüber dem Brief-Absender im Kontext finden.
