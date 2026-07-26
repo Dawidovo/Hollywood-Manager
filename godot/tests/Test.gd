@@ -1988,6 +1988,28 @@ func _ready() -> void:
 	check(bool(cb_c.flags.get("comebackDone", false)) and not cb_c.flags.has("comebackActive"), "Das Comeback ist verbraucht — ein Versuch pro Klient")
 	Game.state.market = 1.0
 
+	# FYC-Kampagnen: Saisonfenster, Boost mit Kappung, Reset nach der Zeremonie
+	Game.new_game("FYC", 1950)
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var fy_c: Dictionary = Game.state.clients[0]
+	Game.state.released.append({"title": "Class Film", "year": 1950, "quality": 82,
+		"roles": [{"type": "lead", "filled": {"clientId": int(fy_c.id)}}]})
+	Game.state.month = 5
+	check(not Game.fyc_eligible(fy_c), "Außerhalb der Saison keine FYC-Kampagne")
+	Game.state.month = 11
+	check(Game.fyc_eligible(fy_c), "Hauptrolle im Klassenjahr macht kampagnenfähig")
+	var fy_cash0 := float(Game.state.agency.cash)
+	Game.fyc_campaign(int(fy_c.id), false)
+	check(absf(float(fy_c.campaign) - Balance.FYC_SMALL_BOOST) < 0.001 and float(Game.state.agency.cash) < fy_cash0, "Trade-Ads buchen Kosten und Boost")
+	Game.fyc_campaign(int(fy_c.id), true)
+	Game.fyc_campaign(int(fy_c.id), true)
+	check(float(fy_c.campaign) <= Balance.FYC_CAP + 0.001, "FYC-Boost ist gekappt")
+	Game.state.year = 1951
+	Game.state.month = 2
+	var fy_award = Game.awards_ceremony()
+	check(fy_award != null and absf(float(fy_c.campaign)) < 0.001, "Zeremonie verbraucht die Kampagne (Reset auf 0)")
+
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.
 	Game.start_negotiation("monroe")

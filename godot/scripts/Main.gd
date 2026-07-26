@@ -1171,6 +1171,10 @@ func _on_comeback(cid: int) -> void:
 	_show_simple_modal("🌅 The second act", Game.launch_comeback(cid))
 	render()
 
+func _on_fyc(cid: int, big: bool) -> void:
+	_show_simple_modal("🏆 For your consideration", Game.fyc_campaign(cid, big))
+	render()
+
 # ---------- Personal: the manager as their own system ----------
 # Runs a persona action, then re-renders.
 func _player_action(action: Callable) -> void:
@@ -2533,6 +2537,8 @@ func _render_klienten() -> void:
 			chips.append(_chip("❄ Cold %d" % roundi(c.heat), BLUE))
 		if c.exhaustion > 60:
 			chips.append(_chip("⚠ Overworked", RED))
+		if float(c.get("campaign", 0.0)) > 0.0:
+			chips.append(_chip("🏆 FYC %d" % roundi(float(c.campaign)), GOLD))
 		if Game.voice_at_risk(c):
 			chips.append(_chip("🎙 Fragile voice", RED))
 		elif c.flags.get("voiceTrained", false):
@@ -2585,6 +2591,13 @@ func _render_klienten() -> void:
 			for type_s in Game.narrative_candidate_types(c):
 				narrative_buttons.add_child(_btn(str(Game.NARRATIVE_TYPES[type_s].label), _on_narrative.bind(int(c.id), str(type_s))))
 			box.add_child(narrative_buttons)
+		# Award-Saison: FYC-Kampagnen für Klienten mit Hauptrolle im Klassenjahr
+		if Game.fyc_eligible(c):
+			var fyc_row := HFlowContainer.new()
+			fyc_row.add_theme_constant_override("h_separation", 6)
+			fyc_row.add_child(_btn("🏆 Trade ads (−%s)" % Util.fmt_money(roundf(Balance.FYC_SMALL_COST * Util.infl(st.year))), _on_fyc.bind(int(c.id), false)))
+			fyc_row.add_child(_btn("🏆 Full FYC circuit (−%s)" % Util.fmt_money(roundf(Balance.FYC_BIG_COST * Util.infl(st.year))), _on_fyc.bind(int(c.id), true)))
+			box.add_child(fyc_row)
 		# Comeback (spätes Karriere-Kunststück): ein Versuch, wenn der Zenit
 		# überschritten und der Ruhm tief genug gefallen ist.
 		if Game.comeback_possible(c):

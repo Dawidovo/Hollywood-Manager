@@ -2620,6 +2620,45 @@ func _studio(sid: String) -> Dictionary:
 	return {"name": "?"}
 
 # ---------- Awards ----------
+# „For Your Consideration“: In der Award-Saison (Nov–Jan) lässt sich die
+# Academy-Wertung eines Klienten mit Kampagnenbudget anschieben — das
+# c.campaign-Feld fließt in die Performance-Wertung der Zeremonie ein.
+func fyc_season() -> bool:
+	return int(state.month) in [11, 12, 1]
+
+# Das „Klassenjahr“, das die nächste Zeremonie ehrt.
+func fyc_class_year() -> int:
+	return int(state.year) if int(state.month) >= 11 else int(state.year) - 1
+
+func fyc_eligible(c: Dictionary) -> bool:
+	if not fyc_season():
+		return false
+	for f in state.released:
+		if int(f.year) != fyc_class_year():
+			continue
+		for r in f.get("roles", []):
+			if str(r.get("type", "")) == "lead" and r.get("filled") != null and r.filled.get("clientId") != null and int(r.filled.clientId) == int(c.id):
+				return true
+	return false
+
+func fyc_campaign(cid, big: bool) -> String:
+	var c = client(cid)
+	if c == null or not fyc_eligible(c):
+		return "The Academy's attention has a season — and this is not it."
+	if float(c.get("campaign", 0.0)) >= Balance.FYC_CAP:
+		return "Every trade paper already carries the name. More money would only look desperate."
+	var cost := roundi((Balance.FYC_BIG_COST if big else Balance.FYC_SMALL_COST) * Util.infl(state.year))
+	if float(state.agency.cash) < float(cost):
+		return "The campaign would cost %s — the till cannot cover it." % Util.fmt_money(cost)
+	book(-float(cost), "pr_recht", "FYC campaign: %s" % client_name(c))
+	c.campaign = minf(float(c.get("campaign", 0.0)) + (Balance.FYC_BIG_BOOST if big else Balance.FYC_SMALL_BOOST), Balance.FYC_CAP)
+	attr_gain("geschaeftssinn", 0.2)
+	if big:
+		record_identity("kommerziell", 0.5)
+		press_event("Awards", "For your consideration: the town cannot open a paper without reading the name %s" % client_name(c))
+		return "Trade ads, screenings, dinners with the right voters. The name is everywhere now — exactly where it needs to be."
+	return "A tasteful spread in the trades, twice a week. The right people notice — quietly."
+
 func awards_ceremony() -> Variant:
 	var pool = state.released.filter(func(f): return int(f.year) == int(state.year) - 1)
 	if pool.is_empty():

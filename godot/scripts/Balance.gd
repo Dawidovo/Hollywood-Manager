@@ -41,6 +41,15 @@ const PROD_MODERN_YEAR := 2015
 const PROD_MONTHS_MIN_MODERN := 3
 const PROD_MONTHS_MAX_MODERN := 5
 
+# ---------- Award-Saison: „For Your Consideration“-Kampagnen ----------
+# Kampagnen-Fenster: November–Januar (Zeremonie im Februar). Der Boost
+# fließt in die Performance-Wertung (Zufallsanteil dort: 0–15).
+const FYC_SMALL_COST := 4000.0
+const FYC_SMALL_BOOST := 8.0
+const FYC_BIG_COST := 12000.0
+const FYC_BIG_BOOST := 18.0
+const FYC_CAP := 30.0
+
 # ---------- Comeback (spätes Karriere-Kunststück) ----------
 # Ein Star nach dem Zenit, ein Prestige-Projekt, eine Kampagne: zündet es
 # (Einspielfaktor oder Qualität über den Schwellen), ist er zurück.
