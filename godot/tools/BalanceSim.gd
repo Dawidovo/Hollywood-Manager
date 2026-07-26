@@ -11,20 +11,31 @@ extends Node
 const WEEKS_PER_RUN := 104
 const MAX_CLIENTS := 4
 const MAX_PITCHES_PER_WEEK := 3
+# Mehrere Seeds pro Epoche (Konfidenz statt Einzellauf) und zwei Profile:
+# "solide" pitcht nur, "aggressiv" nachverhandelt jede Zusage und schnürt
+# Package-Deals, wo möglich.
+const SEED_OFFSETS := [0, 5000]
+const PROFILES := ["solide", "aggressiv"]
+
+var profile := "solide"
 
 
 func _ready() -> void:
 	print("=== Hollywood Manager Balance-Sim ===")
-	print("SIM;year;week;cash;priv;stress;energy;clients;rep;inboxOpen;favors;debts;films")
-	for year in [1925, 1950, 1980, 2010]:
-		_run_era(int(year))
+	print("SIM;profile;seed;year;week;cash;priv;stress;energy;clients;rep;inboxOpen;favors;debts;films")
+	for run_profile in PROFILES:
+		profile = str(run_profile)
+		for seed_off in SEED_OFFSETS:
+			for year in [1925, 1950, 1980, 2010]:
+				_run_era(int(year), int(seed_off))
 	get_tree().call_deferred("quit", 0)
 
 
-func _run_era(year: int) -> void:
-	seed(1000 + year)
+func _run_era(year: int, seed_off: int) -> void:
+	seed(1000 + year + seed_off)
 	Game.new_game("Sim %d" % year, year)
-	var stats := {"signTry": 0, "signOk": 0, "pitchTry": 0, "pitchOk": 0, "letters": 0, "overWeek": 0}
+	var stats := {"signTry": 0, "signOk": 0, "pitchTry": 0, "pitchOk": 0,
+		"tableSkips": 0, "haggleTry": 0, "haggleOk": 0, "letters": 0, "overWeek": 0}
 	for week_no in WEEKS_PER_RUN:
 		if Game.state.over:
 			stats.overWeek = week_no
@@ -40,10 +51,11 @@ func _run_era(year: int) -> void:
 		Game.state.strikeMonths = int(Game.state.strikeMonths)
 		Game.end_week()
 		if week_no % 13 == 0 or week_no == WEEKS_PER_RUN - 1:
-			_snapshot(year, week_no)
-	_snapshot(year, WEEKS_PER_RUN)
-	print("SUM;%d;signed %d/%d;pitched %d/%d;letters %d;gameOverWeek %d" % [year,
-		stats.signOk, stats.signTry, stats.pitchOk, stats.pitchTry, stats.letters, stats.overWeek])
+			_snapshot(year, week_no, seed_off)
+	_snapshot(year, WEEKS_PER_RUN, seed_off)
+	print("SUM;%s;%d;%d;signed %d/%d;pitched %d/%d;tables %d;haggled %d/%d;letters %d;gameOverWeek %d" % [
+		profile, seed_off, year, stats.signOk, stats.signTry, stats.pitchOk, stats.pitchTry,
+		stats.tableSkips, stats.haggleOk, stats.haggleTry, stats.letters, stats.overWeek])
 	_print_ledger(year)
 
 
@@ -61,10 +73,10 @@ func _print_ledger(year: int) -> void:
 		print("LEDGER;%d;%s;%d" % [year, str(cat), roundi(float(by_cat[cat]))])
 
 
-func _snapshot(year: int, week_no: int) -> void:
+func _snapshot(year: int, week_no: int, seed_off: int) -> void:
 	var st = Game.state
 	var pl: Dictionary = st.player
-	print("SIM;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d" % [year, week_no,
+	print("SIM;%s;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d" % [profile, seed_off, year, week_no,
 		roundi(float(st.agency.cash)), roundi(float(pl.cash)),
 		roundi(float(pl.stress)), roundi(float(pl.energy)),
 		st.clients.size(), int(st.agency.rep),
@@ -118,7 +130,22 @@ func _pitch(stats: Dictionary) -> void:
 			var res: Dictionary = Game.submit_pitch(cs.id, role_idx, int(elig[0].c.id))
 			if res.get("success", false):
 				if Game.pitch_ctx != null and Game.pitch_ctx.get("table", false):
+					stats.tableSkips += 1
 					Game.pitch_ctx = null
-				else:
-					Game.close_deal(float(Game.pitch_ctx.fee))
-					stats.pitchOk += 1
+					continue
+				# Aggressives Profil: jede Zusage nachverhandeln, Package anbieten
+				if profile == "aggressiv":
+					stats.haggleTry += 1
+					var hg: Dictionary = Game.haggle()
+					if hg.get("success", false):
+						stats.haggleOk += 1
+					elif hg.get("lost", false):
+						continue
+					var pk_opts: Array = Game.package_options()
+					if pk_opts.size():
+						Game.try_package(int(pk_opts[0].roleIdx), int(pk_opts[0].c.id))
+						if Game.pitch_ctx == null:
+							stats.pitchOk += 1
+							continue
+				Game.close_deal(float(Game.pitch_ctx.fee))
+				stats.pitchOk += 1
