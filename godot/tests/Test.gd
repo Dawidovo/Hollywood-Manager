@@ -1794,5 +1794,101 @@ func _ready() -> void:
 	Jukebox._cache.clear()
 	await get_tree().process_frame
 
+	# =====================================================================
+	# Chunk 05: Kern-Regressionen — fame_at-Kurve, Pool nach Tod, Casting-Fit,
+	# Package-Deal, Box-Office-Determinismus, Wortbruch, Insolvenz
+	# =====================================================================
+	var fa_bg: Dictionary = Game.actor_by_id["bogart"]
+	check(Game.fame_at(fa_bg, float(int(fa_bg.debut) - 5)) == 0, "fame_at: vor dem Debüt 0")
+	check(Game.fame_at(fa_bg, float(fa_bg.peak)) == int(fa_bg.peakFame), "fame_at: am Karrierehoch = peakFame")
+	check(Game.fame_at(fa_bg, float(fa_bg.peak) - 6.0) < int(fa_bg.peakFame) and Game.fame_at(fa_bg, float(fa_bg.peak) + 8.0) < int(fa_bg.peakFame), "fame_at: Kurve steigt zum Hoch und fällt danach")
+	check(Game.fame_at(fa_bg, 2005.0) == 5, "fame_at: lange nach der Karriere nur Sockelruhm")
+
+	Game.new_game("Pool 1980", 1980)
+	check(not Game.available_actors().any(func(a): return str(a.id) == "bogart"), "Verstorbene Schauspieler fehlen im Pool (Bogart 1980)")
+
+	# Casting-Fit: Genre-Match schlägt fremdes Genre (fit_score ist RNG-frei)
+	Game.new_game("Regression", 1950)
+	var fit_c := {"id": 77777, "aid": "bogart", "perks": [], "fame": 60.0, "heat": 0.0,
+		"exhaustion": 0.0, "flags": {}, "dna": Game.initial_dna(Game.actor_by_id["bogart"]),
+		"exclusiveStudio": "", "clauses": [], "talentBonus": 0.0}
+	var fit_role := {"type": "lead", "gender": "m", "minFame": 30, "ageMin": 30, "ageMax": 60, "fee": 40000, "filled": null, "rejected": []}
+	var fit_cast := {"id": 9001, "studioId": "mgm", "title": "Fit-Test", "genre": "crime", "prestige": 1, "budget": 1000000, "deadline": 8, "qualityMod": 0.0, "roles": [fit_role]}
+	var fit_match := Game.fit_score(fit_cast, fit_role, fit_c)
+	fit_cast.genre = "western"
+	var fit_off := Game.fit_score(fit_cast, fit_role, fit_c)
+	check(fit_match > fit_off, "fit_score: Genre-Match (%d) schlägt fremdes Genre (%d)" % [fit_match, fit_off])
+
+	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
+	# beide Gagen liegen 12 % über dem regulären Satz.
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	Game.start_negotiation("gkelly")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var pk_c1: Dictionary = Game.state.clients[0]
+	var pk_c2: Dictionary = Game.state.clients[1]
+	var pk_lead := {"type": "lead", "gender": "f", "minFame": 10, "ageMin": 18, "ageMax": 45, "fee": 60000, "filled": null, "rejected": []}
+	var pk_supp := {"type": "support", "gender": "f", "minFame": 5, "ageMin": 18, "ageMax": 45, "fee": 20000, "filled": null, "rejected": []}
+	var pk_cast := {"id": 9002, "studioId": "mgm", "title": "Package-Test", "genre": "drama", "prestige": 1, "budget": 1200000, "deadline": 8, "qualityMod": 0.0, "roles": [pk_lead, pk_supp]}
+	Game.pitch_ctx = {"casting": pk_cast, "roleIdx": 0, "role": pk_lead, "client": pk_c1,
+		"fee": Game.role_fee_for(pk_cast, pk_lead, pk_c1), "haggled": false}
+	var pk_exp1 := roundi(float(Game.pitch_ctx.fee) * 1.12)
+	var pk_exp2 := roundi(float(Game.role_fee_for(pk_cast, pk_supp, pk_c2)) * 1.12)
+	seed(1234)
+	var pk_res: Dictionary = Game.try_package(1, int(pk_c2.id))
+	check(bool(pk_res.get("success", false)), "Package-Deal kommt zustande (Seed 1234)")
+	check(pk_lead.filled != null and int(pk_lead.filled.fee) == pk_exp1 and pk_supp.filled != null and int(pk_supp.filled.fee) == pk_exp2, "Package-Deal: beide Gagen +12 %")
+
+	# Box-Office: gleicher Seed → identisches Ergebnis (Determinismus)
+	var bo_proto := {"id": 9100, "studioId": "mgm", "title": "Det-Test", "genre": "drama", "prestige": 1, "budget": 1000000, "qualityMod": 0.0, "roles": [
+		{"type": "lead", "gender": "m", "filled": {"clientId": null, "name": "NPC A", "talent": 62.0, "fame": 58.0}},
+		{"type": "support", "gender": "f", "filled": {"clientId": null, "name": "NPC B", "talent": 55.0, "fame": 30.0}}]}
+	seed(4711)
+	var bo_a: Dictionary = Game.release_film(bo_proto.duplicate(true))
+	seed(4711)
+	var bo_b: Dictionary = Game.release_film(bo_proto.duplicate(true))
+	check(str(bo_a.text) == str(bo_b.text), "Box-Office: gleicher Seed → gleiches Ergebnis")
+
+	# Flop senkt Heat, Hit steigert Ruhm — die Marktlage erzwingt das Verdikt
+	# (Markt 0,2: ratio maximal ~0,9; Markt 2,5: ratio sicher über 2).
+	var bh_c: Dictionary = Game.state.clients[0]
+	bh_c.heat = 5.0
+	var bh_heat := float(bh_c.heat)
+	var bh_flop := {"id": 9101, "studioId": "mgm", "title": "Flop-Test", "genre": "drama", "prestige": 0, "budget": 1000000, "qualityMod": 0.0, "roles": [
+		{"type": "lead", "gender": "f", "filled": {"clientId": int(bh_c.id), "fee": 50000}}]}
+	Game.state.market = 0.2
+	seed(99)
+	Game.release_film(bh_flop)
+	check(float(bh_c.heat) < bh_heat, "Flop senkt den Heat des Klienten")
+	var bh_fame := float(bh_c.fame)
+	var bh_hit := {"id": 9102, "studioId": "mgm", "title": "Hit-Test", "genre": "drama", "prestige": 2, "budget": 1000000, "qualityMod": 0.0, "roles": [
+		{"type": "lead", "gender": "f", "filled": {"clientId": int(bh_c.id), "fee": 50000}}]}
+	Game.state.market = 2.5
+	seed(99)
+	Game.release_film(bh_hit)
+	check(float(bh_c.fame) > bh_fame, "Hit steigert den Ruhm des Klienten")
+	Game.state.market = 1.0
+
+	# Gebrochenes Klienten-Versprechen: Loyalität und Agentur-Ruf sinken
+	Game.new_game("Wortbruch", 1950)
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": "lead12"})
+	var wb_c: Dictionary = Game.state.clients[0]
+	var wb_loy := float(wb_c.loyalty)
+	var wb_rep := int(Game.state.agency.rep)
+	wb_c.promises[0].due = Game.mi() - 1
+	Game.tick_clients([])
+	check(bool(wb_c.promises[0].get("broken", false)), "Überfälliges Klienten-Versprechen gilt als gebrochen")
+	check(float(wb_c.loyalty) < wb_loy and int(Game.state.agency.rep) < wb_rep, "Wortbruch: Loyalität und Agentur-Ruf sinken")
+
+	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
+	Game.new_game("Pleite", 1950)
+	Game.state.agency.cash = -5000000.0
+	Game.state.agency.debtMonths = 2
+	for i in 4:
+		Game.state.strikeMonths = 0
+		Game.end_week()
+	check(Game.state.over, "Drei Monate insolvent → Game Over")
+
 	print("=== FERTIG: %d Fehler ===" % fails)
 	get_tree().call_deferred("quit", 1 if fails > 0 else 0)

@@ -22,7 +22,7 @@ Kleine, in sich abgeschlossene Arbeitspakete — jeweils ein Chunk pro Session/P
 | 02 | [Game.gd: Utils extrahieren](02-game-gd-utils-extrahieren.md) | Tech Debt | offen |
 | 03 | [Game.gd: DNA-System extrahieren](03-game-gd-dna-extrahieren.md) | Tech Debt | offen |
 | 04 | [Save-Versionierung & Migration](04-save-migration.md) | Robustheit | erledigt (Versionskette `_migrate_save`, Backup `hm_save.bak.json`, Fehlerdialog, v1-Fixture-Test) |
-| 05 | [Testsuite ausbauen](05-tests-ausbauen.md) | Qualität | offen |
+| 05 | [Testsuite ausbauen](05-tests-ausbauen.md) | Qualität | erledigt (500+ Checks; Kern-Regressionen fame_at/Fit/Package/Box-Office-Determinismus/Wortbruch/Insolvenz; Exit-Code ≠ 0 verifiziert) |
 | 06 | [gdlint/gdformat einführen](06-gdlint-einfuehren.md) | Tooling | erledigt (gdlint aktiv; gdformat bewusst ausgelassen — Riesen-Diff) |
 | 07 | [SonarQube-Findings abarbeiten](07-sonarqube-findings.md) | Qualität | erledigt (laufende Regel) |
 | 08 | [Web-Prototyp einfrieren](08-web-prototyp-einfrieren.md) | Tech Debt | entschieden |
