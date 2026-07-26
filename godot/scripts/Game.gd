@@ -673,11 +673,95 @@ func tick_rivals(events: Array = [], force: bool = false) -> void:
 			var rumor := add_rumor(int(target.id), "%s is sowing doubts about the reliability of %s in the studio corridors." % [rival.name, client_name(target)], false, "skandal", ["Studios", "Assistants"], 14.0, true, "", 34.0)
 			rumor["sourceRival"] = str(rival.id)
 			press_event("Agencies", "Ice age between %s and %s: studio corridors become a battlefield" % [state.agency.name, rival.name])
+		# Aktives Abwerbe-Duell (statt stillem Grudge): unzufriedene Klienten
+		# bekommen ein konkretes Gegenangebot auf den Tisch gelegt.
+		if state.clients.size() and (force or Util.chance(0.04 + float(rival.grudge) / 500.0)):
+			var poach_cands: Array = state.clients.filter(func(pc):
+				return float(pc.loyalty) < 55.0 or float(pc.mood) < 45.0)
+			if poach_cands.size():
+				events.append(_rival_poach_event(rival, Util.pick(poach_cands)))
 		if not force and not cooperation_added and float(rival.grudge) <= 12.0 and float(rival.rel) >= 20.0 and Util.chance(0.04):
 			var coop = _rival_coop_event(rival)
 			if coop != null:
 				events.append(coop)
 				cooperation_added = true
+
+# Marktanteils-Ranking: Star-Power aller Agenturen (Summe Klienten-Ruhm),
+# Spieler eingeschlossen — die Konkurrenz wird als Rangliste sichtbar.
+func agency_ranking() -> Array:
+	var out: Array = []
+	var own := 0.0
+	for c in state.clients:
+		own += float(c.fame)
+	out.append({"name": str(state.agency.name), "score": own, "isPlayer": true})
+	for rival in state.get("rivals", []):
+		var score := 0.0
+		for aid in rival.clients:
+			var actor: Dictionary = actor_by_id.get(str(aid), {})
+			if not actor.is_empty():
+				score += float(Util.fame_at(actor, state.year))
+		out.append({"name": str(rival.name), "score": score, "isPlayer": false})
+	out.sort_custom(func(a, b): return float(a.score) > float(b.score))
+	return out
+
+
+# Abwerbe-Duell: Der Rivale legt ein konkretes Angebot auf den Tisch —
+# mitbieten, an die gemeinsame Geschichte appellieren oder ziehen lassen.
+func _rival_poach_event(rival: Dictionary, c: Dictionary) -> Dictionary:
+	var rid := str(rival.id)
+	var rival_name := str(rival.name)
+	var cid := int(c.id)
+	var bonus := roundi(Util.ask_fee(float(c.fame), state.year) * 0.06)
+	var appeal_p := clampf(0.30 + float(c.loyalty) / 200.0 + float(c.trust) / 250.0 + float(attr("menschenkenntnis")) / 400.0, 0.1, 0.9)
+	return {"title": "Poaching attempt: %s" % client_name(c),
+		"text": "[i]“Half the commission, twice the attention.”[/i]\n\n%s has made %s a concrete offer — and your client is listening. Loyalty %d, mood %d: this is not a bluff." % [rival_name, client_name(c), roundi(float(c.loyalty)), roundi(float(c.mood))],
+		"choices": [
+			{"label": "Match the terms (signing bonus %s)" % Util.fmt_money(bonus), "fn": func():
+				var cl = client(cid)
+				var rv = rival_by_id(rid)
+				if cl == null:
+					return "The moment has passed."
+				if float(state.agency.cash) < float(bonus):
+					return "The till cannot cover the bonus — and everyone at the table knows it."
+				book(-float(bonus), "bonus", "Counter-offer: %s stays" % client_name(cl))
+				cl.loyalty = clampf(float(cl.loyalty) + 10.0, 0.0, 100.0)
+				change_trust(cl, 4.0)
+				if rv != null:
+					rv.grudge = clampf(float(rv.grudge) + 12.0, 0.0, 100.0)
+				attr_gain("verhandlung", 0.3)
+				press_event("Agencies", "%s outbids %s — %s stays" % [state.agency.name, rival_name, client_name(cl)])
+				return "Money talks loudest when it arrives first. %s signs the amendment — and %s crosses a name off a list." % [client_name(cl), rival_name]},
+			{"label": "[👁 %d %%] Appeal to everything you built together" % roundi(appeal_p * 100.0), "fn": func():
+				var cl = client(cid)
+				var rv = rival_by_id(rid)
+				if cl == null:
+					return "The moment has passed."
+				if Util.chance(appeal_p):
+					attr_gain("menschenkenntnis", 0.4)
+					cl.loyalty = clampf(float(cl.loyalty) + 6.0, 0.0, 100.0)
+					cl.mood = clampf(float(cl.mood) + 4.0, 0.0, 100.0)
+					return "No numbers, just history: the first casting, the first premiere, the promise you kept. %s stays." % client_name(cl)
+				attr_gain("menschenkenntnis", 0.15)
+				_client_leaves_to_rival(cl, rv)
+				return "The words are right, the timing is not. %s signs across town — politely, which somehow makes it worse." % client_name(cl)},
+			{"label": "Let them go", "fn": func():
+				var cl = client(cid)
+				var rv = rival_by_id(rid)
+				if cl == null:
+					return "The moment has passed."
+				_client_leaves_to_rival(cl, rv)
+				state.agency.rep = clampi(int(state.agency.rep) - 2, 0, 100)
+				return "Some fights cost more than the prize. The roster is shorter — and the town takes note."},
+		]}
+
+
+func _client_leaves_to_rival(c: Dictionary, rival) -> void:
+	state.clients.erase(c)
+	if rival != null:
+		rival.clients.append(str(c.aid))
+		press_event("Client moves", "%s leaves %s for %s" % [client_name(c), state.agency.name, str(rival.name)])
+	log_msg("%s leaves the agency." % client_name(c), "bad")
+
 
 func rival_casting_block(studio_id: String) -> float:
 	for rival in state.get("rivals", []):

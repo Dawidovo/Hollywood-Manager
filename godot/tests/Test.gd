@@ -1931,6 +1931,39 @@ func _ready() -> void:
 	check(v_fit_ok - v_fit_risk >= 10, "Tonfilm-Fenster: fragile Stimme kostet Casting-Passung (%d vs %d)" % [v_fit_risk, v_fit_ok])
 	check(Data.EVENTS.any(func(e): return str(e.id) == "tonfilm_tontest"), "Tonfilm-Eventkette geladen")
 
+	# Rivalen: Agentur-Ranking & aktives Abwerbe-Duell
+	Game.new_game("Rivalenduell", 1950)
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var rank: Array = Game.agency_ranking()
+	check(rank.any(func(r): return bool(r.isPlayer)), "Agentur-Ranking enthält die eigene Agentur")
+	check(rank.size() == Game.state.rivals.size() + 1, "Ranking listet alle Häuser")
+	check(float(rank[0].score) >= float(rank[rank.size() - 1].score), "Ranking ist absteigend sortiert")
+	var pv_c: Dictionary = Game.state.clients[0]
+	pv_c.loyalty = 30.0
+	var pv_events: Array = []
+	Game.tick_rivals(pv_events, true)
+	var pv_duel = null
+	for pe in pv_events:
+		if str(pe.get("title", "")).begins_with("Poaching attempt"):
+			pv_duel = pe
+			break
+	check(pv_duel != null, "Unzufriedener Klient löst ein Abwerbe-Duell aus")
+	var pv_loy0 := float(pv_c.loyalty)
+	pv_duel.choices[0].fn.call()
+	check(Game.state.clients.size() == 1 and float(pv_c.loyalty) > pv_loy0, "Mitbieten hält den Klienten (Loyalität steigt)")
+	pv_c.loyalty = 30.0
+	var pv_events2: Array = []
+	Game.tick_rivals(pv_events2, true)
+	var pv_duel2 = null
+	for pe2 in pv_events2:
+		if str(pe2.get("title", "")).begins_with("Poaching attempt"):
+			pv_duel2 = pe2
+			break
+	pv_duel2.choices[2].fn.call()
+	check(Game.state.clients.is_empty(), "Ziehen lassen: der Klient verlässt die Agentur")
+	check(Game.state.rivals.any(func(r): return r.clients.has("monroe")), "Der Rivale übernimmt den Klienten")
+
 	# Package-Deal: fester Seed macht den Chance-Wurf deterministisch,
 	# beide Gagen liegen 12 % über dem regulären Satz.
 	Game.start_negotiation("monroe")

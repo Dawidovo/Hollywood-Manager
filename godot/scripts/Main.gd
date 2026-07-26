@@ -2286,8 +2286,25 @@ func _render_buero() -> void:
 		identity_row.add_child(identity_bar)
 		ci[1].add_child(identity_row)
 
-	var cr = _card("Rival agencies", "⚔")
+	var cr = _card("The agency race", "⚔")
 	grid.add_child(cr[0])
+	# Marktanteils-Ranking: Star-Power aller Häuser, die eigene Agentur markiert
+	var ranking: Array = Game.agency_ranking()
+	var top_score: float = maxf(1.0, float(ranking[0].score))
+	for i in ranking.size():
+		var entry: Dictionary = ranking[i]
+		var is_player: bool = bool(entry.isPlayer)
+		var rank_row := HBoxContainer.new()
+		var rank_lbl := _lbl("#%d %s" % [i + 1, str(entry.name)], 12, ACC if is_player else DIM)
+		rank_lbl.custom_minimum_size = Vector2(240 * font_scale, 0)
+		rank_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		rank_row.add_child(rank_lbl)
+		var rank_bar := _bar(float(entry.score) / top_score * 100.0, GOLD if is_player else ACC_DIM, 7)
+		rank_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rank_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rank_row.add_child(rank_bar)
+		cr[1].add_child(rank_row)
+	cr[1].add_child(_lbl("Star power: combined fame of each house's roster. Unhappy clients get offers — expect counter-bids.", 11, DIM))
 	for rival in st.rivals:
 		var info: Dictionary = Game.RIVAL_STYLE_INFO.get(str(rival.style), {"label":str(rival.style), "icon":"◆"})
 		var rr := HBoxContainer.new()
