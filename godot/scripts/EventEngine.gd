@@ -330,6 +330,15 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 				_say("Your word is on the table now: %s." % str(pdef.label), ctx)
 		"press_event":
 			Game.press_event(str(ef.get("cat", "Agencies")), subst(str(ef.get("text", "")), ctx))
+		"rumor_belief":
+			# Presse-Nachspiel (Teil B): das lauteste dem Spieler bekannte
+			# Gerücht gewinnt oder verliert Glauben.
+			var loudest: Dictionary = {}
+			for rumor in st.rumors:
+				if bool(rumor.knownToPlayer) and (loudest.is_empty() or float(rumor.belief) > float(loudest.belief)):
+					loudest = rumor
+			if not loudest.is_empty():
+				loudest.belief = clampf(float(loudest.belief) + amount, 0.0, 100.0)
 		"log":
 			Game.log_msg(subst(str(ef.get("text", "")), ctx), str(ef.get("type", "info")))
 		"followup":

@@ -182,6 +182,20 @@ func _ready() -> void:
 		Persona.begin_channel_dialog(int(Game.state.contacts[0].id), "meet")
 		_start_dialog("channel_meet", {"ctid": int(Game.state.contacts[0].id)})
 		await _take_shot("dialog")
+	elif args.has("--shot-interview"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		Game.state.clients[0].fame = 62.0
+		var iv_journalist: Dictionary = {}
+		for iv_ct in Game.state.contacts:
+			if str(iv_ct.type) == "journalist":
+				iv_journalist = iv_ct
+		if iv_journalist.is_empty():
+			iv_journalist = Persona._add_contact("journalist", "Hedda Hopper")
+		Game.state.attributes["menschenkenntnis"] = 70.0
+		_start_dialog("interview_portrait", {"cid": int(Game.state.clients[0].id), "ctid": int(iv_journalist.id), "sender": str(iv_journalist.name)})
+		await _take_shot("interview")
 	elif args.has("--shot-begegnung") or args.has("--shot-begegnung20"):
 		# Schlüsselbegegnung mit Emotions-Chip: einmal mit scharfem Blick
 		# (Menschenkenntnis 80), einmal fast blind (20).

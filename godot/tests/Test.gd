@@ -2249,6 +2249,44 @@ func _ready() -> void:
 	beg_pkg.choices[0].fn.call()
 	check(Game.state.quests.any(func(q): return str(q.id) == "summit_package"), "Die Paket-Kette erscheint als Auftrag im Journal (quest-Block)")
 
+	# Interviews (Teil B1): Anfragen, Kontext-Bindung, Baum mit Folgen
+	Game.new_game("Interviews", 1950)
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var iv_c: Dictionary = Game.state.clients[0]
+	iv_c.fame = 30.0
+	check(Dialogs.spawn_letter("interview_portrait").is_empty(), "Porträt-Anfrage braucht einen Klienten ab Ruhm 40")
+	check(Dialogs.spawn_letter("interview_agency").is_empty(), "Agentur-Porträt braucht Karrierestufe 1")
+	check(Dialogs.spawn_letter("interview_fishing").is_empty(), "Gerücht-Fishing braucht ein bekanntes Gerücht")
+	iv_c.fame = 55.0
+	var iv_letter: Dictionary = Dialogs.spawn_letter("interview_portrait")
+	check(not iv_letter.is_empty() and int(iv_letter.get("ctx", {}).get("cid", -1)) == int(iv_c.id), "Porträt-Anfrage bindet den Klienten an den Brief")
+	check(str(iv_letter.subject).contains("Marilyn"), "Brief-Betreff nennt den gebundenen Klienten")
+	var iv_res: Dictionary = Dialogs.letter_choose(int(iv_letter.id), 0)
+	check(str(iv_res.get("dialog", "")) == "interview_portrait" and iv_res.get("ctx", {}).has("cid"), "Annahme kostet Kontaktzeit und öffnet den Baum mit Kontext")
+	var iv_pub0 := float(Game.state.player.pubRep)
+	var iv_press0: int = Game.state.pressFeed.size()
+	var iv_view: Dictionary = Dialogs.start("interview_portrait", iv_res.ctx)
+	iv_view = Dialogs.choose(0)
+	var iv_idx := -1
+	for ii in iv_view.choices.size():
+		if str(iv_view.choices[ii].label).contains("Answer honestly"):
+			iv_idx = ii
+	check(iv_idx >= 0, "Die Kernfrage bietet die ehrliche Antwort an")
+	iv_view = Dialogs.choose(iv_idx)
+	iv_view = Dialogs.choose(0)
+	check(bool(iv_view.done), "Interview-Pfad läuft bis zum Ende durch")
+	check(float(Game.state.player.pubRep) > iv_pub0, "Gelungenes Porträt hebt den öffentlichen Ruf")
+	check(Game.state.pressFeed.size() > iv_press0, "Das Porträt erzeugt eine Schlagzeile im Pressefeed")
+	Game.state.player.career = 1
+	check(not Dialogs.spawn_letter("interview_agency").is_empty(), "Agentur-Porträt ab Karrierestufe 1 verfügbar")
+	Scandal.add_rumor(int(iv_c.id), "Something is brewing.", false, "skandal", ["Party guests"], 30.0, true)
+	var iv_fish: Dictionary = Dialogs.spawn_letter("interview_fishing")
+	check(not iv_fish.is_empty(), "Bekanntes Gerücht schaltet das Fishing-Interview frei")
+	var iv_belief0: float = Game.state.rumors[0].belief
+	Dialogs.letter_choose(int(iv_fish.id), 1)
+	check(float(Game.state.rumors[0].belief) > iv_belief0, "Abwimmeln füttert das Gerücht (rumor_belief-Op)")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

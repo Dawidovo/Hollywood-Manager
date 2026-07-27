@@ -1,0 +1,38 @@
+{
+  "entries": [
+    {"id": "interview_portrait", "weight": 2, "from_type": "journalist",
+      "conditions": {"requires_client": {"min_fame": 40}},
+      "subject": "A portrait of {client}",
+      "body": "[i]“Readers do not want another studio handout — they want the person. Give me an afternoon with {client} and I will give you four columns above the fold.”[/i]\n\n{sender} wants to write the big portrait. Doors like this can lift a career — held wrong, they open wounds.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Arrange the sitting (1⏱)", "requirements": {"ap": 1}, "dialog": "interview_portrait"},
+        {"label": "Decline — not this season",
+          "effects": [{"op": "dims", "irritation": 1}],
+          "outcome": "A polite no. Journalists collect those the way agents collect favors."}]},
+
+    {"id": "interview_agency", "weight": 2, "from_type": "journalist",
+      "conditions": {"min_career": 1},
+      "subject": "The story behind {agency}",
+      "body": "[i]“Everyone writes about the stars. Nobody writes about the people who build them. I want the agency piece — how {agency} really works.”[/i]\n\n{sender} is offering the profile every rival house would kill for. Or the autopsy. That part is up to the conversation.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Give them the hour (1⏱)", "requirements": {"ap": 1}, "dialog": "interview_agency"},
+        {"label": "Stay a rumor yourself",
+          "effects": [{"op": "log", "text": "You pass on the agency profile. Mystique is a currency too.", "type": "info"}],
+          "outcome": "Some agencies are better read between the lines. You stay between them."}]},
+
+    {"id": "interview_fishing", "weight": 2, "from_type": "journalist",
+      "conditions": {"requires_rumor_known": true},
+      "subject": "Just a few questions",
+      "body": "[i]“There is a story going around. You know the one. Before I print what I have, I thought I would give you the chance to make it better — or worse.”[/i]\n\n{sender} is fishing, and the bait is your own nervousness. Whatever you say next becomes ink.",
+      "expire_weeks": 1,
+      "choices": [
+        {"label": "Take the call (1⏱)", "requirements": {"ap": 1}, "dialog": "interview_fishing"},
+        {"label": "Have the office say you are traveling",
+          "effects": [{"op": "rumor_belief", "amount": 4}, {"op": "dims", "irritation": 2}],
+          "outcome": "“Traveling.” The word appears in the column, in quotation marks, doing a lot of work."}],
+      "expire_effects": [{"op": "rumor_belief", "amount": 6},
+        {"op": "log", "text": "The unanswered press call becomes a paragraph with the word 'declined' in it.", "type": "bad"}]}
+  ]
+}

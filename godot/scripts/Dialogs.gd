@@ -25,7 +25,7 @@ const KNOWN_OPS := ["money", "rep", "instinct", "fame", "mood", "heat", "exhaust
 	"favor_owe", "rumor", "identity", "log", "followup", "chance", "dims", "fact", "memory",
 	"promise", "xp", "player", "money_private", "tip", "rumor_reveal", "casting_spawn",
 	"meet_someone", "seal_deal", "gate_rel", "memoir", "settle_debt", "refuse_debt", "private_life",
-	"client_promise", "press_event"]
+	"client_promise", "press_event", "rumor_belief"]
 const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio"]
 
 # Laufender Dialog (nur zur Laufzeit, wird nie gespeichert).
@@ -316,6 +316,10 @@ func check_p(check: Dictionary) -> float:
 # oder erscheinen Antworten darum „unerklärlich". Diese Lücke ist gewollt.
 # =====================================================================
 func _emotion_kind(ctx: Dictionary) -> String:
+	# Ein Baum kann sein Emotions-Subjekt festlegen (z. B. Interviews lesen
+	# den JOURNALISTEN, obwohl auch ein Klient im Kontext steckt).
+	if run != null and str(run.def.get("emotion_subject", "")) != "":
+		return str(run.def.emotion_subject)
 	if ctx.has("cid"):
 		return "client"
 	if ctx.has("ctid"):
@@ -476,6 +480,12 @@ func _letter_conditions_ok(def: Dictionary) -> bool:
 	var req_type := str(conds.get("requires_contact_type", ""))
 	if req_type != "" and not _st().contacts.any(func(ct): return str(ct.type) == req_type):
 		return false
+	# Interviews (Teil B1): Briefe können einen passenden Klienten fordern
+	# (gleiche Filter wie Events) oder ein dem Spieler bekanntes Gerücht.
+	if conds.get("requires_client") != null and EvEngine._client_candidates(conds.requires_client).is_empty():
+		return false
+	if bool(conds.get("requires_rumor_known", false)) and not _st().rumors.any(func(r): return bool(r.knownToPlayer)):
+		return false
 	if conds.has("chance") and not Util.chance(float(conds.chance)):
 		return false
 	return true
@@ -530,6 +540,15 @@ func _spawn_letter_with(def: Dictionary, sender: Dictionary, extra_ctx: Dictiona
 		ctx["ctid"] = int(sender.ctid)
 	for key in extra_ctx:
 		ctx[key] = extra_ctx[key]
+	# requires_client bindet einen konkreten Klienten an den Brief — für
+	# {client}-Platzhalter und alle Effekte des späteren Gesprächs.
+	if def.get("conditions", {}).get("requires_client") != null and not ctx.has("cid"):
+		var cands: Array = EvEngine._client_candidates(def.conditions.requires_client)
+		if cands.is_empty():
+			return {}
+		ctx["cid"] = int(Util.pick(cands).id)
+		extra_ctx = extra_ctx.duplicate()
+		extra_ctx["cid"] = int(ctx.cid)
 	var letter := {"id": Game.next_id(), "tid": template_id, "mi": Game.mi(), "wi": Game.wi(),
 		"from": sender, "subject": EvEngine.subst(str(def.get("subject", "…")), ctx),
 		"body": EvEngine.subst(str(def.get("body", "")), ctx),

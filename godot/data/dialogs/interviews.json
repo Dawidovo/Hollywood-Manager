@@ -1,0 +1,210 @@
+{
+  "entries": [
+    {"id": "interview_portrait", "title": "📰 The portrait: {client}", "emotion_subject": "contact",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["Notebook out, pencil down — for now. {sender} starts warm: the early years, the first break, the picture everyone loves. This is the part of the dance where nobody steps on anybody."],
+          "reads": {
+            "unreadable": "Professional friendliness, wall to wall. What is behind it stays behind it.",
+            "likely": "Friendly — but the pencil is a little too ready.",
+            "clear": "The warmth is real and so is the agenda. Both are on the table.",
+            "certain": "You can see the article's structure in their eyes: three kind paragraphs, then the knife, then absolution — if you earn it."
+          },
+          "choices": [
+            {"label": "Give them real color — safe stories with texture", "goto": "trap",
+              "effects": [{"op": "dims", "liking": 2}]},
+            {"label": "Negotiate the ground rules first", "check": {"attr": "verhandlung", "dc": 50, "success": "rules_win", "fail": "rules_flat"}},
+            {"label": "Trade warmth for warmth — open the family album", "goto": "trap_soft", "requires_emotion": ["warm", "hopeful"],
+              "effects": [{"op": "dims", "closeness": 2, "trust": 2}, {"op": "memory", "text": "Let them past the press kit — rare, and remembered."}]}
+          ]},
+        "rules_win": {
+          "text": ["Two topics off the record, photo approval, quotes checked. {sender} agrees — and respects you more for asking properly."],
+          "effects": [{"op": "dims", "respect": 3}, {"op": "xp", "field": "media", "amount": 1}],
+          "choices": [{"label": "Now let the interview begin", "goto": "trap"}]},
+        "rules_flat": {
+          "text": ["You ask for too much and get the professional smile that means: noted, and no. The pencil hovers a little closer now."],
+          "effects": [{"op": "dims", "irritation": 2}],
+          "choices": [{"label": "Into the questions anyway", "goto": "trap"}]},
+        "trap": {
+          "text": ["Then, without a change of tone: \"And the private side? Readers keep asking what {client} goes home to.\" There it is — the question the whole afternoon was built around."],
+          "choices": [
+            {"label": "Deflect without seeming to deflect", "check": {"attr": "diskretion", "dc": 55, "success": "closing_clean", "fail": "closing_slip"}},
+            {"label": "Answer honestly, within limits", "goto": "closing_honest",
+              "effects": [{"op": "dims", "trust": 2}]},
+            {"label": "Name the trap out loud, almost amused", "goto": "closing_called", "requires_emotion": ["calculating", "wary"],
+              "effects": [{"op": "dims", "respect": 3}]}
+          ]},
+        "trap_soft": {
+          "text": ["Because you opened a real door, the private question arrives gently — almost an invitation rather than an ambush."],
+          "choices": [
+            {"label": "Share one true, harmless story", "goto": "closing_honest",
+              "effects": [{"op": "dims", "trust": 2, "liking": 2}]},
+            {"label": "Smile and close the album at the right page", "check": {"attr": "diskretion", "dc": 45, "success": "closing_clean", "fail": "closing_slip"}}
+          ]},
+        "closing_clean": {
+          "text": ["You answer with a story that feels intimate and reveals nothing. {sender} knows exactly what you did — and writes it down as charm."],
+          "effects": [{"op": "fact", "text": "handled the private question like a professional", "tone": 1}],
+          "choices": [{"label": "Wrap the sitting on a high note", "goto": "end_glow"}]},
+        "closing_honest": {
+          "text": ["Honesty, measured by the tablespoon. It costs a little privacy and buys a lot of credibility."],
+          "effects": [{"op": "memory", "text": "Gave a straight answer when dodging was easier."}],
+          "choices": [{"label": "Bring it home", "goto": "end_glow"}]},
+        "closing_called": {
+          "text": ["\"You noticed,\" says {sender}, genuinely pleased, and draws a line through half a page. Games are more fun with someone who can see the board."],
+          "effects": [{"op": "fact", "text": "sees through an ambush question instantly", "tone": 1}],
+          "choices": [{"label": "Finish as colleagues, almost", "goto": "end_glow"}]},
+        "closing_slip": {
+          "text": ["The deflection comes out half a beat too fast, and the silence afterwards is the sound of a headline being born."],
+          "effects": [{"op": "dims", "irritation": 2}, {"op": "fact", "text": "gets nervous when the questions turn personal", "tone": -1}],
+          "choices": [{"label": "Salvage what can be salvaged", "goto": "end_burn"}]},
+        "end_glow": {"end": true,
+          "text": ["Four columns, above the fold, and a photograph that makes the studio switchboard light up. The town reads the portrait over coffee — and reads your fingerprints nowhere in it, which is the highest compliment."],
+          "effects": [{"op": "press_event", "cat": "Press", "text": "The big portrait: {client}, at home in the spotlight"},
+            {"op": "player", "pubRep": 3}, {"op": "heat", "amount": 1}, {"op": "mood", "amount": 5},
+            {"op": "xp", "field": "media", "amount": 2},
+            {"op": "log", "text": "The portrait of {client} lands — warm, wide-read, on message.", "type": "deal"}]},
+        "end_burn": {"end": true,
+          "text": ["The portrait runs — with one paragraph that reads like a raised eyebrow. Nothing actionable. Everything memorable."],
+          "effects": [{"op": "press_event", "cat": "Press", "text": "Between the lines: what is {client}'s camp not saying?"},
+            {"op": "rumor", "text": "The portrait paragraph everyone underlined: something about {client}'s private life is being managed.", "truth": false, "topic": "affäre", "holders": ["Journalists"], "belief": 20, "known": true},
+            {"op": "mood", "amount": -4},
+            {"op": "log", "text": "The portrait of {client} lands a bruise nobody can quite point to.", "type": "bad"}]}
+      }},
+
+    {"id": "interview_agency", "title": "📰 The agency piece", "emotion_subject": "contact",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["\"Start at the beginning,\" says {sender}. \"Sunset Boulevard, the first office, the first client who said yes.\" The warm-up lap — even the warm-up is on the record."],
+          "reads": {
+            "unreadable": "You cannot tell if this is a profile or a prosecution. The notebook looks the same either way.",
+            "likely": "Curious, mostly. There is an angle here somewhere, still folded up.",
+            "clear": "They came with a thesis about your agency. The interview is the search for quotes to hang it on.",
+            "certain": "You can read the working title in their posture — and it is only flattering if you make it so today."
+          },
+          "choices": [
+            {"label": "Tell the founding story straight", "goto": "thesis",
+              "effects": [{"op": "player", "pubRep": 1}]},
+            {"label": "Read what angle they are really after", "check": {"attr": "menschenkenntnis", "dc": 50, "success": "angle_win", "fail": "angle_flat"}},
+            {"label": "Charm first, history later", "goto": "thesis", "requires_emotion": ["warm", "hopeful"],
+              "effects": [{"op": "dims", "liking": 3}]}
+          ]},
+        "angle_win": {
+          "text": ["Halfway through your anecdote you see the shape of their piece: power, not glamour. Who owes whom in this town. You adjust every sentence that follows."],
+          "effects": [{"op": "xp", "field": "people", "amount": 1}],
+          "choices": [{"label": "Feed the thesis on your terms", "goto": "thesis_armed"}]},
+        "angle_flat": {
+          "text": ["You misjudge the piece — you play glamour while they hunt structure. Two of your best lines die in the margin, unused."],
+          "choices": [{"label": "Catch up to the real conversation", "goto": "thesis"}]},
+        "thesis": {
+          "text": ["Then the real question, delivered like a compliment: \"People say no agency closes doors as quietly as yours. Whose favor are you spending when you do that?\""],
+          "choices": [
+            {"label": "Answer without naming a single name", "check": {"attr": "diskretion", "dc": 55, "success": "final_clean", "fail": "final_slip"}},
+            {"label": "Own the method: discretion is the product", "goto": "final_owned",
+              "effects": [{"op": "identity", "key": "diskret", "amount": 1}]},
+            {"label": "Turn it around: ask what they would print", "goto": "final_traded", "requires_emotion": ["calculating", "wary"],
+              "effects": [{"op": "dims", "respect": 2}]}
+          ]},
+        "thesis_armed": {
+          "text": ["The favor question comes — and you have been building the answer for ten minutes. You give them power as craft, not conspiracy."],
+          "choices": [
+            {"label": "Deliver the prepared answer", "goto": "final_clean"},
+            {"label": "Go one honest layer deeper", "goto": "final_owned",
+              "effects": [{"op": "dims", "trust": 3}]}
+          ]},
+        "final_clean": {
+          "text": ["A whole paragraph about discretion, containing none. {sender} laughs once, writes twice."],
+          "effects": [{"op": "fact", "text": "talks for an hour and leaks nothing", "tone": 1}],
+          "choices": [{"label": "Close the notebook together", "goto": "end_profile"}]},
+        "final_owned": {
+          "text": ["\"Discretion is the product.\" You watch the sentence land and know it will be the pull quote. Good. It is even true."],
+          "effects": [{"op": "memory", "text": "Gave the quote of the piece, on purpose."}],
+          "choices": [{"label": "End on the quote", "goto": "end_profile"}]},
+        "final_traded": {
+          "text": ["\"What would YOU print?\" The tables turn for exactly one round — long enough to learn what they have, which is less than they implied."],
+          "effects": [{"op": "rumor_reveal"}],
+          "choices": [{"label": "Trade the last question for goodwill", "goto": "end_profile"}]},
+        "final_slip": {
+          "text": ["One clause too many. Nothing quotable against you — but enough for a footnote with teeth, and journalists build careers out of footnotes."],
+          "effects": [{"op": "dims", "irritation": 1}, {"op": "fact", "text": "almost names names when flattered", "tone": -1}],
+          "choices": [{"label": "End the hour before it gets worse", "goto": "end_edged"}]},
+        "end_profile": {"end": true,
+          "text": ["The piece runs on a Sunday: the agency as craft, the manager as its quiet architect. Three rival agents call it puffery. All three keep the clipping."],
+          "effects": [{"op": "press_event", "cat": "Press", "text": "Profile: how {agency} builds careers without raising its voice"},
+            {"op": "player", "pubRep": 2, "indRep": 2},
+            {"op": "xp", "field": "media", "amount": 2},
+            {"op": "log", "text": "The agency profile lands exactly the way you steered it.", "type": "deal"}]},
+        "end_edged": {"end": true,
+          "text": ["The profile runs with one sentence you will be asked about at every dinner for a month. Not fatal. Just permanent."],
+          "effects": [{"op": "press_event", "cat": "Press", "text": "The agency piece: {agency}, and the doors it closes so quietly"},
+            {"op": "player", "pubRep": 1, "indRep": -2},
+            {"op": "log", "text": "The agency profile carries an edge you did not order.", "type": "bad"}]}
+      }},
+
+    {"id": "interview_fishing", "title": "📞 A journalist, fishing", "emotion_subject": "contact",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["No warm-up this time. {sender} lays the rumor on the table between you, still folded, like a hand of cards. \"I have enough to print something. Help me print the right thing.\""],
+          "reads": {
+            "unreadable": "Impossible to say how much they actually have. That is, of course, the technique.",
+            "likely": "They have something — the confidence is not entirely theater.",
+            "clear": "They have less than they claim. The bluff is load-bearing.",
+            "certain": "You can count their cards from here: one source, secondhand, and a deadline that is doing most of the pushing."
+          },
+          "choices": [
+            {"label": "Give them nothing — charmingly", "check": {"attr": "diskretion", "dc": 55, "success": "stonewall_win", "fail": "stonewall_slip"}},
+            {"label": "Trade: bury this one, and I owe you better", "check": {"attr": "verhandlung", "dc": 55, "success": "trade_win", "fail": "press_round"}},
+            {"label": "Offer a better story instead", "goto": "swap", "requires_emotion": ["calculating"],
+              "effects": [{"op": "xp", "field": "media", "amount": 1}]}
+          ]},
+        "stonewall_win": {
+          "text": ["Twenty minutes of warm, useless sentences. {sender} hangs up with pages of nothing and a grudging smile you can hear."],
+          "effects": [{"op": "fact", "text": "cannot be cracked on the phone", "tone": 1}],
+          "choices": [{"label": "Let the story starve", "goto": "end_dry"}]},
+        "stonewall_slip": {
+          "text": ["One denial too specific — you correct a detail they never mentioned. The silence on the line is the sound of a note being made."],
+          "effects": [{"op": "dims", "irritation": 1}, {"op": "fact", "text": "denies details nobody asked about", "tone": -1}],
+          "choices": [{"label": "Hang up before it compounds", "goto": "end_leak"}]},
+        "trade_win": {
+          "text": ["\"Better, and exclusive?\" — \"Better, and exclusive.\" The rumor goes into a drawer. The drawer has a price tag, and your name is on the invoice."],
+          "effects": [{"op": "dims", "dependence": 3}, {"op": "xp", "field": "negotiation", "amount": 1}],
+          "choices": [{"label": "Shake on it, long distance", "goto": "end_deal"}]},
+        "press_round": {
+          "text": ["\"Everyone offers me a better story,\" says {sender}. \"Nobody ever has one by Friday.\" The pencil is moving again. One more chance to change what it writes."],
+          "choices": [
+            {"label": "Stone face, second attempt", "check": {"attr": "diskretion", "dc": 60, "success": "end_dry", "fail": "end_leak"}},
+            {"label": "Give one careful quote on the record", "goto": "end_quote",
+              "effects": [{"op": "player", "pubRep": 1}]}
+          ]},
+        "swap": {
+          "text": ["You slide a different story across the table — smaller, true, and printable tomorrow. Journalists are hungry animals; the nearest meal usually wins."],
+          "effects": [{"op": "rumor_belief", "amount": -8}],
+          "choices": [{"label": "Close the trade", "goto": "end_swap"}]},
+        "end_dry": {"end": true,
+          "text": ["The column runs that week about somebody else entirely. Stories are fires: this one found no oxygen at your door."],
+          "effects": [{"op": "rumor_belief", "amount": -10},
+            {"op": "log", "text": "The fishing expedition comes up empty. The rumor loses a week of air.", "type": "deal"}]},
+        "end_leak": {"end": true,
+          "text": ["The piece runs with the phrase \"sources close to the agency\" — which is you, badly translated. The rumor gains a byline."],
+          "effects": [{"op": "rumor_belief", "amount": 10}, {"op": "player", "pubRep": -2},
+            {"op": "press_event", "cat": "Scandal", "text": "Column: the story {agency} did not want to discuss"},
+            {"op": "log", "text": "The press call goes sideways — the rumor now has ink behind it.", "type": "bad"}]},
+        "end_deal": {"end": true,
+          "text": ["The rumor stays out of print, and a journalist now holds your marker. In this town that is not a debt — it is a subscription."],
+          "effects": [{"op": "rumor_belief", "amount": -6}, {"op": "favor_owe", "kind": "suppressStory"},
+            {"op": "log", "text": "A story is buried, a debt is born. The ledger of favors turns a page.", "type": "info"}]},
+        "end_quote": {"end": true,
+          "text": ["One sentence, polished for an hour, printed in the morning. It neither confirms nor denies — it reframes. Damage: contained, not canceled."],
+          "effects": [{"op": "rumor_belief", "amount": 4},
+            {"op": "press_event", "cat": "Press", "text": "On the record: {agency} addresses the whispers, briefly"},
+            {"op": "log", "text": "Your one careful quote takes the edge off the story — most of it.", "type": "info"}]},
+        "end_swap": {"end": true,
+          "text": ["Tomorrow's column belongs to the story you fed it. The one you feared keeps breathing, quieter, in the back room."],
+          "effects": [{"op": "press_event", "cat": "Press", "text": "Exclusive: a story from the {agency} orbit — not the one you heard"},
+            {"op": "memory", "text": "Traded a better story to keep a worse one dark."},
+            {"op": "log", "text": "A swap at the news desk: your story dies, another lives.", "type": "info"}]}
+      }}
+  ]
+}

@@ -181,6 +181,9 @@ effect ops as `events/`** — one vocabulary for all three, fully moddable.
   you are) whenever the context has a subject (`ctid`, `cid` or `rid`);
   it refreshes after every choice because choices move the underlying
   values (`dims`, `mood`, …) — emotions themselves are never stored.
+  A tree with several subjects in context can pin the one being read via
+  `"emotion_subject": "contact" | "client" | "rival"` (interviews read the
+  journalist, not the client being discussed).
 - Node `effects` run on entry, choice `effects` on selection.
 - Placeholders: `{contact}`, `{sender}`, `{agency}`, `{year}`, `{money_fmt:N}`.
 - Dialog ids the game launches automatically: `channel_meet`, `channel_club`
@@ -199,6 +202,14 @@ after):
               "outcome": "…", "outcome_fail": "…", "dialog": "optional_dialog_id"}],
  "expire_effects": []}
 ```
+
+Letter conditions also accept `requires_client` (same filter object as
+events, e.g. `{"min_fame": 40}` — the picked client is bound to the letter,
+so `{client}` and all client effect ops target them) and
+`"requires_rumor_known": true` (only when the player knows a rumor).
+Letters spawned by code can carry extra effect context (`sid`, `cid`);
+it persists on the letter and flows into every choice effect and any
+dialog the letter opens.
 
 If a contact of `from_type` exists, the letter comes from them (and `dims`
 effects hit that relationship); otherwise a name is drawn from the pools.
@@ -247,8 +258,11 @@ conversation ops: `dims` (relationship dimensions of the contact in
 context), `fact` (subjective-reputation fact), `memory`, `promise`, `xp`,
 `player` (energy/stress/health/pubRep/indRep/discretion/influence),
 `money_private`, `tip` (market whisper), `rumor_reveal`, `casting_spawn`,
-`meet_someone`, `seal_deal`, `gate_rel`, `memoir`, and `chance`
-(`{"op":"chance","p":0.3,"effects":[…],"else":[…]}`).
+`meet_someone`, `seal_deal`, `gate_rel`, `memoir`, `client_promise`
+(a real client promise with deadline, kinds from `Game.PROMISES`),
+`press_event` (`{"op":"press_event","cat":"Press","text":"…"}`),
+`rumor_belief` (the loudest rumor known to the player gains/loses belief),
+and `chance` (`{"op":"chance","p":0.3,"effects":[…],"else":[…]}`).
 
 ## Staff & delegation (`staff/core.json`)
 
