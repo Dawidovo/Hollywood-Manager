@@ -1,0 +1,98 @@
+{
+  "entries": [
+    {"id": "pressekonferenz", "title": "🎙 Press conference: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["A rented ballroom, forty chairs, sixty journalists. {client} sits beside you, hands folded, media-trained and terrified. You tap the microphone once. The tone you choose now will echo through every question that follows."],
+          "reads": {
+            "unreadable": "Beside you, {client} wears the press smile. What is underneath does not reach the surface.",
+            "likely": "{client} is holding it together — barely, you think.",
+            "clear": "{client} is one wrong question away from the edge. Keep the wrong questions away.",
+            "certain": "You can feel it from your chair: {client} will follow your lead exactly as far as your lead deserves. No further."
+          },
+          "choices": [
+            {"label": "Humility — take the hit standing up", "goto": "round1_humble",
+              "effects": [{"op": "identity", "key": "klientenorientiert", "amount": 1}]},
+            {"label": "Counter-attack — call the story what it is", "goto": "round1_attack",
+              "effects": [{"op": "identity", "key": "skrupellos", "amount": 0.5}]},
+            {"label": "Disarm the room with a joke", "goto": "round1_wit"}
+          ]},
+        "round1_humble": {
+          "text": ["\"We are here because you have questions. Ask them.\" The room, braced for evasion, blinks. First question — a scalpel wrapped in courtesy."],
+          "choices": [
+            {"label": "Answer it clean — honest, bounded, final", "check": {"attr": "diskretion", "dc": 50, "success": "round2_strong", "fail": "unravel"}},
+            {"label": "Stick to the prepared statement", "goto": "round2_shaky",
+              "effects": [{"op": "rumor_belief", "amount": -2}]}
+          ]},
+        "round1_attack": {
+          "text": ["\"Somebody is selling you a story, and the price is my client's name.\" A murmur. Attack buys attention — now you must be right, in public, on the record."],
+          "choices": [
+            {"label": "Name the holes in the story, one by one", "check": {"attr": "verhandlung", "dc": 55, "success": "round2_strong", "fail": "unravel"}},
+            {"label": "Pull back to the prepared statement", "goto": "round2_shaky"}
+          ]},
+        "round1_wit": {
+          "text": ["You open with the joke. Half the room laughs; the other half writes down that you joked. Everything depends on reading which half asks next."],
+          "choices": [
+            {"label": "Read the room and pick the questioner yourself", "check": {"attr": "menschenkenntnis", "dc": 50, "success": "round2_strong", "fail": "unravel"}},
+            {"label": "Drop the act, read the statement", "goto": "round2_shaky"}
+          ]},
+        "round2_strong": {
+          "text": ["The first exchange lands your way, and the room's temperature drops a degree. Second round — the follow-up question, the one they actually came for."],
+          "choices": [
+            {"label": "Take it head-on and close the book", "check": {"attr": "diskretion", "dc": 45, "success": "end_triumph", "fail": "unravel"}},
+            {"label": "Quit while ahead — closing statement now", "goto": "end_ok"}
+          ]},
+        "round2_shaky": {
+          "text": ["The statement holds, but statements never end these rooms. Hands are still up. One more exchange, wanted or not."],
+          "choices": [
+            {"label": "One last question, chosen carefully", "check": {"attr": "diskretion", "dc": 60, "success": "end_ok", "fail": "unravel"}},
+            {"label": "Let {client} say one unrehearsed sentence", "goto": "end_heart", "requires_emotion": ["anxious"]},
+            {"label": "Close the conference early", "goto": "end_early"}
+          ]},
+        "unravel": {
+          "text": ["A follow-up you did not see coming, a pause one beat too long — and the room smells blood. Pencils accelerate. This is the moment careers are written about."],
+          "choices": [
+            {"label": "The spin doctor's exit — one impossible, perfect sentence", "goto": "end_saved",
+              "conditions": {"has_ability": "spin_doctor"}},
+            {"label": "Find the one friendly face and give them the last question", "check": {"attr": "menschenkenntnis", "dc": 60, "success": "end_ok", "fail": "end_disaster"}},
+            {"label": "Gather the papers and leave the podium", "goto": "end_disaster"}
+          ]},
+        "end_triumph": {"end": true,
+          "text": ["The closing line lands, flashbulbs pop, and for once they are on your side. Tomorrow's coverage will carry your framing in its first paragraph — which is the whole war, won."],
+          "effects": [{"op": "rumor_belief", "amount": -14}, {"op": "player", "pubRep": 3},
+            {"op": "mood", "amount": 8}, {"op": "trust", "amount": 5},
+            {"op": "press_event", "cat": "Press", "text": "{client} faces the room — and the room blinks first"},
+            {"op": "xp", "field": "media", "amount": 2}, {"op": "xp", "field": "crisis", "amount": 2},
+            {"op": "log", "text": "The press conference for {client} is a clean win. The story loses its teeth.", "type": "deal"}]},
+        "end_ok": {"end": true,
+          "text": ["No knockout, no wounds. The story will run smaller, on a worse page, with your quote in it. In crisis arithmetic, that is a profit."],
+          "effects": [{"op": "rumor_belief", "amount": -6}, {"op": "player", "pubRep": 1},
+            {"op": "mood", "amount": 3},
+            {"op": "press_event", "cat": "Press", "text": "{client}'s camp takes questions; the story shrinks a column"},
+            {"op": "xp", "field": "crisis", "amount": 1},
+            {"op": "log", "text": "The press conference holds the line for {client}.", "type": "info"}]},
+        "end_early": {"end": true,
+          "text": ["Twelve minutes, four questions, out. The room grumbles — but a short conference is a small target, and small targets survive."],
+          "effects": [{"op": "rumor_belief", "amount": -3}, {"op": "mood", "amount": 1},
+            {"op": "log", "text": "A short, safe press conference for {client}. Nothing gained, little lost.", "type": "info"}]},
+        "end_heart": {"end": true,
+          "text": ["Against every rule of media training, {client} speaks one unpolished, human sentence — and the room, which eats statements for breakfast, goes quiet. You could not have written it. That is exactly why it works."],
+          "effects": [{"op": "rumor_belief", "amount": -8}, {"op": "mood", "amount": 6}, {"op": "trust", "amount": 6},
+            {"op": "press_event", "cat": "Press", "text": "The sentence from {client} nobody at the press conference expected"},
+            {"op": "log", "text": "One honest sentence from {client} does what no statement could.", "type": "deal"}]},
+        "end_saved": {"end": true,
+          "text": ["You say the sentence — the one that concedes nothing, explains nothing and somehow satisfies everyone. Three papers will print it verbatim. Spin is a craft, and tonight the craft pays its rent."],
+          "effects": [{"op": "rumor_belief", "amount": -6}, {"op": "player", "pubRep": 1},
+            {"op": "press_event", "cat": "Press", "text": "Quote of the week, courtesy of {agency}"},
+            {"op": "xp", "field": "crisis", "amount": 2},
+            {"op": "log", "text": "The spin doctor's exit turns a stumble into the quote of the week.", "type": "deal"}]},
+        "end_disaster": {"end": true,
+          "text": ["The photograph of the empty podium runs everywhere, and empty podiums confess. Tomorrow the story is not the rumor — it is the conference. There is a way back from this, but it is uphill and it is long."],
+          "effects": [{"op": "rumor_belief", "amount": 12}, {"op": "player", "pubRep": -3},
+            {"op": "mood", "amount": -8}, {"op": "trust", "amount": -4},
+            {"op": "press_event", "cat": "Scandal", "text": "Press conference implodes: the {client} story grows a second act"},
+            {"op": "log", "text": "The press conference for {client} goes down in flames — and the room writes every flame down.", "type": "bad"}]}
+      }}
+  ]
+}

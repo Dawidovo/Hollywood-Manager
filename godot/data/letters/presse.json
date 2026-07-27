@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {"id": "pressekonferenz_invite", "manual": true, "weight": 0, "from_type": "journalist",
+      "subject": "The story is loud enough for a podium",
+      "body": "[i]“Half the press corps is writing the {client} story this week whether you talk or not. Give them a room, a statement and twenty minutes — or let them write it from the sidewalk.”[/i]\n\nA press conference is a bet: played well it takes the air out of the story, played badly it hands out matches at a gas leak.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Call the press conference (1⏱)", "requirements": {"ap": 1}, "dialog": "pressekonferenz"},
+        {"label": "No podium — starve the story",
+          "effects": [{"op": "rumor_belief", "amount": 3},
+            {"op": "log", "text": "No press conference. The story keeps simmering on other people's stoves.", "type": "info"}],
+          "outcome": "The room stays dark. The typewriters do not."}],
+      "expire_effects": [{"op": "rumor_belief", "amount": 4},
+        {"op": "log", "text": "The window for a press conference closes by itself — the columnists take that personally.", "type": "bad"}]}
+  ]
+}

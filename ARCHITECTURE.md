@@ -42,6 +42,8 @@ Alle Systeme sind Autoloads (Singletons):
 | `Persona` | `scripts/Persona.gd` | Spielfigur: Privatfinanzen, Energie/Stress/Gesundheit, Karriereleiter, Skills | ~1000 Zeilen |
 | `Mogul` | `scripts/Mogul.gd` | Empire-Cluster: Lifestyle, Investments/Aktien, Hinterzimmer-Deals, Endgame | ~1300 Zeilen |
 | `Network` | `scripts/Network.gd` | Kontaktnetz: Beziehungsdimensionen, subjektive Reputation, Wissensfluss, Gala, NPC-Karrieren | ~1000 Zeilen |
+| `Emotions` | `scripts/Emotions.gd` | Emotionsmodell: wahre Emotion abgeleitet aus Fakten, wahrgenommene über Menschenkenntnis-Stufen | klein |
+| `Press` | `scripts/Press.gd` | Pressekonferenz-Auslöser & Cooldowns (Szene/Brief sind Daten) | klein |
 | `Dialogs` | `scripts/Dialogs.gd` | Dialogbäume, Wochenpost, Relevanz-Dispatcher (Digest/Notiz/Kurzdialog/Szene), Gesprächsgedächtnis | ~600 Zeilen |
 | `Staff` | `scripts/Staff.gd` | Mitarbeiter & Delegation: Desks, Empfehlungen, Autonomie-Modi, Eskalationsregeln, Abspaltungen | ~400 Zeilen |
 | `Newspaper` | `scripts/Newspaper.gd` | Presse/Chronik | klein |

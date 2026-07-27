@@ -290,6 +290,15 @@ func choice_blocked_reason(ch: Dictionary) -> String:
 	var fav := str(conds.get("has_favor", ""))
 	if fav != "" and not Game.has_favor(fav):
 		return "You hold no such favor"
+	# Fähigkeits-Auswege (Teil B2): manche Antworten kann nur, wer das
+	# Handwerk dafür gelernt hat (z. B. der Spin-Doctor am Podium).
+	var ability := str(conds.get("has_ability", ""))
+	if ability != "" and not Mogul.has_ability(ability):
+		var ability_name := ability
+		for adef in Data.SKILL_ABILITIES:
+			if str(adef.get("id", "")) == ability:
+				ability_name = str(adef.get("name", ability))
+		return "Needs the ability: %s" % ability_name
 	return ""
 
 

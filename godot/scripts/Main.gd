@@ -182,6 +182,15 @@ func _ready() -> void:
 		Persona.begin_channel_dialog(int(Game.state.contacts[0].id), "meet")
 		_start_dialog("channel_meet", {"ctid": int(Game.state.contacts[0].id)})
 		await _take_shot("dialog")
+	elif args.has("--shot-pressekonferenz"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var pc_client: Dictionary = Game.state.clients[0]
+		Scandal.add_rumor(int(pc_client.id), "Louella Parsons has three sources on the bungalow story now.", true, "affäre", ["Journalists", "Party guests"], 62.0, true)
+		Game.state.attributes["menschenkenntnis"] = 65.0
+		_start_dialog("pressekonferenz", {"cid": int(pc_client.id)})
+		await _take_shot("pressekonferenz")
 	elif args.has("--shot-interview"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")

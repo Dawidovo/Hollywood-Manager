@@ -346,6 +346,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	Mogul.init_state()
 	Network.init_state()
 	Dialogs.init_state()
+	Press.init_state()
 	Staff.init_state()
 	for s in Data.STUDIOS:
 		state.studioRel[s.id] = Util.rndi(20, 45)
@@ -1648,6 +1649,8 @@ func _month_close(events: Array) -> void:
 	tick_clients(events)
 	_tick_roster_pairs(events)
 	Scandal.tick_rumors(events)
+	# Pressekonferenz (Teil B2): laut gewordene Gerüchte rufen ans Podium
+	Press.tick_month()
 	Rivals.tick_rivals(events)
 	# Karrierebretter: veraltete Plan-Slots verfallen lautlos
 	_tick_boards()
@@ -2272,6 +2275,8 @@ func _apply_save_defaults() -> void:
 	Network.ensure_network()
 	# Migration Korrespondenz (Dialogsystem & Posteingang)
 	Dialogs.ensure_inbox()
+	# Migration Pressekonferenz-Cooldowns (Teil B2)
+	Press.ensure_press()
 	# Migration Mitarbeiter & Delegation (Features 32–36)
 	Staff.ensure_staff()
 	# Migration Simulations- & Verhandlungs-Cluster

@@ -2287,6 +2287,50 @@ func _ready() -> void:
 	Dialogs.letter_choose(int(iv_fish.id), 1)
 	check(float(Game.state.rumors[0].belief) > iv_belief0, "Abwimmeln füttert das Gerücht (rumor_belief-Op)")
 
+	# Pressekonferenz (Teil B2): Schwelle, 1× pro Gerücht, Cooldown, Save/Load
+	Game.new_game("Podium", 1950)
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var pc_c: Dictionary = Game.state.clients[0]
+	var pc_rumor: Dictionary = Scandal.add_rumor(int(pc_c.id), "A loud story.", true, "affäre", ["Journalists"], 50.0, true)
+	Press.tick_month()
+	check(not Game.state.inbox.any(func(l): return str(l.tid) == "pressekonferenz_invite"), "Unter belief 55 kein Podium-Angebot")
+	pc_rumor.belief = 60.0
+	Press.tick_month()
+	var pc_letters: Array = Game.state.inbox.filter(func(l): return str(l.tid) == "pressekonferenz_invite")
+	check(pc_letters.size() == 1 and int(pc_letters[0].get("ctx", {}).get("cid", -1)) == int(pc_c.id), "Ab belief 55 liegt das Podium-Angebot in der Post (mit Klienten-Kontext)")
+	check(bool(pc_rumor.get("pressConfOffered", false)), "Das Gerücht ist als angeboten markiert (1× pro Gerücht)")
+	Scandal.add_rumor(int(pc_c.id), "A second loud story.", true, "skandal", ["Journalists"], 70.0, true)
+	Press.tick_month()
+	check(Game.state.inbox.filter(func(l): return str(l.tid) == "pressekonferenz_invite").size() == 1, "Globaler Cooldown verhindert das zweite Angebot")
+	Game.save_game()
+	Game.state = null
+	Game.load_game()
+	check(int(Game.state.press.lastConfMi) == Game.mi(), "Press-Cooldown überlebt Save/Load")
+	check(Game.state.rumors.any(func(r): return bool(r.get("pressConfOffered", false))), "Die 1×-Markierung am Gerücht überlebt Save/Load")
+	var pc_letter2: Dictionary = Game.state.inbox.filter(func(l): return str(l.tid) == "pressekonferenz_invite")[0]
+	var pc_res: Dictionary = Dialogs.letter_choose(int(pc_letter2.id), 0)
+	check(str(pc_res.get("dialog", "")) == "pressekonferenz", "Brief-Annahme öffnet die Podium-Szene")
+	var pc_loud: Dictionary = {}
+	for pc_r in Game.state.rumors:
+		if pc_loud.is_empty() or float(pc_r.belief) > float(pc_loud.belief):
+			pc_loud = pc_r
+	var pc_belief0: float = pc_loud.belief
+	var pc_view: Dictionary = Dialogs.start("pressekonferenz", pc_res.ctx)
+	pc_view = Dialogs.choose(0)
+	var pc_stmt := -1
+	for pi in pc_view.choices.size():
+		if str(pc_view.choices[pi].label).contains("prepared statement"):
+			pc_stmt = pi
+	pc_view = Dialogs.choose(pc_stmt)
+	var pc_close := -1
+	for pi2 in pc_view.choices.size():
+		if str(pc_view.choices[pi2].label).contains("Close the conference early"):
+			pc_close = pi2
+	pc_view = Dialogs.choose(pc_close)
+	check(bool(pc_view.done), "Podium-Pfad (Demut → Statement → früher Schluss) läuft durch")
+	check(float(pc_loud.belief) < pc_belief0, "Die Pressekonferenz nimmt dem Gerücht Glauben")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

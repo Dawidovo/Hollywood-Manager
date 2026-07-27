@@ -111,6 +111,12 @@ const SUMMIT_BURSTS := 2
 const SUMMIT_WINDOW_MONTHS := 24
 const SUMMIT_COOLDOWN_MONTHS := 12
 
+# ---------- Pressekonferenz (Gesamtpaket Teil B2) ----------
+# Ab diesem Glauben an ein Gerücht über einen eigenen Klienten liegt das
+# Podium-Angebot in der Post (1× pro Gerücht, plus globaler Cooldown).
+const PRESSCONF_BELIEF := 55.0
+const PRESSCONF_COOLDOWN_MONTHS := 6
+
 # ---------- Spieler-Attribute (RPG-Chunk 15) ----------
 # Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit
 # abnehmendem Ertrag: voll bis SOFTCAP_1, ×0,5 bis SOFTCAP_2, ×0,25 darüber.
