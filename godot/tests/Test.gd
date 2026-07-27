@@ -471,18 +471,18 @@ func _ready() -> void:
 	pl_client.exhaustion = 80.0
 	pl_client.busyUntil = 0
 	# Volle 21-Slot-Erholungswoche (7 Tage × 3 Abschnitte)
-	Game.planner_fill("client", int(pl_client.id), "erholung", null, false)
+	Planner.planner_fill("client", int(pl_client.id), "erholung", null, false)
 	var dinner_studio: Dictionary = Game.active_studios()[0]
 	var rel_before := int(Game.state.studioRel[dinner_studio.id])
 	for d in 5:
-		Game.planner_slot_set("player", 0, d, 0, "dinner", dinner_studio.id)
-	Game._apply_planner([])
+		Planner.planner_slot_set("player", 0, d, 0, "dinner", dinner_studio.id)
+	Planner._apply_planner([])
 	check(float(pl_client.exhaustion) <= 68.01, "Volle Erholungswoche senkt Erschöpfung (80 → %0.1f)" % pl_client.exhaustion)
 	check(int(Game.state.studioRel[dinner_studio.id]) == rel_before + 1, "Studio-Dinner: 5 Abende ⇒ Beziehung +1")
 	check(Game.state.planner.player[0] == null, "Planer beginnt die neue Woche leer")
 
 	# 32. Save/Load-Roundtrip aller Simulations-Felder
-	Game.planner_slot_set("player", 0, 2, 1, "scouting")
+	Planner.planner_slot_set("player", 0, 2, 1, "scouting")
 	Game.state.instinct = 42
 	Game.state.history_pairs["t1|t2"] = {"n": 2, "p": 3}
 	Game.save_game()
@@ -767,7 +767,7 @@ func _ready() -> void:
 	check(absf(float(weight_client.weightKg) - weight_base * 1.25) < 0.01, "Gewichts-Clamp greift bei +25 % des Basiswerts")
 	weight_client.weightKg = weight_base + 5.0
 	var weight_before_training := float(weight_client.weightKg)
-	Game._planner_client_week(weight_client, {"training": 4})
+	Planner._planner_client_week(weight_client, {"training": 4})
 	check(float(weight_client.weightKg) < weight_before_training and absf(float(weight_client.weightKg) - (weight_before_training - 0.20)) < 0.01, "Training zieht das Gewicht Richtung Basiswert")
 	weight_client.weightKg = weight_base + 8.1
 	check(EvEngine.check_conditions({"requires_client": {"weight_dev_min": 8}}), "weight_dev_min findet deutlich abweichenden Klienten")
@@ -839,7 +839,7 @@ func _ready() -> void:
 	var mig_prod: Dictionary = Game.state.productions[-1]
 	check(int(mig_prod.get("weeksLeft", -1)) == 12 and not mig_prod.has("monthsLeft"), "Produktion: monthsLeft 3 → weeksLeft 12")
 	check(int(Game.state.castings[0].deadline) == 8, "Casting-Deadline auf Wochen umgestellt (2 → 8)")
-	Game.ensure_planner()
+	Planner.ensure_planner()
 	check(Game.state.planner.player.size() == 21, "Planer auf 21 Slots erweitert")
 
 	# =====================================================================

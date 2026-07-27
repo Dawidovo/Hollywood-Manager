@@ -328,11 +328,11 @@ func _ready() -> void:
 		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": ["assistant"], "promise": null})
 		Game.start_negotiation("brando")
 		Game.sign_client({"commission": 12, "bonus": 0, "years": 3, "perks": [], "promise": null})
-		Game.ensure_planner()
-		Game.planner_slot_set("player", 0, 0, 0, "scouting")
-		Game.planner_slot_set("player", 0, 1, 1, "dinner", Game.active_studios()[0].id)
-		Game.planner_slot_set("client", int(Game.state.clients[0].id), 0, 0, "pr")
-		Game.planner_slot_set("client", int(Game.state.clients[1].id), 1, 2, "gala")
+		Planner.ensure_planner()
+		Planner.planner_slot_set("player", 0, 0, 0, "scouting")
+		Planner.planner_slot_set("player", 0, 1, 1, "dinner", Game.active_studios()[0].id)
+		Planner.planner_slot_set("client", int(Game.state.clients[0].id), 0, 0, "pr")
+		Planner.planner_slot_set("client", int(Game.state.clients[1].id), 1, 2, "gala")
 		_switch_tab("planer")
 		await _take_shot("planer")
 	elif args.has("--shot-verhandlung") or args.has("--shot-tisch"):
@@ -3887,14 +3887,14 @@ func _cancel_table() -> void:
 # =====================================================================
 func _render_planer() -> void:
 	var st = Game.state
-	Game.ensure_planner()
+	Planner.ensure_planner()
 	var hv = _card("Weekly planner — %s" % Game.date_str(), "🗓")
 	content_box.add_child(hv[0])
 	hv[1].add_child(_lbl("The coming week in detail: 7 days with morning, afternoon and evening — for you and every free client. Shooting weeks are booked automatically. Empty slots go to the autopilot: rest when exhaustion is above 50, PR otherwise. Galas happen in the evening.", 12, DIM))
 	var pcard = _card("🕴 You (agency)", "")
 	content_box.add_child(pcard[0])
 	_planner_grid(pcard[1], "player", 0, st.planner.player)
-	_planner_fill_row(pcard[1], "player", 0, Game.PLANNER_PLAYER)
+	_planner_fill_row(pcard[1], "player", 0, Planner.PLANNER_PLAYER)
 	for c in st.clients:
 		var ccard = _card("⭐ %s" % Game.client_name(c), "")
 		content_box.add_child(ccard[0])
@@ -3902,23 +3902,23 @@ func _render_planer() -> void:
 			ccard[1].add_child(_lbl("🎬 Shooting this week — the calendar belongs to the studio.", 12, DIM))
 			continue
 		_planner_grid(ccard[1], "client", int(c.id), st.planner.clients.get(str(int(c.id)), []))
-		_planner_fill_row(ccard[1], "client", int(c.id), Game.PLANNER_CLIENT)
+		_planner_fill_row(ccard[1], "client", int(c.id), Planner.PLANNER_CLIENT)
 	# Legende
 	var leg = _card("What the actions do", "ℹ")
 	content_box.add_child(leg[0])
 	var lt := "[b]Your slots:[/b] "
-	for k in Game.PLANNER_PLAYER:
-		var i1: Dictionary = Game.PLANNER_PLAYER[k]
+	for k in Planner.PLANNER_PLAYER:
+		var i1: Dictionary = Planner.PLANNER_PLAYER[k]
 		lt += "%s %s (%s) · " % [i1.icon, i1.name, i1.desc]
 	lt = lt.trim_suffix(" · ") + "\n[b]Client slots:[/b] "
-	for k2 in Game.PLANNER_CLIENT:
-		var i2: Dictionary = Game.PLANNER_CLIENT[k2]
+	for k2 in Planner.PLANNER_CLIENT:
+		var i2: Dictionary = Planner.PLANNER_CLIENT[k2]
 		lt += "%s %s (%s) · " % [i2.icon, i2.name, i2.desc]
 	leg[1].add_child(_rich(lt.trim_suffix(" · "), 12))
 
 # 8-Spalten-Raster: Zeilenlabel (Tagesabschnitt) + Mo…So, Zellen als Icon-Buttons
 func _planner_grid(parent: VBoxContainer, who: String, cid: int, slots: Array) -> void:
-	var acts: Dictionary = Game.PLANNER_PLAYER if who == "player" else Game.PLANNER_CLIENT
+	var acts: Dictionary = Planner.PLANNER_PLAYER if who == "player" else Planner.PLANNER_CLIENT
 	var grid := GridContainer.new()
 	grid.columns = 8
 	grid.add_theme_constant_override("h_separation", 4)
@@ -3926,12 +3926,12 @@ func _planner_grid(parent: VBoxContainer, who: String, cid: int, slots: Array) -
 	parent.add_child(grid)
 	grid.add_child(_lbl("", 11, DIM))
 	for d in 7:
-		var hd := _lbl(Game.PLANNER_DAYS[d], 12, ACC)
+		var hd := _lbl(Planner.PLANNER_DAYS[d], 12, ACC)
 		hd.autowrap_mode = TextServer.AUTOWRAP_OFF
 		hd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		grid.add_child(hd)
 	for part in 3:
-		var pl := _lbl(Game.PLANNER_PARTS[part], 11, DIM)
+		var pl := _lbl(Planner.PLANNER_PARTS[part], 11, DIM)
 		pl.autowrap_mode = TextServer.AUTOWRAP_OFF
 		grid.add_child(pl)
 		for d in 7:
@@ -3945,7 +3945,7 @@ func _planner_grid(parent: VBoxContainer, who: String, cid: int, slots: Array) -
 				var tn := _planner_target_name(slot)
 				tip = str(info.get("name", "?")) + ((" → " + tn) if tn != "" else "")
 			var b := _btn(txt, _open_planner_picker.bind(who, cid, d, part))
-			b.tooltip_text = "%s %s: %s" % [Game.PLANNER_DAYS[d], Game.PLANNER_PARTS[part], tip]
+			b.tooltip_text = "%s %s: %s" % [Planner.PLANNER_DAYS[d], Planner.PLANNER_PARTS[part], tip]
 			b.custom_minimum_size = Vector2(40 * font_scale, 0)
 			grid.add_child(b)
 
@@ -3963,10 +3963,10 @@ func _planner_fill_row(parent: VBoxContainer, who: String, cid: int, acts: Dicti
 		var info: Dictionary = acts[k]
 		var action := str(k)
 		row.add_child(_btn("%s %s" % [info.icon, info.name], func():
-			Game.planner_fill(who, cid, action)
+			Planner.planner_fill(who, cid, action)
 			render()))
 	row.add_child(_btn("✕ Clear the week", func():
-		Game.planner_fill(who, cid, null, null, false)
+		Planner.planner_fill(who, cid, null, null, false)
 		render()))
 
 func _planner_target_name(slot: Dictionary) -> String:
@@ -3989,8 +3989,8 @@ func _open_planner_picker(who: String, cid: int, day: int, part: int) -> void:
 	if who == "client":
 		var c = Game.client(cid)
 		title_s = Game.client_name(c) if c != null else "?"
-	modal_box.add_child(_lbl("🗓 Plan %s %s: %s" % [Game.PLANNER_DAYS[day], Game.PLANNER_PARTS[part], title_s], 20, ACC))
-	var acts: Dictionary = Game.PLANNER_PLAYER if who == "player" else Game.PLANNER_CLIENT
+	modal_box.add_child(_lbl("🗓 Plan %s %s: %s" % [Planner.PLANNER_DAYS[day], Planner.PLANNER_PARTS[part], title_s], 20, ACC))
+	var acts: Dictionary = Planner.PLANNER_PLAYER if who == "player" else Planner.PLANNER_CLIENT
 	for k in acts:
 		var info: Dictionary = acts[k]
 		if who == "client" and k == "gala" and part != 2:
@@ -4002,7 +4002,7 @@ func _open_planner_picker(who: String, cid: int, day: int, part: int) -> void:
 			modal_box.add_child(trow)
 			for s in Game.active_studios():
 				trow.add_child(_btn(str(s.name), func():
-					Game.planner_slot_set("player", 0, day, part, "dinner", s.id)
+					Planner.planner_slot_set("player", 0, day, part, "dinner", s.id)
 					_close_modal()))
 		elif who == "player" and k == "pflege":
 			modal_box.add_child(_lbl("%s %s — %s:" % [info.icon, info.name, info.desc], 13))
@@ -4011,13 +4011,13 @@ func _open_planner_picker(who: String, cid: int, day: int, part: int) -> void:
 			modal_box.add_child(trow2)
 			for c2 in Game.state.clients:
 				trow2.add_child(_btn(Game.client_name(c2), func():
-					Game.planner_slot_set("player", 0, day, part, "pflege", int(c2.id))
+					Planner.planner_slot_set("player", 0, day, part, "pflege", int(c2.id))
 					_close_modal()))
 		else:
 			modal_box.add_child(_btn("%s %s — %s" % [info.icon, info.name, info.desc], func():
-				Game.planner_slot_set(who, cid, day, part, k)
+				Planner.planner_slot_set(who, cid, day, part, k)
 				_close_modal()))
 	modal_box.add_child(_btn("Clear slot", func():
-		Game.planner_slot_set(who, cid, day, part, null)
+		Planner.planner_slot_set(who, cid, day, part, null)
 		_close_modal()))
 	modal_box.add_child(_btn("Cancel", _close_modal))
