@@ -31,10 +31,12 @@ Alle Systeme sind Autoloads (Singletons):
 | `Util` | `scripts/Util.gd` | Zustandslose Helfer: RNG-Wrapper, `hashs`, `body_of`, `infl`/`fame_at`/`age_of`/`ask_fee`, `grade`, `fmt_money`, `attrs` | klein |
 | `CareerDNA` | `scripts/CareerDNA.gd` | Karriere-DNA: Achsen, Genre-Prägungsvektoren, `initial_dna`/`imprint_dna`/`dna_fit`/`dna_label`/`decay` | klein |
 | `Data` | `scripts/Data.gd` | Datenzugriff, delegiert an `DataLoader.gd` (JSON-Merge) | klein |
-| `Game` | `scripts/Game.gd` | Kern-Spiellogik: Verhandlung, Casting, Produktion, Box-Office, Wochenzug | ~3900 Zeilen |
+| `Game` | `scripts/Game.gd` | Kern-Spiellogik: Verhandlung, Casting, Produktion, Box-Office, Wochenzug | ~3600 Zeilen |
 | `Scandal` | `scripts/Scandal.gd` | Geheimnisse & Gerüchte: Entstehen, Verbreitung, Wirkung, Gegenmaßnahmen | ~400 Zeilen |
 | `Rivals` | `scripts/Rivals.gd` | Konkurrenz-Agenturen: Signings, Attacken, Abwerbe-Duelle, Ranking | ~230 Zeilen |
 | `Planner` | `scripts/Planner.gd` | Wochenplaner: 21-Slot-Kalender, Auswertung, Klienten-Autoplanung | ~220 Zeilen |
+| `Predictions` | `scripts/Predictions.gd` | Instinkt-Prognosen: Wetten anlegen/auflösen, Instinkt-Wachstum | ~110 Zeilen |
+| `Coverage` | `scripts/Coverage.gd` | Script-Coverage: Lektorats-Blatt, Marker, Schnitt-Rollen, Auswertung | ~280 Zeilen |
 | `Ev` | `scripts/Events.gd` | Ereignis-Inhalte/Alt-Events | ~1300 Zeilen |
 | `EvEngine` | `scripts/EventEngine.gd` | Datengetriebene Events aus `data/events/*.json` (conditions/weights/choices/Ketten) | ~400 Zeilen |
 | `Persona` | `scripts/Persona.gd` | Spielfigur: Privatfinanzen, Energie/Stress/Gesundheit, Karriereleiter, Skills | ~1000 Zeilen |
@@ -45,10 +47,12 @@ Alle Systeme sind Autoloads (Singletons):
 | `Newspaper` | `scripts/Newspaper.gd` | Presse/Chronik | klein |
 | `Jukebox` | `scripts/MusicGen.gd` | Generative Epochen-Musik | klein |
 
-`Main.gd` (~3200 Zeilen) hält Layout, Navigation, UI-Bausteine und Modals;
-die größten Tabs (Finanzen, Personal, Kontakte, Agentur, Klienten) liegen als
-Screen-Module unter `scripts/ui/` (Muster: Main-Referenz im Konstruktor,
-Rendern in `main.content_box`). Weitere Tabs wandern iterativ dorthin (Chunk 09).
+`Main.gd` (~2650 Zeilen) hält Layout, Navigation, UI-Bausteine, Modals und
+die Verhandlungs-Dialoge; **alle 16 Tabs** liegen als Screen-Module unter
+`scripts/ui/` (Muster: Main-Referenz im Konstruktor, Rendern in
+`main.content_box`): Finance, Personal, Contacts, Agency, Clients sowie
+gebündelt MarketScreens (Pool/Castings/Gerüchte/Filme) und WorldScreens
+(Post/Orte/Lifestyle/Invest/Zeitung/Journal/Chronik/Planner).
 
 ## Daten (`godot/data/`)
 
@@ -77,7 +81,8 @@ Spielstände/Mods: `%APPDATA%\Godot\app_userdata\Hollywood Manager\` (`hm_save.j
 ## Offene Arbeit
 
 Aufgaben-Chunks mit Status: [prompts/tasks/README.md](prompts/tasks/README.md).
-Größte bekannte Tech-Debt-Posten: restliche Tabs aus `Main.gd` in `ui/`-Screens
-überführen (Chunk 09, iterativ); `Game.gd` (~3900) bei Bedarf weiter aufteilen
-(Kandidaten: Verhandlungs-/Casting-Cluster, Coverage, Prognosen).
+Tech-Debt-Stand: Die Monolithen sind aufgeteilt — `Game.gd` (~3600) enthält
+noch den Kern-Spielzug (end_week/Monatsabschluss/Release) und den
+Verhandlungs-/Casting-Motor (bewusst dort belassen: eng an `nego`/`pitch_ctx`
+gekoppelt); `Main.gd` (~2650) UI-Gerüst und Verhandlungs-Dialoge.
 RPG-Ausbau-Konzept: `prompts/rpg_konzept.md` (Chunks 15–18, strikt in Reihenfolge).
