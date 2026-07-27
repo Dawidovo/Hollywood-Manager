@@ -2449,6 +2449,73 @@ func _ready() -> void:
 	Game.tick_clients([])
 	check(float(ew_c.needsSat.geld) < 40.0, "Der Bruch reißt das Bedürfnis zusätzlich ein")
 
+	# TV-Umbruch & Streaming (Teil C3): Appeal, Fenster, Vertrag, Binge
+	Game.new_game("Fernsehen", 1950)
+	var tva := {"id": "tv_probe", "peakFame": 90, "talent": 70, "ego": 30}
+	var tva_val := Util.tv_appeal(tva)
+	check(tva_val == Util.tv_appeal(tva) and tva_val >= 20 and tva_val <= 100, "tv_appeal ist deterministisch und im Wertebereich")
+	var tvn := {"id": "tv_probe_n", "peakFame": 60, "talent": 60, "ego": 40}
+	Util._attr_cache["tv_probe_n"] = {"charisma": 90.0, "discipline": 50.0, "presence": 50.0}
+	var tv_hi_appeal := Util.tv_appeal(tvn)
+	Util._attr_cache["tv_probe_n"] = {"charisma": 10.0, "discipline": 50.0, "presence": 50.0}
+	var tv_lo_appeal := Util.tv_appeal(tvn)
+	Util._attr_cache.erase("tv_probe_n")
+	check(tv_hi_appeal > tv_lo_appeal, "Charisma hebt den Fernseh-Appeal (Nudge)")
+	var tv_actor := {}
+	for ta in Data.ACTORS:
+		if ta.death == null and Util.tv_appeal(ta) >= 60:
+			tv_actor = ta
+			break
+	check(not tv_actor.is_empty(), "Der Pool enthält fernsehtaugliche Gesichter")
+	var tv_c := {"id": 9700, "aid": str(tv_actor.id), "fame": 50.0, "heat": 0.0, "loyalty": 60.0, "mood": 60.0,
+		"exhaustion": 0.0, "busyUntil": 0, "flags": {}, "perks": [], "promises": [], "films": [],
+		"dna": CareerDNA.initial_dna(tv_actor), "clauses": [], "exclusiveStudio": "", "talentBonus": 0.0,
+		"trust": 40.0, "trustCap": 100.0, "secrets": [], "secretThresholds": [], "commission": 10, "years": 3,
+		"contractEnd": Game.mi() + 36, "signedAt": Game.mi(), "weightKg": 70.0, "weightTrend": 0.0,
+		"narrative": {}, "fameHistory": [], "dnaHistory": [], "campaign": 0.0, "awards": 0}
+	Game.state.clients.append(tv_c)
+	Needs.ensure_client(tv_c)
+	var tv_def := EvEngine.def_by_id("tv_angebot")
+	check(EvEngine.eval_weight(tv_def) > 0.0, "TV-Angebot feuert im Fenster 1948–62 bei hohem Appeal")
+	Game.state.year = 1970
+	check(EvEngine.eval_weight(tv_def) == 0.0, "Außerhalb des Fensters keine TV-Angebote")
+	Game.state.year = 1950
+	var tv_ev = EvEngine.build_by_id("tv_angebot", {"cid": 9700})
+	var tv_geld0: float = tv_c.needsSat.geld
+	var tv_pop0: float = tv_c.dna.popular
+	tv_ev.choices[0].fn.call()
+	var tv_income = tv_c.flags.get("tvIncome")
+	check(tv_income != null and int(tv_income.months) > 0 and int(tv_income.monthly) > 0, "tv_contract-Op legt den Serienvertrag über das tvIncome-Flag an")
+	check(float(tv_c.needsSat.geld) > tv_geld0 and float(tv_c.dna.popular) > tv_pop0, "Serie: Geld/Sicherheit rauf, DNA wird populärer")
+	check(Game.state.followups.any(func(fu): return str(fu.get("event", "")) == "tv_erste_staffel"), "Die TV-Kette ist terminiert (quest-Block)")
+	check(EvEngine.eval_weight(tv_def) == 0.0, "Mit laufender Serie kein zweites Angebot (without_flag)")
+	var tv_role := {"type": "lead", "gender": str(tv_actor.g), "minFame": 10, "ageMin": -100, "ageMax": 999, "fee": 30000, "filled": null, "rejected": []}
+	var tv_cast := {"id": 9701, "studioId": "mgm", "title": "P", "genre": "drama", "prestige": 2, "budget": 800000, "deadline": 8, "qualityMod": 0.0, "roles": [tv_role]}
+	var tv_fit_active := Game.fit_score(tv_cast, tv_role, tv_c)
+	tv_c.flags.erase("tvIncome")
+	var tv_fit_free := Game.fit_score(tv_cast, tv_role, tv_c)
+	check(tv_fit_free - tv_fit_active >= 4, "Laufende Serie kostet Prestige-Casting-Standing (%d vs %d)" % [tv_fit_active, tv_fit_free])
+	# Save/Load: Serienvertrag überlebt
+	tv_c.flags["tvIncome"] = {"months": 9, "monthly": 800}
+	Game.save_game()
+	Game.state = null
+	Game.load_game()
+	var tv_c2: Dictionary = Game.state.clients.filter(func(cc): return int(cc.id) == 9700)[0]
+	check(int(tv_c2.flags.tvIncome.months) == 9, "Der Serienvertrag überlebt Save/Load")
+	# Binge-Ruhm: Heat-Abbau nur ab 2015 beschleunigt
+	tv_c2.flags.erase("tvIncome")
+	tv_c2.heat = 5.0
+	Game.tick_clients([])
+	var tv_delta_1950: float = 5.0 - float(tv_c2.heat)
+	tv_c2.heat = 5.0
+	Game.state.year = 2016
+	Game.tick_clients([])
+	var tv_delta_2016: float = 5.0 - float(tv_c2.heat)
+	check(tv_delta_2016 > tv_delta_1950, "Binge-Ruhm: Heat fällt ab 2015 schneller (%.1f vs %.1f)" % [tv_delta_2016, tv_delta_1950])
+	check(EvEngine.eval_weight(EvEngine.def_by_id("streaming_angebot")) >= 0.0 and not EvEngine.def_by_id("likeness_rights").is_empty(), "Streaming- und Likeness-Ketten sind geladen")
+	Game.state.year = 1950
+	check(EvEngine.eval_weight(EvEngine.def_by_id("streaming_angebot")) == 0.0, "Streaming-Angebote erst ab 2015")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

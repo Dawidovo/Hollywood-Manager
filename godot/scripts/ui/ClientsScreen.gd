@@ -77,6 +77,11 @@ func _render_klienten() -> void:
 			sv.add_child(sl)
 			sv.add_child(main._bar(stat[1], stat[2]))
 			row.add_child(sv)
+		# TV-/Streaming-Vertrag (Teil C3): der Serien-Chip auf der Karte
+		var tv_flag = c.flags.get("tvIncome")
+		if tv_flag != null and int(tv_flag.get("months", 0)) > 0:
+			var tv_icon := "📱" if int(Game.state.year) >= Balance.STREAMING_YEAR else "📺"
+			box.add_child(main._chip("%s Series contract · %d mo · %s/mo" % [tv_icon, int(tv_flag.months), Util.fmt_money(float(tv_flag.monthly))], main.BLUE))
 		# Innenleben (Teil C1): „What drives them“ — Sichtbarkeit gestaffelt
 		# über Menschenkenntnis; unter Stufe 1 fehlt die Zeile ganz.
 		var drives_line := Needs.visible_line(c)

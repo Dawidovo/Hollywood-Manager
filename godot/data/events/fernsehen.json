@@ -1,0 +1,41 @@
+{
+  "entries": [
+    {"id": "tv_angebot", "cd": 10,
+      "weight": {"base": 2.0},
+      "conditions": {"min_year": 1948, "max_year": 1962,
+        "requires_client": {"tv_appeal_min": 60, "free": true, "without_flag": "tvIncome"}},
+      "title": "📺 The television question: {client}",
+      "text": "[i]“Thirty-nine episodes a year, a sponsor with deep pockets, and a face America invites into its living room every Thursday. We want {client}.”[/i]\n\nA network offer, in writing. Steady money against silver-screen mystique — the question every agent in town is suddenly being asked.",
+      "quest": {"title": "The television question", "icon": "📺", "step": "Decide {client}'s television future"},
+      "choices": [
+        {"label": "Sign the series — steady money, smaller screen",
+          "effects": [{"op": "tv_contract", "months": 18, "monthly_base": 700},
+            {"op": "dna", "key": "popular", "amount": 6}, {"op": "dna", "key": "unikat", "amount": -6},
+            {"op": "mood", "amount": 4},
+            {"op": "followup", "event": "tv_erste_staffel", "delay_weeks": 8},
+            {"op": "log", "text": "{client} signs a television series — steady money, and Thursday nights belong to the sponsor.", "type": "deal"}],
+          "outcome": "The contract is thick and the money is real. From now on {client} is furniture in a million living rooms — beloved, familiar, and a little less like a movie star every week."},
+        {"label": "Decline — the movies are the movies",
+          "effects": [{"op": "log", "text": "{client} turns television down. The mystique stays on the big screen.", "type": "info"}],
+          "outcome": "You send regrets on good paper. Scarcity is a strategy too — as long as the picture offers keep coming."}]},
+
+    {"id": "tv_erste_staffel", "followup_only": true,
+      "title": "📺 Season one: {client}",
+      "text": "The ratings are in: {client}'s show owns its time slot. The fan mail comes in sacks now — addressed to the character, mostly. The studios have noticed both facts.",
+      "quest": {"step": "Ride out season one of {client}'s show"},
+      "choices": [
+        {"label": "Lean in — press tour, covers, the whole circus",
+          "effects": [{"op": "fame", "amount": 2}, {"op": "dna", "key": "popular", "amount": 4},
+            {"op": "heat", "amount": 1},
+            {"op": "log", "text": "{client} leans into television stardom. America approves, loudly.", "type": "deal"}],
+          "outcome": "TV Guide, supermarket openings, a catchphrase people shout across parking lots. It is not cinema. It is enormous."},
+        {"label": "Keep one foot in pictures — negotiate hiatus windows",
+          "check": {"attr": "verhandlung", "dc": 50},
+          "effects": [{"op": "studio_rel", "amount": 4},
+            {"op": "log", "text": "Hiatus windows secured: {client} can still shoot pictures between seasons.", "type": "deal"}],
+          "outcome": "The network grumbles and signs. {client} stays a movie face that happens to do television — the rarest trick of the decade.",
+          "effects_fail": [{"op": "mood", "amount": -3},
+            {"op": "log", "text": "The network refuses hiatus windows — {client} belongs to Thursday nights now.", "type": "bad"}],
+          "outcome_fail": "The network holds the line: thirty-nine episodes leave room for nothing. The lot starts casting around {client}'s schedule — which means: around {client}."}]}
+  ]
+}

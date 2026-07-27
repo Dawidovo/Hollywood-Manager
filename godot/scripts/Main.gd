@@ -182,6 +182,15 @@ func _ready() -> void:
 		Persona.begin_channel_dialog(int(Game.state.contacts[0].id), "meet")
 		_start_dialog("channel_meet", {"ctid": int(Game.state.contacts[0].id)})
 		await _take_shot("dialog")
+	elif args.has("--shot-fernsehen"):
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+		var tv_shot_ev = EvEngine.build_by_id("tv_angebot", {"cid": int(Game.state.clients[0].id)})
+		if tv_shot_ev != null:
+			modal_queue.append(tv_shot_ev)
+			_show_next_modal()
+		await _take_shot("fernsehen")
 	elif args.has("--shot-pressekonferenz"):
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")

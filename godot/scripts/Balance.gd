@@ -134,6 +134,17 @@ const NEEDS_URGENT := 25.0
 const NEEDS_PROMISE_KEPT := 30.0
 const NEEDS_PROMISE_BROKEN := 20.0
 
+# ---------- TV-Umbruch 1948–62 & Streaming 2015+ (Teil C3) ----------
+# Serien-Angebote locken nur fernsehtaugliche Gesichter (Util.tv_appeal);
+# laufende Serien kosten im Prestige-Kino Standing (bis 1965). Ab
+# STREAMING_YEAR baut sich Heat schneller AUF und AB (Binge-Ruhm).
+const TV_ERA_START := 1948
+const TV_ERA_END := 1962
+const TV_PRESTIGE_MALUS := 5.0
+const TV_PRESTIGE_MALUS_UNTIL := 1965
+const STREAMING_YEAR := 2015
+const BINGE_HEAT_EXTRA := 0.5
+
 # ---------- Spieler-Attribute (RPG-Chunk 15) ----------
 # Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit
 # abnehmendem Ertrag: voll bis SOFTCAP_1, ×0,5 bis SOFTCAP_2, ×0,25 darüber.

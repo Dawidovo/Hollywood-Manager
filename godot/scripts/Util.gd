@@ -54,6 +54,13 @@ func voice_of(a: Dictionary) -> int:
 	return 20 + hashs(str(a.get("id", "")) + "voice") % 81
 
 
+# Fernseh-Tauglichkeit (TV-Umbruch 1948+, Streaming 2015+): deterministisch
+# je Schauspieler, 20–100; Charisma hebt den Wert (exakt nach Tonfilm-Muster).
+func tv_appeal(a: Dictionary) -> int:
+	var base := 20.0 + float(hashs(str(a.get("id", "")) + "tv") % 61)
+	return clampi(roundi(base + (float(attrs(a).charisma) - 50.0) * 0.4), 20, 100)
+
+
 # ---------- Ökonomie & Karriere-Mathematik ----------
 func infl(year: float) -> float:
 	return pow(1.03, year - 1925.0)

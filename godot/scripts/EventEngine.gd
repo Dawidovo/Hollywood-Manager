@@ -136,6 +136,10 @@ func _client_candidates(req) -> Array:
 		# Tonfilm-Umbruch: Filter auf die Sprechstimme des Schauspielers
 		if r.has("voice_max") and Util.voice_of(Game.actor_by_id.get(str(c.aid), {})) > int(r.voice_max):
 			return false
+		# TV-/Streaming-Umbruch (Teil C3): nur fernsehtaugliche Gesichter
+		# bekommen Angebote — niedrige Werte kosten nichts, sie locken nur nicht.
+		if r.has("tv_appeal_min") and Util.tv_appeal(Game.actor_by_id.get(str(c.aid), {})) < int(r.tv_appeal_min):
+			return false
 		# Generisch: Klienten mit gesetztem Flag ausschließen (z. B. schon getestet)
 		if r.has("without_flag") and c.flags.get(str(r.without_flag), false):
 			return false
@@ -336,6 +340,15 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 				_say("Your word is on the table now: %s." % str(pdef.label), ctx)
 		"press_event":
 			Game.press_event(str(ef.get("cat", "Agencies")), subst(str(ef.get("text", "")), ctx))
+		"tv_contract":
+			# TV-/Streaming-Vertrag (Teil C3): stetiges Einkommen über das
+			# vorhandene tvIncome-Flag; Sicherheit und Geld atmen auf.
+			if c != null:
+				var monthly := roundi(float(ef.get("monthly_base", 700)) * Util.infl(st.year) * (0.6 + float(c.fame) / 100.0))
+				c.flags["tvIncome"] = {"months": int(ef.get("months", 18)), "monthly": monthly}
+				Needs.boost(c, "sicherheit", 10.0)
+				Needs.boost(c, "geld", 10.0)
+				_say("A series contract: %s a month, %d months guaranteed." % [Util.fmt_money(float(monthly)), int(ef.get("months", 18))], ctx)
 		"rumor_belief":
 			# Presse-Nachspiel (Teil B): das lauteste dem Spieler bekannte
 			# Gerücht gewinnt oder verliert Glauben.

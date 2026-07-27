@@ -1205,9 +1205,10 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 	# Weekly Planner: „Vorbereitung“ gibt dem nächsten Pitch einen einmaligen Bonus
 	if float(c.flags.get("prepFit", 0.0)) > 0.0:
 		fit += float(c.flags.prepFit)
-	# Fernseh-Ära: TV-Gesichter verlieren bei Prestige-Kino an Standing (Feature 14)
-	if int(state.year) >= 1948 and int(state.year) <= 1965 and c.flags.get("tvIncome") != null and int(c.flags.tvIncome.months) > 0 and int(casting.prestige) >= 2:
-		fit -= 5.0
+	# Fernseh-Ära: TV-Gesichter verlieren bei Prestige-Kino an Standing
+	# (Feature 14 / Teil C3 — solange die Serie läuft, Wert in Balance.gd)
+	if int(state.year) >= Balance.TV_ERA_START and int(state.year) <= Balance.TV_PRESTIGE_MALUS_UNTIL and c.flags.get("tvIncome") != null and int(c.flags.tvIncome.months) > 0 and int(casting.prestige) >= 2:
+		fit -= Balance.TV_PRESTIGE_MALUS
 	# Studiosystem-Ära: Exklusivklienten sind beim eigenen Studio stärker (Feature 14)
 	if str(c.get("exclusiveStudio", "")) != "" and str(c.exclusiveStudio) == str(casting.studioId):
 		fit += 6.0
@@ -1782,6 +1783,10 @@ func tick_clients(events: Array) -> void:
 				c.loyalty = clampf(c.loyalty - 2.0, 0.0, 100.0)
 		else:
 			c.mood = clampf(c.mood + 1.0, 0.0, 100.0)
+		# Binge-Ruhm (Teil C3): ab der Streaming-Ära baut sich Heat schneller
+		# AUF (im Dreh) und AB (in der Lücke) — der Feed vergisst schnell.
+		if int(state.year) >= Balance.STREAMING_YEAR:
+			c.heat = clampf(c.heat + (Balance.BINGE_HEAT_EXTRA if busy else -Balance.BINGE_HEAT_EXTRA), -10.0, 10.0)
 		# Eine nachweisbar skrupellose Hauskultur erleichtert schmutzige Tricks,
 		# lässt aber das Vertrauen aller Klienten langsam erodieren.
 		var ruthless := identity_strength("skrupellos")

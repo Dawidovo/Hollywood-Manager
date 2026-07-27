@@ -151,6 +151,13 @@ func _maybe_expectation_talk(c: Dictionary, worst: String) -> void:
 	Dialogs.spawn_letter_named("erwartung_invite", Game.client_name(c), {"cid": cid})
 
 
+# Öffentlicher Schub von außen (z. B. TV-Vertrag: Sicherheit/Geld rauf).
+func boost(c: Dictionary, need: String, amount: float) -> void:
+	ensure_client(c)
+	if c.needsSat.has(need):
+		_shift(c, need, amount)
+
+
 func on_promise(c: Dictionary, promise_type: String, kept: bool) -> void:
 	var need := str(PROMISE_NEED.get(promise_type, ""))
 	if need == "":

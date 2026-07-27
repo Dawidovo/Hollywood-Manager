@@ -90,7 +90,8 @@ use (more on success). `check` replaces `success_chance` (never both).
 Conditions and choice `requirements` also accept
 `"min_attr": {"verhandlung": 40}` (requirements: button greys out).
 `requires_client` additionally filters on `voice_max` (speaking voice,
-talkie era) and `without_flag` (skip clients that carry a given flag).
+talkie era), `tv_appeal_min` (television appeal, TV/streaming eras) and
+`without_flag` (skip clients that carry a given flag).
 
 **Quest journal**: an event may carry
 `"quest": {"title": "…", "icon": "🧾", "step": "…"}`. When such an event
@@ -290,6 +291,9 @@ context), `fact` (subjective-reputation fact), `memory`, `promise`, `xp`,
 (a real client promise with deadline, kinds from `Game.PROMISES`),
 `press_event` (`{"op":"press_event","cat":"Press","text":"…"}`),
 `rumor_belief` (the loudest rumor known to the player gains/loses belief),
+`tv_contract` (`{"op":"tv_contract","months":18,"monthly_base":700}` — a
+series contract via the `tvIncome` flag; the monthly amount scales with
+inflation and fame, security/money needs get a boost),
 and `chance` (`{"op":"chance","p":0.3,"effects":[…],"else":[…]}`).
 
 ## Staff & delegation (`staff/core.json`)
