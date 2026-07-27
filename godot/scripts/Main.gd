@@ -244,7 +244,7 @@ func _ready() -> void:
 		Game.release_film(news_prod)
 		Game.state.productions.erase(news_prod)
 		Scandal.add_rumor(int(news_client.id), "A columnist is gathering material for a story that names no names yet.", false, "skandal", ["Journalists", "Party guests"], 44.0, true, "", 31.0)
-		Game.tick_rivals([], true)
+		Rivals.tick_rivals([], true)
 		Newspaper.build_newspaper()
 		_switch_tab("zeitung")
 		await _take_shot("zeitung")
@@ -2297,7 +2297,7 @@ func _render_buero() -> void:
 	var cr = _card("The agency race", "⚔")
 	grid.add_child(cr[0])
 	# Marktanteils-Ranking: Star-Power aller Häuser, die eigene Agentur markiert
-	var ranking: Array = Game.agency_ranking()
+	var ranking: Array = Rivals.agency_ranking()
 	var top_score: float = maxf(1.0, float(ranking[0].score))
 	for i in ranking.size():
 		var entry: Dictionary = ranking[i]
@@ -2314,7 +2314,7 @@ func _render_buero() -> void:
 		cr[1].add_child(rank_row)
 	cr[1].add_child(_lbl("Star power: combined fame of each house's roster. Unhappy clients get offers — expect counter-bids.", 11, DIM))
 	for rival in st.rivals:
-		var info: Dictionary = Game.RIVAL_STYLE_INFO.get(str(rival.style), {"label":str(rival.style), "icon":"◆"})
+		var info: Dictionary = Rivals.RIVAL_STYLE_INFO.get(str(rival.style), {"label":str(rival.style), "icon":"◆"})
 		var rr := HBoxContainer.new()
 		var rival_text := _lbl("%s %s · %s · %d clients" % [info.icon, rival.name, info.label, rival.clients.size()], 12, DIM)
 		rival_text.custom_minimum_size = Vector2(280 * font_scale, 0)
@@ -2334,7 +2334,7 @@ func _render_buero() -> void:
 		cp[1].add_child(_lbl("None of your stars directs or produces yet.", 12, DIM))
 	for figure in st.powerFigures:
 		var role_label := "directing" if str(figure.role) == "director" else "producing"
-		var figure_rival = Game.rival_by_id(str(figure.rivalId))
+		var figure_rival = Rivals.rival_by_id(str(figure.rivalId))
 		var allegiance := "close to your house" if bool(figure.agencyFriendly) else ("with %s" % figure_rival.name if figure_rival != null else "independent")
 		cp[1].add_child(_lbl("🎥 %s · %s · %d Credits · %s" % [figure.name, role_label, int(figure.credits), allegiance], 12, GREEN if bool(figure.agencyFriendly) else RED))
 
@@ -2737,7 +2737,7 @@ func _render_rumors() -> void:
 	target_buttons.add_theme_constant_override("h_separation", 6)
 	target_buttons.add_theme_constant_override("v_separation", 6)
 	for actor in Scandal.rumor_targets().slice(0, 6):
-		var owner = Game.rival_for_actor(str(actor.id))
+		var owner = Rivals.rival_for_actor(str(actor.id))
 		var suffix := " · %s" % owner.name if owner != null else ""
 		target_buttons.add_child(_btn("🕸 %s%s" % [actor.name, suffix], _on_rumor_launch.bind(str(actor.id))))
 	launch_card[1].add_child(target_buttons)
@@ -2829,7 +2829,7 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 	list.add_child(grid)
 	for a in all.slice(0, 48):
 		var fame := Util.fame_at(a, st.year)
-		var owner = Game.rival_for_actor(str(a.id))
+		var owner = Rivals.rival_for_actor(str(a.id))
 		var req := Game.required_rep(fame) + (10 if owner != null else 0)
 		var locked: bool = st.agency.rep < req
 		var cv = _card(a.name, "⚔" if owner != null else ("🔒" if locked else ""))

@@ -381,8 +381,8 @@ func wait_out_rumor(rid: int) -> String:
 func rumor_targets() -> Array:
 	var targets: Array = Game.pool_actors().filter(func(a): return not Game.is_client(str(a.id)))
 	targets.sort_custom(func(a, b):
-		var ar := 1 if Game.is_rival_client(str(a.id)) else 0
-		var br := 1 if Game.is_rival_client(str(b.id)) else 0
+		var ar := 1 if Rivals.is_rival_client(str(a.id)) else 0
+		var br := 1 if Rivals.is_rival_client(str(b.id)) else 0
 		return ar > br if ar != br else Util.fame_at(a, Game.state.year) > Util.fame_at(b, Game.state.year))
 	return targets
 
@@ -390,7 +390,7 @@ func launch_rumor(actor_id: String, topic: String = "skandal") -> String:
 	if not Game.actor_by_id.has(actor_id) or Game.is_client(actor_id):
 		return "The target is no good for this campaign."
 	var actor: Dictionary = Game.actor_by_id[actor_id]
-	var owner = Game.rival_for_actor(actor_id)
+	var owner = Rivals.rival_for_actor(actor_id)
 	# Hinterzimmer (Feature 8): eine Schmutzkampagne gegen ein geschütztes Haus bricht den Pakt
 	Mogul.on_launch_rumor(owner)
 	var text_s := "In the anterooms they say there is a story about %s that nobody wants to print yet." % actor.name

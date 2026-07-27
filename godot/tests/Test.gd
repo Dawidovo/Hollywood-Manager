@@ -273,7 +273,7 @@ func _ready() -> void:
 	Game.release_film(news_prod)
 	Game.state.productions.erase(news_prod)
 	Scandal.add_rumor(int(truth_client.id), "Marilyn Monroe werde in einem Bungalow beobachtet.", false, "affäre", ["Journalisten", "Partygäste"], 45.0, true, "", 20.0)
-	Game.tick_rivals([], true)
+	Rivals.tick_rivals([], true)
 	var issue: Dictionary = Newspaper.build_newspaper()
 	var categories: Dictionary = {}
 	var blind_text := ""
@@ -308,7 +308,7 @@ func _ready() -> void:
 	var rival: Dictionary = Game.state.rivals[0]
 	var rival_before: int = rival.clients.size()
 	rival.grudge = 80.0
-	Game.tick_rivals([], true)
+	Rivals.tick_rivals([], true)
 	check(rival.clients.size() > rival_before, "Rivale signiert Pool-Schauspieler")
 	var rival_actor_id := str(rival.clients[0])
 	check(not Game.available_actors().any(func(a): return str(a.id) == rival_actor_id) and Game.pool_actors().any(func(a): return str(a.id) == rival_actor_id), "Rivalenklient im Pool markierbar, aber gesperrt")
@@ -1937,14 +1937,14 @@ func _ready() -> void:
 	Game.new_game("Rivalenduell", 1950)
 	Game.start_negotiation("monroe")
 	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
-	var rank: Array = Game.agency_ranking()
+	var rank: Array = Rivals.agency_ranking()
 	check(rank.any(func(r): return bool(r.isPlayer)), "Agentur-Ranking enthält die eigene Agentur")
 	check(rank.size() == Game.state.rivals.size() + 1, "Ranking listet alle Häuser")
 	check(float(rank[0].score) >= float(rank[rank.size() - 1].score), "Ranking ist absteigend sortiert")
 	var pv_c: Dictionary = Game.state.clients[0]
 	pv_c.loyalty = 30.0
 	var pv_events: Array = []
-	Game.tick_rivals(pv_events, true)
+	Rivals.tick_rivals(pv_events, true)
 	var pv_duel = null
 	for pe in pv_events:
 		if str(pe.get("title", "")).begins_with("Poaching attempt"):
@@ -1956,7 +1956,7 @@ func _ready() -> void:
 	check(Game.state.clients.size() == 1 and float(pv_c.loyalty) > pv_loy0, "Mitbieten hält den Klienten (Loyalität steigt)")
 	pv_c.loyalty = 30.0
 	var pv_events2: Array = []
-	Game.tick_rivals(pv_events2, true)
+	Rivals.tick_rivals(pv_events2, true)
 	var pv_duel2 = null
 	for pe2 in pv_events2:
 		if str(pe2.get("title", "")).begins_with("Poaching attempt"):

@@ -409,7 +409,7 @@ func _defect(s: Dictionary, events: Array) -> void:
 		var rival: Dictionary = Util.pick(st.rivals)
 		rival.grudge = clampf(float(rival.grudge) + 10.0, 0.0, 100.0)
 		if poached != null:
-			Game.rival_poach_client(str(rival.id), poached)
+			Rivals.rival_poach_client(str(rival.id), poached)
 		Network.memoir("%s defected to %s%s — trained by you, used against you." % [str(s.name), str(rival.name), " and took %s along" % Game.client_name(poached) if poached != null else ""], [str(s.name)])
 		events.append({"title": "A defection", "text": "[b]%s[/b] clears the desk overnight and reappears at %s%s.\n\nEverything they know about your files, they now know for the other side." % [str(s.name), str(rival.name), " — with %s in tow" % Game.client_name(poached) if poached != null else ""], "choices": [{"label": "Change the locks"}]})
 		Game.log_msg("%s defects to %s. Loyalty is a wage you didn't pay." % [str(s.name), str(rival.name)], "bad")
@@ -422,7 +422,7 @@ func _defect(s: Dictionary, events: Array) -> void:
 			"studioId": str(Game.active_studios()[0].id) if Game.active_studios().size() else ""}
 		st.rivals.append(new_rival)
 		if poached != null:
-			Game.rival_poach_client(str(new_rival.id), poached)
+			Rivals.rival_poach_client(str(new_rival.id), poached)
 		Network.memoir("%s left to found %s — your training, their letterhead." % [str(s.name), str(new_rival.name)], [str(s.name)])
 		var spin_extra := ", with %s as founding client" % Game.client_name(poached) if poached != null else ""
 		events.append({"title": "A spin-off",

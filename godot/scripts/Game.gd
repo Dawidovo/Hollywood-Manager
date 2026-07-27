@@ -83,12 +83,7 @@ const NARRATIVE_TYPES := {
 	"ensemble_star": {"label":"From the second row to stardom", "desc":"A proven ensemble face finally claims the center of the screen."},
 }
 
-const RIVAL_STYLE_INFO := {
-	"aggressiv": {"label":"Aggressive", "icon":"🦈"},
-	"nachwuchs": {"label":"Up-and-coming", "icon":"🌱"},
-	"studiotreu": {"label":"Studio-loyal", "icon":"🏛"},
-	"prestige": {"label":"Prestige", "icon":"🎩"},
-}
+# ---------- Rivalen-Agenturen: siehe Autoload Rivals.gd ----------
 
 # Bühnen-Cluster: Die vier Entscheidungen eines Vorsprechens. Die Werte sind
 # bewusst genreunabhängige Schlüssel; nur ihre Texte wechseln mit dem Film.
@@ -345,7 +340,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 	state["attributes"] = {}
 	for key in Data.ATTRIBUTES:
 		state.attributes[key] = Balance.ATTR_BASE
-	_init_rivals(start_year)
+	Rivals._init_rivals(start_year)
 	Persona.init_contacts()
 	Mogul.init_state()
 	Network.init_state()
@@ -489,22 +484,7 @@ func record_identity(key: String, amount: float = 1.0) -> void:
 		state.identityLastTop = after.duplicate()
 		press_event("Agencies", "%s wears a new label: %s" % [state.agency.name, " & ".join(after)])
 
-func _rival_names(year: int) -> Array:
-	if year < 1940:
-		return ["Continental Artists Bureau", "Majestic Players Office", "Selznick & Rowe", "Pacific Star Exchange"]
-	if year < 1970:
-		return ["Avalon Artists", "Gold Coast Agency", "Monarch Talent", "Sterling Representation"]
-	if year < 2000:
-		return ["Apex Artists", "Canyon Talent Group", "TriStar Representation", "Westwood Creative"]
-	return ["Velocity Entertainment", "Northstar Talent", "Mosaic Artists Group", "Summit Creative Partners"]
 
-func _init_rivals(year: int) -> void:
-	var names := _rival_names(year)
-	var styles := ["aggressiv", "nachwuchs", "studiotreu", "prestige"]
-	var studios := active_studios()
-	for i in styles.size():
-		state.rivals.append({"id":"rival_%d" % i, "name":names[i], "style":styles[i], "clients":[], "grudge":0.0, "rel":0.0,
-			"studioId":str(studios[i % studios.size()].id) if studios.size() else ""})
 
 func date_str() -> String:
 	return "Week %d · %s %d" % [int(state.get("week", 1)), MONTHS[int(state.month) - 1], int(state.year)]
@@ -530,14 +510,7 @@ func is_client(actor_id: String) -> bool:
 			return true
 	return false
 
-func rival_for_actor(actor_id: String) -> Variant:
-	for rival in state.get("rivals", []):
-		if rival.get("clients", []).has(actor_id):
-			return rival
-	return null
 
-func is_rival_client(actor_id: String) -> bool:
-	return rival_for_actor(actor_id) != null
 
 func pool_actors() -> Array:
 	var y = state.year
@@ -549,7 +522,7 @@ func pool_actors() -> Array:
 func available_actors() -> Array:
 	var y = state.year
 	var out = Data.ACTORS.filter(func(a):
-		return a.debut <= y and (a.death == null or a.death > y) and Util.age_of(a, y) <= 85 and not is_client(a.id) and not is_rival_client(a.id))
+		return a.debut <= y and (a.death == null or a.death > y) and Util.age_of(a, y) <= 85 and not is_client(a.id) and not Rivals.is_rival_client(a.id))
 	out.sort_custom(func(a, b): return Util.fame_at(a, y) > Util.fame_at(b, y))
 	return out
 
@@ -562,195 +535,18 @@ func client(cid) -> Variant:
 func client_name(c: Dictionary) -> String:
 	return actor_by_id[c.aid].name
 
-func rival_by_id(rival_id: String) -> Variant:
-	for rival in state.get("rivals", []):
-		if str(rival.id) == rival_id:
-			return rival
-	return null
-
-func pick_poach_rival() -> Variant:
-	if state.get("rivals", []).is_empty():
-		return null
-	var sorted: Array = state.rivals.duplicate()
-	sorted.sort_custom(func(a, b):
-		var av := float(a.grudge) + (25.0 if str(a.style) == "aggressiv" else 0.0)
-		var bv := float(b.grudge) + (25.0 if str(b.style) == "aggressiv" else 0.0)
-		return av > bv)
-	return sorted[0]
-
-func rival_poach_client(rival_id: String, c: Dictionary) -> void:
-	var rival = rival_by_id(rival_id)
-	if rival == null or c == null:
-		return
-	var actor_id := str(c.aid)
-	var actor_name := client_name(c)
-	state.clients.erase(c)
-	if not rival.clients.has(actor_id):
-		rival.clients.append(actor_id)
-	rival.grudge = clampf(float(rival.grudge) + 20.0, 0.0, 100.0)
-	rival.rel = clampf(float(rival.rel) - 15.0, -100.0, 100.0)
-	press_event("Client moves", "%s leaves %s for %s" % [actor_name, state.agency.name, rival.name])
-
-func _rival_candidate(rival: Dictionary) -> Variant:
-	var pool := available_actors()
-	if pool.is_empty():
-		return null
-	match str(rival.style):
-		"nachwuchs":
-			var young: Array = pool.filter(func(a): return Util.age_of(a, state.year) <= 28)
-			if young.size():
-				young.sort_custom(func(a, b): return float(a.talent) > float(b.talent))
-				return young[0]
-		"prestige":
-			var artists: Array = pool.filter(func(a): return float(a.talent) >= 82.0)
-			if artists.size():
-				artists.sort_custom(func(a, b): return float(a.talent) > float(b.talent))
-				return artists[0]
-		"aggressiv":
-			return pool[0]
-		"studiotreu":
-			var reliable: Array = pool.filter(func(a): return float(Util.attrs(a).discipline) >= 60.0)
-			if reliable.size():
-				return reliable[0]
-	return pool[0]
-
-func _rival_coop_event(rival: Dictionary) -> Variant:
-	var c = random_client(func(x): return is_free(x))
-	if c == null:
-		return null
-	var rid := str(rival.id)
-	var cid := int(c.id)
-	var rival_name := str(rival.name)
-	return {"title":"A call from %s" % rival_name,
-		"text":"[i]“You don't have to like each other to build a good picture together.”[/i]\n\n%s offers a package cooperation: your client %s gets a role, the rival house fills out the rest of the cast." % [rival_name, client_name(c)],
-		"choices":[
-			{"label":"Package it together", "fn":func():
-				var cl = client(cid)
-				var rv = rival_by_id(rid)
-				if cl == null or rv == null:
-					return "The opportunity has passed."
-				var result = quick_production(cl, {"prestige":2 if str(rv.style) == "prestige" else 1})
-				rv.grudge = maxf(0.0, float(rv.grudge) - 12.0)
-				rv.rel = clampf(float(rv.rel) + 14.0, -100.0, 100.0)
-				press_event("Agencies", "%s and %s package “%s” together" % [state.agency.name, rv.name, result.title])
-				return "Two address books, one contract: “%s” goes into production." % result.title},
-			{"label":"Decline politely", "fn":func(): return "You leave the door open. In Hollywood, tomorrow is another month."},
-		]}
-
-func tick_rivals(events: Array = [], force: bool = false) -> void:
-	var cooperation_added := false
-	for rival in state.get("rivals", []):
-		for actor_id in rival.clients.duplicate():
-			var actor: Dictionary = actor_by_id.get(str(actor_id), {})
-			if actor.is_empty() or (actor.death != null and float(actor.death) <= float(state.year)):
-				rival.clients.erase(actor_id)
-		var sign_chance := 0.07 if str(rival.style) == "nachwuchs" else 0.035
-		if force or Util.chance(sign_chance):
-			var actor = _rival_candidate(rival)
-			if actor != null:
-				rival.clients.append(str(actor.id))
-				press_event("Rival deals", "%s signs %s" % [rival.name, actor.name])
-				log_msg("Competition: %s signs %s." % [rival.name, actor.name], "info")
-		if float(rival.grudge) >= 60.0 and state.clients.size() and (force or Util.chance(0.18)):
-			var target: Dictionary = Util.pick(state.clients)
-			var rumor := Scandal.add_rumor(int(target.id), "%s is sowing doubts about the reliability of %s in the studio corridors." % [rival.name, client_name(target)], false, "skandal", ["Studios", "Assistants"], 14.0, true, "", 34.0)
-			rumor["sourceRival"] = str(rival.id)
-			press_event("Agencies", "Ice age between %s and %s: studio corridors become a battlefield" % [state.agency.name, rival.name])
-		# Aktives Abwerbe-Duell (statt stillem Grudge): unzufriedene Klienten
-		# bekommen ein konkretes Gegenangebot auf den Tisch gelegt.
-		if state.clients.size() and (force or Util.chance(0.04 + float(rival.grudge) / 500.0)):
-			var poach_cands: Array = state.clients.filter(func(pc):
-				return float(pc.loyalty) < 55.0 or float(pc.mood) < 45.0)
-			if poach_cands.size():
-				events.append(_rival_poach_event(rival, Util.pick(poach_cands)))
-		if not force and not cooperation_added and float(rival.grudge) <= 12.0 and float(rival.rel) >= 20.0 and Util.chance(0.04):
-			var coop = _rival_coop_event(rival)
-			if coop != null:
-				events.append(coop)
-				cooperation_added = true
-
-# Marktanteils-Ranking: Star-Power aller Agenturen (Summe Klienten-Ruhm),
-# Spieler eingeschlossen — die Konkurrenz wird als Rangliste sichtbar.
-func agency_ranking() -> Array:
-	var out: Array = []
-	var own := 0.0
-	for c in state.clients:
-		own += float(c.fame)
-	out.append({"name": str(state.agency.name), "score": own, "isPlayer": true})
-	for rival in state.get("rivals", []):
-		var score := 0.0
-		for aid in rival.clients:
-			var actor: Dictionary = actor_by_id.get(str(aid), {})
-			if not actor.is_empty():
-				score += float(Util.fame_at(actor, state.year))
-		out.append({"name": str(rival.name), "score": score, "isPlayer": false})
-	out.sort_custom(func(a, b): return float(a.score) > float(b.score))
-	return out
 
 
-# Abwerbe-Duell: Der Rivale legt ein konkretes Angebot auf den Tisch —
-# mitbieten, an die gemeinsame Geschichte appellieren oder ziehen lassen.
-func _rival_poach_event(rival: Dictionary, c: Dictionary) -> Dictionary:
-	var rid := str(rival.id)
-	var rival_name := str(rival.name)
-	var cid := int(c.id)
-	var bonus := roundi(Util.ask_fee(float(c.fame), state.year) * 0.06)
-	var appeal_p := clampf(0.30 + float(c.loyalty) / 200.0 + float(c.trust) / 250.0 + float(attr("menschenkenntnis")) / 400.0, 0.1, 0.9)
-	return {"title": "Poaching attempt: %s" % client_name(c),
-		"text": "[i]“Half the commission, twice the attention.”[/i]\n\n%s has made %s a concrete offer — and your client is listening. Loyalty %d, mood %d: this is not a bluff." % [rival_name, client_name(c), roundi(float(c.loyalty)), roundi(float(c.mood))],
-		"choices": [
-			{"label": "Match the terms (signing bonus %s)" % Util.fmt_money(bonus), "fn": func():
-				var cl = client(cid)
-				var rv = rival_by_id(rid)
-				if cl == null:
-					return "The moment has passed."
-				if float(state.agency.cash) < float(bonus):
-					return "The till cannot cover the bonus — and everyone at the table knows it."
-				book(-float(bonus), "bonus", "Counter-offer: %s stays" % client_name(cl))
-				cl.loyalty = clampf(float(cl.loyalty) + 10.0, 0.0, 100.0)
-				change_trust(cl, 4.0)
-				if rv != null:
-					rv.grudge = clampf(float(rv.grudge) + 12.0, 0.0, 100.0)
-				attr_gain("verhandlung", 0.3)
-				press_event("Agencies", "%s outbids %s — %s stays" % [state.agency.name, rival_name, client_name(cl)])
-				return "Money talks loudest when it arrives first. %s signs the amendment — and %s crosses a name off a list." % [client_name(cl), rival_name]},
-			{"label": "[👁 %d %%] Appeal to everything you built together" % roundi(appeal_p * 100.0), "fn": func():
-				var cl = client(cid)
-				var rv = rival_by_id(rid)
-				if cl == null:
-					return "The moment has passed."
-				if Util.chance(appeal_p):
-					attr_gain("menschenkenntnis", 0.4)
-					cl.loyalty = clampf(float(cl.loyalty) + 6.0, 0.0, 100.0)
-					cl.mood = clampf(float(cl.mood) + 4.0, 0.0, 100.0)
-					return "No numbers, just history: the first casting, the first premiere, the promise you kept. %s stays." % client_name(cl)
-				attr_gain("menschenkenntnis", 0.15)
-				_client_leaves_to_rival(cl, rv)
-				return "The words are right, the timing is not. %s signs across town — politely, which somehow makes it worse." % client_name(cl)},
-			{"label": "Let them go", "fn": func():
-				var cl = client(cid)
-				var rv = rival_by_id(rid)
-				if cl == null:
-					return "The moment has passed."
-				_client_leaves_to_rival(cl, rv)
-				state.agency.rep = clampi(int(state.agency.rep) - 2, 0, 100)
-				return "Some fights cost more than the prize. The roster is shorter — and the town takes note."},
-		]}
 
 
-func _client_leaves_to_rival(c: Dictionary, rival) -> void:
-	state.clients.erase(c)
-	if rival != null:
-		rival.clients.append(str(c.aid))
-		press_event("Client moves", "%s leaves %s for %s" % [client_name(c), state.agency.name, str(rival.name)])
-	log_msg("%s leaves the agency." % client_name(c), "bad")
 
 
-func rival_casting_block(studio_id: String) -> float:
-	for rival in state.get("rivals", []):
-		if str(rival.style) == "studiotreu" and str(rival.get("studioId", "")) == studio_id and rival.clients.size():
-			return clampf(8.0 + float(rival.grudge) / 12.0 - maxf(0.0, float(rival.rel)) / 20.0, 4.0, 16.0)
-	return 0.0
+
+
+
+
+
+
 
 func power_figure_for_aid(actor_id: String) -> Variant:
 	for figure in state.get("powerFigures", []):
@@ -1098,7 +894,7 @@ func start_negotiation(actor_id: String) -> Dictionary:
 	var actor: Dictionary = actor_by_id[actor_id]
 	var fame := Util.fame_at(actor, state.year)
 	var req := required_rep(fame)
-	var owner = rival_for_actor(actor_id)
+	var owner = Rivals.rival_for_actor(actor_id)
 	var poach_req := req + (10 if owner != null else 0)
 	if state.agency.rep < poach_req:
 		# Stale-Schutz: eine gescheiterte Anbahnung darf keine alte Verhandlung
@@ -1388,7 +1184,7 @@ func fit_score(casting: Dictionary, role: Dictionary, c: Dictionary) -> int:
 		fit += (identity_strength("kuenstlerisch") + identity_strength("klientenorientiert")) * (4.5 if eff_talent(c) >= 88.0 else 2.5)
 	else:
 		fit += (identity_strength("studiotreu") + identity_strength("kommerziell")) * 3.5
-	fit -= rival_casting_block(str(casting.studioId))
+	fit -= Rivals.rival_casting_block(str(casting.studioId))
 	fit -= Scandal.rumor_fit_penalty(c)
 	# Tonfilm-Umbruch: Studios casten 1928–1934 keine fragilen Stimmen
 	if voice_at_risk(c):
@@ -1851,7 +1647,7 @@ func _month_close(events: Array) -> void:
 	tick_clients(events)
 	_tick_roster_pairs(events)
 	Scandal.tick_rumors(events)
-	tick_rivals(events)
+	Rivals.tick_rivals(events)
 	# Karrierebretter: veraltete Plan-Slots verfallen lautlos
 	_tick_boards()
 	# Instinkt-Prognosen (Feature 6): fällige Wetten auflösen
@@ -2424,7 +2220,7 @@ func _apply_save_defaults() -> void:
 	if not state.has("rivals"):
 		state["rivals"] = []
 	if state.rivals.is_empty():
-		_init_rivals(int(state.year))
+		Rivals._init_rivals(int(state.year))
 	if not state.has("identity"):
 		state["identity"] = {}
 	for identity_key in IDENTITY_KEYS:

@@ -230,7 +230,7 @@ func _b_poach() -> Dictionary:
 	var sorted = Game.state.clients.duplicate()
 	sorted.sort_custom(func(a, b): return a.fame > b.fame)
 	var c = sorted[0]
-	var rival = Game.pick_poach_rival()
+	var rival = Rivals.pick_poach_rival()
 	var rival_id := str(rival.id) if rival != null else ""
 	var rival_name := str(rival.name) if rival != null else "a big rival agency"
 	var prepared := Scandal.has_mitigated_secret(c, "wechselabsicht")
@@ -258,7 +258,7 @@ func _b_poach() -> Dictionary:
 						rival.rel = clampf(float(rival.rel) - 10.0, -100.0, 100.0)
 					return "“I know who I owe my career to.” %s declines — out of conviction." % _nm(c)
 				if rival_id != "":
-					Game.rival_poach_client(rival_id, c)
+					Rivals.rival_poach_client(rival_id, c)
 				else:
 					Game.state.clients.erase(c)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 4, 0, 100)
@@ -266,7 +266,7 @@ func _b_poach() -> Dictionary:
 				return "The arguments are not enough. %s signs elsewhere — a heavy blow." % _nm(c)},
 			{"label": "Let them go", "fn": func():
 				if rival_id != "":
-					Game.rival_poach_client(rival_id, c)
+					Rivals.rival_poach_client(rival_id, c)
 				else:
 					Game.state.clients.erase(c)
 				Game.state.agency.rep = clampi(int(Game.state.agency.rep) - 3, 0, 100)
