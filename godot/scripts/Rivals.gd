@@ -172,9 +172,15 @@ func _rival_poach_event(rival: Dictionary, c: Dictionary) -> Dictionary:
 	var cid := int(c.id)
 	var bonus := roundi(Util.ask_fee(float(c.fame), Game.state.year) * 0.06)
 	var appeal_p := clampf(0.30 + float(c.loyalty) / 200.0 + float(c.trust) / 250.0 + float(Game.attr("menschenkenntnis")) / 400.0, 0.1, 0.9)
+	var duel_choices: Array = []
+	# Schlüsselbegegnung (Teil A3): ab POACH_SCENE_FAME wird das Duell zur
+	# vollen Szene mit Emotionslage; das klassische Modal bleibt Fallback.
+	if float(c.fame) >= Balance.POACH_SCENE_FAME and Dialogs.has_dialog("poach_defense"):
+		duel_choices.append({"label": "Meet %s face to face — the full conversation" % Game.client_name(c),
+			"dialog": "poach_defense", "ctx": {"cid": cid, "rid": rid}})
 	return {"title": "Poaching attempt: %s" % Game.client_name(c),
 		"text": "[i]“Half the commission, twice the attention.”[/i]\n\n%s has made %s a concrete offer — and your client is listening. Loyalty %d, mood %d: this is not a bluff." % [rival_name, Game.client_name(c), roundi(float(c.loyalty)), roundi(float(c.mood))],
-		"choices": [
+		"choices": duel_choices + [
 			{"label": "Match the terms (signing bonus %s)" % Util.fmt_money(bonus), "fn": func():
 				var cl = Game.client(cid)
 				var rv = rival_by_id(rid)

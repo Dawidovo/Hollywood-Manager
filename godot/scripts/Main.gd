@@ -182,6 +182,20 @@ func _ready() -> void:
 		Persona.begin_channel_dialog(int(Game.state.contacts[0].id), "meet")
 		_start_dialog("channel_meet", {"ctid": int(Game.state.contacts[0].id)})
 		await _take_shot("dialog")
+	elif args.has("--shot-begegnung") or args.has("--shot-begegnung20"):
+		# Schlüsselbegegnung mit Emotions-Chip: einmal mit scharfem Blick
+		# (Menschenkenntnis 80), einmal fast blind (20).
+		_on_era_selected(1950)
+		Game.start_negotiation("monroe")
+		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": "lead12"})
+		var bg_client: Dictionary = Game.state.clients[0]
+		bg_client.loyalty = 38.0
+		bg_client.promises[0].due = Game.mi() - 1
+		bg_client.promises[0]["broken"] = true
+		Game.state.instinct = 0
+		Game.state.attributes["menschenkenntnis"] = 20.0 if args.has("--shot-begegnung20") else 80.0
+		_start_dialog("contract_showdown", {"cid": int(bg_client.id)})
+		await _take_shot("begegnung20" if args.has("--shot-begegnung20") else "begegnung")
 	elif args.has("--shot-chronik"):
 		_on_era_selected(1950)
 		Game.state.agency.rep = 100
@@ -2386,6 +2400,11 @@ func _resolve_choice(ev: Dictionary, idx: int) -> void:
 	if ch.get("action", "") == "restart":
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(Game.SAVE_PATH))
 		get_tree().reload_current_scene()
+		return
+	# Schlüsselbegegnungen (Teil A3): eine Event-Option kann eine volle
+	# Dialogszene öffnen ({"dialog": id, "ctx": {...}}).
+	if ch.has("dialog") and Dialogs.has_dialog(str(ch.dialog)):
+		_start_dialog(str(ch.dialog), ch.get("ctx", {}))
 		return
 	if ch.has("fn"):
 		var outcome = ch.fn.call()

@@ -1952,7 +1952,10 @@ func _ready() -> void:
 			break
 	check(pv_duel != null, "Unzufriedener Klient löst ein Abwerbe-Duell aus")
 	var pv_loy0 := float(pv_c.loyalty)
-	pv_duel.choices[0].fn.call()
+	# Teil A3: ab Ruhm 50 steht die volle Szene vorn — die klassischen
+	# Optionen bleiben als Fallback dahinter erhalten.
+	var pv_match: Dictionary = pv_duel.choices.filter(func(chx): return str(chx.label).begins_with("Match the terms"))[0]
+	pv_match.fn.call()
 	check(Game.state.clients.size() == 1 and float(pv_c.loyalty) > pv_loy0, "Mitbieten hält den Klienten (Loyalität steigt)")
 	pv_c.loyalty = 30.0
 	var pv_events2: Array = []
@@ -1962,7 +1965,8 @@ func _ready() -> void:
 		if str(pe2.get("title", "")).begins_with("Poaching attempt"):
 			pv_duel2 = pe2
 			break
-	pv_duel2.choices[2].fn.call()
+	var pv_letgo: Dictionary = pv_duel2.choices.filter(func(chx): return str(chx.label) == "Let them go")[0]
+	pv_letgo.fn.call()
 	check(Game.state.clients.is_empty(), "Ziehen lassen: der Klient verlässt die Agentur")
 	check(Game.state.rivals.any(func(r): return r.clients.has("monroe")), "Der Rivale übernimmt den Klienten")
 
@@ -2178,6 +2182,72 @@ func _ready() -> void:
 	check(Dialogs.validate_defs().any(func(w): return str(w).contains("furious")), "Unbekannte Emotion im Gate erzeugt eine Ladewarnung")
 	Data.DIALOGS.erase(emd_bad)
 	Data.DIALOGS.erase(emd_def)
+
+	# Schlüsselbegegnungen (Teil A3): vier mehrstufige Szenen + Trigger
+	Game.new_game("Begegnungen", 1950)
+	for beg_id in ["contract_showdown", "poach_defense", "crisis_confession", "studio_summit"]:
+		check(Dialogs.has_dialog(str(beg_id)), "Begegnungsbaum geladen: %s" % str(beg_id))
+	check(Dialogs.validate_defs().is_empty(), "Alle Begegnungs-Bäume und -Briefe laden warnungsfrei")
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var beg_c: Dictionary = Game.state.clients[0]
+	beg_c.loyalty = 30.0
+	beg_c.contractEnd = Game.mi()
+	var beg_events: Array = []
+	Game.tick_clients(beg_events)
+	var beg_showdown = null
+	for be in beg_events:
+		if str(be.get("title", "")).begins_with("Contract talk"):
+			beg_showdown = be
+	check(beg_showdown != null and str(beg_showdown.choices[0].get("dialog", "")) == "contract_showdown", "Niedrige Loyalität am Vertragsende öffnet die Showdown-Szene")
+	check(int(beg_c.contractEnd) > Game.mi(), "Fallback: der Vertrag ist trotzdem verlängert (BalanceSim blockiert nicht)")
+	var beg_promises0: int = beg_c.promises.size()
+	var beg_view: Dictionary = Dialogs.start("contract_showdown", {"cid": int(beg_c.id)})
+	check(str(beg_view.get("emotion", {}).get("text", "")) != "", "Showdown-Szene zeigt den Emotions-Chip")
+	beg_view = Dialogs.choose(0)
+	beg_view = Dialogs.choose(0)
+	check(bool(beg_view.done), "Showdown-Pfad läuft bis zum Endknoten durch")
+	check(beg_c.promises.size() == beg_promises0 + 1 and str(beg_c.promises[-1].type) == "lead12", "client_promise-Op legt ein echtes Klienten-Versprechen mit Frist an")
+	# Abwerbe-Duell wird ab Ruhm 50 zur Szene
+	beg_c.fame = 60.0
+	beg_c.loyalty = 30.0
+	var beg_poach_events: Array = []
+	Rivals.tick_rivals(beg_poach_events, true)
+	var beg_duel = null
+	for be2 in beg_poach_events:
+		if str(be2.get("title", "")).begins_with("Poaching attempt"):
+			beg_duel = be2
+	check(beg_duel != null and str(beg_duel.choices[0].get("dialog", "")) == "poach_defense", "Abwerbe-Duell ab Ruhm 50: volle Szene steht vorn, Modal bleibt Fallback")
+	# Geständnis-Szene: wahres Gerücht ab belief 40, einmal pro Geheimnis
+	Scandal.reveal_secret(beg_c, "beziehung", 2)
+	Scandal.add_rumor(int(beg_c.id), "Something about a bungalow.", true, "affäre", ["Assistants"], 45.0, true, "beziehung")
+	var beg_conf_events: Array = []
+	Scandal.tick_rumors(beg_conf_events)
+	check(beg_conf_events.any(func(e): return str(e.get("title", "")).begins_with("A confession")), "Wahres Gerücht ab belief 40 löst die Geständnis-Szene aus")
+	var beg_conf_events2: Array = []
+	Scandal.tick_rumors(beg_conf_events2)
+	check(not beg_conf_events2.any(func(e): return str(e.get("title", "")).begins_with("A confession")), "Das Geständnis kommt nur einmal pro Geheimnis")
+	# Studio-Gipfel: zwei geplatzte Deals rufen den Boss auf den Plan
+	var beg_sid := str(Game.active_studios()[0].id)
+	Game.note_deal_burst(beg_sid)
+	check(not Game.state.inbox.any(func(l): return str(l.tid) == "studio_summit_invite"), "Ein geplatzter Deal allein ruft den Boss nicht")
+	Game.note_deal_burst(beg_sid)
+	var beg_letter: Dictionary = {}
+	for l in Game.state.inbox:
+		if str(l.tid) == "studio_summit_invite":
+			beg_letter = l
+	check(not beg_letter.is_empty() and str(beg_letter.get("ctx", {}).get("sid", "")) == beg_sid, "Zwei geplatzte Deals: Einladung des Studiobosses mit sid im Kontext")
+	var beg_res: Dictionary = Dialogs.letter_choose(int(beg_letter.id), 0)
+	check(str(beg_res.get("dialog", "")) == "studio_summit" and str(beg_res.get("ctx", {}).get("sid", "")) == beg_sid, "Brief-Annahme öffnet den Gipfel mit Studio-Kontext")
+	Dialogs.start("studio_summit", beg_res.ctx)
+	Dialogs.choose(0)
+	var beg_summit_end: Dictionary = Dialogs.choose(0)
+	check(bool(beg_summit_end.done), "Gipfel-Pfad läuft bis zum Endknoten durch")
+	check(Game.state.followups.any(func(fu): return str(fu.get("event", "")) == "summit_package"), "Paket-Zusage plant die Followup-Kette mit Frist")
+	var beg_pkg = EvEngine.build_by_id("summit_package", {"sid": beg_sid})
+	check(beg_pkg != null, "Followup-Event der Kette baut sich mit Studio-Kontext")
+	beg_pkg.choices[0].fn.call()
+	check(Game.state.quests.any(func(q): return str(q.id) == "summit_package"), "Die Paket-Kette erscheint als Auftrag im Journal (quest-Block)")
 
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)

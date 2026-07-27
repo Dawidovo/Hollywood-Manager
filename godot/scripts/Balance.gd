@@ -98,6 +98,19 @@ const EMO_ERR_LOW := 25
 const EMO_ERR_MID := 10
 const EMO_INSTINCT_DIV := 10.0
 
+# ---------- Schlüsselbegegnungen (Gesamtpaket Teil A3) ----------
+# Vertragsende: unter dieser Loyalität (oder nach Wortbruch) wird die
+# Verlängerung zur vollen Szene statt zum stillen Automatismus.
+const SHOWDOWN_LOYALTY := 50.0
+# Abwerbe-Duell: ab diesem Klienten-Ruhm wird das Duell zur vollen Szene.
+const POACH_SCENE_FAME := 50.0
+# Geständnis-Szene: ab diesem Glauben an ein wahres Gerücht gesteht der Klient.
+const CONFESSION_BELIEF := 40.0
+# Studio-Gipfel: so viele geplatzte Deals im Fenster rufen den Boss auf den Plan.
+const SUMMIT_BURSTS := 2
+const SUMMIT_WINDOW_MONTHS := 24
+const SUMMIT_COOLDOWN_MONTHS := 12
+
 # ---------- Spieler-Attribute (RPG-Chunk 15) ----------
 # Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit
 # abnehmendem Ertrag: voll bis SOFTCAP_1, ×0,5 bis SOFTCAP_2, ×0,25 darüber.

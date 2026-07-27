@@ -1,0 +1,35 @@
+{
+  "entries": [
+    {"id": "summit_package", "followup_only": true,
+      "title": "📦 The promised package",
+      "text": "[i]“The boss mentioned you would be sending something over. He mentions it every Tuesday.”[/i]\n\nThe marquee package you promised {studio} is now a standing item in their story meeting — and in yours. Time to assemble something with names on it.",
+      "quest": {"title": "A package for the studio boss", "icon": "📦", "step": "Assemble a marquee package for {studio}"},
+      "choices": [
+        {"label": "Get to work — the boss is watching",
+          "effects": [{"op": "followup", "event": "summit_delivery", "delay_weeks": 8},
+            {"op": "log", "text": "The package for {studio} takes shape on your desk.", "type": "info"}],
+          "outcome": "Scripts, names, numbers — the folder grows. Eight weeks to make it sing."},
+        {"label": "Let it slide — other fires are burning",
+          "effects": [{"op": "studio_rel", "amount": -8},
+            {"op": "log", "text": "The promised package for {studio} gathers dust. The boss notices. Bosses always notice.", "type": "bad"}],
+          "outcome": "The folder stays thin. On the lot, a notebook opens — and closes."}]},
+
+    {"id": "summit_delivery", "followup_only": true,
+      "title": "📦 Delivery day at {studio}",
+      "text": "The story meeting falls silent as your folder makes the rounds. This is the moment the summit was really about: not the apology — the follow-through.",
+      "quest": {"step": "Deliver the package to {studio}"},
+      "choices": [
+        {"label": "Present the package like a premiere",
+          "check": {"attr": "verhandlung", "dc": 50},
+          "effects": [{"op": "studio_rel", "amount": 10}, {"op": "rep", "amount": 2},
+            {"op": "log", "text": "The package lands at {studio}. The boss's Tuesday remark is retired.", "type": "deal"}],
+          "outcome": "Nods around the table, and from the head of it the rarest sentence on this lot: “Good work.”",
+          "effects_fail": [{"op": "studio_rel", "amount": -4},
+            {"op": "log", "text": "The package for {studio} lands — flat. Better than nothing, worse than promised.", "type": "bad"}],
+          "outcome_fail": "The folder is solid; the pitch is not. They keep two names and forget the rest — including, for a while, yours."},
+        {"label": "Admit the package never came together",
+          "effects": [{"op": "studio_rel", "amount": -10},
+            {"op": "log", "text": "You walk into {studio} empty-handed. The word for that on this lot is unprintable.", "type": "bad"}],
+          "outcome": "Honesty is worth something in this town. Not much, on delivery day, but something."}]}
+  ]
+}

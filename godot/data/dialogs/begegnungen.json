@@ -1,0 +1,257 @@
+{
+  "entries": [
+    {"id": "contract_showdown", "title": "🖋 Contract talk with {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["The contract lies between you like a loaded question. {client} has brought a lawyer's letter and left the lawyer at home — that means something.",
+            "No small talk today. {client} sits down, folds their hands over the expiring contract and waits for you to go first."],
+          "reads": {
+            "unreadable": "You search the familiar face and find nothing you can use.",
+            "likely": "Something is coiled under the politeness — you cannot tell what.",
+            "clear": "The politeness is armor. Underneath it, this meeting was decided weeks ago — almost.",
+            "certain": "You can read the whole ledger in their face: every kept appointment, and the one thing you still owe."
+          },
+          "choices": [
+            {"label": "Ask, plainly, what it would take to stay", "goto": "demands",
+              "effects": [{"op": "trust", "amount": 2}]},
+            {"label": "Open with the numbers — a sweeter split", "check": {"attr": "verhandlung", "dc": 45, "success": "money_win", "fail": "money_flat"}},
+            {"label": "Name the wound before they do", "goto": "grievance", "requires_emotion": ["resentful", "irritated"],
+              "effects": [{"op": "xp", "field": "people", "amount": 1}]}
+          ]},
+        "grievance": {
+          "text": ["For a moment the mask slips. \"You know exactly what this is about,\" says {client}. And you do."],
+          "choices": [
+            {"label": "Own it — no excuses, no lawyers", "goto": "demands",
+              "effects": [{"op": "trust", "amount": 6}, {"op": "mood", "amount": 4}, {"op": "identity", "key": "klientenorientiert", "amount": 1}]},
+            {"label": "Explain what really happened behind closed doors", "check": {"attr": "diskretion", "dc": 50, "success": "grievance_soft", "fail": "grievance_burn"}}
+          ]},
+        "grievance_soft": {
+          "text": ["You lay out the parts of the story that never reached them — the calls, the favors burned, the doors that stayed shut anyway. {client} listens. The silence afterwards is softer."],
+          "effects": [{"op": "trust", "amount": 3}, {"op": "mood", "amount": 2}],
+          "choices": [{"label": "Now talk about the future", "goto": "demands"}]},
+        "grievance_burn": {
+          "text": ["Halfway through, it stops sounding like an explanation and starts sounding like an excuse. You hear it yourself. So does {client}."],
+          "effects": [{"op": "mood", "amount": -6}, {"op": "loyalty", "amount": -4}],
+          "choices": [{"label": "Stop digging. Talk terms.", "goto": "demands"}]},
+        "money_win": {
+          "text": ["You slide the new split across the table before they can open the folder. It is generous, it is concrete, and it lands."],
+          "effects": [{"op": "money", "amount": -2500, "inflate": true, "cat": "bonus", "label": "Renewal sweetener"}, {"op": "loyalty", "amount": 10}, {"op": "trust", "amount": 4}, {"op": "xp", "field": "negotiation", "amount": 1}],
+          "choices": [
+            {"label": "Shake on it while the ink is wet", "goto": "resolve_stay"},
+            {"label": "Keep going — money was never the whole story", "goto": "demands"}
+          ]},
+        "money_flat": {
+          "text": ["The number is fine. That is the problem — fine is what the other agencies offer too. {client} nods and waits for the part that is not about money."],
+          "effects": [{"op": "mood", "amount": -3}],
+          "choices": [{"label": "Give them the part that is not about money", "goto": "demands"}]},
+        "demands": {
+          "text": ["\"I want to know where this is going,\" says {client}. \"Not the next picture. The next chapter.\""],
+          "choices": [
+            {"label": "Promise the lead — within twelve months, in writing", "goto": "resolve_promise",
+              "effects": [{"op": "client_promise", "kind": "lead12"}]},
+            {"label": "Promise a prestige picture — eighteen months", "goto": "resolve_promise",
+              "effects": [{"op": "client_promise", "kind": "prestige"}]},
+            {"label": "Read what they actually want", "check": {"attr": "menschenkenntnis", "dc": 55, "success": "read_win", "fail": "read_flat"}},
+            {"label": "Offer nothing but the truth about the market", "goto": "resolve_honest",
+              "effects": [{"op": "trust", "amount": 5}, {"op": "mood", "amount": -4}]}
+          ]},
+        "read_win": {
+          "text": ["And then you see it — it was never the roles. It is the anteroom that stopped calling back, the premiere they read about in the paper. You say the one sentence that proves you noticed."],
+          "effects": [{"op": "mood", "amount": 6}, {"op": "trust", "amount": 4}, {"op": "loyalty", "amount": 6}, {"op": "xp", "field": "people", "amount": 1}],
+          "choices": [{"label": "Build the next chapter on that sentence", "goto": "resolve_stay"}]},
+        "read_flat": {
+          "text": ["You guess wrong — out loud. {client} looks at you the way you look at a script with the wrong ending."],
+          "effects": [{"op": "mood", "amount": -4}],
+          "choices": [{"label": "Fall back on honesty", "goto": "resolve_honest"}]},
+        "resolve_promise": {"end": true,
+          "text": ["The pen scratches. A promise with a date on it is a debt, and everyone at this table knows how you handle debts — that is exactly the bet {client} is making."],
+          "effects": [{"op": "loyalty", "amount": 12}, {"op": "mood", "amount": 8}, {"op": "log", "text": "Contract talk with {client}: renewed on the strength of a promise.", "type": "deal"}]},
+        "resolve_stay": {"end": true,
+          "text": ["Signatures, then — almost as an afterthought — a real handshake. Contracts expire. Whatever this just became does not, unless you break it."],
+          "effects": [{"op": "loyalty", "amount": 10}, {"op": "trust", "amount": 3}, {"op": "log", "text": "Contract talk with {client}: renewed, and repaired.", "type": "deal"}]},
+        "resolve_honest": {"end": true,
+          "text": ["No promises, no theater — just the market as it is and your word to keep working it. {client} signs. Not warmly. But people remember who did not lie to them."],
+          "effects": [{"op": "loyalty", "amount": 4}, {"op": "log", "text": "Contract talk with {client}: renewed on honesty alone.", "type": "info"}]}
+      }},
+
+    {"id": "poach_defense", "title": "🦈 The counter-offer: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["{client} puts the rival's letter on your desk, face up. \"I wanted you to hear it from me.\" That courtesy is the only good news in the room."],
+          "reads": {
+            "unreadable": "Their face is a press photo — lit, composed, unreadable.",
+            "likely": "They are not gone yet. That much you can tell. How far gone, you cannot.",
+            "clear": "They came to be talked out of it — or to watch you fail to.",
+            "certain": "You see the exact weight on the scale: everything you built together on one side, and on the other a number — plus every call you did not make."
+          },
+          "choices": [
+            {"label": "Counter with hard numbers, here and now", "check": {"attr": "verhandlung", "dc": 50, "success": "counter_win", "fail": "counter_flat"}},
+            {"label": "Remind them of the story you two already wrote", "goto": "history", "requires_emotion": ["warm", "hopeful"]},
+            {"label": "Ask what the other house actually promised", "goto": "probe"}
+          ]},
+        "probe": {
+          "text": ["{client} recites the pitch: the billing, the access, the personal attention. Somewhere in the recital there is a seam."],
+          "choices": [
+            {"label": "Listen for the crack in the pitch", "check": {"attr": "menschenkenntnis", "dc": 55, "success": "probe_win", "fail": "probe_flat"}},
+            {"label": "Let them talk until the pitch runs dry", "goto": "crossroads"}
+          ]},
+        "probe_win": {
+          "text": ["There it is: a guarantee no agency in this town can keep. You do not attack it — you just ask, gently, how exactly they plan to deliver that. The silence answers for them."],
+          "effects": [{"op": "trust", "amount": 4}, {"op": "xp", "field": "people", "amount": 1}],
+          "choices": [{"label": "Build on the doubt", "goto": "crossroads_strong"}]},
+        "probe_flat": {
+          "text": ["You pick the wrong detail to question — it happens to be the one part of the offer that is real. {client} corrects you, politely, with dates."],
+          "effects": [{"op": "mood", "amount": -3}],
+          "choices": [{"label": "Regroup", "goto": "crossroads"}]},
+        "counter_win": {
+          "text": ["You do not match the rival's number. You beat the parts of it that matter and explain why the rest is paper. It is the fastest contract amendment of your life."],
+          "effects": [{"op": "money", "amount": -4000, "inflate": true, "cat": "bonus", "label": "Counter-offer: retention bonus"}, {"op": "loyalty", "amount": 8}, {"op": "xp", "field": "negotiation", "amount": 1}],
+          "choices": [{"label": "Press the advantage", "goto": "crossroads_strong"}]},
+        "counter_flat": {
+          "text": ["Your counter sounds improvised, because it is. {client} watches you do arithmetic under pressure and files the sight away."],
+          "effects": [{"op": "mood", "amount": -3}, {"op": "loyalty", "amount": -3}],
+          "choices": [{"label": "Change the ground you fight on", "goto": "crossroads"}]},
+        "history": {
+          "text": ["The first casting nobody else would take. The premiere where you fixed the billing at midnight. The promise you kept when keeping it cost you. You do not list them — you just say: \"Ask them for one story like ours.\""],
+          "effects": [{"op": "loyalty", "amount": 8}, {"op": "trust", "amount": 4}, {"op": "xp", "field": "people", "amount": 1}],
+          "choices": [{"label": "Close while the story is in the room", "goto": "crossroads_strong"}]},
+        "crossroads_strong": {
+          "text": ["{client} turns the rival's letter over, face down. \"Give me a reason to make this the last time we have this conversation.\""],
+          "choices": [
+            {"label": "Seal it with a promise: the lead, twelve months", "goto": "end_stay_big",
+              "effects": [{"op": "client_promise", "kind": "lead12"}]},
+            {"label": "Seal it with a handshake and no theater", "goto": "end_stay"}
+          ]},
+        "crossroads": {
+          "text": ["The letter lies between you, still face up. {client} is listening — but so is the offer."],
+          "choices": [
+            {"label": "One last push, everything on the table", "check": {"attr": "verhandlung", "dc": 55, "success": "end_stay", "fail": "end_sour"}},
+            {"label": "Refuse to beg — let the work speak", "goto": "end_sour"}
+          ]},
+        "end_stay_big": {"end": true,
+          "text": ["The rival's letter goes into the wastebasket in one clean arc. A promise with a date is now the spine of this relationship — do not let it break."],
+          "effects": [{"op": "loyalty", "amount": 14}, {"op": "mood", "amount": 8}, {"op": "log", "text": "{client} stays — and carries your promise out of the room.", "type": "deal"}]},
+        "end_stay": {"end": true,
+          "text": ["No bonus, no clause — just a decision, made in front of you. Those are the ones that hold."],
+          "effects": [{"op": "loyalty", "amount": 10}, {"op": "trust", "amount": 4}, {"op": "log", "text": "{client} turns the rival down. The duel goes to you.", "type": "deal"}]},
+        "end_sour": {"end": true,
+          "text": ["{client} folds the letter carefully and puts it back in the coat pocket. Not a no. Not a yes. In this town, that is called leverage — theirs."],
+          "effects": [{"op": "loyalty", "amount": -8}, {"op": "mood", "amount": -6},
+            {"op": "rumor", "text": "At the studio gates they say {client} is shopping for a new agency.", "truth": false, "topic": "wechsel", "holders": ["Assistants"], "belief": 16, "known": true},
+            {"op": "log", "text": "The counter-offer to {client} stays on the table. The town starts counting days.", "type": "bad"}]}
+      }},
+
+    {"id": "crisis_confession", "title": "🕯 Behind the rumor: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["Curtains drawn, an untouched drink. \"What they are whispering,\" says {client}, \"is true. Not the way they tell it — but true.\" And then you get the version no columnist has."],
+          "reads": {
+            "unreadable": "The room is too dark and the face too still to read anything at all.",
+            "likely": "Fear, probably. Or exhaustion. The drink stays untouched either way.",
+            "clear": "This is what fear looks like when it has been rehearsing composure for weeks.",
+            "certain": "You see precisely what this confession costs — and that you are the last person in town they still trust with it."
+          },
+          "choices": [
+            {"label": "Listen without judgment, to the end", "goto": "plan",
+              "effects": [{"op": "trust", "amount": 5}, {"op": "identity", "key": "klientenorientiert", "amount": 1}]},
+            {"label": "Ask the one question that matters", "check": {"attr": "menschenkenntnis", "dc": 55, "success": "truth", "fail": "wall"}},
+            {"label": "Steady them first — the story can wait a minute", "goto": "plan", "requires_emotion": ["anxious"],
+              "effects": [{"op": "mood", "amount": 6}, {"op": "trust", "amount": 3}]}
+          ]},
+        "truth": {
+          "text": ["Your question lands in the one spot the rehearsed version was built to protect. {client} stops performing and starts talking. Now you have the whole picture — including the part that could sink you both."],
+          "effects": [{"op": "trust", "amount": 6}, {"op": "xp", "field": "people", "amount": 1}],
+          "choices": [{"label": "Now build the defense around the whole truth", "goto": "plan_informed"}]},
+        "wall": {
+          "text": ["Wrong question. The shutters come down mid-sentence; the rest of the evening you get the version meant for lawyers."],
+          "effects": [{"op": "trust", "amount": -3}, {"op": "mood", "amount": -4}],
+          "choices": [{"label": "Work with what you have", "goto": "plan"}]},
+        "plan": {
+          "text": ["The drink finally gets touched. \"So,\" says {client}, \"what do we do?\" — We. That word is why they are still your client."],
+          "choices": [
+            {"label": "Prepare quietly — lawyers, doctors, calendars ({money_fmt:4000})", "goto": "end_prepared",
+              "effects": [{"op": "money", "amount": -4000, "inflate": true, "cat": "pr_recht", "label": "Quiet preparation behind a confession"},
+                {"op": "identity", "key": "diskret", "amount": 1.5}, {"op": "trust", "amount": 8}, {"op": "loyalty", "amount": 5}]},
+            {"label": "Get ahead of it — shape the version the town hears", "check": {"attr": "diskretion", "dc": 55, "success": "end_spin", "fail": "end_backfire"}},
+            {"label": "Do nothing. Some storms pass on their own", "goto": "end_wait"}
+          ]},
+        "plan_informed": {
+          "text": ["With the whole story on the table, the map looks different: you know which doors the press will try, and which one actually leads anywhere."],
+          "choices": [
+            {"label": "Prepare quietly — lawyers, doctors, calendars ({money_fmt:4000})", "goto": "end_prepared",
+              "effects": [{"op": "money", "amount": -4000, "inflate": true, "cat": "pr_recht", "label": "Quiet preparation behind a confession"},
+                {"op": "identity", "key": "diskret", "amount": 1.5}, {"op": "trust", "amount": 8}, {"op": "loyalty", "amount": 5}]},
+            {"label": "Turn the whole truth into armor", "goto": "end_armed",
+              "effects": [{"op": "favor_grant", "kind": "suppressStory"}, {"op": "trust", "amount": 4}]}
+          ]},
+        "end_prepared": {"end": true,
+          "text": ["By morning, three discreet professionals are working a problem they never learned the name of. If the story breaks, it will land on a mattress you built tonight."],
+          "effects": [{"op": "log", "text": "Behind {client}'s confession, the quiet machinery starts turning.", "type": "deal"}]},
+        "end_armed": {"end": true,
+          "text": ["Knowing everything means knowing exactly which thread unravels the story. You file it away — one call, ready to be made the day the presses warm up."],
+          "effects": [{"op": "log", "text": "{client}'s whole truth becomes your ammunition — held, not fired.", "type": "deal"}]},
+        "end_spin": {"end": true,
+          "text": ["You cannot kill the story, so you recast it: fewer teeth, better lighting, a sympathetic angle. When it finally runs, it reads almost like a redemption arc."],
+          "effects": [{"op": "heat", "amount": 1}, {"op": "mood", "amount": 4}, {"op": "log", "text": "The version of {client}'s story now circulating has your fingerprints on it — and no one else can see them.", "type": "deal"}]},
+        "end_backfire": {"end": true,
+          "text": ["The planted version is too clean; a columnist smells the polish and starts asking who paid for it. Now there are two stories, and one of them is about you."],
+          "effects": [{"op": "mood", "amount": -6}, {"op": "trust", "amount": -5},
+            {"op": "press_event", "cat": "Scandal", "text": "Whispers: someone is managing the {client} story very hard"},
+            {"op": "log", "text": "The attempt to steer {client}'s story leaves visible tracks.", "type": "bad"}]},
+        "end_wait": {"end": true,
+          "text": ["You pour two fresh drinks and change the subject. Sometimes the bravest strategy is a calendar and a steady face — and sometimes it is just the cheapest."],
+          "effects": [{"op": "log", "text": "You decide to sit out the storm behind {client}'s secret.", "type": "info"}]}
+      }},
+
+    {"id": "studio_summit", "title": "🏛 Summoned to the lot",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["The office at the end of the executive corridor. Two burst deals sit between you and the man behind the desk like exhibits A and B. \"Explain to me,\" he says, \"why I keep making room on my slate for your people.\""],
+          "reads": {
+            "unreadable": "Studio bosses are paid to be unreadable. This one earns his salary.",
+            "likely": "Annoyed, certainly. Whether this is theater or a verdict, you cannot tell yet.",
+            "clear": "The anger is real but managed — this meeting has an exit he wants you to find.",
+            "certain": "You read it exactly: he does not want you gone. He wants you humbled, and then he wants to keep making money with you."
+          },
+          "choices": [
+            {"label": "Own the burst deals — no excuses", "goto": "terms",
+              "effects": [{"op": "studio_rel", "amount": 4}, {"op": "dims", "trust": 2}]},
+            {"label": "Reframe: your clients carry every picture they touch", "check": {"attr": "verhandlung", "dc": 55, "success": "respect", "fail": "cold"}},
+            {"label": "Let him vent before you say a single word", "goto": "terms", "requires_emotion": ["irritated", "resentful"],
+              "effects": [{"op": "dims", "irritation": -4}, {"op": "xp", "field": "people", "amount": 1}]}
+          ]},
+        "respect": {
+          "text": ["You walk him through the grosses, picture by picture, with your clients' names above the title. By the third one he has stopped interrupting. \"Fine,\" he says. \"You are expensive trouble. But you are not wrong.\""],
+          "effects": [{"op": "studio_rel", "amount": 6}, {"op": "dims", "respect": 3}, {"op": "xp", "field": "negotiation", "amount": 1}],
+          "choices": [{"label": "Now let him name his terms", "goto": "terms"}]},
+        "cold": {
+          "text": ["The grosses are real, but reciting them now sounds like dodging. His face does the arithmetic and lands on 'arrogant'."],
+          "effects": [{"op": "studio_rel", "amount": -4}, {"op": "dims", "irritation": 2}],
+          "choices": [{"label": "Take the lecture, then talk terms", "goto": "terms"}]},
+        "terms": {
+          "text": ["He leans back. \"I do not need an apology. I need to know the next deal with your office closes.\" What he wants is a gesture — a real one, with a cost attached."],
+          "choices": [
+            {"label": "Commit to a marquee package — on a deadline", "goto": "end_deal",
+              "effects": [{"op": "followup", "event": "summit_package", "delay_weeks": 4},
+                {"op": "studio_rel", "amount": 6}, {"op": "favor_owe", "kind": "extraAudition", "from": "studio"}]},
+            {"label": "Offer first look at your roster for a season", "goto": "end_warm",
+              "effects": [{"op": "studio_rel", "amount": 8}, {"op": "identity", "key": "studiotreu", "amount": 1.5}]},
+            {"label": "Decline — your agency is nobody's farm team", "goto": "end_cold",
+              "effects": [{"op": "studio_rel", "amount": -8}, {"op": "rep", "amount": -2}, {"op": "identity", "key": "kuenstlerisch", "amount": 1}]}
+          ]},
+        "end_deal": {"end": true,
+          "text": ["A handshake with a calendar in it. He walks you to the door himself — which on this lot is a headline in its own right. Now you owe him a package, and the clock is running."],
+          "effects": [{"op": "log", "text": "Summit at {studio}: you leave owing the boss a marquee package — with a deadline.", "type": "deal"}]},
+        "end_warm": {"end": true,
+          "text": ["First look is a currency this town understands. He nods slowly, the way men nod when they have just acquired something. The corridor feels shorter on the way out."],
+          "effects": [{"op": "log", "text": "Summit at {studio}: a season of first look buys back the boss's patience.", "type": "deal"}]},
+        "end_cold": {"end": true,
+          "text": ["He does not argue. He just writes one line in the leather notebook and closes it. In this town the most expensive sound is a notebook closing on your name."],
+          "effects": [{"op": "log", "text": "Summit at {studio}: you walked out with your independence — and little else.", "type": "bad"}]}
+      }}
+  ]
+}

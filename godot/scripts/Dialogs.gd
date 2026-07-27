@@ -24,7 +24,8 @@ const KNOWN_OPS := ["money", "rep", "instinct", "fame", "mood", "heat", "exhaust
 	"loyalty", "trust", "dna", "flag_set", "studio_rel", "favor_grant", "favor_consume",
 	"favor_owe", "rumor", "identity", "log", "followup", "chance", "dims", "fact", "memory",
 	"promise", "xp", "player", "money_private", "tip", "rumor_reveal", "casting_spawn",
-	"meet_someone", "seal_deal", "gate_rel", "memoir", "settle_debt", "refuse_debt", "private_life"]
+	"meet_someone", "seal_deal", "gate_rel", "memoir", "settle_debt", "refuse_debt", "private_life",
+	"client_promise", "press_event"]
 const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio"]
 
 # Laufender Dialog (nur zur Laufzeit, wird nie gespeichert).
@@ -509,16 +510,32 @@ func spawn_letter_named(template_id: String, sender_name: String) -> Dictionary:
 	return _spawn_letter_with(def, {"name": sender_name, "type": "privat"})
 
 
-func _spawn_letter_with(def: Dictionary, sender: Dictionary) -> Dictionary:
+# Brief mit zusätzlichem Effekt-Kontext (z. B. sid für Studio-Gespräche,
+# cid für Interviews über einen Klienten): der Kontext wird am Brief
+# gespeichert und wirkt in Platzhaltern wie in allen Choice-Effekten.
+func spawn_letter_ctx(template_id: String, extra_ctx: Dictionary, force: bool = true) -> Dictionary:
+	var def := letter_def(template_id)
+	if def.is_empty():
+		return {}
+	if not force and not _letter_conditions_ok(def):
+		return {}
+	return _spawn_letter_with(def, _resolve_sender(def), extra_ctx)
+
+
+func _spawn_letter_with(def: Dictionary, sender: Dictionary, extra_ctx: Dictionary = {}) -> Dictionary:
 	var st := _st()
 	var template_id := str(def.id)
 	var ctx := {"sender": str(sender.name)}
 	if sender.has("ctid"):
 		ctx["ctid"] = int(sender.ctid)
+	for key in extra_ctx:
+		ctx[key] = extra_ctx[key]
 	var letter := {"id": Game.next_id(), "tid": template_id, "mi": Game.mi(), "wi": Game.wi(),
 		"from": sender, "subject": EvEngine.subst(str(def.get("subject", "…")), ctx),
 		"body": EvEngine.subst(str(def.get("body", "")), ctx),
 		"status": "open", "expireWi": Game.wi() + int(def.get("expire_weeks", 3)), "outcome": ""}
+	if not extra_ctx.is_empty():
+		letter["ctx"] = extra_ctx.duplicate(true)
 	st.inbox.append(letter)
 	st.inboxSeen[template_id] = Game.wi()
 	return letter
@@ -586,6 +603,9 @@ func _letter_ctx(letter: Dictionary) -> Dictionary:
 	var ctx := {"sender": str(letter["from"].get("name", "?"))}
 	if letter["from"].has("ctid"):
 		ctx["ctid"] = int(letter["from"].ctid)
+	# Am Brief gespeicherter Zusatzkontext (sid/cid) wirkt in den Effekten mit.
+	for key in letter.get("ctx", {}):
+		ctx[key] = letter.ctx[key]
 	return ctx
 
 

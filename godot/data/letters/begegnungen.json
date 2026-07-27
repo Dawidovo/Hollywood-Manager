@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {"id": "studio_summit_invite", "manual": true, "weight": 0, "from_type": "studio",
+      "subject": "An invitation you do not decline",
+      "body": "[i]“Twice now a picture of ours has come apart with your name in the margins. Come by the lot. Let us talk about how we work together — or whether we still do.”[/i]\n\nThe head of {studio} requests a meeting. The tone is polite. The tone is also final.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Drive to the lot (1⏱)", "requirements": {"ap": 1}, "dialog": "studio_summit"},
+        {"label": "Send regrets and a case of scotch",
+          "effects": [{"op": "studio_rel", "amount": -5},
+            {"op": "money", "amount": -300, "inflate": true, "cat": "pr_recht", "label": "A case of scotch instead of a meeting"},
+            {"op": "log", "text": "You declined the summit at {studio}. The lot remembers who does not show.", "type": "bad"}],
+          "outcome": "The scotch is excellent. The silence that follows is not."}],
+      "expire_effects": [{"op": "studio_rel", "amount": -8},
+        {"op": "log", "text": "The invitation from {studio} expired unanswered. Doors close quietly in this town.", "type": "bad"}]}
+  ]
+}

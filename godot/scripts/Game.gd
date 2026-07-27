@@ -330,6 +330,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		"coverage": {"current": null, "history": []}, "coverageQueue": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [], "quests": [],
+		"dealBursts": {}, "summitMi": -999,
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
 		"player": Persona.default_player(),
@@ -1781,7 +1782,25 @@ func tick_clients(events: Array) -> void:
 		# Vertragsende
 		Scandal.maybe_reveal_secret(c, events)
 		if mi() >= int(c.contractEnd):
-			if c.loyalty >= 65:
+			var word_broken: bool = c.promises.any(func(pr): return bool(pr.get("broken", false)) and not bool(pr.get("fulfilled", false)))
+			if (float(c.loyalty) < Balance.SHOWDOWN_LOYALTY or word_broken) and Dialogs.has_dialog("contract_showdown"):
+				# Schlüsselbegegnung (Teil A3): das Vertragsende wird zur Szene.
+				# Die Verlängerung wird sofort als Fallback gebucht — bleibt das
+				# Modal unbeantwortet (BalanceSim), läuft der Vertrag weiter;
+				# die Szene bewegt danach Loyalität, Vertrauen und Konditionen.
+				c.contractEnd = mi() + int(c.years) * 12
+				var sd_cid: int = int(c.id)
+				events.append({"title": "Contract talk: %s" % client_name(c),
+					"text": "[i]“My lawyer says I should listen to other offers. I said I'd hear you out first.”[/i]\n\nThe contract with %s is up — and this time a quiet signature will not do. Loyalty %d%s." % [client_name(c), roundi(float(c.loyalty)), ", and there is a broken promise on the table" if word_broken else ""],
+					"choices": [
+						{"label": "Sit down for the real conversation", "dialog": "contract_showdown", "ctx": {"cid": sd_cid}},
+						{"label": "Renew by messenger and hope", "fn": func():
+							var sd_cl = client(sd_cid)
+							if sd_cl == null:
+								return "Too late."
+							sd_cl.mood = clampf(float(sd_cl.mood) - 4.0, 0.0, 100.0)
+							return "The papers come back signed, without a note. Contracts like this hold — until someone calls."}]})
+			elif c.loyalty >= 65:
 				c.contractEnd = mi() + int(c.years) * 12
 				change_trust(c, 4.0)
 				log_msg("%s renews the contract for %d years without hesitation." % [actor.name, int(c.years)], "deal")
@@ -2231,6 +2250,11 @@ func _apply_save_defaults() -> void:
 	# Migration Quest-Journal (Chunk 17)
 	if not state.has("quests") or not (state.quests is Array):
 		state["quests"] = []
+	# Migration Schlüsselbegegnungen (Teil A3): geplatzte Deals je Studio
+	if not state.has("dealBursts") or not (state.dealBursts is Dictionary):
+		state["dealBursts"] = {}
+	if not state.has("summitMi"):
+		state["summitMi"] = -999
 	# Migration RPG-Attribute (Chunk 15): fehlende Werte mit Basis nachrüsten
 	if not state.has("attributes") or not (state.attributes is Dictionary):
 		state["attributes"] = {}
@@ -3195,7 +3219,29 @@ func table_support_fallback(role_idx: int) -> Dictionary:
 	return {"ok": true}
 
 func table_withdraw() -> void:
+	if pitch_ctx != null and pitch_ctx.get("casting") != null:
+		note_deal_burst(str(pitch_ctx.casting.studioId))
 	pitch_ctx = null
+
+
+# Geplatzte Deals je Studio (Schlüsselbegegnung, Teil A3): platzen im
+# Fenster mehrere, bittet der Studioboss per Brief zum Gespräch
+# (data/dialogs/begegnungen.json → studio_summit). 1× pro Cooldown.
+func note_deal_burst(sid: String) -> void:
+	if state == null or sid == "" or not state.has("dealBursts"):
+		return
+	var bursts: Array = state.dealBursts.get(sid, [])
+	bursts = bursts.filter(func(m): return mi() - int(m) <= Balance.SUMMIT_WINDOW_MONTHS)
+	bursts.append(mi())
+	state.dealBursts[sid] = bursts
+	if bursts.size() < Balance.SUMMIT_BURSTS or not Dialogs.has_dialog("studio_summit"):
+		return
+	if mi() - int(state.get("summitMi", -999)) < Balance.SUMMIT_COOLDOWN_MONTHS:
+		return
+	state["summitMi"] = mi()
+	state.dealBursts[sid] = []
+	Dialogs.spawn_letter_ctx("studio_summit_invite", {"sid": sid})
+	log_msg("Word from %s: the boss wants to talk about the deals that keep falling apart." % str(_studio(sid).name), "bad")
 
 # ---------- Feature 13: Produktionssignale ----------
 const SIGNAL_GOOD = ["Glowing set reports", "Test screening surprises on the upside", "The chemistry on set is right", "Dailies thrill the studio"]
@@ -3321,6 +3367,7 @@ func prod_pull_client(prod_id: int) -> String:
 	if target == null:
 		return "None of your own clients on board."
 	prod.reactions["pull"] = true
+	note_deal_burst(str(prod.studioId))
 	var sev := roundi(float(target_role.filled.get("fee", 0)) * 0.3)
 	book(-float(sev), "abfindung", "Contract exit: %s (“%s”)" % [client_name(target), prod.title])
 	target.busyUntil = mi()

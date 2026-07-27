@@ -276,6 +276,24 @@ func tick_rumors(events: Array = [], force_spread: bool = false) -> void:
 			if (rumor.holders.has("Assistants") and Util.chance(0.45 + contact_bonus)) or Util.chance(contact_bonus * 0.35):
 				rumor.knownToPlayer = true
 				events.append({"title":"A whisper in the anteroom", "text":"[i]“It is only talk so far — but you should know what people are saying about %s.”[/i]\n\n%s" % [rumor_subject_name(rumor), rumor.text], "choices":[{"label":"To the rumor dossier"}]})
+		# Schlüsselbegegnung (Teil A3): wird ein WAHRES Gerücht laut genug,
+		# gesteht der Klient die Geschichte dahinter — einmal pro Geheimnis.
+		if bool(rumor.truth) and str(rumor.get("sourceSecret", "")) != "" and bool(rumor.knownToPlayer) and float(rumor.belief) >= Balance.CONFESSION_BELIEF:
+			var confessor = rumor_subject_client(rumor)
+			if confessor != null:
+				var conf_secret = secret_of(confessor, str(rumor.sourceSecret))
+				if conf_secret != null and not bool(conf_secret.get("confessed", false)) and Dialogs.has_dialog("crisis_confession"):
+					conf_secret["confessed"] = true
+					var conf_cid: int = int(confessor.id)
+					events.append({"title": "A confession: %s" % Game.client_name(confessor),
+						"text": "[i]“Before you read it over breakfast like everyone else — sit down. You should hear it from me.”[/i]\n\nThe rumor is getting louder, and %s wants to tell you the story behind it. The whole story." % Game.client_name(confessor),
+						"choices": [
+							{"label": "Hear the whole story", "dialog": "crisis_confession", "ctx": {"cid": conf_cid}},
+							{"label": "Not now — the columns are waiting", "fn": func():
+								var conf_cl = Game.client(conf_cid)
+								if conf_cl != null:
+									Game.change_trust(conf_cl, -4.0)
+								return "The door closes softly. Some conversations do not offer themselves twice."}]})
 		if float(rumor.belief) >= 60.0 and not rumor.get("impactApplied", false):
 			_apply_rumor_impact(rumor)
 		if float(rumor.industryBelief) >= 60.0 and not rumor.get("industryImpactApplied", false):

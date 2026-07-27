@@ -319,6 +319,17 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 					float(ef.get("belief", 20.0)), bool(ef.get("known", true)))
 		"identity":
 			Game.record_identity(str(ef.get("key", "")), amount)
+		"client_promise":
+			# Ein echtes Klienten-Versprechen mit Frist (Teil A3) — läuft über
+			# dasselbe Register wie die Zusagen aus der Vertragsverhandlung.
+			if c != null and Game.PROMISES.has(str(ef.get("kind", ""))):
+				var pkind := str(ef.kind)
+				var pdef: Dictionary = Game.PROMISES[pkind]
+				c.promises.append({"type": pkind, "label": str(pdef.label),
+					"due": Game.mi() + int(pdef.months), "fulfilled": false, "broken": false})
+				_say("Your word is on the table now: %s." % str(pdef.label), ctx)
+		"press_event":
+			Game.press_event(str(ef.get("cat", "Agencies")), subst(str(ef.get("text", "")), ctx))
 		"log":
 			Game.log_msg(subst(str(ef.get("text", "")), ctx), str(ef.get("type", "info")))
 		"followup":
@@ -326,7 +337,13 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 			# Monatsauflösung (aufgerundet), Umstellung auf Wochen folgt.
 			var delay_w := int(ef.get("delay_weeks", 4))
 			_quest_on_followup(ef, ctx)
-			var fu_ctx := {"cid": ctx.get("cid"), "sid": ctx.get("sid")}
+			# Nur belegte Schlüssel übernehmen: ein followup aus einem Dialog
+			# ohne cid darf beim Aufbau nicht an client(null) scheitern.
+			var fu_ctx := {}
+			if ctx.get("cid") != null:
+				fu_ctx["cid"] = ctx.cid
+			if ctx.get("sid") != null:
+				fu_ctx["sid"] = str(ctx.sid)
 			if ctx.has("_questId"):
 				fu_ctx["_questId"] = str(ctx._questId)
 			st.followups.append({"type": "json", "event": str(ef.get("event", "")),
