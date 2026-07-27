@@ -187,7 +187,7 @@ func _render_buero() -> void:
 	# Script Coverage: das Lektorats-Blatt auf dem Schreibtisch
 	var cc = main._card("Script Coverage", "📋")
 	grid.add_child(cc[0])
-	var cov_stats := Game.coverage_stats()
+	var cov_stats := Coverage.coverage_stats()
 	if int(cov_stats.done) > 0:
 		cc[1].add_child(main._lbl("Hit rate: %d/%d correct%s" % [int(cov_stats.hits), int(cov_stats.done), (" · %d open" % int(cov_stats.open)) if int(cov_stats.open) > 0 else ""], 12, main.GREEN if int(cov_stats.hits) * 2 >= int(cov_stats.done) else main.AMBER))
 	var cov_cur = st.coverage.get("current") if st.has("coverage") else null
