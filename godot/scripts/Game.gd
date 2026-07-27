@@ -1642,7 +1642,7 @@ func _month_close(events: Array) -> void:
 
 	# Script Coverage: Blatt verfällt, verdecktes Casting wird sichtbar,
 	# ggf. neues Blatt auf den Schreibtisch (neue Blätter nur ohne Streik)
-	_tick_coverage(events, strike)
+	Coverage._tick_coverage(events, strike)
 
 	tick_clients(events)
 	_tick_roster_pairs(events)
@@ -1651,7 +1651,7 @@ func _month_close(events: Array) -> void:
 	# Karrierebretter: veraltete Plan-Slots verfallen lautlos
 	_tick_boards()
 	# Instinkt-Prognosen (Feature 6): fällige Wetten auflösen
-	tick_predictions(events)
+	Predictions.tick_predictions(events)
 
 	if int(state.month) == 2:
 		var aw = awards_ceremony()
@@ -1866,7 +1866,7 @@ func start_production(casting: Dictionary, events: Array = []) -> void:
 		if role.filled.get("clientId") != null:
 			var c2 = client(role.filled.clientId)
 			if c2 != null:
-				events.append(hit_prediction_event(prod, c2))
+				events.append(Predictions.hit_prediction_event(prod, c2))
 				break
 
 func release_film(prod: Dictionary) -> Dictionary:
@@ -1912,7 +1912,7 @@ func release_film(prod: Dictionary) -> Dictionary:
 		if int(pr.subject.get("castingId", -1)) != int(prod.id):
 			continue
 		var ridx := clampi(int(pr.subject.get("roleIdx", 0)), 0, prod.roles.size() - 1)
-		if _coverage_cut_roll(prod, prod.roles[ridx]):
+		if Coverage._coverage_cut_roll(prod, prod.roles[ridx]):
 			prod.roles[ridx]["_coverageCut"] = true
 	var affected: Array = []
 	var fame_deltas := {}
@@ -1996,7 +1996,7 @@ func release_film(prod: Dictionary) -> Dictionary:
 			note_pair_history(lead_keys[i], lead_keys[j], 2 if ratio >= 2.0 else -1, ratio, str(prod.title))
 	# Instinkt-Prognosen auflösen (Feature 6): Hit-Wette, „Wer passt besser?“
 	# und die Coverage-Marker aus dem Lektorats-Blatt
-	_resolve_release_predictions(prod, ratio, fame_deltas, quality)
+	Predictions._resolve_release_predictions(prod, ratio, fame_deltas, quality)
 	# Produktions-Signale im Rückblick (Feature 13): Haben die Meldungen gestimmt?
 	var sigs: Array = prod.get("signals", [])
 	if sigs.size():
@@ -2397,103 +2397,13 @@ func clause_available(clause_id: String) -> bool:
 func clause_label(clause_id: String) -> String:
 	return str(CLAUSES.get(clause_id, {}).get("name", clause_id))
 
-# ---------- Feature 6: Instinkt & Prognosen ----------
-# state.instinct wächst NUR durch richtige Spieler-Prognosen.
-func add_prediction(type_s: String, subject, guess, due_mi: int, note_s: String = "") -> Dictionary:
-	var pr := {"id": next_id(), "type": type_s, "subject": subject, "guess": guess,
-		"dueMi": due_mi, "resolved": false, "correct": false, "note": note_s, "madeMi": mi()}
-	state.predictions.append(pr)
-	log_msg("Prediction noted: %s" % note_s, "info")
-	return pr
 
-# (a) Drehbeginn: „Wird das ein Hit (ratio ≥ 2)?“
-func hit_prediction_event(prod: Dictionary, c: Dictionary) -> Dictionary:
-	var pid := int(prod.id)
-	var title_s := str(prod.title)
-	var name_s := client_name(c)
-	return {"title": "Gut check: “%s”" % title_s,
-		"text": "[i]“On the first day of shooting everyone pretends to know what this will become. Nobody knows.”[/i]\n\n“%s” with %s goes into production. Your call: will the film be a hit (box office ≥ 2× budget)?\n\nCorrect predictions sharpen your instinct (%d/100). Staying silent costs nothing." % [title_s, name_s, int(state.get("instinct", 20))],
-		"choices": [
-			{"label": "Yes, this will be a hit", "fn": func():
-				add_prediction("hit", pid, true, mi() + 30, "“%s” will be a hit" % title_s)
-				return "Noted. At the premiere we'll see whether your gut was right."},
-			{"label": "No, more likely a flop", "fn": func():
-				add_prediction("hit", pid, false, mi() + 30, "“%s” will not be a hit" % title_s)
-				return "Noted. At the premiere we'll see whether your gut was right."},
-			{"label": "No call", "fn": func(): return "You keep your cards close — not every premiere needs a bet."},
-		]}
 
-# (b) Signing unter Ruhm 40: „Zukünftiger Star (Ruhm 70 in 8 Jahren)?“
-func star_prediction_event(c: Dictionary) -> Dictionary:
-	var cid := int(c.id)
-	var name_s := client_name(c)
-	return {"title": "Gut check: %s" % name_s,
-		"text": "[i]“That one might become something — or not.”[/i]\n\nYou signed %s at fame %d. Your call: does %s reach fame 70 within 8 years?\n\nCorrect predictions sharpen your instinct (%d/100). Staying silent costs nothing." % [name_s, roundi(c.fame), name_s, int(state.get("instinct", 20))],
-		"choices": [
-			{"label": "Yes, a future star", "fn": func():
-				add_prediction("star", cid, true, mi() + 96, "%s reaches fame 70" % name_s)
-				return "Noted. In eight years at the latest, we'll know."},
-			{"label": "No, probably not", "fn": func():
-				add_prediction("star", cid, false, mi() + 96, "%s stays below fame 70" % name_s)
-				return "Noted. In eight years at the latest, we'll know."},
-			{"label": "No call", "fn": func(): return "You keep your cards close."},
-		]}
 
-func pop_pending_star_prediction() -> Variant:
-	if not state.has("pendingStarPrediction"):
-		return null
-	var cid = state.pendingStarPrediction
-	state.erase("pendingStarPrediction")
-	var c = client(cid)
-	return star_prediction_event(c) if c != null else null
 
-# (c) Casting mit 2+ passenden Klienten: „Wer passt besser?“
-func note_betterfit_prediction(chosen_c: Dictionary, alt_c: Dictionary, casting_id: int) -> void:
-	add_prediction("betterfit",
-		{"prodId": casting_id, "chosen": int(chosen_c.id), "other": int(alt_c.id), "otherFame": float(alt_c.fame)},
-		true, mi() + 30, "%s fits better than %s" % [client_name(chosen_c), client_name(alt_c)])
 
-func _resolve_prediction(pr: Dictionary, correct: bool, label: String) -> void:
-	pr["resolved"] = true
-	pr["correct"] = correct
-	if correct:
-		state.instinct = clampi(int(state.instinct) + 3, 0, 100)
-		attr_gain("menschenkenntnis", 0.5)
-		state.agency.rep = clampi(int(state.agency.rep) + 1, 0, 100)
-		log_msg("Prediction confirmed: %s — instinct +3, reputation +1." % label, "deal")
-	else:
-		state.instinct = maxi(5, int(state.instinct) - 1)
-		log_msg("Prediction missed: %s — instinct −1." % label, "info")
 
-# Auflösung beim Release (Hit-Wette, „Wer passt besser?“, Coverage-Marker)
-func _resolve_release_predictions(prod: Dictionary, ratio: float, fame_deltas: Dictionary, quality: int = -1) -> void:
-	for pr in state.get("predictions", []):
-		if pr.get("resolved", false):
-			continue
-		if str(pr.type) == "hit" and int(pr.subject) == int(prod.id):
-			_resolve_prediction(pr, (ratio >= 2.0) == bool(pr.guess), "“%s” (%s)" % [prod.title, "hit" if ratio >= 2.0 else "no hit"])
-		elif str(pr.type) == "betterfit" and int(pr.subject.get("prodId", -1)) == int(prod.id):
-			var chosen_delta := float(fame_deltas.get(int(pr.subject.get("chosen", -1)), 0.0))
-			var other_c = client(pr.subject.get("other", -1))
-			var other_delta := (float(other_c.fame) - float(pr.subject.get("otherFame", 0.0))) if other_c != null else -99.0
-			_resolve_prediction(pr, (chosen_delta >= other_delta) == bool(pr.guess), str(pr.get("note", "casting prediction")))
-		elif str(pr.type) == "coverage" and int(pr.subject.get("castingId", -1)) == int(prod.id):
-			_resolve_coverage_prediction(pr, prod, ratio, quality)
 
-# Monatstakt: Star-Prognosen verfallen nach 8 Jahren; Sicherheits-Verfall ohne Strafe
-func tick_predictions(_events: Array) -> void:
-	for pr in state.get("predictions", []):
-		if pr.get("resolved", false):
-			continue
-		match str(pr.type):
-			"star":
-				if mi() >= int(pr.dueMi):
-					var c = client(pr.subject)
-					var fame_now := float(c.fame) if c != null else 0.0
-					_resolve_prediction(pr, (fame_now >= 70.0) == bool(pr.guess), str(pr.get("note", "star prediction")))
-			"hit", "betterfit", "coverage":
-				if mi() >= int(pr.dueMi) + 12:
-					pr["resolved"] = true
 
 # Instinkt-Wirkung: engere Noten-Spannweite im Talentpool (9 → bis 4)
 func pool_spread() -> float:
@@ -3455,262 +3365,18 @@ func prod_demand_share(prod_id: int) -> String:
 
 
 
-const COVERAGE_CATS = {
-	"sicher":        {"name": "Safe role", "icon": "🛡", "desc": "The film won't flop: box office ≥ budget and quality ≥ 45."},
-	"prestige":      {"name": "Prestige chance", "icon": "🎩", "desc": "Quality ≥ 62 — the critics will take notice. Marker grants +5 fit at the pitch."},
-	"schwach":       {"name": "Weak script", "icon": "📉", "desc": "The box office stays below the budget (ratio < 1)."},
-	"sleeper":       {"name": "Possible sleeper hit", "icon": "🌟", "desc": "A hit (≥ 2× budget) even though the script looks weak."},
-	"schnitt":       {"name": "Danger: role gets cut", "icon": "✂", "desc": "The marked role falls victim to the final cut."},
-	"problematisch": {"name": "Troubled production", "icon": "🌪", "desc": "Set friction and bad signals prevail."},
-}
-
-func _tick_coverage(_events: Array, strike: bool = false) -> void:
-	if not state.has("coverage") or not (state.coverage is Dictionary):
-		state["coverage"] = {"current": null, "history": []}
-	# 1. Das aktuelle Blatt verfällt zum Monatsende → ins Archiv
-	var cur = state.coverage.get("current")
-	if cur != null and mi() >= int(cur.get("dueMi", 0)):
-		_archive_coverage(cur)
-		state.coverage["current"] = null
-	# 2. Das verdeckte Coverage-Casting des Vormonats wird regulär sichtbar
-	for cs in state.castings:
-		if bool(cs.get("hidden", false)):
-			cs["hidden"] = false
-	if strike:
-		return
-	# 3. Neues Blatt? ~60 % pro Monat, garantiert mindestens einmal pro Quartal
-	state["coverageQueue"] = int(state.get("coverageQueue", 0)) + 1
-	if state.coverage.get("current") == null and (Util.chance(0.6) or int(state.coverageQueue) >= 3):
-		_issue_coverage()
-
-func _issue_coverage() -> void:
-	state["coverageQueue"] = 0
-	var casting := _make_casting()
-	casting["hidden"] = true
-	state.castings.append(casting)
-	var role_idx := _coverage_role_idx(casting)
-	var sheet := {
-		"id": next_id(),
-		"castingRef": int(casting.id),
-		"title": str(casting.title), "genre": str(casting.genre),
-		"studioId": str(casting.studioId), "prestige": int(casting.prestige),
-		"logline": _coverage_logline(casting),
-		"statements": _coverage_statements(casting, role_idx),
-		"roleIdx": role_idx,
-		"markersMax": 3 if int(state.get("instinct", 20)) >= 60 else 2,
-		"createdMi": mi(), "dueMi": mi() + 1,
-	}
-	state.coverage["current"] = sheet
-	log_msg("Coverage on your desk: “%s” (%s) — assessment until the end of the month, %d markers." % [sheet.title, _studio(str(casting.studioId)).name, int(sheet.markersMax)], "info")
-
-# Referenzierte Rolle bestimmen (bevorzugt eine Nebenrolle) und das verdeckte
-# Rollengrößen-Flag würfeln: klein geschriebene Parts landen eher im Schnitt.
-func _coverage_role_idx(casting: Dictionary) -> int:
-	var idx := 0
-	for i in casting.roles.size():
-		if str(casting.roles[i].type) == "support":
-			idx = i
-			break
-	var role: Dictionary = casting.roles[idx]
-	var risk := 0.15
-	if str(role.type) == "support":
-		risk += 0.2
-	if int(role.minFame) <= 18:
-		risk += 0.15
-	role["cutRisk"] = Util.chance(risk)
-	return idx
-
-func _coverage_logline(casting: Dictionary) -> String:
-	var studio: Dictionary = _studio(str(casting.studioId))
-	var genre_label: String = Data.GENRES[str(casting.genre)].label
-	var style_phrase := {"prestige": "with clear awards ambitions", "indie": "with modest risk and a big heart", "commercial": "built for the broad audience"}.get(str(studio.get("style", "commercial")), "built for the broad audience")
-	var y := int(state.year)
-	if y < 1970:
-		return "LOGLINE: “%s” — a %s from the house of %s, %s." % [casting.title, genre_label, studio.name, style_phrase]
-	if y >= 2010:
-		return "Quick take: “%s” is the new %s from %s — %s, and everyone is already talking about it." % [casting.title, genre_label, studio.name, style_phrase]
-	return "Logline: “%s” — a %s from %s, %s." % [casting.title, genre_label, studio.name, style_phrase]
-
-# 4–6 kurze Aussagen: echte Indikatoren (Skriptbasis, Budget vs. Genre,
-# Regie-Historie, geplante Klauseln, Rollengröße) plus Rauschen.
-# Zuverlässigkeit ~70 %, steigt mit Instinkt (wie script_insight).
-func _coverage_statements(casting: Dictionary, role_idx: int) -> Array:
-	var rel := 0.7 + float(state.get("instinct", 20)) / 1000.0
-	var pool: Array = []
-	# 1. Verdeckte Skriptbasis (dieselbe Formel wie script_insight / release_film)
-	var script_base := 35 + int(casting.prestige) * 8 + (Util.hashs(str(casting.id) + "scr") % 21)
-	var script_band := 1  # 0 schwach, 1 mittel, 2 stark
-	if script_base <= 47:
-		script_band = 0
-	elif script_base >= 60:
-		script_band = 2
-	pool.append(_band_statement("scriptQ", script_band, [
-		"The script stumbles from act two on — the story department sets it aside skeptically.",
-		"Solid craftsmanship without big surprises, page after page.",
-		"The script bears the signature of an awards contender — structure, dialogue, everything lands.",
-	], rel))
-	# 2. Budget vs. Genre-Anspruch
-	var fee_sum := 0.0
-	for r in casting.roles:
-		fee_sum += float(r.fee)
-	var typical := fee_sum * 3.75 + 400000.0 * Util.infl(state.year) * (1.0 + int(casting.prestige) * 0.3)
-	var budget_band := 1
-	if float(casting.budget) > typical * 1.15:
-		budget_band = 2
-	elif float(casting.budget) < typical * 0.75:
-		budget_band = 0
-	pool.append(_band_statement("budget", budget_band, [
-		"The budget looks tightly calculated — even by the genre's standards.",
-		"The budget sits within the expected range for a project like this.",
-		"The budget is unusually high for this genre — the studio is betting everything on one card.",
-	], rel))
-	# 3. Regie-Historie (deterministisch aus dem Namen abgeleitet)
-	var dir_name := _director_name_for(casting)
-	var track := Util.hashs("track:" + dir_name) % 100
-	var dir_band := 1
-	if track <= 40:
-		dir_band = 0
-	elif track >= 55:
-		dir_band = 2
-	pool.append(_band_statement("regie", dir_band, [
-		"%s has delivered two flops in a row — internally, doubts are voiced." % dir_name,
-		"On %s, studio leadership keeps its cards close." % dir_name,
-		"%s is coming off a success — the studio lets things run." % dir_name,
-	], rel))
-	# 4. Geplante Klauseln: Hardliner-Flag des Studios
-	var hardliner := Util.hashs(str(casting.id) + "hard") % 100 < 35
-	pool.append(_bool_statement("klauseln", hardliner,
-		"The studio internally insists on far-reaching options — sequel clauses and morality paragraphs are ready.",
-		"The studio is traditionally relaxed about contract language.", rel))
-	# 5. Rollengröße der referenzierten Rolle
-	var role: Dictionary = casting.roles[role_idx]
-	pool.append(_bool_statement("rollengroesse", bool(role.get("cutRisk", false)),
-		"The role reads thin — the studio's first cut lists already mention it.",
-		"The role is firmly anchored in the plot — no editor will shake it loose.", rel))
-	# Mischen und auf 4–5 kürzen (mindestens 4, mit Füller auffüllen)
-	pool.shuffle()
-	var out: Array = pool.slice(0, mini(5, maxi(4, pool.size())))
-	while out.size() < 4:
-		out.append({"text": "Schedule pressure: the studio wants to hold the release date at any cost.", "truthKey": "fueller", "truth": true, "marked": ""})
-	return out
-
-# Band-Aussage (0/1/2). Mit Wahrscheinlichkeit rel stimmt die Behauptung,
-# sonst wird eine andere Band-Behauptung gezeigt (Rauschen).
-func _band_statement(key: String, band: int, texts: Array, rel: float) -> Dictionary:
-	var shown := band
-	if not Util.chance(rel):
-		var others := [0, 1, 2]
-		others.erase(band)
-		shown = int(Util.pick(others))
-	return {"text": str(texts[shown]), "truthKey": key, "truth": shown == band, "marked": ""}
-
-func _bool_statement(key: String, fact: bool, true_text: String, false_text: String, rel: float) -> Dictionary:
-	var shown := fact
-	if not Util.chance(rel):
-		shown = not fact
-	return {"text": true_text if shown else false_text, "truthKey": key, "truth": shown == fact, "marked": ""}
-
-# Marker setzen: eine Aussage einer Kategorie zuordnen → Prognose.
-func coverage_mark(stmt_idx: int, cat: String) -> String:
-	var cur = state.coverage.get("current") if state.has("coverage") else null
-	if cur == null:
-		return "No coverage sheet on the desk."
-	if not COVERAGE_CATS.has(cat):
-		return "Unknown category."
-	var stmts: Array = cur.get("statements", [])
-	if stmt_idx < 0 or stmt_idx >= stmts.size():
-		return "That statement does not exist."
-	var st: Dictionary = stmts[stmt_idx]
-	if str(st.get("marked", "")) != "":
-		return "This statement is already marked — ink dries fast."
-	var used := 0
-	for s in stmts:
-		if str(s.get("marked", "")) != "":
-			used += 1
-	if used >= int(cur.get("markersMax", 2)):
-		return "No markers left — only a few clear bets per sheet."
-	st["marked"] = cat
-	var cs = _casting(cur.get("castingRef", -1))
-	var due := mi() + (ceili(float(cs.deadline) / 4.0) if cs != null else 2) + 7
-	add_prediction("coverage",
-		{"castingId": int(cur.get("castingRef", -1)), "cat": cat, "roleIdx": int(cur.get("roleIdx", 0)), "sheetId": int(cur.get("id", 0))},
-		true, due, "Coverage “%s”: %s" % [str(cur.get("title", "?")), COVERAGE_CATS[cat].name])
-	# Prestigechance: Die Überzeugung des Lektorats trägt durch den Pitch (+5 Passung)
-	if cat == "prestige" and cs != null:
-		cs["agencyBoost"] = float(cs.get("agencyBoost", 0.0)) + 5.0
-	return "Marker set: %s. It resolves when “%s” hits the theaters." % [COVERAGE_CATS[cat].name, str(cur.get("title", "?"))]
-
-# Der Schnitt-Wurf beim Release — Wahrscheinlichkeit hängt am Rollengrößen-Flag.
-func _coverage_cut_roll(_prod: Dictionary, role: Dictionary) -> bool:
-	return Util.chance(0.75 if bool(role.get("cutRisk", false)) else 0.12)
-
-func _resolve_coverage_prediction(pr: Dictionary, prod: Dictionary, ratio: float, quality: int) -> void:
-	var cat := str(pr.subject.get("cat", ""))
-	var q := quality if quality >= 0 else 50
-	var script_base := 35.0 + int(prod.prestige) * 8.0 + float(Util.hashs(str(prod.id) + "scr") % 21)
-	var pos := 0
-	var neg := 0
-	for sg in prod.get("signals", []):
-		if bool(sg.get("pos", false)):
-			pos += 1
-		else:
-			neg += 1
-	var troubled := float(prod.get("qualityMod", 0.0)) < 0.0 or neg > pos
-	var ok := false
-	match cat:
-		"sicher":
-			ok = ratio >= 1.0 and q >= 45
-		"prestige":
-			ok = q >= 62
-		"schwach":
-			ok = ratio < 1.0
-		"sleeper":
-			ok = ratio >= 2.0 and script_base < 62.0
-		"schnitt":
-			var ridx := clampi(int(pr.subject.get("roleIdx", 0)), 0, maxi(0, prod.roles.size() - 1))
-			ok = prod.roles.size() > 0 and bool(prod.roles[ridx].get("_coverageCut", false))
-		"problematisch":
-			ok = troubled
-	_resolve_prediction(pr, ok, "Coverage “%s”: %s" % [str(prod.get("title", "?")), COVERAGE_CATS.get(cat, {}).get("name", cat)])
-
-# Abgelaufenes Blatt ins Archiv (max. 8) — inkl. der Wahrheit hinter den Aussagen.
-func _archive_coverage(cur: Dictionary) -> void:
-	var hist: Array = state.coverage.get("history", [])
-	var stmts: Array = []
-	for st in cur.get("statements", []):
-		stmts.append({"text": str(st.get("text", "")), "truthKey": str(st.get("truthKey", "")),
-			"truth": bool(st.get("truth", false)), "marked": str(st.get("marked", ""))})
-	hist.push_front({
-		"id": int(cur.get("id", 0)), "title": str(cur.get("title", "")),
-		"genre": str(cur.get("genre", "")), "studioId": str(cur.get("studioId", "")),
-		"mi": int(cur.get("createdMi", mi())), "castingRef": int(cur.get("castingRef", -1)),
-		"roleIdx": int(cur.get("roleIdx", 0)), "statements": stmts,
-	})
-	while hist.size() > 8:
-		hist.pop_back()
-	state.coverage["history"] = hist
-
-# Trefferquote aller Coverage-Prognosen (für Karte & Archiv).
-func coverage_stats() -> Dictionary:
-	var done := 0
-	var hits := 0
-	var open_n := 0
-	for pr in state.get("predictions", []):
-		if str(pr.get("type", "")) != "coverage":
-			continue
-		if pr.get("resolved", false):
-			done += 1
-			if pr.get("correct", false):
-				hits += 1
-		else:
-			open_n += 1
-	return {"done": done, "hits": hits, "open": open_n}
 
 
-# ---------- Feature D: Das perfekte Rollen-Karrierebrett ----------
-# Drei Plan-Slots pro Klient: Genre + Rollentyp + Prestige-Stufe als Absicht,
-# kein konkreter Film. Die Folge prägt die DNA-Trajektorie — Kontrast bringt
-# den Transformations-Bonus, Wiederholung den Typecasting-Sog.
+
+
+
+
+
+
+
+
+
+
 
 const BOARD_SLOTS := 3
 const BOARD_PRESTIGE_TIERS := {1: "Commercial (★)", 2: "Ambitious (★★)", 3: "Prestige (★★★)"}

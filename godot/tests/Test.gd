@@ -377,15 +377,15 @@ func _ready() -> void:
 	Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
 	var inst_before := int(Game.state.instinct)
 	check(inst_before == 20, "Instinkt startet bei 20")
-	var pr = Game.add_prediction("star", int(Game.state.clients[0].id), true, Game.mi() - 1, "Test-Star-Prognose")
-	Game.tick_predictions([])
+	var pr = Predictions.add_prediction("star", int(Game.state.clients[0].id), true, Game.mi() - 1, "Test-Star-Prognose")
+	Predictions.tick_predictions([])
 	check(bool(pr.resolved) and int(Game.state.instinct) == inst_before - 1, "Falsche Prognose: Instinkt −1 (%d → %d)" % [inst_before, int(Game.state.instinct)])
-	var pr2 = Game.add_prediction("star", int(Game.state.clients[0].id), false, Game.mi() - 1, "Test-Prognose 2")
-	Game.tick_predictions([])
+	var pr2 = Predictions.add_prediction("star", int(Game.state.clients[0].id), false, Game.mi() - 1, "Test-Prognose 2")
+	Predictions.tick_predictions([])
 	check(bool(pr2.resolved) and int(Game.state.instinct) == inst_before + 2, "Richtige Prognose: Instinkt +3 (→ %d)" % int(Game.state.instinct))
 	Game.state.instinct = 5
-	var pr3 = Game.add_prediction("star", int(Game.state.clients[0].id), true, Game.mi() - 1, "Frust-Deckel-Test")
-	Game.tick_predictions([])
+	var pr3 = Predictions.add_prediction("star", int(Game.state.clients[0].id), true, Game.mi() - 1, "Frust-Deckel-Test")
+	Predictions.tick_predictions([])
 	check(bool(pr3.resolved) and int(Game.state.instinct) == 5, "Instinkt fällt nie unter 5")
 
 	# 26. Klausel-Event feuert NUR mit Klausel-Flag (Feature 8)
@@ -500,40 +500,40 @@ func _ready() -> void:
 	Game.start_negotiation("monroe")
 	Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
 	var cov_client: Dictionary = Game.state.clients[0]
-	Game._issue_coverage()
+	Coverage._issue_coverage()
 	var sheet: Dictionary = Game.state.coverage.current
 	check(sheet != null and sheet.has("castingRef"), "Coverage-Blatt liegt auf dem Schreibtisch")
 	check(sheet.statements.size() >= 4, "Coverage erzeugt mindestens 4 Aussagen aus Sim-Daten (%d)" % sheet.statements.size())
 	var cov_casting = Game._casting(sheet.castingRef)
 	check(cov_casting != null and bool(cov_casting.get("hidden", false)), "Coverage-Casting bleibt einen Monat verdeckt")
 	var pred_n0: int = Game.state.predictions.size()
-	var mark_msg := Game.coverage_mark(0, "schwach")
+	var mark_msg := Coverage.coverage_mark(0, "schwach")
 	check(Game.state.predictions.size() == pred_n0 + 1 and str(Game.state.predictions[-1].type) == "coverage", "Marker legt Coverage-Prognose an")
 	check(mark_msg.contains("Marker set"), "Marker-Setzen bestätigt")
-	Game.coverage_mark(1, "sicher")
-	check(Game.coverage_mark(2, "prestige").contains("No markers left"), "Marker-Kontingent begrenzt (%d)" % int(sheet.markersMax))
+	Coverage.coverage_mark(1, "sicher")
+	check(Coverage.coverage_mark(2, "prestige").contains("No markers left"), "Marker-Kontingent begrenzt (%d)" % int(sheet.markersMax))
 	# Auflösung beim Release: richtig +3, falsch fällt nie unter 5
 	var cov_fake := {"id": 4242, "title": "Testfilm", "genre": "drama", "prestige": 1, "budget": 1000.0,
 		"qualityMod": 0.0, "signals": [], "studioId": str(Game.active_studios()[0].id),
 		"roles": [{"type": "lead", "gender": "f", "minFame": 10, "ageMin": 18, "ageMax": 99, "fee": 1, "cutRisk": true, "filled": {"npc": true, "name": "X", "talent": 50, "fame": 30}, "rejected": []}]}
 	var inst0 := int(Game.state.instinct)
-	var pr_weak := Game.add_prediction("coverage", {"castingId": 4242, "cat": "schwach", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test schwach")
-	Game._resolve_release_predictions(cov_fake, 0.5, {}, 50)
+	var pr_weak := Predictions.add_prediction("coverage", {"castingId": 4242, "cat": "schwach", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test schwach")
+	Predictions._resolve_release_predictions(cov_fake, 0.5, {}, 50)
 	check(bool(pr_weak.resolved) and bool(pr_weak.correct) and int(Game.state.instinct) == inst0 + 3, "Richtiger Marker: Instinkt +3 (%d → %d)" % [inst0, int(Game.state.instinct)])
 	Game.state.instinct = 5
-	var pr_pres := Game.add_prediction("coverage", {"castingId": 4242, "cat": "prestige", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test prestige")
-	Game._resolve_release_predictions(cov_fake, 0.5, {}, 50)
+	var pr_pres := Predictions.add_prediction("coverage", {"castingId": 4242, "cat": "prestige", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test prestige")
+	Predictions._resolve_release_predictions(cov_fake, 0.5, {}, 50)
 	check(bool(pr_pres.resolved) and not bool(pr_pres.correct) and int(Game.state.instinct) == 5, "Falscher Marker: Instinkt fällt nie unter 5")
 	# Schnitt-Auflösung: Wurf triggert, Release löst die Prognose auf
 	var cut_hit := false
 	for i in 80:
-		if Game._coverage_cut_roll(cov_fake, cov_fake.roles[0]):
+		if Coverage._coverage_cut_roll(cov_fake, cov_fake.roles[0]):
 			cut_hit = true
 			break
 	check(cut_hit, "Schnitt-Wurf triggert bei markierter Rolle (cutRisk)")
 	var cov_qp: Dictionary = Game.quick_production(cov_client, {"genre": "drama", "prestige": 1})
 	var cov_prod: Dictionary = cov_qp.prod
-	var pr_cut := Game.add_prediction("coverage", {"castingId": int(cov_prod.id), "cat": "schnitt", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test schnitt")
+	var pr_cut := Predictions.add_prediction("coverage", {"castingId": int(cov_prod.id), "cat": "schnitt", "roleIdx": 0, "sheetId": int(sheet.id)}, true, Game.mi() + 9, "Coverage-Test schnitt")
 	Game.release_film(cov_prod)
 	Game.state.productions.erase(cov_prod)
 	check(bool(pr_cut.resolved), "Schnitt-Prognose wird beim Release aufgelöst (Schnitt eingetreten: %s)" % ("ja" if bool(pr_cut.correct) else "nein"))
@@ -599,7 +599,7 @@ func _ready() -> void:
 	check(board_client.careerBoard.slots.is_empty(), "Slot älter als 30 Monate verfällt still")
 
 	# 35. Save/Load-Roundtrip: Coverage & Karrierebrett
-	Game._issue_coverage()
+	Coverage._issue_coverage()
 	Game.board_slot_add(int(board_client.id), "comedy", "lead", 1)
 	Game.save_game()
 	Game.state = null

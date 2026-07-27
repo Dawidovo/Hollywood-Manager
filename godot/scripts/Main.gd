@@ -467,8 +467,8 @@ func _ready() -> void:
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
 		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
-		Game._issue_coverage()
-		Game.coverage_mark(0, "prestige")
+		Coverage._issue_coverage()
+		Coverage.coverage_mark(0, "prestige")
 		_switch_tab("buero")
 		_open_coverage()
 		await _take_shot("coverage")
@@ -476,7 +476,7 @@ func _ready() -> void:
 		_on_era_selected(1950)
 		Game.start_negotiation("monroe")
 		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
-		Game._issue_coverage()
+		Coverage._issue_coverage()
 		var archived_sheet: Dictionary = Game.state.coverage.current.duplicate(true)
 		archived_sheet["mi"] = Game.mi()
 		Game.state.coverage.history = [archived_sheet, archived_sheet.duplicate(true)]
@@ -1521,7 +1521,7 @@ func _open_coverage() -> void:
 		row.add_child(tl)
 		var marked := str(sttm.get("marked", ""))
 		if marked != "":
-			var info: Dictionary = Game.COVERAGE_CATS.get(marked, {})
+			var info: Dictionary = Coverage.COVERAGE_CATS.get(marked, {})
 			var pr = _coverage_prediction_for(int(cur.id), marked)
 			var state_icon := "⏳"
 			if pr != null and bool(pr.get("resolved", false)):
@@ -1545,8 +1545,8 @@ func _render_coverage_pick(cur: Dictionary) -> void:
 	modal_box.add_child(_lbl("🏷 Set a marker", 22, ACC))
 	modal_box.add_child(_rich("[i]“%s”[/i]" % str(sttm.get("text", "")), 14))
 	modal_box.add_child(_lbl("Which call do you put on this note? It resolves at the theatrical release — correct gives instinct +3, wrong costs only one point.", 12, DIM))
-	for cat in Game.COVERAGE_CATS:
-		var info: Dictionary = Game.COVERAGE_CATS[cat]
+	for cat in Coverage.COVERAGE_CATS:
+		var info: Dictionary = Coverage.COVERAGE_CATS[cat]
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		modal_box.add_child(row)
@@ -1563,7 +1563,7 @@ func _on_coverage_pick(i: int) -> void:
 
 func _on_coverage_mark(stmt_idx: int, cat: String) -> void:
 	_coverage_pick = -1
-	_coverage_note = Game.coverage_mark(stmt_idx, cat)
+	_coverage_note = Coverage.coverage_mark(stmt_idx, cat)
 	_open_coverage()
 
 # Archiv der letzten 8 Blätter inkl. Trefferquote (embedded = ohne eigene Kopfzeile)
@@ -1571,7 +1571,7 @@ func _render_coverage_archive(embedded: bool = false) -> void:
 	var st = Game.state
 	if not embedded:
 		modal_box.add_child(_lbl("📚 Coverage archive", 22, ACC))
-	var cov_stats := Game.coverage_stats()
+	var cov_stats := Coverage.coverage_stats()
 	modal_box.add_child(_lbl("Overall hit rate: %d/%d markers correct%s" % [int(cov_stats.hits), int(cov_stats.done), (" · %d waiting for release" % int(cov_stats.open)) if int(cov_stats.open) > 0 else ""], 13, GREEN if int(cov_stats.hits) * 2 >= int(cov_stats.done) else AMBER))
 	var hist: Array = st.coverage.get("history", [])
 	if hist.is_empty():
@@ -1585,7 +1585,7 @@ func _render_coverage_archive(embedded: bool = false) -> void:
 			var marked := str(sttm.get("marked", ""))
 			if marked == "":
 				continue
-			var info: Dictionary = Game.COVERAGE_CATS.get(marked, {})
+			var info: Dictionary = Coverage.COVERAGE_CATS.get(marked, {})
 			var pr = _coverage_prediction_for(int(sheet.id), marked)
 			var icon := "⏳"
 			if pr != null and bool(pr.get("resolved", false)):
@@ -1880,7 +1880,7 @@ func _show_signed(terms: Dictionary) -> void:
 	var prom_s: String = ("\n\n📜 Your promise (%s) has been put on record." % Game.PROMISES[terms.promise].label) if terms.get("promise") != null else ""
 	_show_outcome_modal("Signing talks", "[b]Contract signed![/b]\n\n[i]“All right then. Make me immortal.”[/i]\n\n%s is now a client — %d%% commission, %d years%s%s.%s%s" % [a.name, int(terms.commission), int(terms.years), (", %s bonus" % Util.fmt_money(terms.bonus)) if terms.bonus > 0 else "", perks_s, clause_s, prom_s])
 	# Star-Prognose (Feature 6b): beim Signing unter Ruhm 40 das Bauchgefühl befragen
-	var pev = Game.pop_pending_star_prediction()
+	var pev = Predictions.pop_pending_star_prediction()
 	if pev != null:
 		modal_queue.append(pev)
 
@@ -2240,11 +2240,11 @@ func _render_studio_offer(note: String) -> void:
 		if alt_c != null:
 			modal_box.add_child(_lbl("🔮 Gut check: does %s really fit better than %s? (Checked at the release)" % [Game.client_name(ctx.client), Game.client_name(alt_c)], 13, ACC))
 			modal_box.add_child(_nego_actions({"label": "Yes, better", "cb": func():
-				Game.note_betterfit_prediction(ctx.client, alt_c, int(ctx.casting.id))
+				Predictions.note_betterfit_prediction(ctx.client, alt_c, int(ctx.casting.id))
 				ctx["fitAsked"] = true
 				_render_studio_offer("Prediction noted — your instinct will be put to the test at the release.")}, [
 				{"label": "No", "cb": func():
-					Game.add_prediction("betterfit", {"prodId": int(ctx.casting.id), "chosen": int(ctx.client.id), "other": int(alt_c.id), "otherFame": float(alt_c.fame)}, false, Game.mi() + 30, "%s does NOT fit better than %s" % [Game.client_name(ctx.client), Game.client_name(alt_c)])
+					Predictions.add_prediction("betterfit", {"prodId": int(ctx.casting.id), "chosen": int(ctx.client.id), "other": int(alt_c.id), "otherFame": float(alt_c.fame)}, false, Game.mi() + 30, "%s does NOT fit better than %s" % [Game.client_name(ctx.client), Game.client_name(alt_c)])
 					ctx["fitAsked"] = true
 					_render_studio_offer("Prediction noted.")},
 				{"label": "No call", "cb": func():
