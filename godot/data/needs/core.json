@@ -1,0 +1,27 @@
+{
+	"anerkennung": {
+		"name": "Recognition",
+		"icon": "🏆",
+		"desc": "Applause, billing, the table by the window. Being seen."
+	},
+	"sicherheit": {
+		"name": "Security",
+		"icon": "🪨",
+		"desc": "A signed next picture, money in the bank, no gaps in the calendar."
+	},
+	"kunst": {
+		"name": "Art",
+		"icon": "🎭",
+		"desc": "Work that means something — roles worth the years they cost."
+	},
+	"geld": {
+		"name": "Money",
+		"icon": "💵",
+		"desc": "The fee, the points, the house. Paper proof of worth."
+	},
+	"ruhe": {
+		"name": "Peace",
+		"icon": "🌿",
+		"desc": "Mornings without flashbulbs. A private life that stays one."
+	}
+}

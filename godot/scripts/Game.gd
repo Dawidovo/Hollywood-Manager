@@ -1022,6 +1022,7 @@ func sign_client(terms: Dictionary) -> Dictionary:
 	}
 	c.fameHistory.append({"mi":mi(), "v":float(c.fame)})
 	c.dnaHistory.append({"mi":mi(), "romantik":float(c.dna.romantik), "popular":float(c.dna.popular), "verlass":float(c.dna.verlass), "unikat":float(c.dna.unikat), "familie":float(c.dna.familie)})
+	Needs.ensure_client(c)
 	if terms.get("promise") != null:
 		c.promises.append({"type": terms.promise, "label": PROMISES[terms.promise].label, "due": mi() + int(PROMISES[terms.promise].months), "fulfilled": false, "broken": false})
 	# Vertragsklauseln (Feature 8): era-verfügbar gefiltert auf den Klienten übernehmen
@@ -1718,6 +1719,9 @@ func tick_clients(events: Array) -> void:
 		_tick_client_weight(c, actor, disc)
 		var trust_growth := 0.28 + minf(0.28, c.perks.size() * 0.07) + (0.10 if busy else 0.0)
 		change_trust(c, trust_growth)
+		# Innenleben (Teil C1): die Arbeit bewegt die Bedürfnisse, der
+		# Engpass wirkt über Laune/Loyalität zurück.
+		Needs.tick_client(c)
 		if busy:
 			c.exhaustion = clampf(c.exhaustion + (3.0 if c.perks.has("assistant") else 6.0) + (2.0 if disc < 40 else (-1.0 if disc > 75 else 0.0)), 0.0, 100.0)
 		else:
@@ -2345,6 +2349,8 @@ func _apply_save_defaults() -> void:
 			c["fameHistory"] = [{"mi":mi(), "v":float(c.fame)}]
 		if not c.has("dnaHistory"):
 			c["dnaHistory"] = [{"mi":mi(), "romantik":float(c.dna.romantik), "popular":float(c.dna.popular), "verlass":float(c.dna.verlass), "unikat":float(c.dna.unikat), "familie":float(c.dna.familie)}]
+		# Migration Klienten-Bedürfnisse (Teil C1)
+		Needs.ensure_client(c)
 		# Migration: Karrierebrett (3 Plan-Slots pro Klient)
 		if not c.has("careerBoard") or not (c.careerBoard is Dictionary):
 			c["careerBoard"] = {"slots": [], "startedMi": mi(), "completed": 0}

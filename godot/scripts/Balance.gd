@@ -117,6 +117,16 @@ const SUMMIT_COOLDOWN_MONTHS := 12
 const PRESSCONF_BELIEF := 55.0
 const PRESSCONF_COOLDOWN_MONTHS := 6
 
+# ---------- Klienten-Bedürfnisse (Gesamtpaket Teil C1) ----------
+# Sättigung startet bei NEEDS_START; fällt das schlechteste Bedürfnis
+# unter NEEDS_LOW, kostet das monatlich Laune, unter NEEDS_CRITICAL
+# zusätzlich Loyalität. Driftraten: Needs.gd.
+const NEEDS_START := 55.0
+const NEEDS_LOW := 35.0
+const NEEDS_CRITICAL := 20.0
+const NEEDS_MOOD_MALUS := 2.0
+const NEEDS_LOYALTY_MALUS := 1.0
+
 # ---------- Spieler-Attribute (RPG-Chunk 15) ----------
 # Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit
 # abnehmendem Ertrag: voll bis SOFTCAP_1, ×0,5 bis SOFTCAP_2, ×0,25 darüber.

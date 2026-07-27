@@ -35,6 +35,7 @@ Mogul="*res://scripts/Mogul.gd"
 Network="*res://scripts/Network.gd"
 Emotions="*res://scripts/Emotions.gd"
 Press="*res://scripts/Press.gd"
+Needs="*res://scripts/Needs.gd"
 Dialogs="*res://scripts/Dialogs.gd"
 Staff="*res://scripts/Staff.gd"
 

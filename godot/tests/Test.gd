@@ -2354,6 +2354,61 @@ func _ready() -> void:
 	check(Game.state.quests.any(func(q): return str(q.id) == "viral_clip"), "Die Clip-Kette erscheint als Auftrag im Journal (quest-Block)")
 	check(Game.state.followups.any(func(fu): return str(fu.get("event", "")) == "viral_aftermath"), "Der Nachhall des Clips ist terminiert")
 
+	# Klienten-Innenleben (Teil C1): Profil, Migration, Drift, Engpass
+	Game.new_game("Beduerfnisse", 1950)
+	check(Data.NEEDS.size() == 5, "Fünf Bedürfnisse geladen")
+	var nd_actor := {"id": "needs_test", "ego": 90, "peakFame": 80, "genres": ["crime"]}
+	var nd_actor_low := {"id": "needs_test", "ego": 10, "peakFame": 30, "genres": ["drama"]}
+	var nd_prof_a: Dictionary = Needs.profile(nd_actor)
+	var nd_prof_b: Dictionary = Needs.profile(nd_actor)
+	check(nd_prof_a == nd_prof_b, "Bedürfnis-Profil ist deterministisch")
+	check(float(Needs.profile(nd_actor).anerkennung) > float(Needs.profile(nd_actor_low).anerkennung), "Hohes Ego treibt die Anerkennung")
+	check(float(Needs.profile(nd_actor_low).sicherheit) > float(Needs.profile(nd_actor).sicherheit), "Kleiner Zenit-Ruhm treibt die Sicherheit")
+	check(float(Needs.profile(nd_actor_low).kunst) > float(Needs.profile(nd_actor).kunst), "Prestige-Genres treiben die Kunst")
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var nd_c: Dictionary = Game.state.clients[0]
+	check(nd_c.has("needsSat") and absf(float(nd_c.needsSat.ruhe) - Balance.NEEDS_START) < 0.01, "Signing initialisiert die Sättigung bei 55")
+	nd_c.erase("needsSat")
+	Game.save_game()
+	Game.state = null
+	Game.load_game()
+	nd_c = Game.state.clients[0]
+	check(nd_c.has("needsSat") and nd_c.needsSat.size() == 5, "Migration rüstet needsSat bei alten Ständen nach")
+	# Drift: Lücke zehrt Sicherheit und Anerkennung, füllt Ruhe
+	var nd_sich0: float = nd_c.needsSat.sicherheit
+	var nd_ruhe0: float = nd_c.needsSat.ruhe
+	Needs.tick_client(nd_c)
+	check(float(nd_c.needsSat.sicherheit) < nd_sich0 and float(nd_c.needsSat.ruhe) > nd_ruhe0, "Lücken zehren Sicherheit, Ruhe erholt sich")
+	# Drift: Prestige-Hauptrolle füttert Anerkennung und Kunst, zehrt Ruhe
+	Game.quick_production(nd_c, {"genre": "drama", "prestige": 2})
+	var nd_aner0: float = nd_c.needsSat.anerkennung
+	var nd_kunst0: float = nd_c.needsSat.kunst
+	var nd_ruhe1: float = nd_c.needsSat.ruhe
+	Needs.tick_client(nd_c)
+	check(float(nd_c.needsSat.anerkennung) > nd_aner0 and float(nd_c.needsSat.kunst) > nd_kunst0, "Prestige-Hauptrolle füttert Anerkennung und Kunst")
+	check(float(nd_c.needsSat.ruhe) < nd_ruhe1, "Dreharbeiten zehren die Ruhe")
+	# Engpass wirkt über Laune und Loyalität
+	nd_c.needsSat.sicherheit = 10.0
+	var nd_mood0: float = nd_c.mood
+	var nd_loy0: float = nd_c.loyalty
+	Needs.tick_client(nd_c)
+	check(float(nd_c.mood) < nd_mood0, "Engpass unter 35 drückt die Laune")
+	check(float(nd_c.loyalty) < nd_loy0, "Engpass unter 20 kostet zusätzlich Loyalität")
+	check(Needs.grievance_cause(nd_c).contains("certainty"), "grievance_cause benennt den Engpass konkret")
+	nd_c.mood = 30.0
+	var nd_emo: Dictionary = Emotions.true_state("client", {"cid": int(nd_c.id)})
+	check(str(nd_emo.cause).contains("certainty"), "Der Engpass verfeinert die Ursache im Emotionsmodell")
+	Game.state.instinct = 0
+	Game.state.attributes["menschenkenntnis"] = 20.0
+	check(Needs.visible_line(nd_c) == "", "Unter Menschenkenntnis 30 bleibt das Innenleben unsichtbar")
+	Game.state.attributes["menschenkenntnis"] = 40.0
+	check(Needs.visible_line(nd_c).contains("What drives them"), "Ab 30 zeigt die Karte das Top-Bedürfnis")
+	Game.state.attributes["menschenkenntnis"] = 60.0
+	check(Needs.visible_line(nd_c).contains("starving"), "Ab 55 wird der Engpass benannt")
+	Game.state.attributes["menschenkenntnis"] = 80.0
+	check(Needs.visible_line(nd_c).contains("·"), "Ab 75 erscheint das volle Mini-Profil")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

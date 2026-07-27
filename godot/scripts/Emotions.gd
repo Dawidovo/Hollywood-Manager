@@ -136,11 +136,13 @@ func _true_client(c: Dictionary) -> Dictionary:
 	var films: Array = c.get("films", [])
 	if films.size() and str(films[0].get("verdict", "")) == "Hit" and int(films[0].get("year", 0)) >= int(Game.state.year) - 1:
 		return _mk("hopeful", 55.0 + float(c.heat) * 3.0, "the hit \"%s\" is still ringing" % str(films[0].title))
-	# 6) Miese Laune, wacklige Bindung, oder echtes Zutrauen.
+	# 6) Miese Laune, wacklige Bindung, oder echtes Zutrauen. Der konkrete
+	# Bedürfnis-Engpass (Teil C1) ersetzt die generische Stimmungsfloskel.
+	var needs_cause := Needs.grievance_cause(c)
 	if float(c.mood) < MOOD_BAD:
-		return _mk("irritated", 70.0 - float(c.mood), "the mood has curdled — too little has gone right lately")
+		return _mk("irritated", 70.0 - float(c.mood), needs_cause if needs_cause != "" else "the mood has curdled — too little has gone right lately")
 	if float(c.loyalty) < LOYALTY_SHAKY:
-		return _mk("wary", 60.0 - float(c.loyalty), "they are quietly weighing their options elsewhere")
+		return _mk("wary", 60.0 - float(c.loyalty), needs_cause if needs_cause != "" else "they are quietly weighing their options elsewhere")
 	if float(c.get("trust", 30.0)) >= TRUST_WARM and float(c.mood) >= MOOD_GOOD:
 		return _mk("warm", (float(c.trust) + float(c.mood)) / 2.0, "trust built over kept appointments and honest counsel")
 	if float(c.mood) >= MOOD_GOOD:

@@ -77,6 +77,11 @@ func _render_klienten() -> void:
 			sv.add_child(sl)
 			sv.add_child(main._bar(stat[1], stat[2]))
 			row.add_child(sv)
+		# Innenleben (Teil C1): „What drives them“ — Sichtbarkeit gestaffelt
+		# über Menschenkenntnis; unter Stufe 1 fehlt die Zeile ganz.
+		var drives_line := Needs.visible_line(c)
+		if drives_line != "":
+			box.add_child(main._lbl(drives_line, 12, main.AMBER))
 		box.add_child(main._lbl("🧬 Career DNA — public image: “%s”" % CareerDNA.dna_label(c), 13, main.ACC))
 		for ax in CareerDNA.DNA_AXES:
 			box.add_child(main._dna_row(ax, c.dna[ax.key]))

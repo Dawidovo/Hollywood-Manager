@@ -164,6 +164,8 @@ func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
 	var base_weight := Game.client_base_weight(c)
 	var weight_start := float(c.get("weightKg", base_weight))
 	var weight_next := weight_start
+	# Innenleben (Teil C1): Erholung füllt die Ruhe, PR/Galas zehren sie.
+	Needs.on_planner_week(c, counts)
 	var n_erh := int(counts.get("erholung", 0))
 	if n_erh > 0:
 		c.exhaustion = clampf(c.exhaustion - 0.6 * n_erh, 0.0, 100.0)

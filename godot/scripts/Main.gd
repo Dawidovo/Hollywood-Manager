@@ -235,6 +235,10 @@ func _ready() -> void:
 		var c = Game.state.clients[0]
 		c.dna = {"romantik": 62.0, "popular": 45.0, "verlass": -20.0, "unikat": 12.0, "familie": -35.0}
 		c.films.push_front({"title": "Gilda", "year": 1950, "verdict": "Hit", "quality": 71, "lead": true})
+		# Innenleben (Teil C1): volle Bedürfniszeile bei Menschenkenntnis 80
+		Game.state.attributes["menschenkenntnis"] = 80.0
+		Needs.ensure_client(c)
+		c.needsSat.ruhe = 28.0
 		_switch_tab("klienten")
 		await _take_shot("client")
 	elif args.has("--shot-deal"):

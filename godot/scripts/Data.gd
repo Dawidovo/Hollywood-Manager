@@ -51,6 +51,7 @@ var STAFF_FOCI: Dictionary = {}
 var STAFF_TRAITS: Dictionary = {}
 var ATTRIBUTES: Dictionary = {}
 var EMOTIONS: Dictionary = {}
+var NEEDS: Dictionary = {}
 
 
 func _init() -> void:
@@ -81,6 +82,7 @@ func reload() -> void:
 	ETHNICITIES = DataLoader.load_dict("ethnicities")
 	ATTRIBUTES = DataLoader.load_dict("attributes")
 	EMOTIONS = DataLoader.load_dict("emotions")
+	NEEDS = DataLoader.load_dict("needs")
 	CAREER_LEVELS = DataLoader.load_entries("career", ["id"],
 		{"salary": 600, "living": 350, "req": {}}, ["id", "name"])
 	REPUTATION_TITLES = DataLoader.load_dict("reputation")

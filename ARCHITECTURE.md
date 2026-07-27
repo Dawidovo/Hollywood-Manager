@@ -44,6 +44,7 @@ Alle Systeme sind Autoloads (Singletons):
 | `Network` | `scripts/Network.gd` | Kontaktnetz: Beziehungsdimensionen, subjektive Reputation, Wissensfluss, Gala, NPC-Karrieren | ~1000 Zeilen |
 | `Emotions` | `scripts/Emotions.gd` | Emotionsmodell: wahre Emotion abgeleitet aus Fakten, wahrgenommene über Menschenkenntnis-Stufen | klein |
 | `Press` | `scripts/Press.gd` | Pressekonferenz-Auslöser & Cooldowns (Szene/Brief sind Daten) | klein |
+| `Needs` | `scripts/Needs.gd` | Klienten-Bedürfnisse: deterministisches Profil, gespeicherte Sättigung, Drift & Engpass-Wirkung | klein |
 | `Dialogs` | `scripts/Dialogs.gd` | Dialogbäume, Wochenpost, Relevanz-Dispatcher (Digest/Notiz/Kurzdialog/Szene), Gesprächsgedächtnis | ~600 Zeilen |
 | `Staff` | `scripts/Staff.gd` | Mitarbeiter & Delegation: Desks, Empfehlungen, Autonomie-Modi, Eskalationsregeln, Abspaltungen | ~400 Zeilen |
 | `Newspaper` | `scripts/Newspaper.gd` | Presse/Chronik | klein |

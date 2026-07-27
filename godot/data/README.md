@@ -21,6 +21,7 @@ No code needed.
 | `ethnicities/` | Display names for ethnicities | Object | ethnicity code |
 | `attributes/` | Player attributes (name, icon, desc; values grow through use) | Object | attribute key |
 | `emotions/` | Core emotions of the social simulation (name, icon, desc, valence) | Object | emotion key |
+| `needs/` | Client needs (name, icon, desc) — profile is derived, satisfaction is save state | Object | need key |
 | `career/` | Career ladder (Junior → Mogul) | List | `id` |
 | `reputation/` | Earned reputation titles | Object | identity key |
 | `locations/` | Node map (places, travel, actions) | List | `id` |
@@ -113,6 +114,21 @@ valence is readable (with a chance of a plausibly WRONG neighbor emotion),
 up to 54 the emotion is read correctly but vaguely, up to 74 clearly, and
 from 75 the concrete cause is named. Misreads are deterministic per subject
 and week — reloading does not reroll them. Thresholds live in `Balance.gd`.
+
+## Needs (`needs/core.json`)
+
+Five client needs (`anerkennung`, `sicherheit`, `kunst`, `geld`, `ruhe`),
+each `{name, icon, desc}`. Two layers: the **profile** (what drives this
+person) is derived deterministically from the actor id with nudges (high
+ego → recognition, low peak fame → security, prestige genres → art) and is
+never saved; the **satisfaction** (`c.needsSat`, 0–100, starts at 55) is
+save state and drifts monthly — roles and releases feed recognition, art
+and money, gaps drain security, PR and galas drain peace, rest (weekly
+planner) refills it. Effects run only through existing mechanics: the worst
+need below 35 costs mood, below 20 additionally loyalty. The client card
+shows a "What drives them" line staged by the insight attribute; the worst
+need also sharpens the emotion model's stated cause. Thresholds in
+`Balance.gd`, drift rates in `Needs.gd`.
 
 ## Career, reputation, locations & contacts (manager systems)
 
