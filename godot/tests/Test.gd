@@ -2331,6 +2331,29 @@ func _ready() -> void:
 	check(bool(pc_view.done), "Podium-Pfad (Demut → Statement → früher Schluss) läuft durch")
 	check(float(pc_loud.belief) < pc_belief0, "Die Pressekonferenz nimmt dem Gerücht Glauben")
 
+	# Ära-Formate (Teil B3): Jahresfenster, Bäume, virale Kette
+	Game.new_game("Formate", 1950)
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var fmt_c: Dictionary = Game.state.clients[0]
+	fmt_c.fame = 55.0
+	for fmt_id in ["radio_hour", "tv_talk_show", "boulevard_shoot", "social_qa"]:
+		check(Dialogs.has_dialog(str(fmt_id)), "Format-Baum geladen: %s" % str(fmt_id))
+	check(Dialogs.validate_defs().is_empty(), "Ära-Formate laden warnungsfrei")
+	check(Dialogs.spawn_letter("radio_fanmag").is_empty(), "Radio-Format endet 1945")
+	check(Dialogs.spawn_letter("boulevard_story").is_empty(), "Boulevard beginnt erst 1980")
+	check(Dialogs.spawn_letter("social_stream").is_empty(), "Social beginnt erst 2010")
+	check(not Dialogs.spawn_letter("tv_talk").is_empty(), "Live-TV-Talk liegt im Fenster 1946–79")
+	Game.state.year = 1940
+	var fmt_radio: Dictionary = Dialogs.spawn_letter("radio_fanmag")
+	check(not fmt_radio.is_empty() and str(fmt_radio.get("ctx", {}).get("sid", "")) != "", "Radio-Format im Fenster, mit gebundenem Studio (studio_rel-Patzer)")
+	Game.state.year = 1950
+	var fmt_ev = EvEngine.build_by_id("viral_clip", {"cid": int(fmt_c.id)})
+	check(fmt_ev != null, "Der virale Clip baut sich als Kettenglied")
+	fmt_ev.choices[0].fn.call()
+	check(Game.state.quests.any(func(q): return str(q.id) == "viral_clip"), "Die Clip-Kette erscheint als Auftrag im Journal (quest-Block)")
+	check(Game.state.followups.any(func(fu): return str(fu.get("event", "")) == "viral_aftermath"), "Der Nachhall des Clips ist terminiert")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

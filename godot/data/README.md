@@ -205,8 +205,10 @@ after):
 
 Letter conditions also accept `requires_client` (same filter object as
 events, e.g. `{"min_fame": 40}` — the picked client is bound to the letter,
-so `{client}` and all client effect ops target them) and
-`"requires_rumor_known": true` (only when the player knows a rumor).
+so `{client}` and all client effect ops target them),
+`"requires_studio": true` (binds a random active studio, so `{studio}` and
+`studio_rel` effects work) and `"requires_rumor_known": true` (only when
+the player knows a rumor).
 Letters spawned by code can carry extra effect context (`sid`, `cid`);
 it persists on the letter and flows into every choice effect and any
 dialog the letter opens.

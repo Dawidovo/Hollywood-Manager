@@ -495,6 +495,8 @@ func _letter_conditions_ok(def: Dictionary) -> bool:
 		return false
 	if bool(conds.get("requires_rumor_known", false)) and not _st().rumors.any(func(r): return bool(r.knownToPlayer)):
 		return false
+	if bool(conds.get("requires_studio", false)) and Game.active_studios().is_empty():
+		return false
 	if conds.has("chance") and not Util.chance(float(conds.chance)):
 		return false
 	return true
@@ -558,6 +560,14 @@ func _spawn_letter_with(def: Dictionary, sender: Dictionary, extra_ctx: Dictiona
 		ctx["cid"] = int(Util.pick(cands).id)
 		extra_ctx = extra_ctx.duplicate()
 		extra_ctx["cid"] = int(ctx.cid)
+	# requires_studio bindet analog ein aktives Studio (für studio_rel-Ops).
+	if bool(def.get("conditions", {}).get("requires_studio", false)) and not ctx.has("sid"):
+		var studios: Array = Game.active_studios()
+		if studios.is_empty():
+			return {}
+		ctx["sid"] = str(Util.pick(studios).id)
+		extra_ctx = extra_ctx.duplicate()
+		extra_ctx["sid"] = str(ctx.sid)
 	var letter := {"id": Game.next_id(), "tid": template_id, "mi": Game.mi(), "wi": Game.wi(),
 		"from": sender, "subject": EvEngine.subst(str(def.get("subject", "…")), ctx),
 		"body": EvEngine.subst(str(def.get("body", "")), ctx),

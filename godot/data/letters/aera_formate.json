@@ -1,0 +1,50 @@
+{
+  "entries": [
+    {"id": "radio_fanmag", "weight": 2, "from_type": "journalist",
+      "conditions": {"max_year": 1945, "requires_client": {"min_fame": 25}, "requires_studio": true},
+      "subject": "The radio hour wants {client}",
+      "body": "[i]“Fifteen minutes on the air, a fan-magazine spread to follow, and every soda fountain in America talking about it. The sponsors adore {client} — don't make me tell them no.”[/i]\n\nRadio is live, national and unforgiving. One flubbed line travels further than ten good pictures.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Book the broadcast (1⏱)", "requirements": {"ap": 1}, "dialog": "radio_hour"},
+        {"label": "Pass — keep the mystery",
+          "effects": [{"op": "log", "text": "You pass on the radio hour for {client}. The sponsors sigh, audibly.", "type": "info"}],
+          "outcome": "The slot goes to a rival's client. Their voice, their risk, their fifteen minutes."}]},
+
+    {"id": "tv_talk", "weight": 2, "from_type": "journalist",
+      "conditions": {"min_year": 1946, "max_year": 1979, "requires_client": {"min_fame": 35}},
+      "subject": "The late show wants {client} on the couch",
+      "body": "[i]“Live television, twenty million living rooms, one couch. {client} charms the host and owns the week — or stumbles once and owns the week anyway, the other way.”[/i]\n\nLive TV is the fastest heat in the business, and heat burns in both directions.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Take the couch (1⏱)", "requirements": {"ap": 1}, "dialog": "tv_talk_show"},
+        {"label": "Decline — film stars don't do television",
+          "effects": [{"op": "heat", "amount": -1},
+            {"op": "log", "text": "{client} skips the late show. The host makes a joke about it on air.", "type": "info"}],
+          "outcome": "The host fills ninety seconds with jokes about empty couches. The audience laughs. Twice."}]},
+
+    {"id": "boulevard_story", "weight": 2, "from_type": "journalist",
+      "conditions": {"min_year": 1980, "max_year": 2009, "requires_client": {"min_fame": 30}},
+      "subject": "An at-home story on {client} — friendly, promise",
+      "body": "[i]“Full-color spread, eight pages, {client} at home with the dogs and the espresso machine. We shoot Tuesday. And of course my editor will want a little... texture. Readers love texture.”[/i]\n\nThe boulevard press pays in reach and collects in privacy. The interest rate is brutal.",
+      "expire_weeks": 2,
+      "choices": [
+        {"label": "Stage the at-home story (1⏱)", "requirements": {"ap": 1}, "dialog": "boulevard_shoot"},
+        {"label": "Keep the front door shut",
+          "effects": [{"op": "dims", "irritation": 2},
+            {"op": "log", "text": "No at-home story for {client}. The magazine will find its texture elsewhere — possibly about you.", "type": "info"}],
+          "outcome": "The editor's reply is one line: “We'll manage without access.” That sentence has teeth."}]},
+
+    {"id": "social_stream", "weight": 2, "from_type": "journalist",
+      "conditions": {"min_year": 2010, "requires_client": {"min_fame": 25}},
+      "subject": "Live Q&A: {client}, trending by Friday",
+      "body": "[i]“One hour, live, unfiltered — {client} answering fan questions on stream. The algorithm is hungry and it likes faces it already knows. We clip the best moments and ride the feed all weekend.”[/i]\n\nEverything is content now. Including, if the hour goes wrong, the going-wrong.",
+      "expire_weeks": 1,
+      "choices": [
+        {"label": "Go live (1⏱)", "requirements": {"ap": 1}, "dialog": "social_qa"},
+        {"label": "Stay off the feed",
+          "effects": [{"op": "heat", "amount": -1},
+            {"op": "log", "text": "{client} stays off the stream. The algorithm forgets faces fast.", "type": "info"}],
+          "outcome": "No stream, no clips, no risk. Also: no heat. The feed scrolls on without you."}]}
+  ]
+}

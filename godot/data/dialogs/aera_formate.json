@@ -1,0 +1,206 @@
+{
+  "entries": [
+    {"id": "radio_hour", "title": "📻 The radio hour: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["A studio smelling of hot tubes and cold coffee. The sponsor's man watches from the booth; the studio's man watches the sponsor's man. {client} clutches the script like a life vest."],
+          "reads": {
+            "unreadable": "Under the studio lights, {client}'s face is all makeup and resolve.",
+            "likely": "Nervous, probably — or just very still.",
+            "clear": "Stage fright, the real kind. The script pages are trembling at the corners.",
+            "certain": "You can see it precisely: {client} will be fine for exactly as long as nothing goes off script."
+          },
+          "choices": [
+            {"label": "Drill the anecdotes one last time", "goto": "on_air",
+              "effects": [{"op": "mood", "amount": 2}]},
+            {"label": "Talk the producer into script approval", "check": {"attr": "verhandlung", "dc": 45, "success": "approved", "fail": "on_air"}},
+            {"label": "Calm the nerves with one good story", "goto": "on_air", "requires_emotion": ["anxious"],
+              "effects": [{"op": "mood", "amount": 5}, {"op": "trust", "amount": 2}]}
+          ]},
+        "approved": {
+          "text": ["The producer initials your changes: two questions gone, one anecdote added. Live radio with an approved script is almost — almost — safe."],
+          "effects": [{"op": "xp", "field": "media", "amount": 1}],
+          "choices": [{"label": "On air", "goto": "on_air_safe"}]},
+        "on_air": {
+          "text": ["ON AIR. The host is warm, the sponsor happy — then a question that is not on the card: about money, or love, or both. The nation leans in."],
+          "choices": [
+            {"label": "Steer {client} back to the script, live", "check": {"attr": "diskretion", "dc": 45, "success": "end_good", "fail": "end_flub"}},
+            {"label": "Let {client} improvise and pray", "goto": "end_flub"}
+          ]},
+        "on_air_safe": {
+          "text": ["ON AIR. With the script approved, the hour glides — anecdote, laughter, sponsor's message, applause. Radio at its most merciful."],
+          "choices": [{"label": "Ride it home", "goto": "end_good"}]},
+        "end_good": {"end": true,
+          "text": ["The fan magazines run the photo spread; the sponsor sends cigars. For a week, {client}'s voice is in every kitchen in America — saying exactly what you wanted said."],
+          "effects": [{"op": "heat", "amount": 1}, {"op": "fame", "amount": 1}, {"op": "studio_rel", "amount": 2},
+            {"op": "press_event", "cat": "Press", "text": "Radio night: America falls for {client}'s voice"},
+            {"op": "log", "text": "The radio hour with {client} lands clean — the sponsors purr.", "type": "deal"}]},
+        "end_flub": {"end": true,
+          "text": ["One flubbed name, one nervous laugh in the wrong place — nothing, really. But the studio hears it, the sponsor hears it, and in 1930s Hollywood the studios ARE the sponsors."],
+          "effects": [{"op": "studio_rel", "amount": -5}, {"op": "mood", "amount": -3},
+            {"op": "press_event", "cat": "Press", "text": "On-air stumble: the {client} broadcast the studios keep replaying"},
+            {"op": "log", "text": "The radio flub costs standing where it hurts: on the lot.", "type": "bad"}]}
+      }},
+
+    {"id": "tv_talk_show", "title": "📺 Live on the couch: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["Green room, twenty minutes to air. The host's booker swears the questions are friendly. Bookers always swear that. Twenty million living rooms will not care what was sworn."],
+          "reads": {
+            "unreadable": "{client} is doing breathing exercises. Beyond that, nothing.",
+            "likely": "Keyed up — the good kind or the bad kind, you cannot tell yet.",
+            "clear": "Wound tight. Live television does that to people who remember it is live.",
+            "certain": "You see the exact fault line: {client} can charm any question except the one about the picture that flopped."
+          },
+          "choices": [
+            {"label": "Prep the pivot lines one more time", "goto": "couch",
+              "effects": [{"op": "mood", "amount": 2}]},
+            {"label": "Read the host backstage first", "check": {"attr": "menschenkenntnis", "dc": 55, "success": "host_read", "fail": "couch"}},
+            {"label": "Channel the nerves into charm", "goto": "couch", "requires_emotion": ["anxious", "hopeful"],
+              "effects": [{"op": "trust", "amount": 2}]}
+          ]},
+        "host_read": {
+          "text": ["Two minutes of small talk and you have the host's plan: soft open, one ambush in the middle, redemption at the end. Knowing the map is half the broadcast."],
+          "effects": [{"op": "xp", "field": "people", "amount": 1}],
+          "choices": [{"label": "Brief {client} on the ambush", "goto": "couch_armed"}]},
+        "couch": {
+          "text": ["Lights, band, applause. Four good minutes — then the host leans in with the smile that means the ambush is here, live and in color."],
+          "choices": [
+            {"label": "The rehearsed pivot, delivered cold", "check": {"attr": "diskretion", "dc": 60, "success": "end_hit", "fail": "end_bomb"}},
+            {"label": "Let {client} take it unrehearsed", "check": {"attr": "menschenkenntnis", "dc": 65, "success": "end_hit", "fail": "end_bomb"}}
+          ]},
+        "couch_armed": {
+          "text": ["The ambush arrives exactly where you mapped it — and {client}, forewarned, meets it like a rehearsed encore."],
+          "choices": [
+            {"label": "Spring the prepared counter-line", "check": {"attr": "diskretion", "dc": 50, "success": "end_hit", "fail": "end_bomb"}},
+            {"label": "Play it safe and run the clock", "goto": "end_even"}
+          ]},
+        "end_hit": {"end": true,
+          "text": ["The counter-line detonates into laughter and applause; even the host tips an invisible hat. Tomorrow the water coolers belong to {client}."],
+          "effects": [{"op": "heat", "amount": 2}, {"op": "player", "pubRep": 2}, {"op": "mood", "amount": 6},
+            {"op": "press_event", "cat": "Press", "text": "Late-night triumph: {client} owns the couch"},
+            {"op": "xp", "field": "media", "amount": 2},
+            {"op": "log", "text": "The talk show is a knockout — {client} is the week's hottest name.", "type": "deal"}]},
+        "end_even": {"end": true,
+          "text": ["No fireworks, no wounds — six pleasant minutes of television. In the live era, boring is a kind of victory."],
+          "effects": [{"op": "heat", "amount": 1}, {"op": "mood", "amount": 2},
+            {"op": "log", "text": "The couch visit passes without incident. Sometimes that is the job.", "type": "info"}]},
+        "end_bomb": {"end": true,
+          "text": ["The pause before the answer lasts three seconds. On film, three seconds is nothing. Live, in twenty million living rooms, it is a verdict."],
+          "effects": [{"op": "heat", "amount": -2}, {"op": "mood", "amount": -5},
+            {"op": "press_event", "cat": "Press", "text": "The three-second silence: {client}'s couch visit goes wrong"},
+            {"op": "rumor", "text": "After that talk-show silence, people wonder what {client} is hiding.", "truth": false, "topic": "skandal", "holders": ["Party guests"], "belief": 18, "known": true},
+            {"op": "log", "text": "Live TV shows no mercy: the couch visit costs {client} heat.", "type": "bad"}]}
+      }},
+
+    {"id": "boulevard_shoot", "title": "📸 The at-home story: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["Tuesday, nine a.m. Two vans, a stylist, a light man — and a reporter whose warm smile has ended four careers. The dogs are camera-ready. The espresso machine gleams. The trap is upholstered."],
+          "reads": {
+            "unreadable": "Everyone here is performing, including the dogs. Reading anyone is hopeless.",
+            "likely": "{client} is playing relaxed. Playing it well, mostly.",
+            "clear": "Under the pose, {client} is guarding a door — and hoping nobody asks which one.",
+            "certain": "You know exactly which door: the private one the editor sent this crew to find."
+          },
+          "choices": [
+            {"label": "Walk the rooms first, set the boundaries", "check": {"attr": "verhandlung", "dc": 50, "success": "controlled", "fail": "shoot"}},
+            {"label": "Trust the charm offensive", "goto": "shoot"},
+            {"label": "Brief {client}: it's a performance, not a confession", "goto": "shoot_braced", "requires_emotion": ["wary", "anxious"],
+              "effects": [{"op": "trust", "amount": 3}]}
+          ]},
+        "controlled": {
+          "text": ["Three rooms open, two locked, questions agreed in writing. The reporter signs with the amusement of someone who has broken better contracts — but the paper helps."],
+          "effects": [{"op": "xp", "field": "media", "amount": 1}],
+          "choices": [{"label": "Start the shoot", "goto": "shoot_braced"}]},
+        "shoot": {
+          "text": ["Between the sofa shot and the kitchen shot, the reporter drifts — casually, professionally — toward the private life. The tape recorder was never off."],
+          "choices": [
+            {"label": "Intercept every third question, smiling", "check": {"attr": "diskretion", "dc": 55, "success": "end_glossy", "fail": "end_expose"}},
+            {"label": "Hope {client} remembers the briefing", "goto": "end_expose"}
+          ]},
+        "shoot_braced": {
+          "text": ["The private questions come — and {client}, braced, hands back anecdotes so polished they squeak. The reporter's smile thins by a millimeter per hour."],
+          "choices": [
+            {"label": "Close the day one hour early, on a high", "goto": "end_glossy"},
+            {"label": "Push for the cover with one personal morsel", "check": {"attr": "diskretion", "dc": 60, "success": "end_cover", "fail": "end_expose"}}
+          ]},
+        "end_glossy": {"end": true,
+          "text": ["Eight pages, golden light, dogs. The texture the editor wanted turned out to be espresso and window views. Reach without wounds — the rarest trade in the boulevard economy."],
+          "effects": [{"op": "heat", "amount": 1}, {"op": "mood", "amount": 4},
+            {"op": "press_event", "cat": "Press", "text": "At home with {client}: eight golden pages"},
+            {"op": "log", "text": "The at-home story runs glossy and harmless. A boulevard miracle.", "type": "deal"}]},
+        "end_cover": {"end": true,
+          "text": ["One true, tiny, harmless secret — traded for the cover. The issue sells out. {client} calls, half horrified, half thrilled. The morsel cost nothing you will miss. Probably."],
+          "effects": [{"op": "heat", "amount": 2}, {"op": "fame", "amount": 1}, {"op": "mood", "amount": 2},
+            {"op": "press_event", "cat": "Press", "text": "Cover story: {client}, closer than ever before"},
+            {"op": "log", "text": "The cover gambit pays off — {client} owns the newsstand.", "type": "deal"}]},
+        "end_expose": {"end": true,
+          "text": ["The spread runs with three photos you approved and one you never saw — a doorway, a shadow, a caption ending in a question mark. The boulevard always collects."],
+          "effects": [{"op": "mood", "amount": -6}, {"op": "dims", "irritation": 2},
+            {"op": "rumor", "text": "That doorway photo of {client} — the caption asked the question everyone now repeats.", "truth": false, "topic": "affäre", "holders": ["Journalists", "Party guests"], "belief": 24, "known": true},
+            {"op": "press_event", "cat": "Scandal", "text": "The {client} at-home story ends in a question mark"},
+            {"op": "log", "text": "The at-home story bites: one stolen frame becomes the week's whisper.", "type": "bad"}]}
+      }},
+
+    {"id": "social_qa", "title": "📱 Live stream: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["A ring light, two phones, a moderator reading a dashboard like a heart monitor. The chat is already scrolling faster than anyone can read. {client} waves at a camera the size of a coin."],
+          "reads": {
+            "unreadable": "Between the ring light and the on-camera smile, nothing real gets through.",
+            "likely": "Loose, mostly. The chat's speed is rattling them a little.",
+            "clear": "Confident on the surface, one bad comment away from reading the whole chat.",
+            "certain": "You can see the exact risk: {client} will answer honestly — including the one question that should not be answered honestly."
+          },
+          "choices": [
+            {"label": "Run the scripted version — approved questions only", "goto": "stream_safe"},
+            {"label": "Go raw — real questions, real answers", "check": {"attr": "menschenkenntnis", "dc": 50, "success": "stream_raw", "fail": "stream_wobble"}},
+            {"label": "Hype them up — the feed rewards joy", "goto": "stream_raw", "requires_emotion": ["hopeful", "warm"],
+              "effects": [{"op": "mood", "amount": 3}]}
+          ]},
+        "stream_safe": {
+          "text": ["Forty smooth minutes. The chat calls it 'scripted' within ninety seconds, because it is. Safe content is content the feed forgets by morning."],
+          "choices": [
+            {"label": "Bank the small win and log off", "goto": "end_mild"},
+            {"label": "Open the last ten minutes to the chat", "check": {"attr": "diskretion", "dc": 55, "success": "end_viral_good", "fail": "end_misquote"}}
+          ]},
+        "stream_raw": {
+          "text": ["It works — {client} riffs, laughs at the right memes, dodges the traps like a pro. The concurrent counter climbs. Then the moderator's eyes widen: THE question, top-voted, unavoidable."],
+          "choices": [
+            {"label": "One beat of honesty, precisely rationed", "check": {"attr": "diskretion", "dc": 55, "success": "end_viral_good", "fail": "end_misquote"}},
+            {"label": "Joke past it and pin a fan question", "goto": "end_mild"}
+          ]},
+        "stream_wobble": {
+          "text": ["Raw was the wrong call: the chat smells hesitation and starts hunting. The moderator is muting slurs with both hands. This needs to land NOW."],
+          "choices": [
+            {"label": "Cut to a planned segment, smooth as silk", "check": {"attr": "diskretion", "dc": 60, "success": "end_mild", "fail": "end_misquote"}},
+            {"label": "Pull the plug — 'technical difficulties'", "goto": "end_plug"}
+          ]},
+        "end_viral_good": {"end": true,
+          "text": ["The honest beat becomes the clip of the weekend — sincere, quotable, thirty seconds. The algorithm feeds it to everyone {client} has ever met, and for once that is a good thing."],
+          "effects": [{"op": "heat", "amount": 2}, {"op": "fame", "amount": 1}, {"op": "player", "pubRep": 2},
+            {"op": "press_event", "cat": "Press", "text": "The {client} clip everyone is sharing — for the right reasons"},
+            {"op": "xp", "field": "media", "amount": 2},
+            {"op": "log", "text": "The stream lands: {client} trends, sincerely.", "type": "deal"}]},
+        "end_mild": {"end": true,
+          "text": ["A pleasant hour, some decent clips, numbers the platform calls 'solid'. The feed scrolls on. Nobody is hurt. Nobody is famous-er, either."],
+          "effects": [{"op": "heat", "amount": 1},
+            {"op": "log", "text": "The stream runs solid and forgettable — which, online, is a passing grade.", "type": "info"}]},
+        "end_plug": {"end": true,
+          "text": ["The stream dies mid-sentence. 'Technical difficulties' trends for an hour, mostly with skull emojis. Could be worse. Online, it can always be worse."],
+          "effects": [{"op": "heat", "amount": -1}, {"op": "mood", "amount": -3},
+            {"op": "log", "text": "The plug gets pulled on {client}'s stream. The chat writes its own ending.", "type": "bad"}]},
+        "end_misquote": {"end": true,
+          "text": ["Eleven words, clipped out of ninety honest seconds, are already traveling faster than any correction ever will. By midnight the clip has a soundtrack. By morning it has merchandise."],
+          "effects": [{"op": "mood", "amount": -4}, {"op": "heat", "amount": -1},
+            {"op": "followup", "event": "viral_clip", "delay_weeks": 1},
+            {"op": "press_event", "cat": "Scandal", "text": "Eleven words: the {client} clip the internet will not put down"},
+            {"op": "log", "text": "A clipped quote from {client}'s stream goes viral — the wrong way.", "type": "bad"}]}
+      }}
+  ]
+}

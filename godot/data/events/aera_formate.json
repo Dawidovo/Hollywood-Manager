@@ -1,0 +1,37 @@
+{
+  "entries": [
+    {"id": "viral_clip", "followup_only": true,
+      "title": "📱 The clip that will not die",
+      "text": "One week later the eleven words are still everywhere: reaction videos, remixes, a late-night monologue. {client} has stopped reading the mentions. The question on your desk: feed the fire, starve it, or redirect it.",
+      "quest": {"title": "Kill the viral clip", "icon": "📱", "step": "Decide how to fight the {client} clip"},
+      "choices": [
+        {"label": "Own it — a fast, human apology video",
+          "effects": [{"op": "followup", "event": "viral_aftermath", "delay_weeks": 2},
+            {"op": "mood", "amount": 2},
+            {"op": "log", "text": "{client} posts the apology video. Now the internet decides what it was worth.", "type": "info"}],
+          "outcome": "Ninety unscripted seconds, posted before the lawyers could object. The comments split — but the tone shifts a degree."},
+        {"label": "Ignore it — the feed always moves on",
+          "effects": [{"op": "followup", "event": "viral_aftermath", "delay_weeks": 2},
+            {"op": "log", "text": "No statement on the {client} clip. You bet on the internet's short memory.", "type": "info"}],
+          "outcome": "Silence as strategy. It works more often than the commentators admit — and fails more loudly."}]},
+
+    {"id": "viral_aftermath", "followup_only": true,
+      "title": "📱 Two weeks later: the clip's afterlife",
+      "text": "The analytics are in. The clip peaked, dipped, twitched — and now hangs at the edge of the feed, waiting for a reason to come back. One good story would bury it for good.",
+      "quest": {"step": "Bury the clip under a better story"},
+      "choices": [
+        {"label": "Feed the algorithm a better {client} story",
+          "check": {"attr": "diskretion", "dc": 55},
+          "effects": [{"op": "heat", "amount": 1}, {"op": "mood", "amount": 4},
+            {"op": "press_event", "cat": "Press", "text": "The new {client} story that finally retired the clip"},
+            {"op": "log", "text": "A better story buries the clip. The feed has a new toy.", "type": "deal"}],
+          "outcome": "A charity visit, genuinely moving, expertly filmed. By Sunday the clip is a footnote to a better story.",
+          "effects_fail": [{"op": "heat", "amount": -2}, {"op": "fame", "amount": -2}, {"op": "mood", "amount": -4},
+            {"op": "log", "text": "The counter-story reads as damage control — and revives the clip instead.", "type": "bad"}],
+          "outcome_fail": "The planted story smells planted. The clip returns for a victory lap, now with commentary about the cover-up."},
+        {"label": "Let it burn out on its own",
+          "effects": [{"op": "heat", "amount": -1},
+            {"op": "log", "text": "The clip fades on its own schedule, taking a little of {client}'s heat with it.", "type": "info"}],
+          "outcome": "It fades. They always fade. What lingers is a faint asterisk next to {client}'s name in the feed's memory."}]}
+  ]
+}
