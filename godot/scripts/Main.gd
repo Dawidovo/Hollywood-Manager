@@ -81,6 +81,8 @@ var modal_queue: Array = []
 @onready var contacts_screen := preload("res://scripts/ui/ContactsScreen.gd").new(self)
 @onready var agency_screen := preload("res://scripts/ui/AgencyScreen.gd").new(self)
 @onready var clients_screen := preload("res://scripts/ui/ClientsScreen.gd").new(self)
+@onready var market_screens := preload("res://scripts/ui/MarketScreens.gd").new(self)
+@onready var world_screens := preload("res://scripts/ui/WorldScreens.gd").new(self)
 var modal_open := false
 var pool_filter := ""
 var nego_form: Dictionary = {}
@@ -1146,21 +1148,21 @@ func render() -> void:
 	match current_tab:
 		"buero": agency_screen._render_buero()
 		"privat": personal_screen._render_privat()
-		"lifestyle": _render_lifestyle()
-		"invest": _render_invest()
+		"lifestyle": world_screens._render_lifestyle()
+		"invest": world_screens._render_invest()
 		"kontakte": contacts_screen._render_kontakte()
-		"post": _render_post()
-		"orte": _render_orte()
+		"post": world_screens._render_post()
+		"orte": world_screens._render_orte()
 		"klienten": clients_screen._render_klienten()
-		"rumors": _render_rumors()
-		"zeitung": _render_zeitung()
-		"quests": _render_quests()
-		"pool": _render_pool()
-		"castings": _render_castings()
-		"filme": _render_filme()
-		"planer": _render_planer()
+		"rumors": market_screens._render_rumors()
+		"zeitung": world_screens._render_zeitung()
+		"quests": world_screens._render_quests()
+		"pool": market_screens._render_pool()
+		"castings": market_screens._render_castings()
+		"filme": market_screens._render_filme()
+		"planer": world_screens._render_planer()
 		"finanzen": finance_screen.render()
-		"chronik": _render_chronik()
+		"chronik": world_screens._render_chronik()
 	_render_sidebar()
 
 func _switch_tab(t: String) -> void:
@@ -1209,27 +1211,11 @@ func _stat_row(box: VBoxContainer, label: String, value: float, color: Color) ->
 
 # ---------- Dialog runner (Feature: Dialogsystem, data/dialogs) ----------
 func _start_dialog(id_s: String, ctx: Dictionary) -> void:
-	_render_dialog_view(Dialogs.start(id_s, ctx))
+	world_screens._render_dialog_view(Dialogs.start(id_s, ctx))
 
 func _dialog_choose(idx: int) -> void:
-	_render_dialog_view(Dialogs.choose(idx))
+	world_screens._render_dialog_view(Dialogs.choose(idx))
 
-func _render_dialog_view(view: Dictionary) -> void:
-	_open_modal()
-	modal_box.add_child(_lbl(str(view.title), 22, ACC))
-	modal_box.add_child(_rich(str(view.text), 14))
-	for line in view.get("lines", []):
-		modal_box.add_child(_rich("[color=#%s]▸ %s[/color]" % [AMBER.to_html(false), str(line)], 13))
-	if bool(view.get("done", false)):
-		modal_box.add_child(_btn("Continue", _modal_done, true))
-		return
-	for i in view.choices.size():
-		var ch: Dictionary = view.choices[i]
-		var b := _btn(str(ch.label), _dialog_choose.bind(i))
-		b.disabled = bool(ch.disabled)
-		if str(ch.get("reason", "")) != "":
-			b.tooltip_text = "⛔ " + str(ch.reason)
-		modal_box.add_child(b)
 
 # ---------- Contacts: relationships over real channels ----------
 func _on_contact_channel(cid: int, key: String) -> void:
@@ -1371,53 +1357,6 @@ func _on_letter_choice(lid: int, idx: int) -> void:
 	modal_box.add_child(_rich(str(res.text), 14))
 	modal_box.add_child(_btn("Continue", _modal_done, true))
 
-func _render_post() -> void:
-	var st = Game.state
-	var head = _card("This week's %s" % Dialogs.mail_word().to_lower(), Dialogs.mail_icon())
-	content_box.add_child(head[0])
-	head[1].add_child(_lbl("Everything that reaches your desk lands here: invitations, requests, demands, opportunities. Most of it can wait — none of it forever.", 12, DIM))
-	head[1].add_child(_lbl("Contact time this week: %d⏱ — some replies cost time, all of them say something about you." % int(st.contactAP), 11, DIM))
-	var letters: Array = Dialogs.open_letters()
-	if letters.is_empty():
-		head[1].add_child(_lbl("The tray is empty. Enjoy it — it never lasts.", 13, DIM))
-	for letter in letters:
-		var lv = _card("%s — %s" % [letter["from"].get("name", "?"), str(letter.subject)], Dialogs.mail_icon())
-		content_box.add_child(lv[0])
-		lv[1].add_child(_lbl("Received %s · expires %s" % [Game.mi_str(letter.mi), "soon" if Game.wi() >= int(letter.expireWi) else "in %d week(s)" % (int(letter.expireWi) - Game.wi())], 11, DIM))
-		lv[1].add_child(_rich(str(letter.body), 14))
-		var def: Dictionary = Dialogs.letter_def(str(letter.tid))
-		var flow := HFlowContainer.new()
-		flow.add_theme_constant_override("h_separation", 6)
-		flow.add_theme_constant_override("v_separation", 6)
-		lv[1].add_child(flow)
-		var choices: Array = def.get("choices", [])
-		for i in choices.size():
-			var ch: Dictionary = choices[i]
-			var b := _btn(EvEngine.subst(str(ch.get("label", "…")), Dialogs._letter_ctx(letter)), _on_letter_choice.bind(int(letter.id), i))
-			var reason: String = Dialogs.letter_choice_blocked(letter, ch)
-			b.disabled = reason != ""
-			if reason != "":
-				b.tooltip_text = "⛔ " + reason
-			flow.add_child(b)
-		# Notizen (Bedeutungsstaffelung): nur zur Kenntnis nehmen
-		if choices.is_empty():
-			flow.add_child(_btn("File away", _player_action.bind(Dialogs.dismiss_letter.bind(int(letter.id)))))
-	# Archiv: erledigte & verfallene Post der letzten Wochen
-	var archive: Array = st.inbox.filter(func(l): return str(l.status) != "open")
-	if not archive.is_empty():
-		var av = _card("Filed away", "🗄")
-		content_box.add_child(av[0])
-		archive.reverse()
-		for letter in archive.slice(0, 8):
-			var status := str(letter.status)
-			var color := GREEN if status == "done" else DIM
-			var line := "%s · %s — %s" % [Game.mi_str(letter.mi), letter["from"].get("name", "?"), str(letter.subject)]
-			if status == "expired":
-				line += "  (went unanswered)"
-			var al := _lbl(line, 12, color)
-			if str(letter.get("outcome", "")) != "":
-				al.tooltip_text = str(letter.outcome)
-			av[1].add_child(al)
 
 # ---------- Locations: the node map with presence ----------
 func _on_travel(id_s: String) -> void:
@@ -1434,45 +1373,6 @@ func _on_location_action() -> void:
 	modal_box.add_child(_rich(text_s, 14))
 	modal_box.add_child(_btn("Continue", _modal_done, true))
 
-func _render_orte() -> void:
-	var st = Game.state
-	var cur: Dictionary = Persona.location_def()
-	var head = _card("Presence", "🗺")
-	content_box.add_child(head[0])
-	head[1].add_child(_lbl("You are in: %s %s" % [str(cur.icon), str(cur.name)], 16, ACC))
-	if Persona.is_away():
-		head[1].add_child(_lbl("⚠ Without you in L.A.: clients lose trust and mood every week, and meetings or club nights with your contacts are impossible.", 12, AMBER))
-	else:
-		head[1].add_child(_lbl("Traveling costs the week's contact time, energy and agency expenses. Whoever is away misses what happens at home — and finds doors elsewhere that L.A. does not have.", 12, DIM))
-
-	var grid := _grid(520.0)
-	content_box.add_child(grid)
-	for loc in Data.LOCATIONS:
-		var id_s := str(loc.id)
-		var cv = _card("%s %s" % [str(loc.icon), str(loc.name)])
-		grid.add_child(cv[0])
-		var box: VBoxContainer = cv[1]
-		box.add_child(_lbl(str(loc.desc), 12, DIM))
-		if loc.has("months"):
-			box.add_child(_chip("📅 Season: %s" % Game.MONTHS[int(loc.months[0]) - 1], AMBER))
-		if id_s == Persona.location_id():
-			box.add_child(_chip("📍 You are here", GREEN))
-			if loc.get("action") != null:
-				box.add_child(_lbl(str(loc.action.desc), 11, DIM))
-				var ab := _btn("★ %s" % str(loc.action.name), _on_location_action, true)
-				ab.disabled = not Persona.location_action_available()
-				ab.tooltip_text = str(loc.action.desc) + ("" if not ab.disabled else "\n⛔ Already done this week")
-				box.add_child(ab)
-		else:
-			var cost := Persona.travel_cost(id_s)
-			var label := "✈ Travel there" if id_s != "la" else "✈ Back to Los Angeles"
-			if cost > 0.0:
-				label += " (−%s)" % Util.fmt_money(cost)
-			var tb := _btn(label, _on_travel.bind(id_s), id_s == "la")
-			var reason: String = Persona.travel_blocked_reason(id_s)
-			tb.disabled = reason != ""
-			tb.tooltip_text = "Costs the week's contact time and %d energy." % roundi(float(loc.energy)) + ("" if reason == "" else "\n⛔ " + reason)
-			box.add_child(tb)
 
 # ---------- Sidebar ----------
 # ---------- Lifestyle: real estate & status purchases (Feature 5) ----------
@@ -1489,70 +1389,6 @@ func _on_host_reception() -> void:
 	if text_s != "":
 		_show_simple_modal("🥂 Reception", text_s)
 
-func _render_lifestyle() -> void:
-	var st = Game.state
-	var home: Dictionary = Mogul.home_def()
-	var head = _card("Lifestyle", "🏠")
-	content_box.add_child(head[0])
-	head[1].add_child(_lbl("You live at: %s %s (tier %d)" % [str(home.icon), str(home.name), int(home.tier)], 16, ACC))
-	head[1].add_child(_lbl("Running lifestyle costs: %s/month (home & purchases, paid privately). Private account: %s." % [Util.fmt_money(Mogul.upkeep_total()), Util.fmt_money(st.player.cash)], 12, DIM))
-	head[1].add_child(_lbl("An address is a statement: prestige lifts your public name, privacy protects secrets, capacity lets you host — and whoever lives beneath their title pays for it in standing. Moving down is noticed.", 11, DIM))
-	if Mogul.can_host():
-		head[1].add_child(_btn("🥂 Host a reception (−%s, once a month)" % Util.fmt_money(Mogul.reception_cost()), _on_host_reception, true))
-	elif int(home.get("capacity", 0)) >= 3:
-		head[1].add_child(_lbl("A reception has already filled this month's calendar.", 11, DIM))
-
-	var grid := _grid(520.0)
-	content_box.add_child(grid)
-	var hv = _card("Residences", "🔑")
-	grid.add_child(hv[0])
-	for h in Data.ESTATE_HOMES:
-		var id_s := str(h.id)
-		var box := VBoxContainer.new()
-		box.add_theme_constant_override("separation", 2)
-		hv[1].add_child(box)
-		var current := id_s == Mogul.home_id()
-		box.add_child(_lbl("%s %s%s" % [str(h.icon), str(h.name), "  ← you live here" if current else ""], 14, ACC if current else TEXT_C))
-		box.add_child(_lbl(str(h.desc), 11, DIM))
-		var stats := "Prestige %d · Privacy %d · Guests %d · Upkeep %s/mo" % [int(h.prestige), int(h.privacy), int(h.capacity), Util.fmt_money(roundf(float(h.upkeep) * Util.infl(st.year)))]
-		if float(h.get("paparazzi", 0.0)) > 0.0:
-			stats += " · 📸 risk"
-		box.add_child(_lbl(stats, 11, DIM))
-		if not current:
-			var price := Mogul.home_price(id_s)
-			var label := "Move in (−%s" % Util.fmt_money(price)
-			if Mogul.home_value() > 0.0:
-				label += ", old home sells for %s" % Util.fmt_money(Mogul.home_value())
-			label += ")"
-			if int(h.tier) < int(home.get("tier", 0)):
-				label += " ⚠ downgrade"
-			var b := _btn(label, _estate_action.bind(Mogul.buy_home.bind(id_s)))
-			var reason := Mogul.home_blocked_reason(id_s)
-			b.disabled = reason != ""
-			b.tooltip_text = reason
-			box.add_child(b)
-
-	var pv = _card("Status purchases", "🛍")
-	grid.add_child(pv[0])
-	pv[1].add_child(_lbl("Every purchase buys access, time or protection — and adds to the monthly bill.", 11, DIM))
-	for pdef in Data.ESTATE_PURCHASES:
-		var pid := str(pdef.id)
-		var box2 := VBoxContainer.new()
-		box2.add_theme_constant_override("separation", 2)
-		pv[1].add_child(box2)
-		var owned := Mogul.owns(pid)
-		box2.add_child(_lbl("%s %s%s" % [str(pdef.icon), str(pdef.name), "  ✔ yours" if owned else ""], 14, ACC if owned else TEXT_C))
-		box2.add_child(_lbl("%s Upkeep %s/mo." % [str(pdef.desc), Util.fmt_money(roundf(float(pdef.upkeep) * Util.infl(st.year)))], 11, DIM))
-		if owned:
-			var value := Mogul.purchase_value(pid)
-			var sell_label := "Sell (+%s)" % Util.fmt_money(value) if value > 0.0 else "Cancel"
-			box2.add_child(_btn(sell_label, _player_action.bind(Mogul.sell_purchase.bind(pid))))
-		else:
-			var b2 := _btn("Buy (−%s private)" % Util.fmt_money(Mogul.purchase_price(pid)), _estate_action.bind(Mogul.buy_purchase.bind(pid)))
-			var reason2 := Mogul.purchase_blocked_reason(pid)
-			b2.disabled = reason2 != ""
-			b2.tooltip_text = reason2
-			box2.add_child(b2)
 
 # ---------- Investments: ticker, tips, film stakes, empire (Feature 7/9) ----------
 func _on_trade(id_s: String, action: String, amount: float) -> void:
@@ -1573,122 +1409,6 @@ func _on_stake(ref_id: int, type_s: String) -> void:
 		return
 	render()
 
-func _render_invest() -> void:
-	var st = Game.state
-	Mogul.ensure_prices()
-	var p: Dictionary = st.player
-	var head = _card("Your money", "📈")
-	content_box.add_child(head[0])
-	head[1].add_child(_lbl("Private account: %s · Portfolio: %s" % [Util.fmt_money(p.cash), Util.fmt_money(Mogul.portfolio_value())], 16, ACC))
-	head[1].add_child(_lbl("Everything here runs on private money — the agency till stays untouched. The interesting part is never the ticker itself: it is who whispers to you, and whom you owe when it pays off.", 11, DIM))
-	if Mogul.has_advisor():
-		var adv: Dictionary = st.invest.advisor
-		head[1].add_child(_lbl("💼 %s manages the portfolio (skill %d, fee %s/mo): acts on open tips — but their judgement is not always yours." % [str(adv.name), int(adv.skill), Util.fmt_money(Mogul.advisor_fee())], 12, TEXT_C))
-		head[1].add_child(_btn("Dismiss the financial manager", _player_action.bind(Mogul.fire_advisor)))
-	else:
-		head[1].add_child(_btn("💼 Hire a financial manager (fee ≈ %s/mo)" % Util.fmt_money(roundf(140.0 * Util.infl(st.year))), _player_action.bind(Mogul.hire_advisor)))
-
-	# Open tips
-	var open_tips: Array = st.invest.tips.filter(func(t): return not bool(t.resolved))
-	if not open_tips.is_empty():
-		var tv = _card("Whispers", "💹")
-		content_box.add_child(tv[0])
-		for tip in open_tips:
-			var def: Dictionary = Mogul.stock_def(str(tip.companyId))
-			tv[1].add_child(_lbl("%s %s: %s expects the stock to go %s (by %s).%s" % [str(def.get("icon", "📈")), str(def.get("name", tip.companyId)), str(tip.source), "up" if int(tip.dir) > 0 else "down", Game.mi_str(tip.dueMi), "  🤫 insider" if bool(tip.insider) else ""], 12, AMBER if bool(tip.insider) else TEXT_C))
-		tv[1].add_child(_lbl("Trading on insider whispers works — until the timing of your trades starts asking questions.", 11, DIM))
-
-	# Ticker
-	var sv = _card("The ticker", "🗠")
-	content_box.add_child(sv[0])
-	for def in Mogul.stock_defs():
-		var id_s := str(def.id)
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		sv[1].add_child(row)
-		var tr := Mogul.trend(id_s)
-		var arrow := "→"
-		if tr > 1.0:
-			arrow = "↗"
-		if tr < -1.0:
-			arrow = "↘"
-		var name_l := _lbl("%s %s" % [str(def.icon), str(def.name)], 12, TEXT_C)
-		name_l.custom_minimum_size = Vector2(230 * font_scale, 0)
-		name_l.autowrap_mode = TextServer.AUTOWRAP_OFF
-		name_l.tooltip_text = "%s — %s" % [str(def.sector), str(def.get("desc", ""))]
-		row.add_child(name_l)
-		var price_l := _lbl("$%.2f %s %+.1f%%" % [Mogul.price(id_s), arrow, tr], 12, GREEN if tr > 1.0 else (RED if tr < -1.0 else DIM))
-		price_l.custom_minimum_size = Vector2(130 * font_scale, 0)
-		price_l.autowrap_mode = TextServer.AUTOWRAP_OFF
-		row.add_child(price_l)
-		if Mogul.has_ability("market_nose"):
-			var drift_l := _lbl("nose: %s" % ("solid" if float(def.drift) >= 0.004 else "sluggish"), 11, DIM)
-			drift_l.autowrap_mode = TextServer.AUTOWRAP_OFF
-			row.add_child(drift_l)
-		var held := Mogul.shares_of(id_s)
-		if held > 0:
-			var held_l := _lbl("%d× (%s)" % [held, Util.fmt_money(held * Mogul.price(id_s))], 12, ACC)
-			held_l.autowrap_mode = TextServer.AUTOWRAP_OFF
-			row.add_child(held_l)
-		for budget in [500, 2500]:
-			var amount := roundf(float(budget) * Util.infl(st.year))
-			var bb := _btn("Buy %s" % Util.fmt_money(amount), _on_trade.bind(id_s, "buy", amount))
-			bb.disabled = float(p.cash) < amount
-			row.add_child(bb)
-		if held > 0:
-			row.add_child(_btn("Sell all", _on_trade.bind(id_s, "sell", 0.0)))
-
-	# Film stakes
-	var fv = _card("Film stakes", "🎬")
-	content_box.add_child(fv[0])
-	fv[1].add_child(_lbl("Equity (5% of budget) pays out with the box office. Profit points cost less (2%) but only pay on a real hit. Putting your own client into a picture you financed is lucrative — and a conflict of interest someone may notice.", 11, DIM))
-	for stk in st.filmStakes:
-		fv[1].add_child(_lbl("💼 “%s”: %s as %s%s%s" % [str(stk.title), Util.fmt_money(float(stk.amount)), "equity" if str(stk.type) == "equity" else "profit points", "  ⚠ conflict of interest" if bool(stk.conflict) else "", "  📣 boosted" if bool(stk.boosted) else ""], 12, AMBER if bool(stk.conflict) else TEXT_C))
-	for target in Mogul.stake_targets():
-		var ref: Dictionary = target.ref
-		var have: Dictionary = Mogul.stake_for(int(ref.id))
-		var row2 := HBoxContainer.new()
-		row2.add_theme_constant_override("separation", 8)
-		fv[1].add_child(row2)
-		var t_l := _lbl("“%s” (%s, budget %s)" % [str(ref.title), "casting" if str(target.phase) == "casting" else "shooting", Util.fmt_money(float(ref.get("budget", 0)))], 12, TEXT_C)
-		t_l.custom_minimum_size = Vector2(300 * font_scale, 0)
-		row2.add_child(t_l)
-		if have.is_empty():
-			for type_s in [["equity", "Equity"], ["points", "Points"]]:
-				var cost := Mogul.stake_cost(ref, str(type_s[0]))
-				var b3 := _btn("%s (−%s)" % [str(type_s[1]), Util.fmt_money(cost)], _on_stake.bind(int(ref.id), str(type_s[0])))
-				b3.disabled = Mogul.stake_blocked_reason(int(ref.id), str(type_s[0])) != ""
-				row2.add_child(b3)
-		elif str(target.phase) == "production" and not bool(have.boosted):
-			row2.add_child(_btn("📣 Marketing push (−%s)" % Util.fmt_money(roundf(2000.0 * Util.infl(st.year))), _estate_action.bind(Mogul.boost_marketing.bind(int(ref.id)))))
-
-	# Empire: takeovers & studio stakes (Feature 9)
-	if int(p.career) >= 4:
-		var ev = _card("Empire", "👑")
-		content_box.add_child(ev[0])
-		if st.rivals.is_empty():
-			ev[1].add_child(_lbl("No rival houses left standing. The market is yours.", 12, GREEN))
-		for rival in st.rivals:
-			var row3 := HBoxContainer.new()
-			row3.add_theme_constant_override("separation", 8)
-			ev[1].add_child(row3)
-			row3.add_child(_lbl_fill("%s — %d clients, grudge %d" % [str(rival.name), rival.clients.size(), roundi(float(rival.grudge))], 12, TEXT_C))
-			var cost4 := Mogul.takeover_cost(rival)
-			var tb := _btn("Buy them out (−%s private)" % Util.fmt_money(cost4), _estate_action.bind(Mogul.takeover.bind(str(rival.id))))
-			tb.disabled = Mogul.takeover_blocked_reason(str(rival.id)) != ""
-			tb.tooltip_text = Mogul.takeover_blocked_reason(str(rival.id))
-			row3.add_child(tb)
-		if int(p.career) >= 5:
-			ev[1].add_child(_lbl("A studio stake (10%%) costs %s: dividends on every release, permanent open doors — and a conflict of interest the whole town knows about." % Util.fmt_money(Mogul.studio_stake_cost()), 11, DIM))
-			for studio in Game.active_studios():
-				var sid := str(studio.id)
-				if st.endgame.studioStakes.has(sid):
-					ev[1].add_child(_lbl("✔ %s — you sit at their table." % str(studio.name), 12, GREEN))
-					continue
-				var sb := _btn("Buy into %s (−%s)" % [str(studio.name), Util.fmt_money(Mogul.studio_stake_cost())], _estate_action.bind(Mogul.buy_studio_stake.bind(sid)))
-				sb.disabled = Mogul.studio_stake_blocked_reason(sid) != ""
-				sb.tooltip_text = Mogul.studio_stake_blocked_reason(sid)
-				ev[1].add_child(sb)
 
 func _render_sidebar() -> void:
 	_clear(sidebar_box)
@@ -1929,57 +1649,6 @@ func _do_board_slot_add() -> void:
 	var p: int = _board_picker.tier.selected + 1
 	_show_simple_modal("Career board", Game.board_slot_add(int(_board_picker.cid), g, rt, p))
 
-# ---------- Tab: Rumors ----------
-func _render_rumors() -> void:
-	content_box.add_child(_lbl("🗣 The whisper of the town", 22, ACC))
-	content_box.add_child(_lbl("The public and the industry don't believe the same things. A lie can fizzle at the box office and still end a career behind studio doors.", 13, DIM))
-	var launch_card = _card("Launch a rumor", "🕸")
-	content_box.add_child(launch_card[0])
-	launch_card[1].add_child(_lbl("Deliberately seed a rumor about free or rival-represented talent. Risky: if the agency is exposed, reputation, trust and moral identity suffer.", 12, DIM))
-	var target_buttons := HFlowContainer.new()
-	target_buttons.add_theme_constant_override("h_separation", 6)
-	target_buttons.add_theme_constant_override("v_separation", 6)
-	for actor in Scandal.rumor_targets().slice(0, 6):
-		var owner = Rivals.rival_for_actor(str(actor.id))
-		var suffix := " · %s" % owner.name if owner != null else ""
-		target_buttons.add_child(_btn("🕸 %s%s" % [actor.name, suffix], _on_rumor_launch.bind(str(actor.id))))
-	launch_card[1].add_child(target_buttons)
-	var known: Array = Game.state.rumors.filter(func(r): return r.knownToPlayer)
-	known.sort_custom(func(a, b): return maxf(float(a.belief), float(a.get("industryBelief", 0.0))) > maxf(float(b.belief), float(b.get("industryBelief", 0.0))))
-	if known.is_empty():
-		var empty = _card("The anteroom is still quiet", "🤫")
-		empty[1].add_child(_lbl("Good assistants, studio contacts and a strong network let you hear earlier what the town is saying.", 13, DIM))
-		content_box.add_child(empty[0])
-		return
-	var grid := _grid(620.0)
-	content_box.add_child(grid)
-	for rumor in known:
-		var cv = _card(Scandal.rumor_subject_name(rumor), "🗣")
-		grid.add_child(cv[0])
-		var box: VBoxContainer = cv[1]
-		box.add_child(_rich("[i]“%s”[/i]" % rumor.text, 14))
-		var chips: Array = [_chip("Topic: %s" % str(rumor.topic).capitalize(), BLUE), _chip("⏳ %d month(s) in circulation" % int(rumor.age), DIM)]
-		if Scandal.player_knows_rumor_truth(rumor):
-			chips.append(_chip("🔒 Confirmed by your dossier", GREEN))
-		if rumor.belief >= 60:
-			chips.append(_chip("⚠ Publicly effective", RED))
-		if float(rumor.get("industryBelief", 0.0)) >= 60:
-			chips.append(_chip("🏛 Effective inside the industry", AMBER))
-		box.add_child(_chip_row(chips))
-		box.add_child(_lbl("Public %d/100" % roundi(rumor.belief), 12, RED if rumor.belief >= 60 else DIM))
-		box.add_child(_bar(rumor.belief, RED if rumor.belief >= 60 else ACC_DIM, 10))
-		box.add_child(_lbl("Industry %d/100" % roundi(float(rumor.get("industryBelief", 0.0))), 12, AMBER if float(rumor.get("industryBelief", 0.0)) >= 60 else DIM))
-		box.add_child(_bar(float(rumor.get("industryBelief", 0.0)), AMBER if float(rumor.get("industryBelief", 0.0)) >= 60 else BLUE, 10))
-		box.add_child(_lbl("👥 Known carriers: %s" % ", ".join(rumor.holders), 12, DIM))
-		var actions := HFlowContainer.new()
-		actions.add_theme_constant_override("h_separation", 6)
-		actions.add_theme_constant_override("v_separation", 6)
-		box.add_child(actions)
-		actions.add_child(_btn("📢 Deny", _on_rumor_action.bind(int(rumor.id), "deny")))
-		actions.add_child(_btn("🏛 Studio talks", _on_rumor_action.bind(int(rumor.id), "studio")))
-		actions.add_child(_btn("🤫 Suppress", _on_rumor_action.bind(int(rumor.id), "suppress"), true))
-		actions.add_child(_btn("🌀 Counter-rumor", _on_rumor_action.bind(int(rumor.id), "counter")))
-		actions.add_child(_btn("⏳ Wait it out", _on_rumor_action.bind(int(rumor.id), "wait")))
 
 func _on_rumor_action(rid: int, action: String) -> void:
 	var outcome := ""
@@ -1998,23 +1667,6 @@ func _on_secret_action(cid: int, type_s: String, action: String) -> void:
 	var outcome := Scandal.prepare_secret(cid, type_s) if action == "prepare" else Scandal.sell_secret(cid, type_s)
 	_show_simple_modal("Strictly confidential", outcome)
 
-# ---------- Tab: Talent pool ----------
-func _render_pool() -> void:
-	var st = Game.state
-	var filter_row := HBoxContainer.new()
-	content_box.add_child(filter_row)
-	var fe := LineEdit.new()
-	fe.placeholder_text = "🔍 Search name …"
-	fe.text = pool_filter
-	fe.custom_minimum_size = Vector2(240, 32)
-	fe.text_changed.connect(func(t): pool_filter = t; _refresh_pool_list())
-	filter_row.add_child(fe)
-	filter_row.add_child(_lbl_fill("  Big names only negotiate with agencies of standing. Values = industry assessment (spread).", 12, DIM))
-	var list := VBoxContainer.new()
-	list.name = "PoolList"
-	list.add_theme_constant_override("separation", 8)
-	content_box.add_child(list)
-	_fill_pool_list(list)
 
 func _refresh_pool_list() -> void:
 	var list = content_box.get_node_or_null("PoolList")
@@ -2232,64 +1884,6 @@ func _show_signed(terms: Dictionary) -> void:
 	if pev != null:
 		modal_queue.append(pev)
 
-# ---------- Tab: Castings ----------
-func _render_castings() -> void:
-	var st = Game.state
-	if int(st.strikeMonths) > 0:
-		var cv0 = _card("Strike!", "⚠")
-		cv0[1].add_child(_lbl("All castings rest for %d more month(s)." % int(st.strikeMonths), 13, DIM))
-		content_box.add_child(cv0[0])
-		return
-	# Coverage-Castings bleiben bis nächsten Monat verdeckt
-	var visible_castings: Array = st.castings.filter(func(cs): return not bool(cs.get("hidden", false)))
-	if visible_castings.is_empty():
-		var cv1 = _card("No open castings", "🎬")
-		cv1[1].add_child(_lbl("Next month the studios will announce new projects.", 13, DIM))
-		content_box.add_child(cv1[0])
-		return
-	var grid := _grid(620.0)
-	content_box.add_child(grid)
-	for cs in visible_castings:
-		var studio = Game._studio(cs.studioId)
-		var cv = _card("“%s”" % cs.title, GENRE_ICONS.get(cs.genre, "🎬"))
-		grid.add_child(cv[0])
-		var box: VBoxContainer = cv[1]
-		var rel: float = st.studioRel[cs.studioId]
-		box.add_child(_chip_row([
-			_chip(_genre_de(cs.genre), BLUE),
-			_chip("★".repeat(int(cs.prestige)) + "☆".repeat(3 - int(cs.prestige)), ACC),
-			_chip("⏳ %d wk" % int(cs.deadline), RED if int(cs.deadline) <= 4 else DIM),
-			_chip("🏛 Relations %d" % int(rel), GREEN if rel >= 60 else (RED if rel < 30 else DIM)),
-		]))
-		box.add_child(_lbl("%s · Budget %s" % [studio.name, Util.fmt_money(cs.budget)], 12, DIM))
-		if cs.has("director"):
-			box.add_child(_lbl("🎬 Director: %s%s" % [cs.director.name, " · favors your agency" if bool(cs.director.agencyFriendly) else " · from a rival house"], 12, GREEN if bool(cs.director.agencyFriendly) else RED))
-		if cs.has("producer"):
-			box.add_child(_lbl("💼 Producer: %s%s" % [cs.producer.name, " · favors your agency" if bool(cs.producer.agencyFriendly) else " · from a rival house"], 12, GREEN if bool(cs.producer.agencyFriendly) else RED))
-		if Game.chem_read_available(cs):
-			box.add_child(_btn("🧪 Arrange a chemistry read", _start_chem_read_ui.bind(int(cs.id)), true))
-			box.add_child(_lbl("Two open roles, two pairings of your own — plus the studio's suggestion. Skippable at any time.", 11, DIM))
-		for i in cs.roles.size():
-			var r: Dictionary = cs.roles[i]
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 10)
-			box.add_child(row)
-			var desc := "%s %s (%s, %d–%d yrs) · from ⭐ %d · ca. %s" % ["🎯" if r.type == "lead" else "▫", "Lead" if r.type == "lead" else "Supporting role", "♂" if r.gender == "m" else "♀", int(r.ageMin), int(r.ageMax), int(r.minFame), Util.fmt_money(r.fee)]
-			var dl := _lbl(desc, 12, TEXT_C if r.type == "lead" else DIM)
-			dl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			dl.autowrap_mode = TextServer.AUTOWRAP_OFF
-			row.add_child(dl)
-			if r.filled == null:
-				row.add_child(_btn("Pitch a client", _open_pitch.bind(int(cs.id), i)))
-			elif r.filled.get("clientId") != null:
-				var cl = Game.client(r.filled.clientId)
-				var st_lbl := _lbl("✅ %s (%s)" % [Game.client_name(cl) if cl else "?", Util.fmt_money(r.filled.fee)], 12, GREEN)
-				st_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF  # sonst Buchstaben-Umbruch neben Expand-Label
-				row.add_child(st_lbl)
-			else:
-				var npc_lbl := _lbl(r.filled.get("name", "?"), 12, DIM)
-				npc_lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
-				row.add_child(npc_lbl)
 
 func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 	var cs = Game._casting(casting_id)
@@ -2718,60 +2312,6 @@ func _do_package(role_idx: int, client_id: int) -> void:
 	else:
 		_render_studio_offer("“We won't take the second name. But the original offer still stands.”")
 
-# ---------- Tab: Films ----------
-func _render_filme() -> void:
-	var st = Game.state
-	if st.productions.size():
-		content_box.add_child(_lbl("🎥 In production", 18, ACC))
-		var grid := _grid(560.0)
-		content_box.add_child(grid)
-		for p in st.productions:
-			var cv = _card("“%s”" % p.title, GENRE_ICONS.get(p.genre, "🎥"))
-			grid.add_child(cv[0])
-			var names: Array = []
-			for r in p.roles:
-				if r.filled != null:
-					if r.filled.get("clientId") != null:
-						var cl = Game.client(r.filled.clientId)
-						names.append("👤 " + (Game.client_name(cl) if cl else "?"))
-					else:
-						names.append(r.filled.get("name", "?"))
-			cv[1].add_child(_lbl("%s · %s · Budget %s" % [Game._studio(p.studioId).name, _genre_de(p.genre), Util.fmt_money(p.budget)], 12, DIM))
-			cv[1].add_child(_lbl("Cast: " + ", ".join(names), 12, DIM))
-			Game.ensure_prod_fields(p)
-			cv[1].add_child(_chip_row([_chip("🎬 Release in ~%d wk" % int(p.weeksLeft), BLUE)]))
-			# Produktions-Signale (Feature 13): Set-Gerede statt Fakten
-			if p.signals.size():
-				var srow := HFlowContainer.new()
-				srow.add_theme_constant_override("h_separation", 6)
-				cv[1].add_child(srow)
-				for sig in p.signals:
-					srow.add_child(_chip(("🟢 " if bool(sig.get("pos", true)) else "🔴 ") + str(sig.get("t", "")), GREEN if bool(sig.get("pos", true)) else RED))
-				cv[1].add_child(_lbl("Signals are set talk — the hit rate rises with your instinct.", 10, DIM))
-				var has_client_here := false
-				for r in p.roles:
-					if r.filled != null and r.filled.get("clientId") != null and Game.client(r.filled.clientId) != null:
-						has_client_here = true
-				if has_client_here:
-					var pid := int(p.id)
-					cv[1].add_child(_nego_actions({
-						"label": "Renegotiate", "cb": _run_production_negotiation.bind(pid, "reneg"), "disabled": bool(p.reactions.get("reneg", false)),
-					}, [
-						{"label": "Pull the client", "cb": _run_production_negotiation.bind(pid, "pull"), "disabled": bool(p.reactions.get("pull", false))},
-						{"label": "Demand participation", "cb": _run_production_negotiation.bind(pid, "share"), "disabled": bool(p.reactions.get("share", false))},
-					], null))
-	if st.released.size():
-		content_box.add_child(_lbl("🎞 Released", 18, ACC))
-		var txt := ""
-		for f in st.released.slice(0, 30):
-			var col := "#c0504d" if f.ratio < 1.0 else ("#7da05c" if f.ratio >= 2.0 else "#a89b7e")
-			var vicon := "💥" if f.verdict == "Blockbuster" else ("✅" if f.ratio >= 2.0 else ("❌" if f.ratio < 1.0 else "▫"))
-			txt += "%d  %s “%s” (%s) — Q %d · %s · [color=%s]%s %s[/color]\n" % [int(f.year), GENRE_ICONS.get(f.genre, ""), f.title, Game._studio(f.studioId).name, int(f.quality), Util.fmt_money(f.revenue), col, vicon, f.verdict]
-		content_box.add_child(_rich(txt, 13))
-	if st.productions.is_empty() and st.released.is_empty():
-		var cv = _card("No films yet", "🎞")
-		cv[1].add_child(_lbl("Place clients in castings — once a film wraps, it appears here.", 13, DIM))
-		content_box.add_child(cv[0])
 
 func _run_production_negotiation(prod_id: int, kind: String) -> void:
 	var outcome := ""
@@ -2785,97 +2325,8 @@ func _run_production_negotiation(prod_id: int, kind: String) -> void:
 # ---------- Tab: Finances (ledger) ----------
 # ---------- Tab: Finanzen — extrahiert nach ui/FinanceScreen.gd (Chunk 09) ----------
 
-# ---------- Tab: Hollywood newspaper ----------
-func _render_zeitung() -> void:
-	content_box.add_child(_lbl("🗞 The alternate history of Hollywood", 22, ACC))
-	content_box.add_child(_lbl("Every issue grows out of real premieres, castings, rumors, client moves and power struggles of your simulation.", 13, DIM))
-	if Game.state.newspaper.is_empty():
-		var empty = _card("The presses are waiting", "📰")
-		empty[1].add_child(_lbl("Finish the first month. After that the current issue appears here — and stays in the archive.", 13, DIM))
-		content_box.add_child(empty[0])
-		return
-	var issue: Dictionary = Game.state.newspaper[0]
-	var front = _card(str(issue.name), "🗞")
-	content_box.add_child(front[0])
-	front[1].add_child(_lbl(Game.mi_str(issue.mi).to_upper(), 11, ACC))
-	for i in issue.headlines.size():
-		var h: Dictionary = issue.headlines[i]
-		var cat := str(h.get("cat", "Talk of the town"))
-		var col: Color = {"Reviews":ACC, "Box office":GREEN, "Blind item":AMBER, "Scandal":RED, "Cover story":GOLD, "Awards":GOLD, "Rival deals":BLUE, "Casting":BLUE}.get(cat, TEXT_C)
-		front[1].add_child(_lbl("%s  %s" % [cat.to_upper(), h.get("text", "")], 17 if i == 0 else 14, col))
 
-	content_box.add_child(_lbl("Archive · %d older issues" % mini(23, maxi(0, Game.state.newspaper.size() - 1)), 17, ACC))
-	var archive_grid := _grid(520.0)
-	content_box.add_child(archive_grid)
-	for old_issue in Game.state.newspaper.slice(1, 24):
-		var archive_card = _card("%s · %s" % [old_issue.name, Game.mi_str(old_issue.mi)], "▤")
-		archive_grid.add_child(archive_card[0])
-		for headline in old_issue.headlines.slice(0, 5):
-			archive_card[1].add_child(_lbl("%s · %s" % [str(headline.cat), str(headline.text)], 12, DIM))
 
-# ---------- Tab: Quest-Journal (RPG-Chunk 17) ----------
-func _render_quests() -> void:
-	var st = Game.state
-	content_box.add_child(_lbl("📜 Open stories", 22, ACC))
-	content_box.add_child(_lbl("Event chains you are part of — what has started will play out, one way or another.", 13, DIM))
-	var active: Array = st.get("quests", []).filter(func(q): return str(q.status) == "aktiv")
-	var done: Array = st.get("quests", []).filter(func(q): return str(q.status) == "abgeschlossen")
-	if active.is_empty():
-		var ec = _card("All quiet", "🌙")
-		content_box.add_child(ec[0])
-		ec[1].add_child(_lbl("No open stories — yet. This town rarely leaves it that way.", 13, DIM))
-	var qgrid := _grid(520.0)
-	content_box.add_child(qgrid)
-	for q in active:
-		var qc = _card(str(q.title), str(q.get("icon", "📜")))
-		qgrid.add_child(qc[0])
-		qc[1].add_child(_lbl(str(q.step), 13, TEXT_C))
-		var meta_s := "since %s" % Game.mi_str(int(q.startedMi))
-		if int(q.get("dueMi", -1)) > Game.mi():
-			meta_s += " · next beat in ~%d wk" % maxi(1, (int(q.dueMi) - Game.mi()) * 4)
-		qc[1].add_child(_lbl(meta_s, 11, DIM))
-	if done.size():
-		content_box.add_child(_lbl("Archive · %d closed" % done.size(), 17, ACC))
-		var agrid := _grid(520.0)
-		content_box.add_child(agrid)
-		for q in done.slice(maxi(0, done.size() - 10)):
-			var arch = _card(str(q.title), str(q.get("icon", "📜")))
-			agrid.add_child(arch[0])
-			arch[1].add_child(_lbl(str(q.step), 12, DIM))
-			arch[1].add_child(_lbl("closed %s" % Game.mi_str(int(q.get("doneMi", q.startedMi))), 11, DIM))
-
-# ---------- Tab: Chronicle ----------
-func _render_chronik() -> void:
-	# Career memoir (Feature 10): the decisions and relationships that
-	# defined this career — kept forever, unlike the rolling log below.
-	var memoirs: Array = Game.state.get("memoirs", [])
-	var mv = _card("Career memoir (%d entries)" % memoirs.size(), "📖")
-	content_box.add_child(mv[0])
-	if memoirs.is_empty():
-		mv[1].add_child(_lbl("Nothing worth remembering yet. Careers are written one decision at a time.", 12, DIM))
-	else:
-		mv[1].add_child(_lbl("What this career will be remembered for — promises broken, doors opened, empires bought. This record never fades.", 11, DIM))
-		var mtxt := ""
-		var shown: Array = memoirs.slice(maxi(0, memoirs.size() - 30))
-		shown.reverse()
-		var last_year := -1
-		for m in shown:
-			var y := int(m.mi) / 12
-			if y != last_year:
-				last_year = y
-				mtxt += "[color=%s][b]— %d —[/b][/color]\n" % [ACC.to_html(false), y]
-			mtxt += "[color=#a89b7e]%s[/color]  %s\n" % [Game.mi_str(m.mi), str(m.text)]
-		if memoirs.size() > 30:
-			mtxt += "[color=#6b6152](%d earlier entries rest in the archive.)[/color]\n" % (memoirs.size() - 30)
-		mv[1].add_child(_rich(mtxt, 13))
-
-	var lv = _card("The rolling log", "📰")
-	content_box.add_child(lv[0])
-	var txt := ""
-	for l in Game.state.log:
-		var col := {"deal": "#7da05c", "bad": "#c0504d", "history": ACC.to_html(false)}.get(l.type, "#a89b7e")
-		txt += "[color=#6b6152]%s %d[/color]  [color=%s]%s %s[/color]\n" % [Game.MONTHS[int(l.m) - 1], int(l.y), col, LOG_ICONS.get(l.type, "•"), l.text]
-	lv[1].add_child(_rich(txt if txt != "" else "Nothing has happened yet.", 13))
 
 # =====================================================================
 # Modals
@@ -3085,39 +2536,6 @@ func _cancel_table() -> void:
 	Game.table = null
 	_close_modal()
 
-# =====================================================================
-# Weekly Planner (UI)
-# =====================================================================
-func _render_planer() -> void:
-	var st = Game.state
-	Planner.ensure_planner()
-	var hv = _card("Weekly planner — %s" % Game.date_str(), "🗓")
-	content_box.add_child(hv[0])
-	hv[1].add_child(_lbl("The coming week in detail: 7 days with morning, afternoon and evening — for you and every free client. Shooting weeks are booked automatically. Empty slots go to the autopilot: rest when exhaustion is above 50, PR otherwise. Galas happen in the evening.", 12, DIM))
-	var pcard = _card("🕴 You (agency)", "")
-	content_box.add_child(pcard[0])
-	_planner_grid(pcard[1], "player", 0, st.planner.player)
-	_planner_fill_row(pcard[1], "player", 0, Planner.PLANNER_PLAYER)
-	for c in st.clients:
-		var ccard = _card("⭐ %s" % Game.client_name(c), "")
-		content_box.add_child(ccard[0])
-		if not Game.is_free(c):
-			ccard[1].add_child(_lbl("🎬 Shooting this week — the calendar belongs to the studio.", 12, DIM))
-			continue
-		_planner_grid(ccard[1], "client", int(c.id), st.planner.clients.get(str(int(c.id)), []))
-		_planner_fill_row(ccard[1], "client", int(c.id), Planner.PLANNER_CLIENT)
-	# Legende
-	var leg = _card("What the actions do", "ℹ")
-	content_box.add_child(leg[0])
-	var lt := "[b]Your slots:[/b] "
-	for k in Planner.PLANNER_PLAYER:
-		var i1: Dictionary = Planner.PLANNER_PLAYER[k]
-		lt += "%s %s (%s) · " % [i1.icon, i1.name, i1.desc]
-	lt = lt.trim_suffix(" · ") + "\n[b]Client slots:[/b] "
-	for k2 in Planner.PLANNER_CLIENT:
-		var i2: Dictionary = Planner.PLANNER_CLIENT[k2]
-		lt += "%s %s (%s) · " % [i2.icon, i2.name, i2.desc]
-	leg[1].add_child(_rich(lt.trim_suffix(" · "), 12))
 
 # 8-Spalten-Raster: Zeilenlabel (Tagesabschnitt) + Mo…So, Zellen als Icon-Buttons
 func _planner_grid(parent: VBoxContainer, who: String, cid: int, slots: Array) -> void:
