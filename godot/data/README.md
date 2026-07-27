@@ -130,6 +130,16 @@ shows a "What drives them" line staged by the insight attribute; the worst
 need also sharpens the emotion model's stated cause. Thresholds in
 `Balance.gd`, drift rates in `Needs.gd`.
 
+Twice a year (or once per half-year when a need drops below 25) the client
+asks for the **expectation talk** (`letters/erwartung.json` →
+`dialogs/erwartung.json`): the bottleneck is named clearly or obliquely
+depending on insight (`{need}` placeholder reads the worst need), and the
+player can make a real promise with a deadline (`client_promise`: lead,
+prestige picture, protected break, fee jump — tracked by the existing
+promise system and a journal chain), stall (negotiation check) or decline
+honestly. Kept promises refill the matching need strongly; broken ones
+tear it down further.
+
 ## Career, reputation, locations & contacts (manager systems)
 
 These four categories drive the "manager as a person" systems and are fully

@@ -1,0 +1,36 @@
+{
+  "entries": [
+    {"id": "erwartung_check", "followup_only": true,
+      "title": "🤝 Your word to {client}",
+      "text": "A month after the dinner, the promise is still the quiet third party in every phone call with {client}. A word in time now costs little — and buys patience for the stretch ahead.",
+      "quest": {"title": "Your word to {client}", "icon": "🤝", "step": "Keep the promise to {client} on track"},
+      "choices": [
+        {"label": "Give an honest progress report",
+          "check": {"attr": "verhandlung", "dc": 45},
+          "effects": [{"op": "mood", "amount": 3}, {"op": "trust", "amount": 2},
+            {"op": "followup", "event": "erwartung_deadline", "delay_weeks": 8},
+            {"op": "log", "text": "You keep {client} in the loop on your promise — patience secured.", "type": "info"}],
+          "outcome": "You lay out what has moved and what has not. {client} appreciates being treated like a partner, not a deadline.",
+          "effects_fail": [{"op": "mood", "amount": -2},
+            {"op": "followup", "event": "erwartung_deadline", "delay_weeks": 8},
+            {"op": "log", "text": "Your progress report on the {client} promise lands wobbly.", "type": "info"}],
+          "outcome_fail": "The report sounds thinner out loud than it did in your head. {client} hears the gaps."},
+        {"label": "Say nothing — let the work speak later",
+          "effects": [{"op": "followup", "event": "erwartung_deadline", "delay_weeks": 8}],
+          "outcome": "Silence is a bet that the delivery will be loud enough. The clock keeps its own counsel."}]},
+
+    {"id": "erwartung_deadline", "followup_only": true,
+      "title": "🤝 The promise to {client}: crunch time",
+      "text": "The window on your word to {client} is narrowing. Whatever happens next happens on the record — kept promises build careers here, broken ones build reputations.",
+      "quest": {"step": "The clock on your promise to {client} is running down"},
+      "choices": [
+        {"label": "Double down: clear the decks for it",
+          "effects": [{"op": "player", "stress": 4},
+            {"op": "log", "text": "You clear the decks for the {client} promise — whatever it takes.", "type": "info"}],
+          "outcome": "Calendars are rearranged, favors warmed up. The promise gets your best hours now."},
+        {"label": "Prepare {client} for the possibility of failure",
+          "effects": [{"op": "trust", "amount": 3}, {"op": "mood", "amount": -3},
+            {"op": "log", "text": "You level with {client} about the promise. Bitter, but honest.", "type": "info"}],
+          "outcome": "A hard conversation ahead of the deadline hurts less than silence after it. {client} takes it — barely."}]}
+  ]
+}

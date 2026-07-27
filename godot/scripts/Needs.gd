@@ -23,6 +23,10 @@ extends Node
 
 const PRESTIGE_GENRES := ["drama", "history", "war"]
 
+# Welche Zusage welches Bedürfnis bedient (Erwartungsgespräch, Teil C2).
+const PROMISE_NEED := {"lead12": "anerkennung", "prestige": "kunst",
+	"oscar": "anerkennung", "auszeit": "ruhe", "gage": "geld"}
+
 # Monatliche Driftraten (Sättigung)
 const FEED_LEAD := 4.0
 const FEED_SUPPORT := 1.5
@@ -123,6 +127,36 @@ func tick_client(c: Dictionary) -> void:
 		c.mood = clampf(float(c.mood) - Balance.NEEDS_MOOD_MALUS, 0.0, 100.0)
 	if float(c.needsSat[worst]) < Balance.NEEDS_CRITICAL:
 		c.loyalty = clampf(float(c.loyalty) - Balance.NEEDS_LOYALTY_MALUS, 0.0, 100.0)
+	_maybe_expectation_talk(c, worst)
+
+
+# Erwartungsgespräch (Teil C2): halbjährlich — oder sobald ein Bedürfnis
+# unter NEEDS_URGENT fällt — bittet der Klient um das Grundsatzgespräch;
+# höchstens eines pro Halbjahr und Klient. Der Brief kommt vom Klienten
+# selbst, mit cid im Kontext für den Baum (data/dialogs/erwartung.json).
+func _maybe_expectation_talk(c: Dictionary, worst: String) -> void:
+	if not Dialogs.has_dialog("erwartung"):
+		return
+	var last := int(c.flags.get("expectTalkMi", int(c.get("signedAt", Game.mi()))))
+	# 1× pro Halbjahr und Klient — das Halbjahres-Ritual selbst und der
+	# dringende Engpass (< NEEDS_URGENT) teilen sich diese Sperre.
+	if Game.mi() - last < Balance.NEEDS_TALK_COOLDOWN_MONTHS:
+		return
+	if Game.mi() - last < Balance.NEEDS_TALK_RITUAL_MONTHS and float(c.needsSat[worst]) >= Balance.NEEDS_URGENT:
+		return
+	var cid := int(c.id)
+	if Game.state.inbox.any(func(l): return str(l.tid) == "erwartung_invite" and str(l.status) == "open" and int(l.get("ctx", {}).get("cid", -1)) == cid):
+		return
+	c.flags["expectTalkMi"] = Game.mi()
+	Dialogs.spawn_letter_named("erwartung_invite", Game.client_name(c), {"cid": cid})
+
+
+func on_promise(c: Dictionary, promise_type: String, kept: bool) -> void:
+	var need := str(PROMISE_NEED.get(promise_type, ""))
+	if need == "":
+		return
+	ensure_client(c)
+	_shift(c, need, Balance.NEEDS_PROMISE_KEPT if kept else -Balance.NEEDS_PROMISE_BROKEN)
 
 
 # Wöchentliche Planner-Kopplung: Erholung füllt die Ruhe, PR und Galas

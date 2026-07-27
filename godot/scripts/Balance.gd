@@ -126,6 +126,13 @@ const NEEDS_LOW := 35.0
 const NEEDS_CRITICAL := 20.0
 const NEEDS_MOOD_MALUS := 2.0
 const NEEDS_LOYALTY_MALUS := 1.0
+# Erwartungsgespräch: Rhythmus, Dringlichkeits-Schwelle und wie stark
+# gehaltene/gebrochene Zusagen das Bedürfnis bewegen (Teil C2).
+const NEEDS_TALK_COOLDOWN_MONTHS := 6
+const NEEDS_TALK_RITUAL_MONTHS := 12
+const NEEDS_URGENT := 25.0
+const NEEDS_PROMISE_KEPT := 30.0
+const NEEDS_PROMISE_BROKEN := 20.0
 
 # ---------- Spieler-Attribute (RPG-Chunk 15) ----------
 # Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit

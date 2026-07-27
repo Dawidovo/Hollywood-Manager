@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {"id": "erwartung_invite", "manual": true, "weight": 0, "from_type": "privat",
+      "subject": "Dinner? Just the two of us.",
+      "body": "[i]“No lawyers, no trades on the table. I want to talk about where this is going — you, me, the next few years. You pick the restaurant, I'll pick the subject.”[/i]\n\n{client} is asking for the conversation that contracts only pretend to be.",
+      "expire_weeks": 3,
+      "choices": [
+        {"label": "Take the dinner (1⏱)", "requirements": {"ap": 1}, "dialog": "erwartung"},
+        {"label": "Postpone — the season is brutal",
+          "effects": [{"op": "mood", "amount": -4}, {"op": "trust", "amount": -2},
+            {"op": "log", "text": "You postpone the dinner with {client}. Postponed conversations grow teeth.", "type": "info"}],
+          "outcome": "“Of course. When things calm down.” Things never calm down, and you both know it."}],
+      "expire_effects": [{"op": "mood", "amount": -6}, {"op": "loyalty", "amount": -4},
+        {"op": "log", "text": "The dinner invitation from {client} went unanswered. That silence has a price.", "type": "bad"}]}
+  ]
+}

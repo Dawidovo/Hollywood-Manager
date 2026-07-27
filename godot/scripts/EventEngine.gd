@@ -229,6 +229,12 @@ func subst(s: String, ctx: Dictionary) -> String:
 			s = s.replace("{client}", Game.client_name(c))
 	if s.contains("{studio}") and ctx.has("sid"):
 		s = s.replace("{studio}", str(Game._studio(str(ctx.sid)).name))
+	# Innenleben (Teil C2): {need} = das aktuell schwächste Bedürfnis des
+	# Klienten im Kontext — Text liest die Simulation, erfindet nichts.
+	if s.contains("{need}") and ctx.has("cid"):
+		var need_client = Game.client(ctx.cid)
+		if need_client != null:
+			s = s.replace("{need}", str(Data.NEEDS.get(Needs.worst_need(need_client), {}).get("name", "…")).to_lower())
 	# Dialog-/Brief-Kontext (Feature: Dialogsystem): {contact} & {sender}
 	if s.contains("{contact}") and ctx.has("ctid"):
 		var ct: Dictionary = Persona.contact_by_id(ctx.ctid)

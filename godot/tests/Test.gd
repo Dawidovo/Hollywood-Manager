@@ -2409,6 +2409,46 @@ func _ready() -> void:
 	Game.state.attributes["menschenkenntnis"] = 80.0
 	check(Needs.visible_line(nd_c).contains("·"), "Ab 75 erscheint das volle Mini-Profil")
 
+	# Erwartungsgespräch (Teil C2): Trigger, Versprechen, Bedürfnis-Kopplung
+	Game.new_game("Erwartung", 1950)
+	check(Game.PROMISES.has("auszeit") and Game.PROMISES.has("gage"), "Neue Versprechens-Arten: Auszeit und Gagensprung")
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var ew_c: Dictionary = Game.state.clients[0]
+	check(EvEngine.subst("{need}", {"cid": int(ew_c.id)}) != "{need}", "Der need-Platzhalter liest das schwächste Bedürfnis")
+	ew_c["signedAt"] = Game.mi() - 13
+	Needs.tick_client(ew_c)
+	var ew_letters: Array = Game.state.inbox.filter(func(l): return str(l.tid) == "erwartung_invite")
+	check(ew_letters.size() == 1 and int(ew_letters[0].ctx.cid) == int(ew_c.id), "Nach dem Ritual-Fenster bittet der Klient zum Erwartungsgespräch")
+	Needs.tick_client(ew_c)
+	check(Game.state.inbox.filter(func(l): return str(l.tid) == "erwartung_invite").size() == 1, "Höchstens ein Gespräch pro Halbjahr und Klient")
+	var ew_res: Dictionary = Dialogs.letter_choose(int(ew_letters[0].id), 0)
+	check(str(ew_res.get("dialog", "")) == "erwartung", "Die Einladung öffnet den Erwartungs-Baum")
+	var ew_view: Dictionary = Dialogs.start("erwartung", ew_res.ctx)
+	ew_view = Dialogs.choose(0)
+	ew_view = Dialogs.choose(0)
+	var ew_break := -1
+	for ei in ew_view.choices.size():
+		if str(ew_view.choices[ei].label).contains("real break"):
+			ew_break = ei
+	check(ew_break >= 0, "Die Auszeit-Zusage steht auf dem Tisch")
+	ew_view = Dialogs.choose(ew_break)
+	check(bool(ew_view.done), "Erwartungs-Pfad läuft bis zum Ende durch")
+	check(ew_c.promises.any(func(p): return str(p.type) == "auszeit"), "Die Zusage landet als echtes Versprechen mit Frist")
+	check(Game.state.followups.any(func(fu): return str(fu.get("event", "")) == "erwartung_check"), "Die Frist-Kette (quest-Block) ist terminiert")
+	Needs.ensure_client(ew_c)
+	ew_c.needsSat.ruhe = 20.0
+	ew_c.exhaustion = 10.0
+	ew_c.busyUntil = 0
+	Game.tick_clients([])
+	var ew_auszeit: Dictionary = ew_c.promises.filter(func(p): return str(p.type) == "auszeit")[0]
+	check(bool(ew_auszeit.fulfilled), "Auszeit gilt als gehalten, sobald der Klient wirklich zur Ruhe kam")
+	check(float(ew_c.needsSat.ruhe) > 40.0, "Die gehaltene Zusage füllt das Bedürfnis stark")
+	ew_c.promises.append({"type": "gage", "label": "a serious fee jump within 12 months", "due": Game.mi() - 1, "fulfilled": false, "broken": false})
+	ew_c.needsSat.geld = 50.0
+	Game.tick_clients([])
+	check(float(ew_c.needsSat.geld) < 40.0, "Der Bruch reißt das Bedürfnis zusätzlich ein")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

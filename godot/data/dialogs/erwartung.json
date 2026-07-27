@@ -1,0 +1,63 @@
+{
+  "entries": [
+    {"id": "erwartung", "title": "🍷 The expectation talk: {client}",
+      "start": "opening",
+      "nodes": {
+        "opening": {
+          "text": ["A corner booth, two menus nobody opens. {client} talks about everything except the reason for the dinner — the new director, the weather, somebody's divorce. The real subject sits under the table, waiting."],
+          "reads": {
+            "unreadable": "Whatever is eating at them stays wrapped in anecdotes. You cannot find the thread.",
+            "likely": "There is a want under the small talk — money, rest, respect, you cannot tell which yet.",
+            "clear": "You can hear the real subject circling: it is their {need}, and it has been hungry for a while.",
+            "certain": "It is {need} — you knew before the bread arrived. Every anecdote tonight has been about it, in disguise."
+          },
+          "choices": [
+            {"label": "Ask straight out what they need", "goto": "core",
+              "effects": [{"op": "trust", "amount": 2}]},
+            {"label": "Read between the anecdotes first", "check": {"attr": "menschenkenntnis", "dc": 50, "success": "core_read", "fail": "core"}},
+            {"label": "Acknowledge the strain before they name it", "goto": "core_warm", "requires_emotion": ["anxious", "resentful", "irritated"],
+              "effects": [{"op": "mood", "amount": 4}, {"op": "trust", "amount": 2}]}
+          ]},
+        "core_read": {
+          "text": ["Halfway through the second course the anecdotes align, and you see the pattern: this dinner is about their {need}. You say it out loud, gently, before they have to."],
+          "effects": [{"op": "trust", "amount": 4}, {"op": "xp", "field": "people", "amount": 1}],
+          "choices": [{"label": "Now talk about what you can actually do", "goto": "offers"}]},
+        "core_warm": {
+          "text": ["\"I know this year has taken more than it gave,\" you say, and {client} puts down the fork. The armor comes off one buckle at a time. What is underneath is a want with a name: {need}."],
+          "choices": [{"label": "Put something real on the table", "goto": "offers"}]},
+        "core": {
+          "text": ["Finally {client} says it — half sideways, wrapped in a joke that is not one: \"I need to know what I am working toward.\" The want underneath has a name: {need}."],
+          "choices": [{"label": "Answer with something concrete", "goto": "offers"}]},
+        "offers": {
+          "text": ["The table is quiet now. Whatever you say next will be remembered word for word — this is the part of the dinner that becomes the contract behind the contract."],
+          "choices": [
+            {"label": "Promise the lead — twelve months, your word", "goto": "end_promise",
+              "effects": [{"op": "client_promise", "kind": "lead12"}, {"op": "followup", "event": "erwartung_check", "delay_weeks": 4}]},
+            {"label": "Promise a prestige picture — eighteen months", "goto": "end_promise",
+              "effects": [{"op": "client_promise", "kind": "prestige"}, {"op": "followup", "event": "erwartung_check", "delay_weeks": 4}]},
+            {"label": "Promise a real break — six months, protected", "goto": "end_promise",
+              "effects": [{"op": "client_promise", "kind": "auszeit"}, {"op": "followup", "event": "erwartung_check", "delay_weeks": 4}]},
+            {"label": "Promise a serious fee jump — twelve months", "goto": "end_promise",
+              "effects": [{"op": "client_promise", "kind": "gage"}, {"op": "followup", "event": "erwartung_check", "delay_weeks": 4}]},
+            {"label": "Buy time without promising anything", "check": {"attr": "verhandlung", "dc": 55, "success": "end_stalled", "fail": "end_stall_burn"}},
+            {"label": "Be honest: you cannot promise that right now", "goto": "end_honest",
+              "effects": [{"op": "trust", "amount": 6}, {"op": "mood", "amount": -5}]}
+          ]},
+        "end_promise": {"end": true,
+          "text": ["{client} looks at you for a long second, then nods — the slow nod people give when they decide to believe you one more time. The promise now has a date, and dates in this town are witnesses."],
+          "effects": [{"op": "loyalty", "amount": 8}, {"op": "mood", "amount": 6},
+            {"op": "log", "text": "Expectation talk with {client}: a concrete promise, with a deadline.", "type": "deal"}]},
+        "end_stalled": {"end": true,
+          "text": ["You talk about pipelines and timing and the market — fluently enough that it sounds like a plan instead of a postponement. {client} accepts it. For now. The word 'now' is doing real work in that sentence."],
+          "effects": [{"op": "mood", "amount": 2}, {"op": "xp", "field": "negotiation", "amount": 1},
+            {"op": "log", "text": "Expectation talk with {client}: bought time, promised nothing.", "type": "info"}]},
+        "end_stall_burn": {"end": true,
+          "text": ["The stalling shows its seams by dessert. {client} smiles the professional smile and asks for the check — the one gesture that says: noted, and filed."],
+          "effects": [{"op": "mood", "amount": -6}, {"op": "loyalty", "amount": -4},
+            {"op": "log", "text": "Expectation talk with {client}: the evasion was heard as exactly that.", "type": "bad"}]},
+        "end_honest": {"end": true,
+          "text": ["\"I can't promise you that right now. I won't pretend I can.\" It is not the answer {client} wanted — but it is the first sentence all evening they fully believe. Honesty pays into a different account, at a slower rate."],
+          "effects": [{"op": "log", "text": "Expectation talk with {client}: no promise, but the truth.", "type": "info"}]}
+      }}
+  ]
+}

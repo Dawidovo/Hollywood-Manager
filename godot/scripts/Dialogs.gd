@@ -26,7 +26,7 @@ const KNOWN_OPS := ["money", "rep", "instinct", "fame", "mood", "heat", "exhaust
 	"promise", "xp", "player", "money_private", "tip", "rumor_reveal", "casting_spawn",
 	"meet_someone", "seal_deal", "gate_rel", "memoir", "settle_debt", "refuse_debt", "private_life",
 	"client_promise", "press_event", "rumor_belief"]
-const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio"]
+const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio", "need"]
 
 # Laufender Dialog (nur zur Laufzeit, wird nie gespeichert).
 var run = null
@@ -523,12 +523,13 @@ func spawn_letter_for(template_id: String, ct: Dictionary) -> Dictionary:
 	return _spawn_letter_with(def, sender)
 
 
-# Brief mit frei benanntem Absender (Privatleben: Partner sind keine Kontakte).
-func spawn_letter_named(template_id: String, sender_name: String) -> Dictionary:
+# Brief mit frei benanntem Absender (Privatleben: Partner sind keine
+# Kontakte; Erwartungsgespräch: der Absender ist der Klient selbst).
+func spawn_letter_named(template_id: String, sender_name: String, extra_ctx: Dictionary = {}) -> Dictionary:
 	var def := letter_def(template_id)
 	if def.is_empty():
 		return {}
-	return _spawn_letter_with(def, {"name": sender_name, "type": "privat"})
+	return _spawn_letter_with(def, {"name": sender_name, "type": "privat"}, extra_ctx)
 
 
 # Brief mit zusätzlichem Effekt-Kontext (z. B. sid für Studio-Gespräche,

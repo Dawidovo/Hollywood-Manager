@@ -19,6 +19,9 @@ const PROMISES = {
 	"lead12":   {"label":"a lead role within 12 months",          "months":12},
 	"prestige": {"label":"a prestige project within 18 months",   "months":18},
 	"oscar":    {"label":"an Oscar nomination within 24 months",  "months":24},
+	# Erwartungsgespräch (Teil C2): Zusagen, die direkt auf Bedürfnisse zielen
+	"auszeit":  {"label":"a real break within 6 months",          "months":6},
+	"gage":     {"label":"a serious fee jump within 12 months",   "months":12},
 }
 
 const CONTRACT_YEARS = [2, 3, 5, 7]
@@ -1405,6 +1408,13 @@ func check_promises_on_deal(c: Dictionary, casting: Dictionary, role: Dictionary
 			fulfill_promise(c, pr)
 		if pr.type == "prestige" and int(casting.prestige) >= 2:
 			fulfill_promise(c, pr)
+		# Gagensprung (Teil C2): deutlich über der Erwartungskurve abgeschlossen
+		if pr.type == "gage":
+			var deal_fee := float(role.get("fee", 0))
+			if role.get("filled") is Dictionary and role.filled.has("fee"):
+				deal_fee = float(role.filled.fee)
+			if deal_fee >= Util.ask_fee(float(c.fame), state.year) * 1.2:
+				fulfill_promise(c, pr)
 	# Karrierebrett: jede Deal-Art (Casting, Package, Sofort-Deal) läuft hier
 	# hindurch — die geplante Rollenfolge wird an derselben Stelle abgeglichen.
 	check_board_on_deal(c, casting, role)
@@ -1415,6 +1425,8 @@ func fulfill_promise(c: Dictionary, pr: Dictionary) -> void:
 	change_trust(c, Balance.PROMISE_KEPT_TRUST)
 	c.mood = clampf(c.mood + Balance.PROMISE_KEPT_MOOD, 0.0, 100.0)
 	state.agency.rep = clampi(int(state.agency.rep) + Balance.PROMISE_KEPT_REP, 0, 100)
+	# Innenleben (Teil C2): eine gehaltene Zusage füllt das Bedürfnis stark
+	Needs.on_promise(c, str(pr.type), true)
 	log_msg("Promise kept: %s — %s. Loyalty rises sharply." % [client_name(c), pr.label], "deal")
 
 # ---------- Comeback: das späte Karriere-Kunststück ----------
@@ -1778,12 +1790,17 @@ func tick_clients(events: Array) -> void:
 		snapshot_client(c)
 		# Versprechen
 		for pr in c.promises:
+			# Auszeit (Teil C2): eingelöst, sobald der Klient wirklich zur Ruhe kam
+			if not pr.fulfilled and not pr.get("broken", false) and str(pr.type) == "auszeit" and not busy and float(c.exhaustion) <= 30.0:
+				fulfill_promise(c, pr)
 			if not pr.fulfilled and not pr.get("broken", false) and mi() > int(pr.due):
 				pr.broken = true
 				c.loyalty = clampf(c.loyalty - Balance.PROMISE_BROKEN_LOYALTY, 0.0, 100.0)
 				change_trust(c, -Balance.PROMISE_BROKEN_TRUST)
 				c.mood = clampf(c.mood - Balance.PROMISE_BROKEN_MOOD, 0.0, 100.0)
 				state.agency.rep = clampi(int(state.agency.rep) - Balance.PROMISE_BROKEN_REP, 0, 100)
+				# Innenleben (Teil C2): der Bruch reißt das Bedürfnis zusätzlich ein
+				Needs.on_promise(c, str(pr.type), false)
 				log_msg("Promise broken: %s waited in vain for %s." % [actor.name, pr.label], "bad")
 				events.append({"title": "A broken promise", "text": "[i]“You gave me your word. In this town an agent's word is everything — or so I thought.”[/i]\n\n%s is deeply disappointed. Loyalty plummets, your reputation suffers." % actor.name, "choices": [{"label": "Understood"}]})
 		# Vertragsende
