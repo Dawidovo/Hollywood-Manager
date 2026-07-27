@@ -16,7 +16,13 @@ func _init(main_ref) -> void:
 func _render_dialog_view(view: Dictionary) -> void:
 	main._open_modal()
 	main.modal_box.add_child(main._lbl(str(view.title), 22, main.ACC))
+	# Emotions-Chip (Teil A2): was du im Gesicht des Gegenübers liest —
+	# je nach Menschenkenntnis präzise, vage oder schlicht falsch.
+	if str(view.get("emotion", {}).get("text", "")) != "":
+		main.modal_box.add_child(main._chip(str(view.emotion.text), main.AMBER))
 	main.modal_box.add_child(main._rich(str(view.text), 14))
+	if str(view.get("read", "")) != "":
+		main.modal_box.add_child(main._rich("[i]%s[/i]" % str(view.read), 13))
 	for line in view.get("lines", []):
 		main.modal_box.add_child(main._rich("[color=#%s]▸ %s[/color]" % [main.AMBER.to_html(false), str(line)], 13))
 	if bool(view.get("done", false)):

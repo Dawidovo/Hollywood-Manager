@@ -166,6 +166,21 @@ effect ops as `events/`** — one vocabulary for all three, fully moddable.
 
 - `goto: "end"` (or a node with `"end": true` and no choices) ends the dialog.
 - `check` rolls: `base` + 0.06 × skill level + relationship dim / 300.
+  A check may instead carry an **attribute test**
+  `{"attr": "menschenkenntnis", "dc": 45, "success": "...", "fail": "..."}` —
+  chance and button label reuse the event formula (attribute = dc ⇒ 50 %,
+  ±1 % per point, clamped 5–95 %); the attribute grows on use.
+- **Emotion gates**: a choice may carry `"requires_emotion": ["warm", ...]`
+  (keys from `emotions/core.json`). The gate checks the subject's **TRUE**
+  emotion, while the player only sees the *perceived* one — with poor
+  insight, options appear or vanish "inexplicably". That gap is deliberate.
+- **Perception line**: a node may carry
+  `"reads": {"unreadable": "...", "likely": "...", "clear": "...", "certain": "..."}`
+  — one body-language line per insight tier; misreads see the vague variant.
+- The dialog header shows an **emotion chip** (perceived emotion + how sure
+  you are) whenever the context has a subject (`ctid`, `cid` or `rid`);
+  it refreshes after every choice because choices move the underlying
+  values (`dims`, `mood`, …) — emotions themselves are never stored.
 - Node `effects` run on entry, choice `effects` on selection.
 - Placeholders: `{contact}`, `{sender}`, `{agency}`, `{year}`, `{money_fmt:N}`.
 - Dialog ids the game launches automatically: `channel_meet`, `channel_club`

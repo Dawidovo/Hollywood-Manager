@@ -293,7 +293,11 @@ func choice_blocked_reason(ch: Dictionary) -> String:
 
 
 # Erfolgswahrscheinlichkeit eines Würfelwurfs: Basis + Fähigkeit + Beziehung.
+# Attributs-Proben ("attr"/"dc") nutzen DIE Formel der Event-Engine —
+# eine Chance-Rechnung im ganzen Spiel, keine Kopie (Teil A2).
 func check_p(check: Dictionary) -> float:
+	if check.has("attr"):
+		return EvEngine.check_chance(check)
 	var p := float(check.get("base", 0.5))
 	if check.has("skill"):
 		p += float(Mogul.level(str(check.skill))) * 0.06
@@ -304,10 +308,83 @@ func check_p(check: Dictionary) -> float:
 	return clampf(p, 0.05, 0.95)
 
 
+# =====================================================================
+# Emotionen im Gespräch (Teil A2): Chip, Wahrnehmungszeile und
+# Emotions-Gates. Bedingungen prüfen die WAHRE Emotion; der Spieler
+# sieht nur die wahrgenommene — bei schlechter Menschenkenntnis fehlen
+# oder erscheinen Antworten darum „unerklärlich". Diese Lücke ist gewollt.
+# =====================================================================
+func _emotion_kind(ctx: Dictionary) -> String:
+	if ctx.has("cid"):
+		return "client"
+	if ctx.has("ctid"):
+		return "contact"
+	if ctx.has("rid"):
+		return "rival"
+	return ""
+
+
+func true_emotion_key(ctx: Dictionary) -> String:
+	var kind := _emotion_kind(ctx)
+	if kind == "":
+		return ""
+	return str(Emotions.true_state(kind, ctx).get("key", ""))
+
+
+# Chip-Inhalt für den Dialog-Header: wahrgenommene Emotion + Konfidenz.
+func emotion_view(ctx: Dictionary) -> Dictionary:
+	var kind := _emotion_kind(ctx)
+	if kind == "":
+		return {}
+	var p := Emotions.perceived(kind, ctx)
+	if p.is_empty():
+		return {}
+	if str(p.key) == "unreadable":
+		return {"text": "🎭 Hard to read", "confidence": "unreadable"}
+	var d := Emotions.def_of(str(p.key))
+	var text_s := "%s %s" % [str(d.icon), str(d.name)]
+	match str(p.confidence):
+		"guess":
+			text_s += " · just a hunch"
+		"likely":
+			text_s += " · you're fairly sure"
+		"clear":
+			text_s += " · unmistakable"
+		"certain":
+			text_s += " — because %s" % str(p.cause) if str(p.cause) != "" else " · unmistakable"
+	return {"text": text_s, "confidence": str(p.confidence)}
+
+
+# Nur Antworten, deren Emotions-Gate zur WAHREN Emotion passt, sind
+# überhaupt sichtbar — view() und choose() teilen sich diese Liste,
+# damit die Indizes zusammenpassen.
+func _visible_choices(node: Dictionary) -> Array:
+	var all: Array = node.get("choices", [])
+	var gated: Array = all.filter(func(ch): return ch is Dictionary and ch.has("requires_emotion"))
+	if gated.is_empty() or run == null:
+		return all
+	var true_key := true_emotion_key(run.ctx)
+	return all.filter(func(ch):
+		if not (ch is Dictionary) or not ch.has("requires_emotion"):
+			return true
+		return (ch.requires_emotion as Array).has(true_key))
+
+
+# Wahrnehmungszeile eines Knotens ("reads"): je Präzisionsstufe ein
+# anderer Text; Fehllesungen ("guess") sehen die vage Variante.
+func _read_line(node: Dictionary) -> String:
+	if not node.has("reads") or run == null:
+		return ""
+	var view_conf := str(emotion_view(run.ctx).get("confidence", ""))
+	if view_conf == "guess":
+		view_conf = "unreadable"
+	return str(node.reads.get(view_conf, ""))
+
+
 func choose(idx: int) -> Dictionary:
 	if run == null:
 		return {"done": true, "title": "…", "text": "", "lines": [], "choices": []}
-	var choices: Array = _node().get("choices", [])
+	var choices: Array = _visible_choices(_node())
 	if idx < 0 or idx >= choices.size():
 		return view()
 	var ch: Dictionary = choices[idx]
@@ -321,7 +398,11 @@ func choose(idx: int) -> Dictionary:
 		var check: Dictionary = ch.check
 		if check.has("skill"):
 			Mogul.grant_xp(str(check.skill), 0.5, "Tried, in conversation")
-		next = str(check.get("success", "end")) if Util.chance(check_p(check)) else str(check.get("fail", "end"))
+		var ok := Util.chance(check_p(check))
+		# Attributs-Probe: aus Proben lernt man — wie bei den Events.
+		if check.has("attr"):
+			Game.attr_gain(str(check.attr), 0.4 if ok else 0.15)
+		next = str(check.get("success", "end")) if ok else str(check.get("fail", "end"))
 	run.lines.append_array(EvEngine.lines)
 	EvEngine.lines.clear()
 	if next == "end" or not run.def.get("nodes", {}).has(next):
@@ -343,12 +424,16 @@ func view() -> Dictionary:
 	var texts: Array = node.get("text", []) if node.get("text") is Array else [node.get("text", "")]
 	var text_s := EvEngine.subst(_pick_text(texts), run.ctx)
 	var out := {"done": done, "title": EvEngine.subst(str(run.def.get("title", "Conversation")), run.ctx),
-		"text": text_s, "lines": run.lines.duplicate(), "choices": []}
+		"text": text_s, "lines": run.lines.duplicate(), "choices": [],
+		"emotion": emotion_view(run.ctx), "read": EvEngine.subst(_read_line(node), run.ctx)}
 	if not done:
-		for ch in node.get("choices", []):
+		for ch in _visible_choices(node):
 			var reason := choice_blocked_reason(ch)
-			out.choices.append({"label": EvEngine.subst(str(ch.get("label", "…")), run.ctx),
-				"disabled": reason != "", "reason": reason})
+			var label_s := EvEngine.subst(str(ch.get("label", "…")), run.ctx)
+			# Sichtbare Attributs-Probe: gleiche Label-Optik wie bei Events.
+			if ch.get("check", {}).has("attr"):
+				label_s = "%s %s" % [EvEngine.check_label(ch.check), label_s]
+			out.choices.append({"label": label_s, "disabled": reason != "", "reason": reason})
 	if done:
 		run = null
 	return out
@@ -601,8 +686,21 @@ func validate_defs() -> Array:
 			var texts: Array = node.get("text", []) if node.get("text") is Array else [str(node.get("text", ""))]
 			for t in texts:
 				_check_text(str(t), where, out)
+			# Wahrnehmungszeilen: nur bekannte Präzisionsstufen als Schlüssel
+			for read_key in node.get("reads", {}):
+				if not ["unreadable", "likely", "clear", "certain"].has(str(read_key)):
+					out.append("%s: reads has unknown tier \"%s\"" % [where, str(read_key)])
+				else:
+					_check_text(str(node.reads[read_key]), where, out)
 			for ch in node.get("choices", []):
 				_check_effects(ch.get("effects", []), where, out)
+				# Emotions-Gates: nur echte Emotionen aus data/emotions
+				for emo_key in ch.get("requires_emotion", []):
+					if not Data.EMOTIONS.has(str(emo_key)):
+						out.append("%s: requires_emotion names unknown emotion \"%s\"" % [where, str(emo_key)])
+				# Attributs-Proben: nur echte Attribute aus data/attributes
+				if ch.get("check", {}).has("attr") and not Data.ATTRIBUTES.has(str(ch.check.attr)):
+					out.append("%s: check.attr names unknown attribute \"%s\"" % [where, str(ch.check.attr)])
 				for target_key in [["goto", ch.get("goto")], ["check.success", ch.get("check", {}).get("success")], ["check.fail", ch.get("check", {}).get("fail")]]:
 					var target = target_key[1]
 					if target != null and str(target) != "end" and not nodes.has(str(target)):

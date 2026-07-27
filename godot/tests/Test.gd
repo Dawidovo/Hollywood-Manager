@@ -2147,6 +2147,38 @@ func _ready() -> void:
 	var em_rv_true: Dictionary = Emotions.true_state("rival", {"rid": str(em_rv.id)})
 	check(str(em_rv_true.key) == "resentful" and int(em_rv_true.intensity) >= 60, "Rivale mit hohem Groll ist resentful")
 
+	# Emotionen im Dialogsystem (Teil A2): Gates, Attribut-Proben, Chip
+	var emd_def := {"id": "emo_testdialog", "title": "Test", "start": "opening", "nodes": {
+		"opening": {"text": ["…"],
+			"reads": {"unreadable": "Nothing.", "likely": "Something.", "clear": "Anger.", "certain": "Anger, and you know why."},
+			"choices": [
+				{"label": "Only for the warm", "goto": "end", "requires_emotion": ["warm"]},
+				{"label": "Only for the resentful", "goto": "end", "requires_emotion": ["resentful"]},
+				{"label": "Always there", "goto": "end"},
+				{"label": "Probe", "check": {"attr": "verhandlung", "dc": 50, "success": "end", "fail": "end"}}]}}}
+	Data.DIALOGS.append(emd_def)
+	check(Dialogs.validate_defs().is_empty(), "requires_emotion/reads/check.attr validieren warnungsfrei")
+	var emd_view: Dictionary = Dialogs.start("emo_testdialog", em_ctx)
+	check(emd_view.choices.size() == 3, "requires_emotion filtert auf die WAHRE Emotion (resentful): %d Antworten" % emd_view.choices.size())
+	check(str(emd_view.choices[0].label) == "Only for the resentful", "Das passende Emotions-Gate bleibt sichtbar")
+	check(str(emd_view.choices[2].label).begins_with("["), "Attributs-Probe trägt das Event-Label (sichtbare Chance)")
+	check(absf(Dialogs.check_p({"attr": "verhandlung", "dc": 50}) - EvEngine.check_chance({"attr": "verhandlung", "dc": 50})) < 0.0001, "Dialog-Probe nutzt DIE Formel der Event-Engine")
+	check(str(emd_view.get("read", "")) != "", "Wahrnehmungszeile (reads) wird geliefert")
+	Game.state.attributes["menschenkenntnis"] = 80.0
+	var emd_view80: Dictionary = Dialogs.start("emo_testdialog", em_ctx)
+	check(str(emd_view80.emotion.text).contains("Resentful") and str(emd_view80.emotion.text).contains("because"), "Chip bei Menschenkenntnis 80: Emotion + Ursache")
+	check(str(emd_view80.read) == "Anger, and you know why.", "reads: höchste Präzisionsstufe liefert die volle Zeile")
+	Game.state.attributes["menschenkenntnis"] = 20.0
+	var emd_view20: Dictionary = Dialogs.start("emo_testdialog", em_ctx)
+	check(emd_view20.choices.size() == 3, "Gates hängen NICHT an der Wahrnehmung — die Lücke ist gewollt")
+	Dialogs.run = null
+	var emd_bad := {"id": "emo_baddialog", "title": "T", "start": "opening", "nodes": {
+		"opening": {"text": ["…"], "choices": [{"label": "x", "goto": "end", "requires_emotion": ["furious"]}]}}}
+	Data.DIALOGS.append(emd_bad)
+	check(Dialogs.validate_defs().any(func(w): return str(w).contains("furious")), "Unbekannte Emotion im Gate erzeugt eine Ladewarnung")
+	Data.DIALOGS.erase(emd_bad)
+	Data.DIALOGS.erase(emd_def)
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0
