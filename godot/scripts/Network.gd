@@ -655,7 +655,7 @@ func _shareable_rumor() -> Dictionary:
 	for rumor in _st().rumors:
 		if not bool(rumor.knownToPlayer) or bool(rumor.get("sharedByPlayer", false)):
 			continue
-		var c = Game.rumor_subject_client(rumor)
+		var c = Scandal.rumor_subject_client(rumor)
 		if c == null and str(rumor.get("subject", "")) != "agency":
 			return rumor
 	return {}
@@ -680,7 +680,7 @@ func share_story(cid) -> Dictionary:
 	Game.record_identity("skrupellos", 0.5)
 	Persona._memory(ct, "You fed them a story — they owe you column inches.")
 	Mogul.grant_xp("media", 1.0, "Placed a story")
-	return {"ok": true, "text": "You slide the story about %s across the table. %s takes notes, buys the next round — and owes you.\n\n(The story gains reach; your fingerprints are on it: discretion −2.)" % [Game.rumor_subject_name(rumor), str(ct.name)]}
+	return {"ok": true, "text": "You slide the story about %s across the table. %s takes notes, buys the next round — and owes you.\n\n(The story gains reach; your fingerprints are on it: discretion −2.)" % [Scandal.rumor_subject_name(rumor), str(ct.name)]}
 
 
 # =====================================================================

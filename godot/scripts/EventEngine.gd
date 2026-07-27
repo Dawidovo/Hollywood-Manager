@@ -314,7 +314,7 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 			Game.owe_favor(_pick_kind(str(ef.get("kind", "extraAudition"))), _favor_from(ef, ctx))
 		"rumor":
 			if c != null:
-				Game.add_rumor(int(c.id), subst(str(ef.get("text", "")), ctx), bool(ef.get("truth", false)),
+				Scandal.add_rumor(int(c.id), subst(str(ef.get("text", "")), ctx), bool(ef.get("truth", false)),
 					str(ef.get("topic", "skandal")), ef.get("holders", ["Journalisten"]),
 					float(ef.get("belief", 20.0)), bool(ef.get("known", true)))
 		"identity":
@@ -437,7 +437,7 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 				Network.add_fact(ct8, "does not honor their debts", -1, 2.0)
 			Game.record_identity("skrupellos", 1.0)
 			if Util.chance(0.4):
-				Game.add_rumor("agency", "They say %s takes help gladly — and forgets it just as gladly." % st.agency.name, true, "skandal", ["Party guests"], 20.0, true)
+				Scandal.add_rumor("agency", "They say %s takes help gladly — and forgets it just as gladly." % st.agency.name, true, "skandal", ["Party guests"], 20.0, true)
 			_say("Refused debts do not disappear in this town. They compound — in whispers.", ctx)
 		_:
 			push_warning("EvEngine: Unbekannte Effekt-Op „%s“ — übersprungen." % str(ef.get("op", "")))

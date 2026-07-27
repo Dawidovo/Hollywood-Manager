@@ -228,11 +228,11 @@ func _ready() -> void:
 		Game.start_negotiation("monroe")
 		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": ["assistant", "pr"], "promise": null})
 		var shot_client: Dictionary = Game.state.clients[0]
-		Game.reveal_secret(shot_client, "beziehung", 2)
-		var shot_rumor := Game.add_rumor(int(shot_client.id), "Louella Parsons hears of late-night meetings in a bungalow by the beach.", true, "affäre", ["Assistants", "Journalists", "Party guests"], 67.0, true, "beziehung")
+		Scandal.reveal_secret(shot_client, "beziehung", 2)
+		var shot_rumor := Scandal.add_rumor(int(shot_client.id), "Louella Parsons hears of late-night meetings in a bungalow by the beach.", true, "affäre", ["Assistants", "Journalists", "Party guests"], 67.0, true, "beziehung")
 		shot_rumor.industryBelief = 38.0
 		shot_rumor.impactApplied = true
-		Game.add_rumor(int(shot_client.id), "A studio messenger claims the next contract is being negotiated elsewhere in secret.", false, "wechsel", ["Studios", "Directors"], 24.0, true, "", 72.0)
+		Scandal.add_rumor(int(shot_client.id), "A studio messenger claims the next contract is being negotiated elsewhere in secret.", false, "wechsel", ["Studios", "Directors"], 24.0, true, "", 72.0)
 		_switch_tab("rumors")
 		await _take_shot("rumors")
 	elif args.has("--shot-zeitung"):
@@ -243,7 +243,7 @@ func _ready() -> void:
 		var news_prod: Dictionary = Game.quick_production(news_client, {"genre":"drama", "prestige":3, "qualityMod":12.0}).prod
 		Game.release_film(news_prod)
 		Game.state.productions.erase(news_prod)
-		Game.add_rumor(int(news_client.id), "A columnist is gathering material for a story that names no names yet.", false, "skandal", ["Journalists", "Party guests"], 44.0, true, "", 31.0)
+		Scandal.add_rumor(int(news_client.id), "A columnist is gathering material for a story that names no names yet.", false, "skandal", ["Journalists", "Party guests"], 44.0, true, "", 31.0)
 		Game.tick_rivals([], true)
 		Newspaper.build_newspaper()
 		_switch_tab("zeitung")
@@ -2615,7 +2615,7 @@ func _render_klienten() -> void:
 		if c.secrets.size():
 			box.add_child(_lbl("🔒 Confidential dossier", 13, ACC))
 			for secret in c.secrets:
-				var info: Dictionary = Game.SECRET_TYPES.get(str(secret.type), {"label": str(secret.type)})
+				var info: Dictionary = Scandal.SECRET_TYPES.get(str(secret.type), {"label": str(secret.type)})
 				var status_text := {"geheim": "under wraps", "entschärft": "prepared", "publik": "public"}.get(str(secret.status), str(secret.status))
 				var status_color := GREEN if str(secret.status) == "entschärft" else (RED if str(secret.status) == "publik" else DIM)
 				var sicon: String = SECRET_ICONS.get(str(secret.type), "◆")
@@ -2736,7 +2736,7 @@ func _render_rumors() -> void:
 	var target_buttons := HFlowContainer.new()
 	target_buttons.add_theme_constant_override("h_separation", 6)
 	target_buttons.add_theme_constant_override("v_separation", 6)
-	for actor in Game.rumor_targets().slice(0, 6):
+	for actor in Scandal.rumor_targets().slice(0, 6):
 		var owner = Game.rival_for_actor(str(actor.id))
 		var suffix := " · %s" % owner.name if owner != null else ""
 		target_buttons.add_child(_btn("🕸 %s%s" % [actor.name, suffix], _on_rumor_launch.bind(str(actor.id))))
@@ -2751,12 +2751,12 @@ func _render_rumors() -> void:
 	var grid := _grid(620.0)
 	content_box.add_child(grid)
 	for rumor in known:
-		var cv = _card(Game.rumor_subject_name(rumor), "🗣")
+		var cv = _card(Scandal.rumor_subject_name(rumor), "🗣")
 		grid.add_child(cv[0])
 		var box: VBoxContainer = cv[1]
 		box.add_child(_rich("[i]“%s”[/i]" % rumor.text, 14))
 		var chips: Array = [_chip("Topic: %s" % str(rumor.topic).capitalize(), BLUE), _chip("⏳ %d month(s) in circulation" % int(rumor.age), DIM)]
-		if Game.player_knows_rumor_truth(rumor):
+		if Scandal.player_knows_rumor_truth(rumor):
 			chips.append(_chip("🔒 Confirmed by your dossier", GREEN))
 		if rumor.belief >= 60:
 			chips.append(_chip("⚠ Publicly effective", RED))
@@ -2781,18 +2781,18 @@ func _render_rumors() -> void:
 func _on_rumor_action(rid: int, action: String) -> void:
 	var outcome := ""
 	match action:
-		"deny": outcome = Game.deny_rumor(rid)
-		"studio": outcome = Game.studio_talk_rumor(rid)
-		"suppress": outcome = Game.suppress_rumor(rid)
-		"counter": outcome = Game.counter_rumor(rid)
-		"wait": outcome = Game.wait_out_rumor(rid)
+		"deny": outcome = Scandal.deny_rumor(rid)
+		"studio": outcome = Scandal.studio_talk_rumor(rid)
+		"suppress": outcome = Scandal.suppress_rumor(rid)
+		"counter": outcome = Scandal.counter_rumor(rid)
+		"wait": outcome = Scandal.wait_out_rumor(rid)
 	_show_simple_modal("The story behind the story", outcome)
 
 func _on_rumor_launch(actor_id: String) -> void:
-	_show_simple_modal("A sentence makes the rounds", Game.launch_rumor(actor_id, str(Util.pick(["skandal", "wechsel", "affäre"]))))
+	_show_simple_modal("A sentence makes the rounds", Scandal.launch_rumor(actor_id, str(Util.pick(["skandal", "wechsel", "affäre"]))))
 
 func _on_secret_action(cid: int, type_s: String, action: String) -> void:
-	var outcome := Game.prepare_secret(cid, type_s) if action == "prepare" else Game.sell_secret(cid, type_s)
+	var outcome := Scandal.prepare_secret(cid, type_s) if action == "prepare" else Scandal.sell_secret(cid, type_s)
 	_show_simple_modal("Strictly confidential", outcome)
 
 # ---------- Tab: Talent pool ----------

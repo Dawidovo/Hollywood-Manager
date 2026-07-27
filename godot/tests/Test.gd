@@ -122,23 +122,23 @@ func _ready() -> void:
 	confidante.trustCap = 100.0
 	confidante.trust = 60.0
 	var reveal_events: Array = []
-	check(Game.maybe_reveal_secret(confidante, reveal_events, true) and reveal_events.size() == 1, "Geheimnis wird an Vertrauensschwelle offenbart")
-	var addiction_modal = Game.reveal_secret(confidante, "sucht", 3)
-	check(addiction_modal != null or Game.secret_of(confidante, "sucht") != null, "Sucht-Geheimnis mit Folgepotenzial angelegt")
-	Game.prepare_secret(int(confidante.id), "sucht", 0)
+	check(Scandal.maybe_reveal_secret(confidante, reveal_events, true) and reveal_events.size() == 1, "Geheimnis wird an Vertrauensschwelle offenbart")
+	var addiction_modal = Scandal.reveal_secret(confidante, "sucht", 3)
+	check(addiction_modal != null or Scandal.secret_of(confidante, "sucht") != null, "Sucht-Geheimnis mit Folgepotenzial angelegt")
+	Scandal.prepare_secret(int(confidante.id), "sucht", 0)
 	Game.quick_production(confidante, {"genre":"drama"})
 	confidante.exhaustion = 82.0
 	check(Ev._w_breakdown() == 0.0, "Vorbereitete Sucht ersetzt den harten Zusammenbruch")
 
 	# 9. Gerüchte wandern; Wahrheit und Lüge wirken ab derselben Schwelle
 	var fame_before_rumor: float = confidante.fame
-	var false_rumor := Game.add_rumor(int(confidante.id), "Man behauptet, Monroe wolle die Agentur verlassen.", false, "wechsel", ["Journalists"], 59.0, true)
+	var false_rumor := Scandal.add_rumor(int(confidante.id), "Man behauptet, Monroe wolle die Agentur verlassen.", false, "wechsel", ["Journalists"], 59.0, true)
 	var rumor_events: Array = []
-	Game.tick_rumors(rumor_events, true)
+	Scandal.tick_rumors(rumor_events, true)
 	check(false_rumor.holders.size() > 1, "Gerücht wandert zu einem weiteren Trägertyp")
 	check(false_rumor.impactApplied and false_rumor.belief >= 60.0, "Gerücht wirkt ab Glaubensschwelle")
 	check(confidante.fame < fame_before_rumor, "Auch ein falsches Gerücht schadet")
-	check(Game.rumor_fit_penalty(confidante) > 0.0, "Wechsel-Gerücht erzeugt Studio-Skepsis")
+	check(Scandal.rumor_fit_penalty(confidante) > 0.0, "Wechsel-Gerücht erzeugt Studio-Skepsis")
 
 	# 10. Save/Load-Roundtrip mit Geheimnissen und Gerüchten
 	var secret_count: int = confidante.secrets.size()
@@ -259,12 +259,12 @@ func _ready() -> void:
 	Game.sign_client({"commission":10, "bonus":0, "years":5, "perks":[], "promise":null})
 	var truth_client: Dictionary = Game.state.clients[0]
 	var truth_fame := float(truth_client.fame)
-	var industry_rumor := Game.add_rumor(int(truth_client.id), "Studios zweifeln intern an der Verlässlichkeit.", false, "wechsel", ["Studios"], 5.0, true, "", 70.0)
-	Game.tick_rumors([], false)
+	var industry_rumor := Scandal.add_rumor(int(truth_client.id), "Studios zweifeln intern an der Verlässlichkeit.", false, "wechsel", ["Studios"], 5.0, true, "", 70.0)
+	Scandal.tick_rumors([], false)
 	check(industry_rumor.industryImpactApplied and not industry_rumor.impactApplied, "Branchenwissen wird ohne öffentliche Schlagzeile wirksam")
-	check(absf(float(truth_client.fame) - truth_fame) < 0.01 and Game.rumor_fit_penalty(truth_client) >= 12.0, "Branchenwissen schadet Casting, nicht Ruhm")
-	var public_rumor := Game.add_rumor(int(truth_client.id), "Die Presse verbreitet eine öffentliche Geschichte.", false, "skandal", ["Journalisten"], 70.0, true, "", 5.0)
-	Game.tick_rumors([], false)
+	check(absf(float(truth_client.fame) - truth_fame) < 0.01 and Scandal.rumor_fit_penalty(truth_client) >= 12.0, "Branchenwissen schadet Casting, nicht Ruhm")
+	var public_rumor := Scandal.add_rumor(int(truth_client.id), "Die Presse verbreitet eine öffentliche Geschichte.", false, "skandal", ["Journalisten"], 70.0, true, "", 5.0)
+	Scandal.tick_rumors([], false)
 	check(public_rumor.impactApplied and not public_rumor.industryImpactApplied, "Öffentlicher Glaube wirkt ohne Branchenmehrheit")
 	check(float(truth_client.fame) < truth_fame, "Öffentliche Geschichte verändert Ruhm/Image")
 
@@ -272,7 +272,7 @@ func _ready() -> void:
 	var news_prod: Dictionary = Game.quick_production(truth_client, {"genre":"drama", "prestige":3, "qualityMod":10.0}).prod
 	Game.release_film(news_prod)
 	Game.state.productions.erase(news_prod)
-	Game.add_rumor(int(truth_client.id), "Marilyn Monroe werde in einem Bungalow beobachtet.", false, "affäre", ["Journalisten", "Partygäste"], 45.0, true, "", 20.0)
+	Scandal.add_rumor(int(truth_client.id), "Marilyn Monroe werde in einem Bungalow beobachtet.", false, "affäre", ["Journalisten", "Partygäste"], 45.0, true, "", 20.0)
 	Game.tick_rivals([], true)
 	var issue: Dictionary = Newspaper.build_newspaper()
 	var categories: Dictionary = {}
@@ -978,7 +978,7 @@ func _ready() -> void:
 	Game.change_trust(bs_c, 4.0)
 	check(absf(float(bs_c.trust) - (bs_t0 + 5.0)) < 0.01, "Gescheitert: Vertrauensgewinn ×1,25")
 	Game.new_game("Federkiel", 1950, "kolumnist")
-	var bs_rumor := Game.add_rumor("agency", "Testgerücht aus dem Hinterzimmer.", false, "skandal")
+	var bs_rumor := Scandal.add_rumor("agency", "Testgerücht aus dem Hinterzimmer.", false, "skandal")
 	check(bool(bs_rumor.knownToPlayer), "Kolumnist: Neues Gerücht ist sofort bekannt")
 
 	# 22. Spielfigur: getrennte Privat-/Agenturfinanzen, Zustand, Karriere
@@ -1364,7 +1364,7 @@ func _ready() -> void:
 			press_ct = ct
 	press_ct.dims.trust = 75.0
 	press_ct.rel = Network.derived_rel(press_ct)
-	var info_rumor := Game.add_rumor(str(Game.available_actors()[0].id), "Ein Name macht in den Vorzimmern die Runde.", false, "skandal", ["Assistants"], 20.0, false)
+	var info_rumor := Scandal.add_rumor(str(Game.available_actors()[0].id), "Ein Name macht in den Vorzimmern die Runde.", false, "skandal", ["Assistants"], 20.0, false)
 	Game.state.contactAP = 3
 	var info_res := Network.ask_info(int(press_ct.id))
 	check(bool(info_res.ok) and bool(info_rumor.knownToPlayer), "Journalist enthüllt ein unbekanntes Gerücht")
@@ -1691,7 +1691,7 @@ func _ready() -> void:
 	check(Game.state.weekDigest.any(func(d): return str(d).contains("warm")), "Autonome Arbeit landet im Wochen-Digest")
 	var crisis_staff := Staff.hire("crisis")
 	crisis_staff.mode = "auto"
-	var cr_rumor := Game.add_rumor("agency", "Eine laute Geschichte.", false, "skandal", ["Journalists"], 70.0, true)
+	var cr_rumor := Scandal.add_rumor("agency", "Eine laute Geschichte.", false, "skandal", ["Journalists"], 70.0, true)
 	var cr_events: Array = []
 	Staff._work_crisis(crisis_staff, cr_events)
 	check(cr_events.size() == 1 and str(cr_events[0].title).contains("Escalation"), "Laute Skandale eskalieren trotz Autonomie (Regel)")

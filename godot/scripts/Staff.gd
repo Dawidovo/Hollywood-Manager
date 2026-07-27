@@ -344,16 +344,16 @@ func _work_crisis(s: Dictionary, events: Array) -> void:
 	var cost := roundf(12000.0 * Util.infl(_st().year) * (0.5 if Mogul.has_ability("spin_doctor") else 1.0))
 	var scandal_rule: bool = bool(_st().delegation.escalateScandal) and float(rumor.belief) >= 55.0
 	if str(s.mode) == "auto" and not scandal_rule and (Game.has_favor("suppressStory") or (cost <= fee_cap() and float(_st().agency.cash) >= cost)):
-		Game.suppress_rumor(int(rumor.id))
+		Scandal.suppress_rumor(int(rumor.id))
 		_st().weekDigest.append("%s buried a story before it grew teeth" % str(s.name))
 		return
 	var title := "Escalation from the crisis desk" if str(s.mode) == "auto" else "A recommendation from %s" % str(s.name)
 	var reason := "\n\nYour standing rule: stories this loud (belief %d) always reach your desk." % roundi(float(rumor.belief)) if scandal_rule else ""
 	events.append({"title": title,
-		"text": "%s: The story about [b]%s[/b] is gaining belief (%d). I recommend suppressing it — favor or %s. Risk: the source may dig further. Certainty ~%d%%.%s%s" % [str(s.name), Game.rumor_subject_name(rumor), roundi(float(rumor.belief)), Util.fmt_money(cost), confidence(s), reason, _bias_line(s)],
+		"text": "%s: The story about [b]%s[/b] is gaining belief (%d). I recommend suppressing it — favor or %s. Risk: the source may dig further. Certainty ~%d%%.%s%s" % [str(s.name), Scandal.rumor_subject_name(rumor), roundi(float(rumor.belief)), Util.fmt_money(cost), confidence(s), reason, _bias_line(s)],
 		"choices": [
-			{"label": "Approve — bury it", "fn": func(): Game.log_msg(Game.suppress_rumor(int(rumor.id)), "info")},
-			{"label": "Just deny it", "fn": func(): Game.log_msg(Game.deny_rumor(int(rumor.id)), "info")},
+			{"label": "Approve — bury it", "fn": func(): Game.log_msg(Scandal.suppress_rumor(int(rumor.id)), "info")},
+			{"label": "Just deny it", "fn": func(): Game.log_msg(Scandal.deny_rumor(int(rumor.id)), "info")},
 			{"label": "I'll handle this one myself"},
 		]})
 

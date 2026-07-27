@@ -371,7 +371,7 @@ func host_reception() -> String:
 		text += "\n\nOver dessert, a promise: %s owes you a favor (%s)." % [fav["from"].get("name", "?"), str(Game.FAVOR_KINDS[kind].name)]
 	if Util.chance(float(h.get("paparazzi", 0.0)) * paparazzi_mult() * 2.0):
 		_p().pubRep = clampf(float(_p().pubRep) - 2.0, 0.0, 100.0)
-		Game.add_rumor("agency", "Photographers counted the empty bottles outside the party at %s." % str(st.agency.name), true, "skandal", ["Party guests"], 15.0, true)
+		Scandal.add_rumor("agency", "Photographers counted the empty bottles outside the party at %s." % str(st.agency.name), true, "skandal", ["Party guests"], 15.0, true)
 		text += "\n\n⚠ A photographer waited at the gate — not every picture is flattering (public reputation −2)."
 	Game.log_msg("Reception at %s — the town talks about it, mostly kindly." % str(h.name), "info")
 	return text
@@ -403,7 +403,7 @@ func _tick_estate_month() -> void:
 	if Util.chance(float(h.get("paparazzi", 0.0)) * paparazzi_mult()):
 		p.pubRep = clampf(float(p.pubRep) - 2.0, 0.0, 100.0)
 		p.discretion = clampf(float(p.discretion) - 3.0, 0.0, 100.0)
-		Game.add_rumor("agency", "Long lenses at the driveway: pictures from the private life of %s's boss are making the rounds." % str(st.agency.name), true, "skandal", ["Journalists"], 15.0, true)
+		Scandal.add_rumor("agency", "Long lenses at the driveway: pictures from the private life of %s's boss are making the rounds." % str(st.agency.name), true, "skandal", ["Journalists"], 15.0, true)
 		Game.log_msg("Paparazzi outside your home — not every picture is flattering.", "bad")
 	# Expectations: a partner in a boarding-house room raises eyebrows.
 	var expected := 0
@@ -652,7 +652,7 @@ func _tick_invest_month(events: Array) -> void:
 				_p().discretion = clampf(float(_p().discretion) - 10.0, 0.0, 100.0)
 				Network.memoir("Your trades sat suspiciously close to the news from %s — the town asked questions." % str(stock_def(id_s).get("name", id_s)))
 				Game.record_identity("skrupellos", 2.0)
-				Game.add_rumor("agency", "Curious timing: %s's boss traded shares right before the news broke." % str(st.agency.name), true, "skandal", ["Journalists", "Studios"], 30.0, true)
+				Scandal.add_rumor("agency", "Curious timing: %s's boss traded shares right before the news broke." % str(st.agency.name), true, "skandal", ["Journalists", "Studios"], 30.0, true)
 				events.append({"title": "Insider trading?", "text": "Your trades sat too close to the news. Nobody can prove anything — yet — but the question alone stains: public reputation −8, industry standing −5.", "choices": [{"label": "Deny everything"}]})
 			else:
 				grant_xp("discretion", 1.0, "A discreet trade")
@@ -1062,7 +1062,7 @@ func _tick_backroom_month(events: Array) -> void:
 			_p().indRep = clampf(float(_p().indRep) - (5.0 if illegal else 2.0), 0.0, 100.0)
 			if illegal:
 				st.agency.rep = clampi(int(st.agency.rep) - 4, 0, 100)
-			Game.add_rumor("agency", "There is talk of an arrangement between %s and %s that neither would sign in daylight." % [st.agency.name, rec["with"].get("name", "?")], true, "skandal", ["Journalists", "Assistants"], 30.0, true)
+			Scandal.add_rumor("agency", "There is talk of an arrangement between %s and %s that neither would sign in daylight." % [st.agency.name, rec["with"].get("name", "?")], true, "skandal", ["Journalists", "Assistants"], 30.0, true)
 			Network.memoir("Exposed: the arrangement “%s” with %s became public%s." % [str(def.name), rec["with"].get("name", "?"), " — paper trail included" if bool(rec.paper) else ""], [str(rec["with"].get("name", "?"))])
 			grant_xp("crisis", 2.0, "A deal blew up in public")
 			events.append({"title": "Backroom deal exposed", "text": "The arrangement “[b]%s[/b]” with %s has leaked%s.\n\n%s" % [str(def.name), rec["with"].get("name", "?"),
@@ -1128,7 +1128,7 @@ func _obligation_event(rec: Dictionary, def: Dictionary) -> Dictionary:
 		_p().stress = clampf(float(_p().stress) + 4.0, 0.0, 100.0)
 		Game.record_identity("skrupellos", 1.5)
 		if Util.chance(0.5):
-			Game.add_rumor("agency", "%s is said to make promises that expire with the last glass." % _st().agency.name, true, "skandal", ["Party guests"], 20.0, true)
+			Scandal.add_rumor("agency", "%s is said to make promises that expire with the last glass." % _st().agency.name, true, "skandal", ["Party guests"], 20.0, true)
 		Game.log_msg("Broken word: %s will remember it — and talk about it." % partner, "bad")
 	return {"title": "An arrangement comes due", "text": "%s reminds you of your side of “[b]%s[/b]”: %s." % [partner, str(def.name), str(give.get("label", ""))],
 		"choices": [{"label": honor_label, "fn": honor_fn}, {"label": "Break your word", "fn": break_fn}]}

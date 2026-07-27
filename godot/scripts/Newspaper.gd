@@ -24,7 +24,7 @@ func _has_category(headlines: Array, cat: String) -> bool:
 	return headlines.any(func(h): return str(h.get("cat", "")) == cat)
 
 func _client_or_actor_label(rumor: Dictionary) -> String:
-	var c = Game.rumor_subject_client(rumor)
+	var c = Scandal.rumor_subject_client(rumor)
 	if c != null:
 		return CareerDNA.dna_label(c)
 	var aid := str(rumor.get("subject", ""))

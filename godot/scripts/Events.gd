@@ -222,7 +222,7 @@ func _w_poach() -> float:
 		return 0.0
 	var sorted: Array = Game.state.clients.duplicate()
 	sorted.sort_custom(func(a, b): return a.fame > b.fame)
-	if Game.has_mitigated_secret(sorted[0], "wechselabsicht"):
+	if Scandal.has_mitigated_secret(sorted[0], "wechselabsicht"):
 		return 0.3
 	return 1.2 if Game.state.clients.any(func(c): return c.loyalty < 70) else 0.4
 
@@ -233,7 +233,7 @@ func _b_poach() -> Dictionary:
 	var rival = Game.pick_poach_rival()
 	var rival_id := str(rival.id) if rival != null else ""
 	var rival_name := str(rival.name) if rival != null else "a big rival agency"
-	var prepared := Game.has_mitigated_secret(c, "wechselabsicht")
+	var prepared := Scandal.has_mitigated_secret(c, "wechselabsicht")
 	var cost = roundi(c.fame * (540.0 if prepared else 900.0) * Util.infl(Game.state.year))
 	return {"title": "The poaching attempt",
 		"text": "[i]“With us you wouldn't be a client. You would be THE client.”[/i]\n\n%s is courting your most valuable name: %s (loyalty %d/100).%s" % [rival_name, _nm(c), roundi(c.loyalty), "\n\n[color=#7da05c]You knew about the thoughts of leaving. Contract, arguments and budget are already prepared.[/color]" if prepared else ""],
@@ -604,7 +604,7 @@ func _w_breakdown() -> float:
 		for r in prod.roles:
 			if r.filled != null and r.filled.get("clientId") != null:
 				var c = Game.client(r.filled.clientId)
-				if c != null and c.exhaustion >= 60 and not Game.has_mitigated_secret(c, "sucht") and not Game.has_mitigated_secret(c, "gesundheit"):
+				if c != null and c.exhaustion >= 60 and not Scandal.has_mitigated_secret(c, "sucht") and not Scandal.has_mitigated_secret(c, "gesundheit"):
 					return 2.0
 	return 0.0
 
@@ -614,7 +614,7 @@ func _b_breakdown() -> Dictionary:
 		for r in prod.roles:
 			if r.filled != null and r.filled.get("clientId") != null:
 				var c2 = Game.client(r.filled.clientId)
-				if c2 != null and c2.exhaustion >= 60 and not Game.has_mitigated_secret(c2, "sucht") and not Game.has_mitigated_secret(c2, "gesundheit"):
+				if c2 != null and c2.exhaustion >= 60 and not Scandal.has_mitigated_secret(c2, "sucht") and not Scandal.has_mitigated_secret(c2, "gesundheit"):
 					candidates.append({"c": c2, "prod": prod})
 	var hit = Util.pick(candidates)
 	var c = hit.c
@@ -754,11 +754,11 @@ func _w_blacklist() -> float:
 	var y = int(Game.state.year)
 	if y < 1947 or y > 1956 or Game.state.clients.size() < 4:
 		return 0.0
-	return 1.5 if Game.state.clients.any(func(c): return not Game.has_mitigated_secret(c, "politik")) else 0.0
+	return 1.5 if Game.state.clients.any(func(c): return not Scandal.has_mitigated_secret(c, "politik")) else 0.0
 
 func _b_blacklist() -> Dictionary:
-	var candidates: Array = Game.state.clients.filter(func(c): return not Game.has_mitigated_secret(c, "politik"))
-	var warned: Array = candidates.filter(func(c): return Game.secret_of(c, "politik") != null)
+	var candidates: Array = Game.state.clients.filter(func(c): return not Scandal.has_mitigated_secret(c, "politik"))
+	var warned: Array = candidates.filter(func(c): return Scandal.secret_of(c, "politik") != null)
 	var c = Util.pick(warned if warned.size() else candidates)
 	return {"title": "Suspicion of un-American activities",
 		"text": "[i]“The committee summons %s. They are interested in … earlier acquaintances.”[/i]\n\nThe blacklist is spreading. How you act now defines your agency for years." % _nm(c),
@@ -1163,7 +1163,7 @@ func _moral_case() -> Dictionary:
 			continue
 		var rumor = null
 		for ru in Game.state.rumors:
-			if float(ru.get("belief", 0.0)) >= 60.0 and Game.rumor_subject_client(ru) == c:
+			if float(ru.get("belief", 0.0)) >= 60.0 and Scandal.rumor_subject_client(ru) == c:
 				rumor = ru
 				break
 		if rumor == null:

@@ -558,7 +558,7 @@ func contact_interact(cid, key: String) -> Dictionary:
 			# Back channels (Feature 6): discreet couriers leak half as often
 			if Util.chance(0.05 if Mogul.has_ability("back_channels") else 0.1):
 				st.player.discretion = clampf(float(st.player.discretion) - 5.0, 0.0, 100.0)
-				Game.add_rumor("agency", "A private note from %s to %s is circulating in copies." % [st.agency.name, ct.name], true, "skandal", ["Journalists"], 20.0, true)
+				Scandal.add_rumor("agency", "A private note from %s to %s is circulating in copies." % [st.agency.name, ct.name], true, "skandal", ["Journalists"], 20.0, true)
 				lines.append("The message got passed around — copies are circulating (discretion −5).")
 		"gift":
 			# The true wish (Feature 6): you always know what lands
@@ -673,7 +673,7 @@ func _tick_contacts_month(events: Array) -> void:
 			# Schriftliche Zusagen hinterlassen Beweise, bezeugte Gerede.
 			if bool(pr.get("written", false)) and Util.chance(0.5):
 				st.player.pubRep = clampf(float(st.player.pubRep) - 2.0, 0.0, 100.0)
-				Game.add_rumor("agency", "%s is said to break written promises — and someone kept the letter." % str(st.agency.name), true, "skandal", ["Journalists"], 25.0, true)
+				Scandal.add_rumor("agency", "%s is said to break written promises — and someone kept the letter." % str(st.agency.name), true, "skandal", ["Journalists"], 25.0, true)
 			Network.memoir("Promise broken: %s waited in vain%s." % [str(pr.to), " — in front of witnesses" if w > 0 else ""], [str(pr.to)])
 			Game.log_msg("Promise broken: %s waited in vain." % str(pr.to), "bad")
 	# Neglected contacts cool off — and note it exactly once.
@@ -841,7 +841,7 @@ func do_location_action() -> String:
 	if not risk.is_empty() and Util.chance(float(risk.get("chance", 0.0))):
 		_apply_effects(risk.get("effects", {}))
 		if risk.has("rumor"):
-			Game.add_rumor("agency", str(risk.rumor).replace("{agency}", str(st.agency.name)), true, "skandal", ["Party guests"], 15.0, true)
+			Scandal.add_rumor("agency", str(risk.rumor).replace("{agency}", str(st.agency.name)), true, "skandal", ["Party guests"], 15.0, true)
 		return str(risk.get("text", ""))
 	if int(act.get("casting", 0)) > 0:
 		Game.spawn_castings(int(act.casting))
