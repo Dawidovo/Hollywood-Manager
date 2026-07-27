@@ -2111,6 +2111,42 @@ func _ready() -> void:
 	check(bool(wb_c.promises[0].get("broken", false)), "Überfälliges Klienten-Versprechen gilt als gebrochen")
 	check(float(wb_c.loyalty) < wb_loy and int(Game.state.agency.rep) < wb_rep, "Wortbruch: Loyalität und Agentur-Ruf sinken")
 
+	# Emotionsmodell (Teil A): wahre und wahrgenommene Gefühle
+	Game.new_game("Emotionen", 1950)
+	check(Data.EMOTIONS.size() == 8, "Acht Grundemotionen geladen")
+	Game.start_negotiation("monroe")
+	Game.sign_client({"commission": 10, "bonus": 0, "years": 3, "perks": [], "promise": null})
+	var em_c: Dictionary = Game.state.clients[0]
+	em_c.mood = 70.0
+	em_c.trust = 65.0
+	em_c.loyalty = 60.0
+	var em_ctx := {"cid": int(em_c.id)}
+	var em_true: Dictionary = Emotions.true_state("client", em_ctx)
+	check(str(em_true.key) == "warm", "Zufriedener Klient mit Vertrauen ist warm (%s)" % str(em_true.key))
+	em_c.promises.append({"type": "lead12", "label": "a lead role within 12 months", "due": Game.mi() - 1, "fulfilled": false, "broken": true})
+	em_true = Emotions.true_state("client", em_ctx)
+	check(str(em_true.key) == "resentful" and str(em_true.cause).contains("broke your word"), "Gebrochenes Versprechen ⇒ resentful mit konkreter Ursache")
+	Game.state.instinct = 0
+	Game.state.attributes["menschenkenntnis"] = 80.0
+	var em_p80: Dictionary = Emotions.perceived("client", em_ctx)
+	check(str(em_p80.key) == "resentful" and not bool(em_p80.wrong) and str(em_p80.cause) != "", "Menschenkenntnis 80: Emotion korrekt + Ursachenzeile")
+	Game.state.attributes["menschenkenntnis"] = 20.0
+	var em_p20a: Dictionary = Emotions.perceived("client", em_ctx)
+	var em_p20b: Dictionary = Emotions.perceived("client", em_ctx)
+	check(str(em_p20a.key) == str(em_p20b.key) and bool(em_p20a.wrong) == bool(em_p20b.wrong), "Wahrnehmung ist pro Subjekt und Woche deterministisch")
+	check(str(em_p20a.key) == "unreadable" or bool(em_p20a.wrong), "Menschenkenntnis 20: unlesbar oder falsche Nachbaremotion")
+	check(str(em_p20a.get("cause", "")) == "", "Unterhalb der höchsten Stufe keine Ursachenzeile")
+	if bool(em_p20a.wrong):
+		check(str(em_p20a.key) != "resentful" and Emotions.EMO_RING.has(str(em_p20a.key)), "Fehllesung ist eine echte Nachbaremotion")
+	var em_ct: Dictionary = Game.state.contacts[0]
+	Game.state.promises.append({"id": 99801, "to": str(em_ct.name), "kind": "callback", "status": "broken", "madeMi": Game.mi() - 3, "dueMi": Game.mi() - 1})
+	var em_ct_true: Dictionary = Emotions.true_state("contact", {"ctid": int(em_ct.id)})
+	check(str(em_ct_true.key) == "resentful", "Kontakt mit gebrochener Zusage ist resentful")
+	var em_rv: Dictionary = Game.state.rivals[0]
+	em_rv.grudge = 70.0
+	var em_rv_true: Dictionary = Emotions.true_state("rival", {"rid": str(em_rv.id)})
+	check(str(em_rv_true.key) == "resentful" and int(em_rv_true.intensity) >= 60, "Rivale mit hohem Groll ist resentful")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

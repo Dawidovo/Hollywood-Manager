@@ -1,0 +1,50 @@
+{
+	"warm": {
+		"name": "Warm",
+		"icon": "🤗",
+		"desc": "Genuine goodwill — this person is on your side right now.",
+		"valence": 1
+	},
+	"hopeful": {
+		"name": "Hopeful",
+		"icon": "✨",
+		"desc": "Something good feels within reach — and you are part of it.",
+		"valence": 1
+	},
+	"calculating": {
+		"name": "Calculating",
+		"icon": "🦊",
+		"desc": "Every sentence is being weighed. This is business, not affection.",
+		"valence": 0
+	},
+	"wary": {
+		"name": "Wary",
+		"icon": "🛡",
+		"desc": "Guard up. They are watching for the catch in everything you say.",
+		"valence": 0
+	},
+	"anxious": {
+		"name": "Anxious",
+		"icon": "😟",
+		"desc": "Fear sits at the table — of failure, exposure or being dropped.",
+		"valence": -1
+	},
+	"irritated": {
+		"name": "Irritated",
+		"icon": "😤",
+		"desc": "Patience is thin. One wrong word and the conversation tips.",
+		"valence": -1
+	},
+	"resentful": {
+		"name": "Resentful",
+		"icon": "🌩",
+		"desc": "An old wound, kept fresh. They have not forgotten what you did.",
+		"valence": -1
+	},
+	"resigned": {
+		"name": "Resigned",
+		"icon": "🌫",
+		"desc": "They stopped expecting anything from you. That is the coldest state of all.",
+		"valence": -1
+	}
+}

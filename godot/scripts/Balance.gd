@@ -86,6 +86,18 @@ const TALKIE_TRANSITION_END := 1934
 const VOICE_FIT_MALUS := 12.0
 const VOICE_FAME_DRIFT := 1.2
 
+# ---------- Emotionsmodell (Gesamtpaket Teil A) ----------
+# Wahrnehmungsstufen: Lese-Score = Menschenkenntnis + Instinkt/EMO_INSTINCT_DIV.
+# Unter TIER_LIKELY nur Valenz/unlesbar (EMO_ERR_LOW % falsche Nachbaremotion),
+# bis TIER_CLEAR korrekt-aber-vage (EMO_ERR_MID % Fehler), bis TIER_CAUSE klar,
+# darüber zusätzlich die konkrete Ursache.
+const EMO_TIER_LIKELY := 30.0
+const EMO_TIER_CLEAR := 55.0
+const EMO_TIER_CAUSE := 75.0
+const EMO_ERR_LOW := 25
+const EMO_ERR_MID := 10
+const EMO_INSTINCT_DIV := 10.0
+
 # ---------- Spieler-Attribute (RPG-Chunk 15) ----------
 # Basiswert neuer Spielfiguren; Wachstum nur durch Benutzung mit
 # abnehmendem Ertrag: voll bis SOFTCAP_1, ×0,5 bis SOFTCAP_2, ×0,25 darüber.

@@ -20,6 +20,7 @@ No code needed.
 | `backstories/` | Selectable player backstories | List | `id` |
 | `ethnicities/` | Display names for ethnicities | Object | ethnicity code |
 | `attributes/` | Player attributes (name, icon, desc; values grow through use) | Object | attribute key |
+| `emotions/` | Core emotions of the social simulation (name, icon, desc, valence) | Object | emotion key |
 | `career/` | Career ladder (Junior → Mogul) | List | `id` |
 | `reputation/` | Earned reputation titles | Object | identity key |
 | `locations/` | Node map (places, travel, actions) | List | `id` |
@@ -97,6 +98,21 @@ tab; every chain link can set the current `quest.step`. A link resolved
 without a further `followup` closes the story (the chosen `outcome`
 becomes the closing line). Events without a `quest` block never appear
 in the journal.
+
+## Emotions (`emotions/core.json`)
+
+Eight core emotions (`warm`, `hopeful`, `calculating`, `wary`, `anxious`,
+`irritated`, `resentful`, `resigned`), each `{name, icon, desc, valence}`.
+Emotions are **derived, never stored**: the autoload `Emotions` computes the
+TRUE emotion of a contact, client or rival from existing simulation facts
+(relationship dimensions, mood/loyalty/trust, broken promises, debts,
+grudges) — `Emotions.true_state(kind, ctx)`. What the PLAYER reads comes from
+`Emotions.perceived(kind, ctx)` and depends on the insight attribute
+(`menschenkenntnis`, plus a situational instinct bonus): below 30 only the
+valence is readable (with a chance of a plausibly WRONG neighbor emotion),
+up to 54 the emotion is read correctly but vaguely, up to 74 clearly, and
+from 75 the concrete cause is named. Misreads are deterministic per subject
+and week — reloading does not reroll them. Thresholds live in `Balance.gd`.
 
 ## Career, reputation, locations & contacts (manager systems)
 

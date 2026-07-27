@@ -33,6 +33,7 @@ Jukebox="*res://scripts/MusicGen.gd"
 Persona="*res://scripts/Persona.gd"
 Mogul="*res://scripts/Mogul.gd"
 Network="*res://scripts/Network.gd"
+Emotions="*res://scripts/Emotions.gd"
 Dialogs="*res://scripts/Dialogs.gd"
 Staff="*res://scripts/Staff.gd"
 
