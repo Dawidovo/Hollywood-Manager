@@ -40,6 +40,11 @@
 - **Versprechen und Gefallen sind Verpflichtungen, keine Währung:** Versprechen werden
   mit Deadline/Zeugen/schriftlich-Flag protokolliert; Bruch kostet Loyalität/Ruf,
   schriftliche Brüche können als Beweis in der Presse landen.
+- **Agentur-Kasse darf ins Minus — doppelt gedeckelt:** betragsmäßig durch den
+  Kreditrahmen (`Game.credit_limit()`: Basis + Ruf-Anteil × Inflation, geprüft via
+  `can_spend()` vor jeder aktiven Ausgabe), zeitlich durch `INSOLVENCY_MONTHS`
+  (3 Monate rot → Game Over). Privatentnahmen und autonome Mitarbeiter-Ausgaben
+  laufen nie auf Kredit.
 
 ## Arbeitsweise & Qualität
 
