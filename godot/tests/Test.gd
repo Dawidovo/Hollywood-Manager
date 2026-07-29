@@ -286,6 +286,15 @@ func _ready() -> void:
 	check(Game.pass_any_favor_to_studio(fd_sid), "Tür öffnen: Gefallen wird ans Studio weitergereicht")
 	check(int(Game.state.studioRel[fd_sid]) == clampi(fd_rel + Balance.FAVOR_DOOR_REL, 0, 100), "Tür öffnen hebt die Studio-Beziehung um +%d" % Balance.FAVOR_DOOR_REL)
 
+	# 12h. Branchenkolumne: frühe private Einkommensquelle über den Planner
+	Planner.ensure_planner()
+	Planner.planner_fill("player", 0, "kolumne", null, false)
+	var kol_cash0: float = float(Game.state.player.cash)
+	var kol_rep0: float = float(Game.state.player.pubRep)
+	Planner._apply_planner([])
+	check(float(Game.state.player.cash) > kol_cash0, "Kolumnen-Slots zahlen ein privates Honorar")
+	check(float(Game.state.player.pubRep) > kol_rep0, "Die Byline hebt das öffentliche Ansehen leicht")
+
 	# 13. Migration: alter Netzwerk-Wert → konkrete Gefallen
 	Game.state["network"] = 45
 	Game.state.erase("favors")

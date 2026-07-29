@@ -28,6 +28,7 @@ const PLANNER_PLAYER = {
 	"presse": {"name": "Press work", "icon": "🗞", "desc": "Early rumor detection (from 2 slots/week)"},
 	"buecher": {"name": "Check the books", "icon": "🧾", "desc": "Office costs −10% (from 3 slots/month)"},
 	"weiterbildung": {"name": "Training", "icon": "📚", "desc": "From 3 slots/week your weakest attribute grows"},
+	"kolumne": {"name": "Trade column", "icon": "🖋", "desc": "Private honorarium per slot — your own money, from day one"},
 }
 
 func _empty_week() -> Array:
@@ -95,6 +96,7 @@ func _apply_planner(_events: Array) -> void:
 	var scouting := 0
 	var presse := 0
 	var weiterbildung := 0
+	var kolumne := 0
 	var dinner_slots: Dictionary = {}
 	var pflege_slots: Dictionary = {}
 	for s in Game.state.planner.player:
@@ -117,6 +119,8 @@ func _apply_planner(_events: Array) -> void:
 					pflege_slots[pcid] = int(pflege_slots.get(pcid, 0)) + 1
 			"presse":
 				presse += 1
+			"kolumne":
+				kolumne += 1
 			"buecher":
 				pass  # zählt über plannerMonthCounts in den Monatsabschluss
 	# ~5 Scouting-Slots wirken wie früher eine ganze Scouting-Woche
@@ -133,6 +137,15 @@ func _apply_planner(_events: Array) -> void:
 			Game.change_trust(pc, 0.15 * float(pflege_slots[pcid]))
 	if presse >= maxi(1, 2 - int(Game.backstory_mod("presse_slot_bonus", 0.0))):
 		_planner_presse()
+	# Branchenkolumne (Design-Review Punkt 4): frühe PRIVATE Einkommensquelle,
+	# damit die Empire-Schiene (Lifestyle/Invest) ab Jahr 1 bespielbar ist.
+	# Honorar je Slot: Monatsgehalt/80 — eine volle Kolumnen-Woche ersetzt
+	# grob ein Monatsgehalt, kostet dafür die komplette übrige Planung.
+	if kolumne > 0:
+		var honorar := roundf(Persona.salary() / 80.0 * float(kolumne))
+		Persona.book(honorar, "Trade column: %d piece(s)" % kolumne)
+		Game.state.player.pubRep = clampf(float(Game.state.player.pubRep) + 0.05 * kolumne, 0.0, 100.0)
+		Game.log_msg("Your byline runs in the trades — %s honorarium, and the right people read it." % Util.fmt_money(honorar), "info")
 	# Weiterbildung (Chunk 15): ab 3 Slots wächst das schwächste Attribut —
 	# kein gezieltes Pumpen, der Manager arbeitet an seiner Schwäche.
 	if weiterbildung >= 3 and Game.state.has("attributes") and not Game.state.attributes.is_empty():
