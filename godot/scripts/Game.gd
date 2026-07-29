@@ -263,8 +263,8 @@ func declare_narrative(cid: int, type_s: String) -> String:
 	if not narrative_candidate_types(c).has(type_s):
 		return "The career so far does not support this narrative yet."
 	var cost := roundi(7500.0 * Util.infl(state.year))
-	if float(state.agency.cash) < float(cost):
-		return "The PR campaign costs %s — too much for the till right now." % Util.fmt_money(cost)
+	if not can_spend(float(cost)):
+		return "The PR campaign costs %s — and the credit line is exhausted." % Util.fmt_money(cost)
 	book(-float(cost), "pr_recht", "Career narrative: %s" % client_name(c))
 	c.narrative = {"type":type_s, "startedMi":mi(), "progress":0.0, "status":"aktiv"}
 	press_event("Careers", "Chapter 1: %s — %s begins" % [client_name(c), NARRATIVE_TYPES[type_s].label])
@@ -653,6 +653,17 @@ func book(amount: float, cat: String, text: String) -> void:
 	state.ledger.append({"mi": mi(), "amount": amount, "cat": cat, "text": text})
 	while state.ledger.size() > LEDGER_MAX:
 		state.ledger.pop_front()
+
+# Kreditrahmen: wie tief die Agentur ins Minus darf. Die Banken geben
+# Leine nach Ruf — und ziehen sie nach INSOLVENCY_MONTHS wieder ein.
+func credit_limit() -> float:
+	return roundf((Balance.CREDIT_LIMIT_BASE + float(state.agency.rep) * Balance.CREDIT_LIMIT_PER_REP) * Util.infl(state.year))
+
+# Kann die Agentur diese Ausgabe stemmen? Minus ist erlaubt — aber nur
+# bis zum Kreditrahmen. Laufende Kosten (book) bleiben ungebremst; diese
+# Prüfung gehört vor jede AKTIVE Ausgabe-Entscheidung des Spielers.
+func can_spend(cost: float) -> bool:
+	return float(state.agency.cash) - cost >= -credit_limit()
 
 # Monatsabschluss: Einzelbuchungen eines Monats zu einem Aggregat
 # verdichten, damit die Historie kompakt bleibt.
@@ -1459,8 +1470,8 @@ func launch_comeback(cid) -> String:
 	if c == null or not comeback_possible(c):
 		return "The moment for this has passed."
 	var cost := comeback_cost()
-	if float(state.agency.cash) < float(cost):
-		return "A comeback needs a campaign — and the till cannot cover %s." % Util.fmt_money(cost)
+	if not can_spend(float(cost)):
+		return "A comeback needs a campaign — and even the bank will not front %s anymore." % Util.fmt_money(cost)
 	book(-float(cost), "pr_recht", "Comeback campaign: %s" % client_name(c))
 	var res: Dictionary = quick_production(c, {"prestige": 3, "qualityMod": 6.0})
 	res.prod["comeback"] = true
@@ -2131,8 +2142,8 @@ func fyc_campaign(cid, big: bool) -> String:
 	if float(c.get("campaign", 0.0)) >= Balance.FYC_CAP:
 		return "Every trade paper already carries the name. More money would only look desperate."
 	var cost := roundi((Balance.FYC_BIG_COST if big else Balance.FYC_SMALL_COST) * Util.infl(state.year))
-	if float(state.agency.cash) < float(cost):
-		return "The campaign would cost %s — the till cannot cover it." % Util.fmt_money(cost)
+	if not can_spend(float(cost)):
+		return "The campaign would cost %s — and the credit line is exhausted." % Util.fmt_money(cost)
 	book(-float(cost), "pr_recht", "FYC campaign: %s" % client_name(c))
 	c.campaign = minf(float(c.get("campaign", 0.0)) + (Balance.FYC_BIG_BOOST if big else Balance.FYC_SMALL_BOOST), Balance.FYC_CAP)
 	attr_gain("geschaeftssinn", 0.2)

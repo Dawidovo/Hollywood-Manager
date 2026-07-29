@@ -20,6 +20,10 @@ const OFFICE_EARLY_ERA_UNTIL := 1948
 const OFFICE_BOOKS_MULT := 0.9
 # Monate in Folge zahlungsunfähig, bis die Banken übernehmen.
 const INSOLVENCY_MONTHS := 3
+# Kreditrahmen: wie tief die Agentur ins Minus darf (× Inflation).
+# Basis + Ruf-Anteil — ein respektiertes Haus bekommt mehr Leine.
+const CREDIT_LIMIT_BASE := 25000.0
+const CREDIT_LIMIT_PER_REP := 500.0
 
 # ---------- Gagen & Deals ----------
 # Gagenkurve: BASE × (Ruhm/100)^EXPONENT, nie unter MIN (alles × Inflation).

@@ -88,8 +88,8 @@ func prepare_secret(cid: int, type_s: String, cost: int = -1) -> String:
 	if secret == null:
 		return "You cannot prepare for this without solid information."
 	var actual_cost: int = cost if cost >= 0 else roundi((1800.0 + int(secret.severity) * 1700.0) * Util.infl(Game.state.year))
-	if float(Game.state.agency.cash) < actual_cost:
-		return "The discreet preparation would cost %s. The till cannot cover that yet — the secret stays protected." % Util.fmt_money(actual_cost)
+	if not Game.can_spend(float(actual_cost)):
+		return "The discreet preparation would cost %s — and the credit line will not stretch that far." % Util.fmt_money(actual_cost)
 	Game.book(-float(actual_cost), "pr_recht", "Discreet preparation: %s (%s)" % [SECRET_TYPES[type_s].label, Game.client_name(c)])
 	secret.status = "entschärft"
 	Game.record_identity("diskret", 1.0)
@@ -339,8 +339,8 @@ func suppress_rumor(rid: int) -> String:
 	# Krisenmanagement (Feature 6): der Spin-Doctor kennt die halbe Preisliste
 	var cost: int = roundi(12000.0 * Util.infl(Game.state.year) * (0.5 if Mogul.has_ability("spin_doctor") else 1.0))
 	if not used_favor:
-		if float(Game.state.agency.cash) < cost:
-			return "No matching favor — and the till is short the %s they ask for." % Util.fmt_money(cost)
+		if not Game.can_spend(float(cost)):
+			return "No matching favor — and not even the bank fronts the %s they ask for." % Util.fmt_money(cost)
 		Game.book(-float(cost), "pr_recht", "Rumor suppressed: %s" % rumor_subject_name(rumor))
 	Game.record_identity("diskret", 1.5)
 	Game.attr_gain("diskretion", 0.5)
@@ -359,8 +359,8 @@ func studio_talk_rumor(rid: int) -> String:
 	var paid_with_favor := Game.consume_any_favor()
 	var cost := roundi(9000.0 * Util.infl(Game.state.year))
 	if not paid_with_favor:
-		if float(Game.state.agency.cash) < float(cost):
-			return "Discreet studio talks require a favor or %s." % Util.fmt_money(cost)
+		if not Game.can_spend(float(cost)):
+			return "Discreet studio talks require a favor or %s — and the credit line is spent." % Util.fmt_money(cost)
 		Game.book(-float(cost), "pr_recht", "Discreet studio talks: %s" % rumor_subject_name(rumor))
 	rumor.industryBelief = maxf(0.0, float(rumor.get("industryBelief", 0.0)) - 34.0)
 	rumor.holders = rumor.holders.filter(func(h): return str(h) not in ["Studios", "Directors"])
@@ -376,8 +376,8 @@ func counter_rumor(rid: int) -> String:
 	if rumor == null:
 		return "It is too late for that."
 	var cost: int = roundi(5000.0 * Util.infl(Game.state.year))
-	if float(Game.state.agency.cash) < cost:
-		return "The campaign would cost %s. The till will not cover it." % Util.fmt_money(cost)
+	if not Game.can_spend(float(cost)):
+		return "The campaign would cost %s — more than till and credit line together allow." % Util.fmt_money(cost)
 	Game.book(-float(cost), "pr_recht", "Counter-rumor campaign: %s" % rumor_subject_name(rumor))
 	# Medienstrategie (Feature 6): wer das Narrativ führt, trifft härter & bleibt unerkannt
 	var control := Mogul.has_ability("narrative_control")

@@ -186,8 +186,8 @@ func _rival_poach_event(rival: Dictionary, c: Dictionary) -> Dictionary:
 				var rv = rival_by_id(rid)
 				if cl == null:
 					return "The moment has passed."
-				if float(Game.state.agency.cash) < float(bonus):
-					return "The till cannot cover the bonus — and everyone at the table knows it."
+				if not Game.can_spend(float(bonus)):
+					return "Not even the bank fronts this bonus anymore — and everyone at the table knows it."
 				Game.book(-float(bonus), "bonus", "Counter-offer: %s stays" % Game.client_name(cl))
 				cl.loyalty = clampf(float(cl.loyalty) + 10.0, 0.0, 100.0)
 				Game.change_trust(cl, 4.0)

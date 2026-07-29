@@ -2555,6 +2555,29 @@ func _ready() -> void:
 	Game.state.year = 1950
 	check(EvEngine.eval_weight(EvEngine.def_by_id("streaming_angebot")) == 0.0, "Streaming-Angebote erst ab 2015")
 
+	# Kreditrahmen: Minus ist erlaubt, aber betragsmäßig gedeckelt (zeitlich
+	# deckelt weiterhin INSOLVENCY_MONTHS — siehe letzter Test).
+	Game.new_game("Kreditrahmen", 1950)
+	var cl_limit := Game.credit_limit()
+	check(cl_limit > 0.0, "Kreditrahmen ist positiv (%s)" % Util.fmt_money(cl_limit))
+	Game.state.agency.cash = 0.0
+	check(Game.can_spend(cl_limit), "Ausgabe bis exakt zum Rahmen ist erlaubt")
+	check(not Game.can_spend(cl_limit + 1.0), "Jenseits des Rahmens ist Schluss")
+	var cl_rep_low: float
+	var cl_rep_high: float
+	Game.state.agency.rep = 10
+	cl_rep_low = Game.credit_limit()
+	Game.state.agency.rep = 90
+	cl_rep_high = Game.credit_limit()
+	check(cl_rep_high > cl_rep_low, "Mehr Ruf, mehr Leine: der Rahmen wächst mit der Reputation")
+	# Eine konkrete Aktion respektiert den Rahmen: Gegengerücht-Kampagne
+	var cl_rumor: Dictionary = Scandal.add_rumor(-1, "Testgerücht", false, "skandal", ["Assistants"], 20.0, true)
+	Game.state.agency.cash = -Game.credit_limit()
+	var cl_msg := Scandal.counter_rumor(int(cl_rumor.id))
+	check(cl_msg.contains("credit line") and float(cl_rumor.belief) >= 20.0, "Am Limit blockt die Gegen-Kampagne (kein weiteres Minus)")
+	Game.state.agency.cash = 50000.0
+	check(not Scandal.counter_rumor(int(cl_rumor.id)).contains("credit line"), "Mit Deckung läuft die Gegen-Kampagne wieder")
+
 	# Drei Monate zahlungsunfähig → Game Over (als letzter Test, beendet das Spiel)
 	Game.new_game("Pleite", 1950)
 	Game.state.agency.cash = -5000000.0

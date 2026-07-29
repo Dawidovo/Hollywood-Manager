@@ -239,6 +239,8 @@ func _b_poach() -> Dictionary:
 		"text": "[i]“With us you wouldn't be a client. You would be THE client.”[/i]\n\n%s is courting your most valuable name: %s (loyalty %d/100).%s" % [rival_name, _nm(c), roundi(c.loyalty), "\n\n[color=#7da05c]You knew about the thoughts of leaving. Contract, arguments and budget are already prepared.[/color]" if prepared else ""],
 		"choices": [
 			{"label": "Outbid them financially (%s)" % _fmt(cost), "fn": func():
+				if not Game.can_spend(float(cost)):
+					return "The counter-offer would need %s — and even the bank shakes its head. The rival knows it too." % _fmt(cost)
 				Game.book(-float(cost), "bonus", "Loyalty bonus: %s" % _nm(c))
 				c.loyalty = clampf(c.loyalty + 15.0, 0.0, 100.0)
 				c.mood = clampf(c.mood + 5.0, 0.0, 100.0)
@@ -918,15 +920,15 @@ func _b_power_figure() -> Dictionary:
 	var producer_cost := roundi(35000.0 * Util.infl(Game.state.year))
 	var choices: Array = [
 		{"label":"Prepare the director's chair (%s)" % _fmt(director_cost), "fn":func():
-			if float(Game.state.agency.cash) < float(director_cost):
-				return "The financing isn't there. The director's chair has to wait."
+			if not Game.can_spend(float(director_cost)):
+				return "The financing isn't there — even on credit. The director's chair has to wait."
 			Game.book(-float(director_cost), "investition", "Directing debut: %s" % _nm(c))
 			Game.record_identity("kuenstlerisch", 2.0)
 			Game.record_identity("klientenorientiert", 1.0)
 			return Game.become_power_figure(cid, "director", true)},
 		{"label":"Build a production company (%s)" % _fmt(producer_cost), "fn":func():
-			if float(Game.state.agency.cash) < float(producer_cost):
-				return "Without capital there is no production company. Not yet."
+			if not Game.can_spend(float(producer_cost)):
+				return "Without capital there is no production company — and the credit line is spent. Not yet."
 			Game.book(-float(producer_cost), "investition", "Producing debut: %s" % _nm(c))
 			Game.record_identity("kommerziell", 1.0)
 			Game.record_identity("klientenorientiert", 1.0)

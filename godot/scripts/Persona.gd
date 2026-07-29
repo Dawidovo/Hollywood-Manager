@@ -767,8 +767,8 @@ func travel_blocked_reason(id_s: String) -> String:
 	var loc: Dictionary = Data.LOCATION_BY_ID[id_s]
 	if loc.has("months") and not loc.months.has(int(_st().month)):
 		return "Festival season only (%s)" % Game.MONTHS[int(loc.months[0]) - 1]
-	if float(_st().agency.cash) < travel_cost(id_s):
-		return "Agency account too tight"
+	if not Game.can_spend(travel_cost(id_s)):
+		return "Not even on credit — the agency account is too deep in the red"
 	return ""
 
 

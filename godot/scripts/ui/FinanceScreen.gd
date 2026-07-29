@@ -25,6 +25,11 @@ func render() -> void:
 	var burn := Game.avg_burn(6)
 	var runway := Game.months_to_broke()
 	kc[1].add_child(main._lbl("💰 Capital: %s" % Util.fmt_money(st.agency.cash), 14, main.RED if st.agency.cash < 0 else main.TEXT_C))
+	var credit := Game.credit_limit()
+	if float(st.agency.cash) < 0.0:
+		kc[1].add_child(main._lbl("🏦 Credit line: %s of %s drawn · banks take over after %d months in the red (%d/%d)" % [Util.fmt_money(-float(st.agency.cash)), Util.fmt_money(credit), Balance.INSOLVENCY_MONTHS, int(st.agency.debtMonths), Balance.INSOLVENCY_MONTHS], 13, main.RED))
+	else:
+		kc[1].add_child(main._lbl("🏦 Credit line: up to −%s (reputation-based)" % Util.fmt_money(credit), 13, main.DIM))
 	kc[1].add_child(main._lbl("🔥 Avg. expenses (6 mo.): %s / month" % Util.fmt_money(burn), 13, main.DIM))
 	if runway >= 0.0 and runway < 900.0:
 		kc[1].add_child(main._lbl("⏳ Runway at the current burn: ~%d months" % roundi(runway), 13, main.RED if runway < 6.0 else (main.AMBER if runway < 12.0 else main.GREEN)))
