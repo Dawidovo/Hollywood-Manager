@@ -247,6 +247,24 @@ func _ready() -> void:
 	check(int(Predictions.hit_bet_for(424242).get("id", -1)) == int(hb_bet.id), "hit_bet_for findet die laufende Wette (stille Tab-Option)")
 	check(Predictions.hit_bet_for(-777).is_empty(), "hit_bet_for ohne Wette bleibt leer")
 
+	# 12f. Endgültige Absage hat ein Gedächtnis: Sperrfrist fürs Signing
+	var sc_actor: Dictionary = Game.available_actors().filter(func(a): return Util.fame_at(a, Game.state.year) <= 55)[0]
+	var sc_id := str(sc_actor.id)
+	check(not Game.start_negotiation(sc_id).get("locked", false), "Kandidat für die Sperrfrist ist verhandelbar")
+	var sc_final := false
+	for i in 6:
+		var sc_res: Dictionary = Game.make_offer({"commission": 18, "bonus": 0, "years": 2, "perks": [], "promise": null, "clauses": []})
+		if bool(sc_res.get("accepted", false)):
+			break
+		if bool(sc_res.get("final", false)):
+			sc_final = true
+			break
+	check(sc_final, "Miese Angebote führen zur endgültigen Absage")
+	check(Game.start_negotiation(sc_id).get("declined", false), "Nach der Absage bleibt die Tür zu (Sperrfrist)")
+	Game.state.negoCooldowns[sc_id] = Game.mi() - 1
+	check(not Game.start_negotiation(sc_id).get("declined", false), "Nach Ablauf der Frist öffnet die Tür wieder")
+	Game.nego = null
+
 	# 13. Migration: alter Netzwerk-Wert → konkrete Gefallen
 	Game.state["network"] = 45
 	Game.state.erase("favors")

@@ -102,6 +102,11 @@ const EMO_ERR_LOW := 25
 const EMO_ERR_MID := 10
 const EMO_INSTINCT_DIV := 10.0
 
+# ---------- Signing-Verhandlung ----------
+# Nach einer endgültigen Absage („declines for good“) ist die Tür so
+# lange zu — Verhandlungen haben damit einen echten Einsatz.
+const SIGNING_COOLDOWN_MONTHS := 9
+
 # ---------- Mehrparteien-Verhandlungstisch ----------
 # Der Tisch ist ein Ereignis, keine Routine: nur Prestige-Spitzenprojekte
 # (SOLO), Traumpaar-Castings oder Star-Hauptrollen (minFame ≥ STAR) in

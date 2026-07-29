@@ -1737,7 +1737,10 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 		var owner = Rivals.rival_for_actor(str(a.id))
 		var req := Game.required_rep(fame) + (10 if owner != null else 0)
 		var locked: bool = st.agency.rep < req
-		var cv = _card(a.name, "⚔" if owner != null else ("🔒" if locked else ""))
+		# Sperrfrist nach endgültiger Absage: die Tür bleibt eine Weile zu
+		var cool_until := int(st.get("negoCooldowns", {}).get(str(a.id), -999))
+		var cooling: bool = Game.mi() < cool_until
+		var cv = _card(a.name, "⚔" if owner != null else ("🚪" if cooling else ("🔒" if locked else "")))
 		grid.add_child(cv[0])
 		var box: VBoxContainer = cv[1]
 		var chips: Array = []
@@ -1747,6 +1750,8 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 			chips.append(_chip("📉 Fading", DIM))
 		if locked:
 			chips.append(_chip("🔒 Reputation ≥ %d required" % req, RED))
+		if cooling:
+			chips.append(_chip("🚪 Declined for good — door shut until %s" % Game.mi_str(cool_until), AMBER))
 		if owner != null:
 			chips.append(_chip("⚔ Under contract with %s" % owner.name, AMBER))
 		if chips.size():
@@ -1761,7 +1766,11 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 			Game.grade_range(a.talent, 9, str(a.id) + "tal"), Game.grade_range(Util.attrs(a).charisma, 9, str(a.id) + "cha"),
 			Game.grade_range(Util.attrs(a).discipline, 9, str(a.id) + "dis"), Game.grade_range(Util.attrs(a).presence, 9, str(a.id) + "pre")], 12, DIM))
 		box.add_child(_lbl("💰 Fee level ca. %s" % Util.fmt_money(Util.ask_fee(fame, st.year)), 12, DIM))
-		if locked:
+		if cooling:
+			var cb := _btn("🚪 Door shut until %s" % Game.mi_str(cool_until), func(): pass)
+			cb.disabled = true
+			box.add_child(cb)
+		elif locked:
 			var lb := _btn("🔒 Reputation %d required" % req, func(): pass)
 			lb.disabled = true
 			box.add_child(lb)
@@ -1771,6 +1780,9 @@ func _fill_pool_list(list: VBoxContainer) -> void:
 # ---------- Negotiation v2 ----------
 func _open_negotiation(actor_id: String) -> void:
 	var n = Game.start_negotiation(actor_id)
+	if n.get("declined", false):
+		_show_simple_modal("The door stays shut", "[i]“%s asks for understanding: the matter is settled.”[/i]\n\nThe final rejection still stands. Before %s, nobody in that house will pick up the phone." % [n.actor.name, Game.mi_str(int(n.untilMi))])
+		return
 	if n.get("locked", false):
 		var rival_note := (" The existing contract with %s raises the bar." % n.rivalName) if str(n.get("rivalName", "")) != "" else ""
 		_show_simple_modal("No appointment", "[i]“%s sends word: nobody here knows your agency.”[/i]\n\nStars of this caliber (fame %d) only negotiate with agencies from reputation %d up (currently: %d).%s" % [n.actor.name, n.fame, n.reqRep, int(Game.state.agency.rep), rival_note])

@@ -333,7 +333,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		"coverage": {"current": null, "history": []}, "coverageQueue": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [], "quests": [],
-		"dealBursts": {}, "summitMi": -999,
+		"dealBursts": {}, "summitMi": -999, "negoCooldowns": {},
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
 		"player": Persona.default_player(),
@@ -909,6 +909,11 @@ func actor_demands(actor: Dictionary, fame: float, ask: float, profile: Dictiona
 func start_negotiation(actor_id: String) -> Dictionary:
 	var actor: Dictionary = actor_by_id[actor_id]
 	var fame := Util.fame_at(actor, state.year)
+	# Sperrfrist: wer endgültig abgelehnt hat, nimmt eine Weile keinen Anruf an.
+	var cooldown_until := int(state.get("negoCooldowns", {}).get(actor_id, -999))
+	if mi() < cooldown_until:
+		nego = null
+		return {"declined": true, "actor": actor, "fame": fame, "untilMi": cooldown_until}
 	var req := required_rep(fame)
 	var owner = Rivals.rival_for_actor(actor_id)
 	var poach_req := req + (10 if owner != null else 0)
@@ -1080,7 +1085,9 @@ func make_offer(offer: Dictionary) -> Dictionary:
 	nego.counter = build_counter(offer) if score >= 34.0 else null
 	if nego.round > nego.maxRounds:
 		nego.done = true
-		log_msg("%s declines for good." % nego.actor.name, "bad")
+		# „For good“ heißt jetzt auch für gut: Sperrfrist statt Drehtür.
+		state.negoCooldowns[str(nego.actor.id)] = mi() + Balance.SIGNING_COOLDOWN_MONTHS
+		log_msg("%s declines for good — that door stays shut until %s." % [nego.actor.name, mi_str(mi() + Balance.SIGNING_COOLDOWN_MONTHS)], "bad")
 		return {"accepted": false, "final": true, "hint": negotiation_hint()}
 	return {"accepted": false, "final": false, "hint": negotiation_hint(), "counter": nego.counter}
 
@@ -2369,6 +2376,9 @@ func _apply_save_defaults() -> void:
 		state["dealBursts"] = {}
 	if not state.has("summitMi"):
 		state["summitMi"] = -999
+	# Migration Signing-Sperrfrist: endgültige Absagen haben ein Gedächtnis
+	if not state.has("negoCooldowns") or not (state.negoCooldowns is Dictionary):
+		state["negoCooldowns"] = {}
 	# Migration RPG-Attribute (Chunk 15): fehlende Werte mit Basis nachrüsten
 	if not state.has("attributes") or not (state.attributes is Dictionary):
 		state["attributes"] = {}
