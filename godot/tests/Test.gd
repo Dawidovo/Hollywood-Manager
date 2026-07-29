@@ -183,6 +183,26 @@ func _ready() -> void:
 	check(Game.use_extra_audition(role, int(cl.id)), "extraAudition hebt Ablehnung auf")
 	check(role.rejected.is_empty(), "Ablehnungs-Eintrag entfernt")
 
+	# 12b. Eine Studio-Absage ist bindend — auf JEDEM Weg (Regression):
+	# submit_pitch blockt, eligible_clients filtert (deckt damit auch
+	# Vorsprechen, Paket-Deals und Mitarbeiter-Pitches ab).
+	var rj_cast: Dictionary = {"id": Game.next_id(), "title": "Rejection Test", "studioId": str(Game.state.castings[0].studioId),
+		"genre": "drama", "prestige": 2, "deadline": 8, "roles": [
+			{"type": "lead", "gender": str(Game.actor_by_id[cl.aid].g), "minFame": 5, "ageMin": -100, "ageMax": 999, "fee": 30000, "filled": null, "rejected": []}]}
+	Game.state.castings.append(rj_cast)
+	var rj_role: Dictionary = rj_cast.roles[0]
+	cl.busyUntil = 0
+	check(Game.eligible_clients(rj_cast, rj_role).any(func(e): return int(e.c.id) == int(cl.id)), "Vor der Absage ist der Klient wählbar")
+	rj_role.rejected.append(int(cl.id))
+	var rj_res: Dictionary = Game.submit_pitch(int(rj_cast.id), 0, int(cl.id))
+	check(not bool(rj_res.get("success", false)) and bool(rj_res.get("blocked", false)), "submit_pitch blockt abgelehnte Klienten (bindende Absage)")
+	check(not Game.eligible_clients(rj_cast, rj_role).any(func(e): return int(e.c.id) == int(cl.id)), "eligible_clients filtert abgelehnte Klienten (Audition/Paket/Staff-Wege)")
+	check(not bool(Game.begin_audition(int(rj_cast.id), 0, int(cl.id)).get("ok", false)), "Vorsprechen für die abgelehnte Rolle wird verweigert")
+	Game.grant_favor("extraAudition", {"type": "produzent", "name": "Produzent H. Barrow"})
+	check(Game.use_extra_audition(rj_role, int(cl.id)), "extraAudition öffnet die Rolle wieder")
+	check(Game.eligible_clients(rj_cast, rj_role).any(func(e): return int(e.c.id) == int(cl.id)), "Nach dem Gefallen ist der Klient wieder wählbar")
+	Game.state.castings.erase(rj_cast)
+
 	# 13. Migration: alter Netzwerk-Wert → konkrete Gefallen
 	Game.state["network"] = 45
 	Game.state.erase("favors")

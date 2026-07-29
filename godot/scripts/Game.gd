@@ -1227,6 +1227,10 @@ func eligible_clients(casting: Dictionary, role: Dictionary) -> Array:
 		# Studiosystem: Exklusivklienten dürfen nur für ihr Studio arbeiten
 		if str(c.get("exclusiveStudio", "")) != "" and str(c.exclusiveStudio) != str(casting.studioId):
 			continue
+		# Vom Studio bereits abgelehnt: nur der Gefallen „Extra-Audition“
+		# (use_extra_audition) hebt die Sperre wieder auf.
+		if (role.get("rejected", []) as Array).has(int(c.id)):
+			continue
 		var taken := false
 		var feud_block := false
 		for r in casting.roles:
@@ -1259,6 +1263,9 @@ func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
 	var casting = _casting(casting_id)
 	var role: Dictionary = casting.roles[role_idx]
 	var c = client(client_id)
+	# Eine Studio-Absage ist bindend — egal über welchen Weg der Pitch kommt.
+	if (role.get("rejected", []) as Array).has(int(c.id)):
+		return {"success": false, "blocked": true}
 	var fit := fit_score(casting, role, c)
 	var p: float = clampf(fit / 100.0 + 0.08, 0.05, 0.95)
 	# Gagen-Eskalator: Studios zögern bei teuren Wiederbesetzungen
@@ -2755,6 +2762,8 @@ func audition_support_options(casting: Dictionary, c: Dictionary) -> Array:
 		var role: Dictionary = casting.roles[i]
 		if str(role.type) != "support" or role.filled != null or str(role.gender) != str(actor.g):
 			continue
+		if (role.get("rejected", []) as Array).has(int(c.id)):
+			continue
 		out.append({"roleIdx":i, "fee":role_fee_for(casting, role, c)})
 	return out
 
@@ -2841,6 +2850,9 @@ func audition_support_fallback(casting_id: int, client_id: int, role_idx: int) -
 		return {"ok":false}
 	var role: Dictionary = casting.roles[role_idx]
 	if str(role.type) != "support" or role.filled != null:
+		return {"ok":false}
+	# Auch der Trostpreis respektiert eine frühere Studio-Absage für diese Rolle.
+	if (role.get("rejected", []) as Array).has(int(c.id)):
 		return {"ok":false}
 	pitch_ctx = {"casting":casting, "roleIdx":role_idx, "role":role, "client":c,
 		"fee":role_fee_for(casting, role, c), "haggled":true, "alts":[]}
