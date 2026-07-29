@@ -50,6 +50,14 @@ func star_prediction_event(c: Dictionary) -> Dictionary:
 		]}
 
 
+# Hit-Wette zu einer Produktion (für die stille Wett-Option im Filme-Tab).
+func hit_bet_for(prod_id: int) -> Dictionary:
+	for pr in Game.state.get("predictions", []):
+		if str(pr.type) == "hit" and int(pr.subject) == int(prod_id):
+			return pr
+	return {}
+
+
 func pop_pending_star_prediction() -> Variant:
 	if not Game.state.has("pendingStarPrediction"):
 		return null

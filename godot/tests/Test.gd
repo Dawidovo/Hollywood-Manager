@@ -230,6 +230,23 @@ func _ready() -> void:
 	check(Game.needs_table({"prestige": 2, "dreamPair": false}, nt_star), "Star-Hauptrolle in Prestige-Stoff: Tisch")
 	check(not Game.needs_table({"prestige": 3, "dreamPair": true}, {"type": "support", "minFame": 99}), "Nebenrollen versammeln nie den Tisch")
 
+	# 12e. Hit-Wette: Modal nur bei großen Deals, sonst stiller Tab-Einsatz
+	cl.busyUntil = 0
+	var hb_sid := str(Game.state.castings[0].studioId)
+	var hb_role_base := {"type": "lead", "gender": str(Game.actor_by_id[cl.aid].g), "minFame": 10, "ageMin": -100, "ageMax": 999, "fee": 20000, "filled": {"clientId": int(cl.id), "fee": 20000, "billing": 1}, "rejected": []}
+	var hb_small := {"id": Game.next_id(), "studioId": hb_sid, "title": "HB Small", "genre": "drama", "prestige": 1, "budget": 500000, "deadline": 8, "qualityMod": 0.0, "roles": [hb_role_base.duplicate(true)]}
+	var hb_ev1: Array = []
+	Game.start_production(hb_small, hb_ev1)
+	check(not hb_ev1.any(func(e): return str(e.get("title", "")).begins_with("Gut check")), "Kleiner Drehstart wirft kein Hit-Wetten-Modal mehr")
+	cl.busyUntil = 0
+	var hb_big := {"id": Game.next_id(), "studioId": hb_sid, "title": "HB Big", "genre": "drama", "prestige": 2, "budget": 900000, "deadline": 8, "qualityMod": 0.0, "roles": [hb_role_base.duplicate(true)]}
+	var hb_ev2: Array = []
+	Game.start_production(hb_big, hb_ev2)
+	check(hb_ev2.any(func(e): return str(e.get("title", "")).begins_with("Gut check")), "Großer Drehstart (Hauptrolle, Prestige 2) fragt das Bauchgefühl")
+	var hb_bet: Dictionary = Predictions.add_prediction("hit", 424242, true, Game.mi() + 30, "hb test")
+	check(int(Predictions.hit_bet_for(424242).get("id", -1)) == int(hb_bet.id), "hit_bet_for findet die laufende Wette (stille Tab-Option)")
+	check(Predictions.hit_bet_for(-777).is_empty(), "hit_bet_for ohne Wette bleibt leer")
+
 	# 13. Migration: alter Netzwerk-Wert → konkrete Gefallen
 	Game.state["network"] = 45
 	Game.state.erase("favors")

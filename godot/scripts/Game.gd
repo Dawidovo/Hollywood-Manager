@@ -1990,13 +1990,17 @@ func start_production(casting: Dictionary, events: Array = []) -> void:
 	prod["weeksLeft"] = months * 4
 	_init_production_uncertainty(prod)
 	state.productions.append(prod)
-	# Instinkt-Prognose (Feature 6a): „Wird das ein Hit?“ beim Drehbeginn anbieten
+	# Instinkt-Prognose (Feature 6a): das „Wird das ein Hit?“-Modal nur noch
+	# bei großen eigenen Deals (Hauptrolle im Prestige-Stoff). Alle anderen
+	# Produktionen bieten die Wette still im Filme-Tab an — dasselbe
+	# Bauchgefühl ohne Modal-Müdigkeit (Design-Review Juli 2026).
 	for role in casting.roles:
-		if role.filled.get("clientId") != null:
-			var c2 = client(role.filled.clientId)
-			if c2 != null:
-				events.append(Predictions.hit_prediction_event(prod, c2))
-				break
+		if str(role.type) != "lead" or role.filled.get("clientId") == null:
+			continue
+		var c2 = client(role.filled.clientId)
+		if c2 != null and int(casting.prestige) >= 2:
+			events.append(Predictions.hit_prediction_event(prod, c2))
+			break
 
 func release_film(prod: Dictionary) -> Dictionary:
 	# Skript-Basis deterministisch (wie script_insight): 35 + Prestige*8 + Roll 0..20

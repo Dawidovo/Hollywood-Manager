@@ -166,6 +166,31 @@ func _render_filme() -> void:
 			cv[1].add_child(main._lbl("Cast: " + ", ".join(names), 12, main.DIM))
 			Game.ensure_prod_fields(p)
 			cv[1].add_child(main._chip_row([main._chip("🎬 Release in ~%d wk" % int(p.weeksLeft), main.BLUE)]))
+			# Stille Hit-Wette (Feature 6a): kleine Deals werfen kein Modal
+			# mehr — das Bauchgefühl wartet hier, solange die Kamera läuft.
+			var own_here := false
+			for r2 in p.roles:
+				if r2.filled != null and r2.filled.get("clientId") != null and Game.client(r2.filled.clientId) != null:
+					own_here = true
+			if own_here:
+				var bet: Dictionary = Predictions.hit_bet_for(int(p.id))
+				if bet.is_empty():
+					var bet_pid := int(p.id)
+					var bet_title := str(p.title)
+					var brow := HBoxContainer.new()
+					brow.add_theme_constant_override("separation", 8)
+					cv[1].add_child(brow)
+					var bl = main._lbl("🔮 Gut check: will this be a hit (box office ≥ 2× budget)?", 12, main.DIM)
+					bl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					brow.add_child(bl)
+					brow.add_child(main._btn("Hit", func():
+						Predictions.add_prediction("hit", bet_pid, true, Game.mi() + 30, "“%s” will be a hit" % bet_title)
+						main.render()))
+					brow.add_child(main._btn("Flop", func():
+						Predictions.add_prediction("hit", bet_pid, false, Game.mi() + 30, "“%s” will not be a hit" % bet_title)
+						main.render()))
+				elif not bool(bet.get("resolved", false)):
+					cv[1].add_child(main._lbl("🔮 Your call: %s — the premiere will tell (instinct %d/100)." % ["hit" if bool(bet.guess) else "flop", int(Game.state.get("instinct", 20))], 12, main.ACC_DIM))
 			# Produktions-Signale (Feature 13): Set-Gerede statt Fakten
 			if p.signals.size():
 				var srow := HFlowContainer.new()
