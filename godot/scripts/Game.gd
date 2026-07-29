@@ -1766,6 +1766,15 @@ func tick_clients(events: Array) -> void:
 			if int(state.year) >= 1948 and int(state.year) <= 1965:
 				c.dna.popular = clampf(c.dna.popular + 0.4, -100.0, 100.0)
 				c.dna.unikat = clampf(c.dna.unikat - 0.4, -100.0, 100.0)
+			# Ausgelaufene Verträge räumen das Flag ab — sonst blockiert es für
+			# immer neue TV-/Streaming-Angebote (without_flag) und füttert die
+			# Bedürfnisse weiter, als liefe die Serie noch.
+			if int(tv.months) <= 0:
+				c.flags.erase("tvIncome")
+				log_msg("The series contract of %s has run its course — the weekly checks stop." % client_name(c), "info")
+		elif tv != null:
+			# Migration: Altstände mit months 0 tragen das tote Flag noch
+			c.flags.erase("tvIncome")
 		# Werbevertrag-Klausel (Feature 8): regelmäßiges Einkommen, Image +, Laune −
 		if c.get("clauses", []).has("endorsement"):
 			var ad_income := roundi((900.0 + float(c.fame) * 30.0) * Util.infl(state.year) * float(c.commission) / 100.0)
@@ -3244,7 +3253,7 @@ func close_table() -> Dictionary:
 	if casting2 != null:
 		for i in casting2.roles.size():
 			var r: Dictionary = casting2.roles[i]
-			if str(r.type) == "support" and r.filled == null:
+			if str(r.type) == "support" and r.filled == null and not (r.get("rejected", []) as Array).has(int(table.clientId)):
 				fallbacks.append({"kind": "support", "roleIdx": i})
 		fallbacks.append({"kind": "other"})
 	fallbacks.append({"kind": "withdraw"})
@@ -3258,6 +3267,9 @@ func table_support_fallback(role_idx: int) -> Dictionary:
 	var role: Dictionary = casting.roles[role_idx]
 	var c = client(table.clientId)
 	if c == null:
+		return {"ok": false}
+	# Auch dieser Trostpreis respektiert Besetzung und frühere Studio-Absage.
+	if str(role.type) != "support" or role.filled != null or (role.get("rejected", []) as Array).has(int(c.id)):
 		return {"ok": false}
 	pitch_ctx = {"casting": casting, "roleIdx": role_idx, "role": role, "client": c, "fee": role_fee_for(casting, role, c), "haggled": true, "alts": []}
 	close_deal(float(pitch_ctx.fee), " (consolation prize: supporting role)", [], 1)

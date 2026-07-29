@@ -2522,6 +2522,25 @@ func _ready() -> void:
 	Game.load_game()
 	var tv_c2: Dictionary = Game.state.clients.filter(func(cc): return int(cc.id) == 9700)[0]
 	check(int(tv_c2.flags.tvIncome.months) == 9, "Der Serienvertrag überlebt Save/Load")
+	# Regression: der auslaufende Serienvertrag räumt das Flag ab — sonst
+	# blockiert without_flag für immer neue TV-/Streaming-Angebote.
+	tv_c2.flags["tvIncome"] = {"months": 1, "monthly": 800}
+	Game.tick_clients([])
+	check(tv_c2.flags.get("tvIncome") == null, "Ausgelaufener Serienvertrag räumt das tvIncome-Flag ab")
+	check(EvEngine.eval_weight(tv_def) > 0.0, "Nach Vertragsende sind neue TV-Angebote wieder möglich")
+	# Regression: die Star-Prognose zählt das frühe Erreichen von Ruhm 70,
+	# auch wenn der Ruhm bis zum Stichtag wieder fallen würde.
+	var star_pr: Dictionary = Predictions.add_prediction("star", 9700, true, Game.mi() + 96, "star test")
+	tv_c2.fame = 75.0
+	Predictions.tick_predictions([])
+	check(bool(star_pr.resolved) and bool(star_pr.correct), "Star-Prognose zählt das frühe Erreichen von Ruhm 70")
+	# Regression: Trostpreis am Verhandlungstisch respektiert die Studio-Absage
+	tv_cast.roles.append({"type": "support", "gender": str(tv_actor.g), "minFame": 5, "ageMin": -100, "ageMax": 999, "fee": 8000, "filled": null, "rejected": [9700]})
+	Game.state.castings.append(tv_cast)
+	Game.table = {"castingId": 9701, "roleIdx": 0, "clientId": 9700, "fee": 10000, "billing": 1, "clauses": [], "points": 3, "favorUsed": false, "chemUsed": false, "done": false, "parties": {}}
+	check(not bool(Game.table_support_fallback(1).get("ok", false)), "Trostpreis-Nebenrolle bleibt nach Studio-Absage gesperrt")
+	Game.state.castings.erase(tv_cast)
+	Game.table = null
 	# Binge-Ruhm: Heat-Abbau nur ab 2015 beschleunigt
 	tv_c2.flags.erase("tvIncome")
 	tv_c2.heat = 5.0

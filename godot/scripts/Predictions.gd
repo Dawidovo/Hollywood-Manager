@@ -102,10 +102,14 @@ func tick_predictions(_events: Array) -> void:
 			continue
 		match str(pr.type):
 			"star":
-				if Game.mi() >= int(pr.dueMi):
-					var c = Game.client(pr.subject)
-					var fame_now := float(c.fame) if c != null else 0.0
-					Predictions._resolve_prediction(pr, (fame_now >= 70.0) == bool(pr.guess), str(pr.get("note", "star prediction")))
+				var c = Game.client(pr.subject)
+				var fame_now := float(c.fame) if c != null else 0.0
+				# „Erreicht Ruhm 70 binnen 8 Jahren“ zählt, sobald es passiert —
+				# nicht erst am Stichtag (dazwischen kann der Ruhm wieder fallen).
+				if fame_now >= 70.0:
+					Predictions._resolve_prediction(pr, bool(pr.guess), str(pr.get("note", "star prediction")))
+				elif Game.mi() >= int(pr.dueMi):
+					Predictions._resolve_prediction(pr, not bool(pr.guess), str(pr.get("note", "star prediction")))
 			"hit", "betterfit", "coverage":
 				if Game.mi() >= int(pr.dueMi) + 12:
 					pr["resolved"] = true
