@@ -102,6 +102,16 @@ const EMO_ERR_LOW := 25
 const EMO_ERR_MID := 10
 const EMO_INSTINCT_DIV := 10.0
 
+# ---------- Gefallen-Ökonomie ----------
+# Gefallen verjähren schneller (vorher 24–36 Monate: das Register lief
+# voll und nichts drängte). Kurze Fristen + aktive Verwendungen halten
+# den Kreislauf in Bewegung. VERFALL_CHANCE: Anteil mit Ablaufdatum.
+const FAVOR_EXPIRY_MIN_MONTHS := 12
+const FAVOR_EXPIRY_MAX_MONTHS := 18
+const FAVOR_EXPIRY_CHANCE := 0.9
+# Aktiver Einsatz „Tür öffnen“: Beziehungsgewinn beim Studio.
+const FAVOR_DOOR_REL := 7
+
 # ---------- Signing-Verhandlung ----------
 # Nach einer endgültigen Absage („declines for good“) ist die Tür so
 # lange zu — Verhandlungen haben damit einen echten Einsatz.

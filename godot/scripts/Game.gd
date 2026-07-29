@@ -797,8 +797,8 @@ func favor_contact_for(kind: String, studio_id: String = "") -> Dictionary:
 func grant_favor(kind: String, from: Dictionary = {}, silent: bool = false) -> Dictionary:
 	var person: Dictionary = from if not from.is_empty() else favor_contact_for(kind)
 	var exp := -1
-	if Util.chance(0.8):
-		exp = mi() + Util.rndi(24, 36)
+	if Util.chance(Balance.FAVOR_EXPIRY_CHANCE):
+		exp = mi() + Util.rndi(Balance.FAVOR_EXPIRY_MIN_MONTHS, Balance.FAVOR_EXPIRY_MAX_MONTHS)
 	var fav := {"id": next_id(), "kind": kind, "from": person, "gainedMi": mi(), "expiresMi": exp, "note": str(FAVOR_KINDS[kind].desc)}
 	state.favors.append(fav)
 	attr_gain("netzwerk", 0.3)
@@ -827,9 +827,26 @@ func remove_debt(debt_id) -> void:
 func pass_any_favor_to_studio(studio_id: String) -> bool:
 	if not consume_any_favor():
 		return false
-	state.studioRel[studio_id] = clampi(int(state.studioRel.get(studio_id, 40)) + 7, 0, 100)
+	state.studioRel[studio_id] = clampi(int(state.studioRel.get(studio_id, 40)) + Balance.FAVOR_DOOR_REL, 0, 100)
 	log_msg("You pass a favor along to %s — the relationship deepens." % _studio(studio_id).name, "deal")
 	return true
+
+# Aktiver Gefallen-Einsatz (immer verfügbar, kein Event nötig): ein Anruf,
+# und ein verdecktes Projekt landet auf deinem Tisch — oder ein neues wird
+# dir zugetragen, bevor die Konkurrenz davon hört.
+func favor_reveal_casting() -> String:
+	if not consume_any_favor():
+		return "Nobody owes you anything right now."
+	for cs in state.castings:
+		if bool(cs.get("hidden", false)):
+			cs.hidden = false
+			log_msg("A favor called in: “%s” lands on your desk before the town hears of it." % str(cs.title), "deal")
+			return "One phone call. “%s” is casting — and the town does not know yet." % str(cs.title)
+	spawn_castings(1)
+	var fresh: Dictionary = state.castings[state.castings.size() - 1]
+	fresh["hidden"] = false
+	log_msg("A favor called in: “%s” comes to you before the announcement." % str(fresh.title), "deal")
+	return "One phone call. “%s” is casting — and you heard it first." % str(fresh.title)
 
 # extraAudition: hebt eine Rollen-Absage für einen Klienten auf.
 func use_extra_audition(role: Dictionary, client_id) -> bool:

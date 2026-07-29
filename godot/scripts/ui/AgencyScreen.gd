@@ -59,6 +59,31 @@ func _render_buero() -> void:
 		cg[1].add_child(main._lbl("🤝 %s — %s%s" % [f["from"].get("name", "?"), Game.FAVOR_KINDS.get(str(f.kind), {}).get("name", str(f.kind)), exp_s], 12, main.GREEN))
 	for d in st.debts:
 		cg[1].add_child(main._lbl("⚠ You owe %s: %s" % [d["from"].get("name", "?"), Game.FAVOR_KINDS.get(str(d.kind), {}).get("name", str(d.kind))], 12, main.AMBER))
+	# Aktive Verwendungen: Gefallen sind Kapital, kein Sammelalbum.
+	if st.favors.size():
+		cg[1].add_child(main._lbl("Call one in — favors expire, doors do not wait:", 11, main.DIM))
+		var cold_sid := ""
+		var cold_rel := 101
+		for s in Game.active_studios():
+			if int(st.studioRel[s.id]) < cold_rel:
+				cold_rel = int(st.studioRel[s.id])
+				cold_sid = str(s.id)
+		var frow := HBoxContainer.new()
+		frow.add_theme_constant_override("separation", 8)
+		cg[1].add_child(frow)
+		if cold_sid != "":
+			var door_sid := cold_sid
+			var door_b = main._btn("🚪 Open a door: %s (+%d)" % [Game._studio(cold_sid).name, Balance.FAVOR_DOOR_REL], func():
+				Game.pass_any_favor_to_studio(door_sid)
+				main.render())
+			door_b.tooltip_text = "Pass a favor along to the studio you are coldest with — relations +%d." % Balance.FAVOR_DOOR_REL
+			frow.add_child(door_b)
+		var reveal_b = main._btn("📞 What is not on the market yet?", func():
+			var msg: String = Game.favor_reveal_casting()
+			main.render()
+			main._show_simple_modal("A favor, called in", msg))
+		reveal_b.tooltip_text = "Spend a favor: a hidden project lands on your desk — or you hear of a new one first."
+		frow.add_child(reveal_b)
 
 	var c2 = main._card("Market %d%%" % roundi(st.market * 100.0), "📈")
 	grid.add_child(c2[0])

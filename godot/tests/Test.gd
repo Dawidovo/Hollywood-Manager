@@ -265,6 +265,27 @@ func _ready() -> void:
 	check(not Game.start_negotiation(sc_id).get("declined", false), "Nach Ablauf der Frist öffnet die Tür wieder")
 	Game.nego = null
 
+	# 12g. Gefallen-Ökonomie: kürzere Fristen & aktive Verwendungen
+	var fv: Dictionary = Game.grant_favor("billing", {"type": "produzent", "name": "P. Test"})
+	check(int(fv.expiresMi) < 0 or int(fv.expiresMi) <= Game.mi() + Balance.FAVOR_EXPIRY_MAX_MONTHS, "Gefallen verjähren spätestens nach %d Monaten" % Balance.FAVOR_EXPIRY_MAX_MONTHS)
+	var fr_target: Dictionary = Game.state.castings[0]
+	fr_target["hidden"] = true
+	Game.favor_reveal_casting()
+	check(not bool(fr_target.get("hidden", false)), "Gefallen-Einsatz deckt das verdeckte Projekt auf")
+	Game.state.favors.clear()
+	check(Game.favor_reveal_casting().contains("Nobody"), "Ohne Gefallen bleibt nur ein höfliches Nein")
+	Game.grant_favor("billing", {"type": "produzent", "name": "P. Test"})
+	for fr_cs in Game.state.castings:
+		fr_cs["hidden"] = false
+	var fr_n: int = Game.state.castings.size()
+	Game.favor_reveal_casting()
+	check(Game.state.castings.size() == fr_n + 1 and not bool(Game.state.castings[fr_n].get("hidden", false)), "Ohne verdecktes Projekt bringt der Anruf ein neues ans Licht")
+	var fd_sid := str(Game.state.castings[0].studioId)
+	Game.grant_favor("billing", {"type": "produzent", "name": "P. Test"})
+	var fd_rel := int(Game.state.studioRel[fd_sid])
+	check(Game.pass_any_favor_to_studio(fd_sid), "Tür öffnen: Gefallen wird ans Studio weitergereicht")
+	check(int(Game.state.studioRel[fd_sid]) == clampi(fd_rel + Balance.FAVOR_DOOR_REL, 0, 100), "Tür öffnen hebt die Studio-Beziehung um +%d" % Balance.FAVOR_DOOR_REL)
+
 	# 13. Migration: alter Netzwerk-Wert → konkrete Gefallen
 	Game.state["network"] = 45
 	Game.state.erase("favors")
