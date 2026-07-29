@@ -203,6 +203,33 @@ func _ready() -> void:
 	check(Game.eligible_clients(rj_cast, rj_role).any(func(e): return int(e.c.id) == int(cl.id)), "Nach dem Gefallen ist der Klient wieder wählbar")
 	Game.state.castings.erase(rj_cast)
 
+	# 12c. Absage-Feedback: der größte Malus-Faktor wird lesbar — gestaffelt
+	# über die Menschenkenntnis-Stufen (Floskel → vage Richtung → Grund).
+	var ph_role := {"type": "lead", "gender": str(Game.actor_by_id[cl.aid].g), "minFame": 95, "ageMin": -100, "ageMax": 999, "fee": 40000, "filled": null, "rejected": []}
+	var ph_cast := {"id": Game.next_id(), "studioId": str(Game.state.castings[0].studioId), "title": "Hint Test", "genre": str(Game.actor_by_id[cl.aid].genres[0]), "prestige": 1, "deadline": 8, "roles": [ph_role]}
+	var ph_mk_before: float = float(Game.state.attributes.get("menschenkenntnis", 22.0))
+	var ph_inst_before: int = int(Game.state.get("instinct", 20))
+	Game.state.instinct = 0
+	Game.state.attributes["menschenkenntnis"] = 20.0
+	check(Game.pitch_rejection_hint(ph_cast, ph_role, cl) == "", "Unter Menschenkenntnis 30 bleibt die Absage eine Floskel")
+	Game.state.attributes["menschenkenntnis"] = 40.0
+	var ph_vague: String = Game.pitch_rejection_hint(ph_cast, ph_role, cl)
+	check(ph_vague.contains("standing") and not ph_vague.contains("marquee"), "Mittlere Stufe: nur die vage Richtung")
+	Game.state.attributes["menschenkenntnis"] = 80.0
+	check(Game.pitch_rejection_hint(ph_cast, ph_role, cl).contains("marquee"), "Hohe Stufe nennt den konkreten Grund (Ruhm-Lücke)")
+	Game.state.attributes["menschenkenntnis"] = ph_mk_before
+	Game.state.instinct = ph_inst_before
+
+	# 12d. Mehrparteien-Tisch nur noch für die großen Deals (Pacing-Fix)
+	var nt_role := {"type": "lead", "gender": "f", "minFame": 30, "ageMin": 18, "ageMax": 99, "fee": 30000, "filled": null, "rejected": []}
+	check(not Game.needs_table({"prestige": 2, "budget": 2000000, "dreamPair": false}, nt_role), "Prestige 2 mit kleiner Hauptrolle: kein Tisch mehr (war Routine)")
+	check(Game.needs_table({"prestige": 3, "dreamPair": false}, nt_role), "Prestige 3 versammelt alle Parteien")
+	check(Game.needs_table({"prestige": 2, "dreamPair": true}, nt_role), "Traumpaar-Casting bleibt Tisch-Ereignis")
+	var nt_star: Dictionary = nt_role.duplicate()
+	nt_star.minFame = 50
+	check(Game.needs_table({"prestige": 2, "dreamPair": false}, nt_star), "Star-Hauptrolle in Prestige-Stoff: Tisch")
+	check(not Game.needs_table({"prestige": 3, "dreamPair": true}, {"type": "support", "minFame": 99}), "Nebenrollen versammeln nie den Tisch")
+
 	# 13. Migration: alter Netzwerk-Wert → konkrete Gefallen
 	Game.state["network"] = 45
 	Game.state.erase("favors")

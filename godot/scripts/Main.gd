@@ -2019,7 +2019,11 @@ func _open_pitch(casting_id: int, role_idx: int, insight: int = -1) -> void:
 func _do_pitch(casting_id: int, role_idx: int, client_id: int) -> void:
 	var res = Game.submit_pitch(casting_id, role_idx, client_id)
 	if not res.success:
-		_show_outcome_modal("Studio pitch", "[b]Rejection[/b]\n\n[i]“We had imagined the role … differently. Thank you for your time.”[/i]")
+		var reject_s := "[b]Rejection[/b]\n\n[i]“We had imagined the role … differently. Thank you for your time.”[/i]"
+		# Menschenkenntnis liest zwischen den Zeilen: der wahre Absagegrund
+		if str(res.get("hint", "")) != "":
+			reject_s += "\n\n👁 %s" % str(res.hint)
+		_show_outcome_modal("Studio pitch", reject_s)
 		return
 	_offer_clauses = []
 	# Große Hauptrollen: Mehrparteien-Verhandlung (Feature 9)

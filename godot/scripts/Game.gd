@@ -1270,6 +1270,59 @@ func role_fee_for(_cs: Dictionary, role: Dictionary, c: Dictionary) -> int:
 		ask *= 1.15
 	return roundi(clampf(ask, role.fee * 0.6, role.fee * 2.2))
 
+# Warum hat das Studio abgelehnt? Liefert den größten Malus-Faktor des
+# Fits als Hinweis — gestaffelt über die Menschenkenntnis-Stufen des
+# Emotionsmodells: unter TIER_LIKELY nichts (die Absage bleibt Floskel),
+# bis TIER_CLEAR nur die vage Richtung, darüber der konkrete Grund.
+# So wird aus dem Würfelwurf ein Handwerk, das man lesen lernt.
+func pitch_rejection_hint(casting: Dictionary, role: Dictionary, c: Dictionary) -> String:
+	var score := Emotions.read_score()
+	if score < Balance.EMO_TIER_LIKELY:
+		return ""
+	var actor: Dictionary = actor_by_id[c.aid]
+	var age := Util.age_of(actor, state.year)
+	# [Malus-Gewicht, vage Richtung, konkreter Grund]
+	var factors: Array = []
+	if float(c.fame) < float(role.minFame):
+		factors.append([minf(25.0, (float(role.minFame) - float(c.fame)) * 0.7),
+			"it was about standing, not craft",
+			"the name is not big enough yet — the studio wanted more marquee value for this part"])
+	if not actor.genres.has(str(casting.genre)):
+		factors.append([16.0, "they doubted the material fits",
+			"the résumé shows no %s — the studio could not picture it" % str(casting.genre)])
+	var dna_v := CareerDNA.dna_fit(c, str(casting.genre), studio_style(str(casting.studioId)))
+	if dna_v <= -3.0:
+		factors.append([absf(dna_v), "the image was the problem",
+			"the public image points the wrong way — the career DNA does not sell this role"])
+	var rumor_pen := Scandal.rumor_fit_penalty(c)
+	if rumor_pen > 0.0:
+		factors.append([rumor_pen + 2.0, "something unspoken hung in the room",
+			"the whispers about the client have reached the studio floor"])
+	if float(c.exhaustion) > 50.0:
+		factors.append([(float(c.exhaustion) - 50.0) / 2.5, "they worried about reliability",
+			"word is the client is running on fumes — nobody insures an exhausted lead"])
+	if age < int(role.ageMin) or age > int(role.ageMax):
+		factors.append([absf(age - clampi(age, int(role.ageMin), int(role.ageMax))) * 2.5,
+			"the part calls for someone else",
+			"the age does not match what the part calls for"])
+	var block := Rivals.rival_casting_block(str(casting.studioId))
+	if block > 0.0:
+		factors.append([block, "someone talked before you arrived",
+			"a studio-loyal rival house has poisoned this well"])
+	if int(state.studioRel.get(str(casting.studioId), 40)) < 30:
+		factors.append([8.0, "the room was cold from the start",
+			"the studio's relationship with your agency is icy — warm it up first"])
+	if voice_at_risk(c):
+		factors.append([Balance.VOICE_FIT_MALUS, "they hesitated at the sound test",
+			"in the talkie transition, the studio does not trust the voice"])
+	if factors.is_empty():
+		return "Sometimes it is simply the day, not the client." if score >= Balance.EMO_TIER_CLEAR else ""
+	factors.sort_custom(func(a, b): return float(a[0]) > float(b[0]))
+	var top: Array = factors[0]
+	if score < Balance.EMO_TIER_CLEAR:
+		return "Your read of the room: %s." % str(top[1])
+	return "Your read of the room: %s." % str(top[2])
+
 func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
 	var casting = _casting(casting_id)
 	var role: Dictionary = casting.roles[role_idx]
@@ -1303,10 +1356,11 @@ func submit_pitch(casting_id, role_idx: int, client_id) -> Dictionary:
 		if needs_table(casting, role):
 			pitch_ctx["table"] = true
 		return {"success": true, "fee": pitch_ctx.fee}
+	var hint := pitch_rejection_hint(casting, role, c)
 	role.rejected.append(int(client_id))
 	state.studioRel[casting.studioId] = clampi(int(state.studioRel[casting.studioId]) - 1, 0, 100)
 	Mogul.grant_xp("talent", 1.0, "A rejection teaches too")
-	return {"success": false}
+	return {"success": false, "hint": hint}
 
 func _casting(cid) -> Variant:
 	for cs in state.castings:
@@ -3150,7 +3204,17 @@ func director_chem_quality(prod: Dictionary) -> float:
 # Bei großen Hauptrollen sitzen Studio, Regisseur, Klient und ggf. ein
 # zweiter Star am Tisch. Zufriedenheits-Scores, Vetos, begrenzte Punkte.
 func needs_table(casting: Dictionary, role: Dictionary) -> bool:
-	return str(role.type) == "lead" and (int(casting.prestige) >= 2 or float(casting.budget) >= float(role.fee) * 10.0)
+	if str(role.type) != "lead":
+		return false
+	# Nur die wirklich großen Deals versammeln alle Parteien am Tisch.
+	# (Vorher zusätzlich: budget ≥ fee×10 — der Pauschalanteil des Budgets
+	# dominierte bei kleinen Gagen, der Tisch feuerte bei jedem zweiten
+	# Lead-Pitch und wurde Routine statt Ereignis.)
+	if bool(casting.get("dreamPair", false)):
+		return true
+	if int(casting.prestige) >= Balance.TABLE_PRESTIGE_SOLO:
+		return true
+	return int(casting.prestige) >= 2 and int(role.minFame) >= Balance.TABLE_STAR_MINFAME
 
 func start_table() -> Dictionary:
 	var casting: Dictionary = pitch_ctx.casting

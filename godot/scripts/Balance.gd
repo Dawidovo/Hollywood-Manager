@@ -102,6 +102,13 @@ const EMO_ERR_LOW := 25
 const EMO_ERR_MID := 10
 const EMO_INSTINCT_DIV := 10.0
 
+# ---------- Mehrparteien-Verhandlungstisch ----------
+# Der Tisch ist ein Ereignis, keine Routine: nur Prestige-Spitzenprojekte
+# (SOLO), Traumpaar-Castings oder Star-Hauptrollen (minFame ≥ STAR) in
+# Prestige-Stoffen versammeln alle Parteien.
+const TABLE_PRESTIGE_SOLO := 3
+const TABLE_STAR_MINFAME := 45
+
 # ---------- Schlüsselbegegnungen (Gesamtpaket Teil A3) ----------
 # Vertragsende: unter dieser Loyalität (oder nach Wortbruch) wird die
 # Verlängerung zur vollen Szene statt zum stillen Automatismus.
