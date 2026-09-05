@@ -1,0 +1,301 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2582)
+AUDIT_BEGIN
+AUDIT_PATH;C:/Users/Anwender/Desktop/Hollywood Manager/godot/qa/2026-09-05/project/qa_userdata/hm_save.json
+AUDIT_CREDIT_PR;before=-70142.0;after=-71021.0;limit=70142.0
+AUDIT_CREDIT_GALA;before=-70142.0;after=-71607.0;limit=70142.0
+AUDIT_DINNER;five_separate_slots;before=27.0;after=27
+AUDIT_SIGN_CREDIT;can_spend_zero=true
+AUDIT_SIGN_CREDIT;result={ "broke": true }
+AUDIT_DUPLICATE_SIGN;clients=2
+AUDIT_ZERO_SALE;xp_before=1.0;xp_after=11.0;cash_delta=0.0;shares_before=17;shares_after=17
+AUDIT_EVENT_SAVE;returned_events=1;followups_before_load=0;followups_after_load=0;state_keys=["agency", "attributes", "audition", "backroom", "backstory", "castings", "clients", "contactAP", "contacts", "coverage", "coverageQueue", "dealBursts", "debts", "delegation", "directors", "endgame", "estate", "eventCd", "favors", "filmStakes", "followups", "history_pairs", "identity", "identityLastTop", "inbox", "inboxSeen", "instinct", "invest", "ledger", "ledgerMonthly", "log", "market", "marketHistory", "memoirs", "month", "negoCooldowns", "newspaper", "nextId", "occasions", "outMail", "over", "planner", "plannerMonthCounts", "player", "powerFigures", "predictions", "press", "pressFeed", "productions", "promises", "quests", "released", "rivals", "rumors", "saveVersion", "scoutBonus", "seenKinds", "skills", "staff", "startYear", "strikeExempt", "strikeMonths", "studioRel", "summitMi", "usedHistory", "usedLines", "usedTitles", "week", "weekDigest", "weekScenes", "weekScenesNoted", "year", "assistant"]
+AUDIT_EVENT_TITLE;The test reel
+AUDIT_BAD_SAVE_BEGIN;{}
+SCRIPT ERROR: Invalid access to property or key 'year' on a base object of type 'Dictionary'.
+   at: _apply_save_defaults (res://scripts/Game.gd:2380)
+   GDScript backtrace (most recent call first):
+       [0] _apply_save_defaults (res://scripts/Game.gd:2380)
+       [1] load_game (res://scripts/Game.gd:2329)
+       [2] _ready (res://tests/Audit.gd:69)
+AUDIT_BAD_SAVE_END;accepted=true;load_error=;has_agency=false
+AUDIT_BAD_SAVE_BEGIN;{"saveVersion":2}
+SCRIPT ERROR: Invalid access to property or key 'year' on a base object of type 'Dictionary'.
+   at: _apply_save_defaults (res://scripts/Game.gd:2380)
+   GDScript backtrace (most recent call first):
+       [0] _apply_save_defaults (res://scripts/Game.gd:2380)
+       [1] load_game (res://scripts/Game.gd:2329)
+       [2] _ready (res://tests/Audit.gd:69)
+AUDIT_BAD_SAVE_END;accepted=true;load_error=;has_agency=false
+AUDIT_BAD_SAVE_BEGIN;{"saveVersion":2,"year":1950,"agency":null}
+SCRIPT ERROR: Invalid access to property or key 'rep' on a base object of type 'Nil'.
+   at: promotion_requirements (res://scripts/Persona.gd:109)
+   GDScript backtrace (most recent call first):
+       [0] promotion_requirements (res://scripts/Persona.gd:109)
+       [1] _promotion_due (res://scripts/Persona.gd:125)
+       [2] ensure_player (res://scripts/Persona.gd:51)
+       [3] _apply_save_defaults (res://scripts/Game.gd:2408)
+       [4] load_game (res://scripts/Game.gd:2329)
+       [5] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'nextId' on a base object of type 'Dictionary'.
+   at: next_id (res://scripts/Game.gd:437)
+   GDScript backtrace (most recent call first):
+       [0] next_id (res://scripts/Game.gd:437)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:87)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:106)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'nextId' on a base object of type 'Dictionary'.
+   at: next_id (res://scripts/Game.gd:437)
+   GDScript backtrace (most recent call first):
+       [0] next_id (res://scripts/Game.gd:437)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:87)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:106)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'nextId' on a base object of type 'Dictionary'.
+   at: next_id (res://scripts/Game.gd:437)
+   GDScript backtrace (most recent call first):
+       [0] next_id (res://scripts/Game.gd:437)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:87)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:106)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'nextId' on a base object of type 'Dictionary'.
+   at: next_id (res://scripts/Game.gd:437)
+   GDScript backtrace (most recent call first):
+       [0] next_id (res://scripts/Game.gd:437)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:87)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:106)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'nextId' on a base object of type 'Dictionary'.
+   at: next_id (res://scripts/Game.gd:437)
+   GDScript backtrace (most recent call first):
+       [0] next_id (res://scripts/Game.gd:437)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:408)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:87)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:106)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:408)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'nextId' on a base object of type 'Dictionary'.
+   at: next_id (res://scripts/Game.gd:437)
+   GDScript backtrace (most recent call first):
+       [0] next_id (res://scripts/Game.gd:437)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:410)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] _add_contact (res://scripts/Persona.gd:414)
+       [2] init_contacts (res://scripts/Persona.gd:410)
+       [3] ensure_contacts (res://scripts/Persona.gd:716)
+       [4] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [5] load_game (res://scripts/Game.gd:2329)
+       [6] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:87)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:410)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'month' on a base object of type 'Dictionary'.
+   at: mi (res://scripts/Game.gd:498)
+   GDScript backtrace (most recent call first):
+       [0] mi (res://scripts/Game.gd:498)
+       [1] seed_contact (res://scripts/Network.gd:106)
+       [2] _add_contact (res://scripts/Persona.gd:418)
+       [3] init_contacts (res://scripts/Persona.gd:410)
+       [4] ensure_contacts (res://scripts/Persona.gd:716)
+       [5] _apply_save_defaults (res://scripts/Game.gd:2409)
+       [6] load_game (res://scripts/Game.gd:2329)
+       [7] _ready (res://tests/Audit.gd:69)
+SCRIPT ERROR: Invalid access to property or key 'clients' on a base object of type 'Dictionary'.
+   at: _apply_save_defaults (res://scripts/Game.gd:2459)
+   GDScript backtrace (most recent call first):
+       [0] _apply_save_defaults (res://scripts/Game.gd:2459)
+       [1] load_game (res://scripts/Game.gd:2329)
+       [2] _ready (res://tests/Audit.gd:69)
+AUDIT_BAD_SAVE_END;accepted=true;load_error=;has_agency=true
+AUDIT_DONE

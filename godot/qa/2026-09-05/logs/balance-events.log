@@ -1,0 +1,1571 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2582)
+=== Hollywood Manager Balance-Sim ===
+SIM;profile;seed;year;week;cash;priv;stress;energy;clients;rep;inboxOpen;favors;debts;films
+SIM;solide;0;1925;0;178320;2500;20;77;4;20;2;1;0;0
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($30K)
+WARNING: Invalid comment in Ogg Vorbis file "res://assets/music/era_ragtime.ogg", should contain '=': "Sony Ogg Vorbis 1.0 Final".
+   at: maybe_update_info (modules/vorbis/audio_stream_ogg_vorbis.cpp:473)
+   GDScript backtrace (most recent call first):
+       [0] _load_track (res://scripts/MusicGen.gd:84)
+       [1] set_era (res://scripts/MusicGen.gd:72)
+       [2] _month_close (res://scripts/Game.gd:1707)
+       [3] end_week (res://scripts/Game.gd:1665)
+       [4] _run_era (res://tools/BalanceEvents.gd:52)
+       [5] _ready (res://tools/BalanceEvents.gd:30)
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 24 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Two clients, one role;Back Marlene Dietrich (safe)
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+SIM;solide;0;1925;13;140818;3188;19;100;4;19;2;2;0;0
+EVENT_RESOLVED;A new name for a new star;Accept the renaming
+EVENT_RESOLVED;Premiere: “A Bitter Winter”;Continue
+EVENT_RESOLVED;Gut check: “Der Scheich”;Yes, this will be a hit
+SIM;solide;0;1925;26;141348;2188;52;92;4;21;0;4;0;1
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “The Godfather of Havana”;Continue
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $1011)
+EVENT_RESOLVED;Premiere: “The Last Ride to Eldorado”;Continue
+EVENT_RESOLVED;Premiere: “The Jazz Singer”;Continue
+EVENT_RESOLVED;Premiere: “Screams from Croft Manor”;Continue
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;Premiere: “Wings”;Continue
+SIM;solide;0;1925;39;122857;2660;44;91;4;23;1;4;0;6
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Premiere: “The Ritual of Croft Manor”;Continue
+EVENT_RESOLVED;Premiere: “Rhythm of Havana”;Continue
+EVENT_RESOLVED;The staged romance;Accept the campaign
+EVENT_RESOLVED;Premiere: “Ben Hur”;Continue
+EVENT_RESOLVED;Premiere: “Reunion in Casablanca”;Continue
+EVENT_RESOLVED;Premiere: “Das Phantom der Oper”;Continue
+EVENT_RESOLVED;Premiere: “Goldrausch”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “Der Scheich”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $2240)
+EVENT_RESOLVED;The favor is called in;Honor it and deliver
+EVENT_RESOLVED;Premiere: “Der General”;Continue
+EVENT_RESOLVED;Awards season 1926;Applause!
+SIM;solide;0;1925;52;114230;269;47;92;4;28;2;7;0;14
+EVENT_RESOLVED;Premiere: “Es tut sich was in Hollywood”;Continue
+EVENT_RESOLVED;Premiere: “The Whisper of Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “Sonnenaufgang”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Firestorm”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Monte Carlo”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($5356)
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1293)
+EVENT_RESOLVED;Premiere: “Chaos with the Boss”;Continue
+EVENT_RESOLVED;Premiere: “The Protocol Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Twelve Miles to Laredo”;Continue
+EVENT_RESOLVED;Premiere: “The Protocol Havana”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Blackwood”;Continue
+SIM;solide;0;1925;65;96655;129;80;77;4;32;1;10;0;25
+EVENT_RESOLVED;Gut check: “Countdown Omega”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Pandora's Box”;Continue
+EVENT_RESOLVED;Premiere: “A Wedding with the Boss”;Continue
+EVENT_RESOLVED;Gut check: “One Night in Verona”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Safari to Macao”;Continue
+EVENT_RESOLVED;Premiere: “Farewell to Paris”;Continue
+EVENT_RESOLVED;Premiere: “The Marshal of Cheyenne”;Continue
+EVENT_RESOLVED;Premiere: “A Short Morning”;Continue
+EVENT_RESOLVED;Premiere: “The Silent Rain”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $1902)
+EVENT_RESOLVED;Premiere: “The Treasure of Borneo”;Continue
+EVENT_RESOLVED;Premiere: “Operation Midnight”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “The Marshal of Cheyenne”;Continue
+SIM;solide;0;1925;78;112794;892;84;75;4;34;1;11;0;36
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;A new name for a new star;Accept the renaming
+EVENT_RESOLVED;Premiere: “The Ritual of Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “Farewell to Manhattan”;Continue
+EVENT_RESOLVED;Premiere: “The Godfather of Brooklyn”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $2650)
+EVENT_RESOLVED;Premiere: “Countdown Omega”;Continue
+EVENT_RESOLVED;Premiere: “Expedition to Java”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with the Wrong Man”;Continue
+EVENT_RESOLVED;Premiere: “One Night in Verona”;Continue
+EVENT_RESOLVED;Premiere: “One Night in Casablanca”;Continue
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $2726)
+SIM;solide;0;1925;91;100940;2131;99;53;4;39;2;12;0;44
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($52K)
+EVENT_RESOLVED;Gut check: “The Marshal of Laredo”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Operation Midnight”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($41K)
+EVENT_RESOLVED;Premiere: “The Curse of St. Mary”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Havana”;Continue
+EVENT_RESOLVED;Premiere: “A Short Summer”;Continue
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($7320)
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1628)
+EVENT_RESOLVED;Premiere: “The Night of Havana”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;The talkie test;Book intensive voice training ($8487)
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($7320)
+EVENT_RESOLVED;Awards season 1927;Applause!
+EVENT_RESOLVED;Premiere: “The File Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “The Last Ride to Abilene”;Continue
+EVENT_RESOLVED;Premiere: “The Treasure of Nairobi”;Continue
+EVENT_RESOLVED;Premiere: “The Night of San Francisco”;Continue
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($5517)
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1628)
+SIM;solide;0;1925;103;14978;1493;100;32;4;39;2;12;0;53
+SIM;solide;0;1925;104;14978;1493;100;32;4;39;2;12;0;53
+SUM;solide;0;1925;signed 4/4;pitched 13/13;tables 0;haggled 0/0;letters 125;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-110427
+LEDGER;1925;bonus;-85299
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-33330
+LEDGER;1925;provision;145613
+LEDGER;1925;events;-8487
+EVENT_RESOLVED;The leaked audition;Go legal ($25K)
+SIM;solide;0;1950;0;223491;5234;20;77;4;23;1;1;0;0
+EVENT_RESOLVED;Poaching attempt: Fred Astaire;Meet Fred Astaire face to face — the full conversation
+EVENT_RESOLVED;📺 The television question: Boris Karloff;Sign the series — steady money, smaller screen
+EVENT_RESOLVED;📺 Season one: Boris Karloff;Lean in — press tour, covers, the whole circus
+SIM;solide;0;1950;13;221978;7017;17;100;4;23;1;2;0;0
+EVENT_RESOLVED;Television comes knocking;Accept the offer
+EVENT_RESOLVED;Suspicion of un-American activities;Defend the client publicly
+EVENT_RESOLVED;The role got cut;Demand reshoots
+SIM;solide;0;1950;26;249414;7779;42;98;4;28;2;3;0;0
+EVENT_RESOLVED;A new name for a new star;Accept the renaming
+EVENT_RESOLVED;Premiere: “Gilda”;Continue
+EVENT_RESOLVED;Premiere: “Sunset Boulevard”;Continue
+EVENT_RESOLVED;Premiere: “Twelve Miles to Abilene”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Ein Amerikaner in Paris”;Continue
+EVENT_RESOLVED;Premiere: “Verdammt in alle Ewigkeit”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “Twelve Miles to Red Creek”;Continue
+EVENT_RESOLVED;Premiere: “My Darling Clementine”;Continue
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($14K)
+SIM;solide;0;1950;39;299460;16499;50;89;4;32;1;5;0;7
+EVENT_RESOLVED;Premiere: “Singin' in the Rain”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($105K)
+EVENT_RESOLVED;Premiere: “Colony Proxima”;Continue
+EVENT_RESOLVED;Premiere: “Das Fenster zum Hof”;Continue
+EVENT_RESOLVED;Premiere: “It's a Wonderful Life”;Continue
+EVENT_RESOLVED;Premiere: “Escape from Borneo”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Premiere: “A Bitter Farewell”;Continue
+EVENT_RESOLVED;Awards season 1951;Applause!
+SIM;solide;0;1950;52;217974;11988;34;98;4;32;2;5;0;13
+EVENT_RESOLVED;Premiere: “Swing in New Orleans”;Continue
+EVENT_RESOLVED;Premiere: “Beyond Titan”;Continue
+EVENT_RESOLVED;Bad blood;Noted
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Premiere: “High Noon”;Continue
+EVENT_RESOLVED;Premiere: “Commando Falcon”;Continue
+EVENT_RESOLVED;Premiere: “Endstation Sehnsucht”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($116K)
+EVENT_RESOLVED;Premiere: “Farewell to Rome”;Continue
+EVENT_RESOLVED;Premiere: “Codename Firestorm”;Continue
+EVENT_RESOLVED;Premiere: “All About Eve”;Continue
+SIM;solide;0;1950;65;109322;848;49;89;4;38;1;7;0;21
+EVENT_RESOLVED;Premiere: “A Short Winter”;Continue
+EVENT_RESOLVED;Premiere: “Escape from Macao”;Continue
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($7548)
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “A Bitter River”;Continue
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Poaching attempt: Ginger Rogers;Meet Ginger Rogers face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Rhythm of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with the Wrong Man”;Continue
+EVENT_RESOLVED;Premiere: “Der dritte Mann”;Continue
+EVENT_RESOLVED;The censorship office objects to the script;Defuse the script
+EVENT_RESOLVED;Premiere: “Die Faust im Nacken”;Continue
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($17K)
+SIM;solide;0;1950;78;135186;1055;41;89;4;41;1;9;0;28
+EVENT_RESOLVED;Premiere: “The Syndicate of Brooklyn”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Midnight”;Continue
+EVENT_RESOLVED;Premiere: “The Strange Winter”;Continue
+EVENT_RESOLVED;Premiere: “Project Firestorm”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Premiere: “A Wedding with the Wrong Man”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Claudette Colbert;Meet Claudette Colbert face to face — the full conversation
+EVENT_RESOLVED;Poaching attempt: Boris Karloff;Meet Boris Karloff face to face — the full conversation
+EVENT_RESOLVED;Gut check: “Chaos with the Boss”;Yes, this will be a hit
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($108K)
+EVENT_RESOLVED;Premiere: “…denn sie wissen nicht, was sie tun”;Continue
+EVENT_RESOLVED;Premiere: “The Godfather of Havana”;Continue
+EVENT_RESOLVED;Premiere: “The Silent Rain”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($15K)
+SIM;solide;0;1950;91;6922;10680;47;84;4;45;2;9;0;36
+EVENT_RESOLVED;Premiere: “Rhythm of Manhattan”;Continue
+EVENT_RESOLVED;Premiere: “A Bitter Farewell”;Continue
+EVENT_RESOLVED;Premiere: “Swing in Manhattan”;Continue
+EVENT_RESOLVED;Premiere: “Jenseits von Eden”;Continue
+EVENT_RESOLVED;Premiere: “The Last River”;Continue
+EVENT_RESOLVED;Premiere: “The Whisper of Innsfield”;Continue
+EVENT_RESOLVED;Awards season 1952;Applause!
+EVENT_RESOLVED;Premiere: “Letters from Paris”;Continue
+EVENT_RESOLVED;Premiere: “Melody of Harlem”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($12K)
+SIM;solide;0;1950;103;32259;10413;45;95;4;49;2;10;0;44
+SIM;solide;0;1950;104;32259;10413;45;95;4;49;2;10;0;44
+SUM;solide;0;1950;signed 4/4;pitched 17/45;tables 14;haggled 0/0;letters 146;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-337238
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-103427
+LEDGER;1950;tv;29314
+LEDGER;1950;provision;563567
+LEDGER;1950;bonus;-116162
+SIM;solide;0;1980;0;605588;12705;20;77;4;24;1;1;0;0
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 24 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Photos from the past;Buy the exclusive rights ($208K)
+EVENT_RESOLVED;Gut check: “Ghostbusters”;Yes, this will be a hit
+EVENT_RESOLVED;The role got cut;Demand reshoots
+SIM;solide;0;1980;13;430253;23999;25;100;4;23;1;1;1;0
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($41K)
+EVENT_RESOLVED;Gut check: “Krieg der Sterne”;Yes, this will be a hit
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Ghostbusters”;Continue
+EVENT_RESOLVED;Strike in Hollywood;Publicly support the strikers
+SIM;solide;0;1980;26;434705;30288;51;94;4;31;1;1;1;1
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($255K)
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+EVENT_RESOLVED;The breakdown;Have the production paused
+SIM;solide;0;1980;39;45035;28505;38;99;4;31;1;1;1;1
+EVENT_RESOLVED;Premiere: “Holidays with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “Rocky”;Continue
+EVENT_RESOLVED;The favor is called in;Honor it and deliver
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Tootsie”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Premiere: “Krieg der Sterne”;Continue
+EVENT_RESOLVED;Premiere: “Terms of Endearment”;Continue
+EVENT_RESOLVED;Gut check: “A Wedding with Mr. Pennyworth”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Terminator”;Continue
+EVENT_RESOLVED;Premiere: “Apocalypse Now”;Continue
+EVENT_RESOLVED;Premiere: “E.T. the Extra-Terrestrial”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Awards season 1981;Applause!
+SIM;solide;0;1980;52;227118;30638;29;97;4;34;3;3;0;9
+EVENT_RESOLVED;Premiere: “Alien”;Continue
+EVENT_RESOLVED;Premiere: “Der Stadtneurotiker”;Continue
+EVENT_RESOLVED;Premiere: “The Empire Strikes Back”;Continue
+EVENT_RESOLVED;Premiere: “Operation Seven”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Raiders of the Lost Ark”;Continue
+EVENT_RESOLVED;Premiere: “Taxi Driver”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+SIM;solide;0;1980;65;194397;11256;41;97;4;38;2;6;0;16
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;Premiere: “Shining”;Continue
+EVENT_RESOLVED;Premiere: “Nur Samstag Nacht”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with the Boss”;Continue
+EVENT_RESOLVED;Premiere: “Reunion in Casablanca”;Continue
+EVENT_RESOLVED;Premiere: “Blade Runner”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+SIM;solide;0;1980;78;129962;2043;40;95;4;43;1;8;0;21
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Gut check: “The Syndicate of Chicago”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “A Wedding with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Omega”;Continue
+EVENT_RESOLVED;Premiere: “Commando Omega”;Continue
+EVENT_RESOLVED;The staged romance;Accept the campaign
+EVENT_RESOLVED;Premiere: “The Protocol Havana”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Midnight”;Continue
+EVENT_RESOLVED;The three a.m. phone call;Say yes immediately
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($36K)
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($27K)
+EVENT_RESOLVED;Premiere: “Project Omega”;Continue
+EVENT_RESOLVED;Premiere: “Amadeus”;Continue
+EVENT_RESOLVED;Premiere: “The Long River”;Continue
+EVENT_RESOLVED;Premiere: “A Bitter Winter”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($340K)
+SIM;solide;0;1980;91;-6456;32685;36;96;4;50;2;10;0;30
+EVENT_RESOLVED;Premiere: “Jenseits von Afrika”;Continue
+EVENT_RESOLVED;Photos from the past;Buy the exclusive rights ($242K)
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($28K)
+EVENT_RESOLVED;Premiere: “The Night of Marlowe”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Falcon”;Continue
+EVENT_RESOLVED;Premiere: “Back to the Future”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Awards season 1982;Applause!
+EVENT_RESOLVED;Premiere: “Operation Falcon”;Continue
+EVENT_RESOLVED;Premiere: “Operation Seven”;Continue
+EVENT_RESOLVED;The romance is exposed;Admit it and laugh
+EVENT_RESOLVED;Premiere: “Codename Falcon”;Continue
+EVENT_RESOLVED;Premiere: “Project Falcon”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Game Over;New game
+SIM;solide;0;1980;103;-326379;13784;83;75;4;54;2;11;0;38
+SIM;solide;0;1980;104;-326379;13784;83;75;4;54;2;11;0;38
+SUM;solide;0;1980;signed 4/4;pitched 15/57;tables 26;haggled 0/0;letters 150;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-624723
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-222956
+LEDGER;1980;provision;1146279
+LEDGER;1980;bonus;-615749
+SIM;solide;0;2010;0;1475104;30839;20;76;4;25;1;1;0;0
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 24 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;The staged romance;Accept the campaign
+SIM;solide;0;2010;13;2189427;105371;17;100;4;24;2;3;0;0
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($622K)
+EVENT_RESOLVED;Premiere: “Grand Budapest Hotel”;Continue
+EVENT_RESOLVED;Poaching attempt: Tom Hanks;Meet Tom Hanks face to face — the full conversation
+EVENT_RESOLVED;The romance is exposed;Call in a favor: make the column disappear
+SIM;solide;0;2010;26;1403583;90321;33;100;4;26;1;3;0;1
+EVENT_RESOLVED;Poaching attempt: Dwayne Johnson;Meet Dwayne Johnson face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Slumdog Millionaire”;Continue
+EVENT_RESOLVED;Premiere: “The Curse of Croft Manor”;Continue
+EVENT_RESOLVED;Strike in Hollywood;Publicly support the strikers
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+SIM;solide;0;2010;39;1127359;66666;47;93;4;35;3;5;1;3
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($617K)
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($85K)
+EVENT_RESOLVED;Premiere: “Whiplash”;Continue
+EVENT_RESOLVED;Gut check: “The Marshal of Laredo”;Yes, this will be a hit
+EVENT_RESOLVED;Gut check: “The Wolf of Wall Street”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Swing in Havana”;Continue
+EVENT_RESOLVED;The favor is called in;Honor it and deliver
+EVENT_RESOLVED;Premiere: “The File Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “Avatar – Aufbruch nach Pandora”;Continue
+EVENT_RESOLVED;Premiere: “Inception”;Continue
+EVENT_RESOLVED;Premiere: “Departed – Unter Feinden”;Continue
+EVENT_RESOLVED;Awards season 2011;Applause!
+SIM;solide;0;2010;52;2038012;105665;34;100;4;41;1;8;0;9
+EVENT_RESOLVED;Premiere: “Drive”;Continue
+EVENT_RESOLVED;Premiere: “Codename Seven”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($88K)
+EVENT_RESOLVED;Premiere: “12 Years a Slave”;Continue
+EVENT_RESOLVED;Premiere: “The Wolf of Wall Street”;Continue
+SIM;solide;0;2010;65;1837086;115230;56;88;4;44;2;9;0;13
+EVENT_RESOLVED;Premiere: “Inglourious Basterds”;Continue
+EVENT_RESOLVED;Premiere: “No Country for Old Men”;Continue
+EVENT_RESOLVED;Premiere: “Streets of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Protocol Titan”;Continue
+EVENT_RESOLVED;Premiere: “Argo”;Continue
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($66K)
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($66K)
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “The Marshal of Laredo”;Continue
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($44K)
+EVENT_RESOLVED;Premiere: “The Dark Knight”;Continue
+EVENT_RESOLVED;Premiere: “The Artist”;Continue
+SIM;solide;0;2010;78;1651602;86601;36;97;4;53;2;9;0;21
+EVENT_RESOLVED;Premiere: “The Godfather of Marseille”;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Kim Basinger;Meet Kim Basinger face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Streets of Chicago”;Continue
+EVENT_RESOLVED;Premiere: “Django Unchained”;Continue
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($102K)
+EVENT_RESOLVED;Premiere: “The Social Network”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “Letters from Verona”;Continue
+EVENT_RESOLVED;Gut check: “The Curse of Innsfield”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Chaos with Aunt Polly”;Continue
+EVENT_RESOLVED;Premiere: “Gravity”;Continue
+EVENT_RESOLVED;Premiere: “Mad Max: Fury Road”;Continue
+EVENT_RESOLVED;Premiere: “Birdman”;Continue
+EVENT_RESOLVED;Premiere: “Holidays with the Boss”;Continue
+SIM;solide;0;2010;91;2811749;178618;45;86;4;56;3;7;0;32
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;The partnership buy-in;Buy in ($318K)
+EVENT_RESOLVED;Headline;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($654K)
+EVENT_RESOLVED;Premiere: “Project Omega”;Continue
+EVENT_RESOLVED;Awards season 2012;Applause!
+EVENT_RESOLVED;Premiere: “Codename Falcon”;Continue
+EVENT_RESOLVED;Premiere: “Reunion in Verona”;Continue
+EVENT_RESOLVED;Premiere: “Streets of San Francisco”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Seven”;Continue
+SIM;solide;0;2010;103;2339493;145147;53;87;4;66;3;7;0;37
+SIM;solide;0;2010;104;2339493;145147;53;87;4;66;3;7;0;37
+SUM;solide;0;2010;signed 4/4;pitched 22/39;tables 9;haggled 0/0;letters 139;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-1779166
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-853633
+LEDGER;2010;provision;5665762
+LEDGER;2010;bonus;-671063
+SIM;solide;5000;1925;0;179160;2500;20;76;4;20;1;1;0;0
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Poaching attempt: Boris Karloff;Match the terms (signing bonus $3989)
+SIM;solide;5000;1925;13;166583;2722;23;100;4;20;1;4;0;0
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $1173)
+EVENT_RESOLVED;A new name for a new star;Accept the renaming
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $2078)
+EVENT_RESOLVED;Premiere: “Das Phantom der Oper”;Continue
+SIM;solide;5000;1925;26;159272;1790;46;95;4;22;1;6;0;1
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “An Evening with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Chicago”;Continue
+EVENT_RESOLVED;Premiere: “Es tut sich was in Hollywood”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Premiere: “An Evening with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Promotion;Continue
+SIM;solide;5000;1925;39;142675;1247;32;97;4;26;3;6;0;5
+EVENT_RESOLVED;Premiere: “The Strange Rain”;Continue
+EVENT_RESOLVED;Premiere: “Streets of San Francisco”;Continue
+EVENT_RESOLVED;Premiere: “Safari to Java”;Continue
+EVENT_RESOLVED;Premiere: “A Wedding with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Farewell to Verona”;Continue
+EVENT_RESOLVED;The staged romance;Accept the campaign
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $855)
+EVENT_RESOLVED;Premiere: “The Syndicate of Chicago”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Premiere: “The Heist of San Francisco”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Midnight”;Continue
+EVENT_RESOLVED;Premiere: “Ben Hur”;Continue
+EVENT_RESOLVED;Awards season 1926;Applause!
+EVENT_RESOLVED;Premiere: “Wings”;Continue
+SIM;solide;5000;1925;52;110427;1189;45;89;4;26;2;5;0;15
+EVENT_RESOLVED;Premiere: “The Jazz Singer”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($30K)
+EVENT_RESOLVED;Premiere: “Goldrausch”;Continue
+EVENT_RESOLVED;The three a.m. phone call;Say yes immediately
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “Codename Falcon”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “Pandora's Box”;Continue
+EVENT_RESOLVED;The passion project;Support it
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $2269)
+EVENT_RESOLVED;Premiere: “Der General”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Chicago”;Continue
+SIM;solide;5000;1925;65;70531;1892;39;89;4;26;0;5;0;21
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $2269)
+EVENT_RESOLVED;Premiere: “Der Scheich”;Continue
+EVENT_RESOLVED;Premiere: “Swing in Harlem”;Continue
+EVENT_RESOLVED;Premiere: “Sonnenaufgang”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “Screams from Ravenhill”;Continue
+EVENT_RESOLVED;Premiere: “The Strange Winter”;Continue
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 26 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($7107)
+EVENT_RESOLVED;Premiere: “The Strange Farewell”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Marlowe”;Continue
+EVENT_RESOLVED;Premiere: “Streets of San Francisco”;Continue
+EVENT_RESOLVED;Premiere: “The Long Winter”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with the Boss”;Continue
+SIM;solide;5000;1925;78;57700;1514;50;92;4;26;1;5;0;31
+EVENT_RESOLVED;Premiere: “A Short Morning”;Continue
+EVENT_RESOLVED;Premiere: “A Short Summer”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Premiere: “The Night of St. Mary”;Continue
+EVENT_RESOLVED;Premiere: “One Night in Rome”;Continue
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $1346)
+EVENT_RESOLVED;Premiere: “The Shadow of Monte Carlo”;Continue
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($5356)
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $1167)
+EVENT_RESOLVED;Premiere: “The Legend of Eldorado”;Continue
+EVENT_RESOLVED;Premiere: “Holidays with Millionaires”;Continue
+EVENT_RESOLVED;The leaked audition;Go legal ($12K)
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $2197)
+SIM;solide;5000;1925;91;4194;748;31;98;4;32;3;5;0;38
+EVENT_RESOLVED;Premiere: “Screams from Innsfield”;Continue
+EVENT_RESOLVED;Premiere: “Commando Firestorm”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($42K)
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($5517)
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $2505)
+EVENT_RESOLVED;Premiere: “The Protocol Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “Holidays with the Boss”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($53K)
+EVENT_RESOLVED;The talkie test;Book intensive voice training ($8487)
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($5517)
+EVENT_RESOLVED;Awards season 1927;Applause!
+EVENT_RESOLVED;Premiere: “The Long Summer”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with the Wrong Man”;Continue
+EVENT_RESOLVED;Premiere: “Codename Falcon”;Continue
+EVENT_RESOLVED;Premiere: “The Silent Farewell”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($3713)
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $3330)
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $1887)
+EVENT_RESOLVED;Game Over;New game
+SIM;solide;5000;1925;103;-132793;484;75;81;4;34;2;6;0;46
+SIM;solide;5000;1925;104;-132793;484;75;81;4;34;2;6;0;46
+SUM;solide;5000;1925;signed 4/4;pitched 8/16;tables 0;haggled 0/0;letters 135;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-150023
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-25152
+LEDGER;1925;provision;33365
+LEDGER;1925;bonus;-89404
+LEDGER;1925;events;-8487
+SIM;solide;5000;1950;0;248616;5234;20;77;4;23;2;1;0;0
+EVENT_RESOLVED;Poaching attempt: Ginger Rogers;Meet Ginger Rogers face to face — the full conversation
+EVENT_RESOLVED;The role got cut;Demand reshoots
+SIM;solide;5000;1950;13;298827;11568;19;100;4;23;1;2;0;0
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 24 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Poaching attempt: Boris Karloff;Match the terms (signing bonus $19K)
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Premiere: “The Marshal of Eldorado”;Continue
+SIM;solide;5000;1950;26;305586;15766;50;94;4;22;1;1;0;1
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “My Darling Clementine”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with Aunt Polly”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Bad blood;Noted
+EVENT_RESOLVED;Premiere: “Sunset Boulevard”;Continue
+EVENT_RESOLVED;Premiere: “Singin' in the Rain”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with Aunt Polly”;Continue
+EVENT_RESOLVED;The staged romance;Accept the campaign
+SIM;solide;5000;1950;39;332076;15520;63;81;4;28;2;3;0;6
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “It's a Wonderful Life”;Continue
+EVENT_RESOLVED;Premiere: “A Wedding with Aunt Polly”;Continue
+EVENT_RESOLVED;Premiere: “One Night in Harlem”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($105K)
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($7328)
+EVENT_RESOLVED;Poaching attempt: Ginger Rogers;Meet Ginger Rogers face to face — the full conversation
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Premiere: “The Case Monte Carlo”;Continue
+EVENT_RESOLVED;Premiere: “The Treasure of Zanzibar”;Continue
+EVENT_RESOLVED;Awards season 1951;Applause!
+EVENT_RESOLVED;Premiere: “Chaos with Aunt Polly”;Continue
+EVENT_RESOLVED;Premiere: “Tote schlafen fest”;Continue
+SIM;solide;5000;1950;52;281011;17004;48;82;4;28;2;4;0;13
+EVENT_RESOLVED;Premiere: “Verdammt in alle Ewigkeit”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with the Boss”;Continue
+EVENT_RESOLVED;Premiere: “Red River”;Continue
+EVENT_RESOLVED;Premiere: “Gilda”;Continue
+EVENT_RESOLVED;Premiere: “A Spring in Rome”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “Ein Amerikaner in Paris”;Continue
+EVENT_RESOLVED;Premiere: “All About Eve”;Continue
+EVENT_RESOLVED;The franchise trap;Sign immediately
+EVENT_RESOLVED;Premiere: “Trouble with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “Der dritte Mann”;Continue
+EVENT_RESOLVED;Premiere: “Beyond Eden”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+SIM;solide;5000;1950;65;407639;23966;40;91;4;36;1;7;0;23
+EVENT_RESOLVED;Premiere: “The Night of Innsfield”;Continue
+EVENT_RESOLVED;Premiere: “Das Fenster zum Hof”;Continue
+EVENT_RESOLVED;Premiere: “Colony Andromeda”;Continue
+EVENT_RESOLVED;Premiere: “High Noon”;Continue
+SIM;solide;5000;1950;78;442921;19234;51;83;4;36;2;8;0;27
+EVENT_RESOLVED;Premiere: “Melody of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Twelve Miles to Eldorado”;Continue
+EVENT_RESOLVED;Premiere: “Reunion in Casablanca”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “Endstation Sehnsucht”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Monte Carlo”;Continue
+EVENT_RESOLVED;Premiere: “Beyond Eden”;Continue
+EVENT_RESOLVED;Premiere: “Farewell to Rome”;Continue
+EVENT_RESOLVED;Premiere: “Twelve Miles to Abilene”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($150K)
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($7548)
+EVENT_RESOLVED;Premiere: “An Evening with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “The Case Marlowe”;Continue
+SIM;solide;5000;1950;91;317981;11635;32;99;4;40;3;8;0;38
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “The Night of Ravenhill”;Continue
+EVENT_RESOLVED;Premiere: “Storm over Java”;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Boris Karloff;Meet Boris Karloff face to face — the full conversation
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($18K)
+EVENT_RESOLVED;Suspicion of un-American activities;Defend the client publicly
+EVENT_RESOLVED;Premiere: “Expedition Orion”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($111K)
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($15K)
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($15K)
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Boris Karloff;Meet Boris Karloff face to face — the full conversation
+EVENT_RESOLVED;Awards season 1952;Applause!
+EVENT_RESOLVED;Premiere: “A Spring in Casablanca”;Continue
+EVENT_RESOLVED;Premiere: “Commando Seven”;Continue
+EVENT_RESOLVED;The censorship office objects to the script;Defuse the script
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($12K)
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($7775)
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+SIM;solide;5000;1950;103;128728;6093;43;94;4;33;2;9;0;43
+SIM;solide;5000;1950;104;128728;6093;43;94;4;33;2;9;0;43
+SUM;solide;5000;1950;signed 4/4;pitched 18/34;tables 6;haggled 0/0;letters 153;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-315080
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-111444
+LEDGER;1950;provision;728479
+LEDGER;1950;bonus;-169432
+EVENT_RESOLVED;The leaked audition;Go legal ($61K)
+SIM;solide;5000;1980;0;544602;12705;20;77;4;24;1;1;0;0
+EVENT_RESOLVED;Strike in Hollywood;Publicly support the strikers
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 24 %] Talk the producer into a screen test for your roster
+SIM;solide;5000;1980;13;437566;7621;17;100;4;27;1;2;0;0
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+SIM;solide;5000;1980;26;607368;27871;37;99;4;27;1;2;0;0
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “Raiders of the Lost Ark”;Continue
+EVENT_RESOLVED;Premiere: “Nur Samstag Nacht”;Continue
+SIM;solide;5000;1980;39;659048;39573;58;81;4;29;1;3;0;2
+EVENT_RESOLVED;Premiere: “Shining”;Continue
+EVENT_RESOLVED;Premiere: “Der Stadtneurotiker”;Continue
+EVENT_RESOLVED;Premiere: “Protocol Proxima”;Continue
+EVENT_RESOLVED;The staged romance;Accept the campaign
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($254K)
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Taxi Driver”;Continue
+EVENT_RESOLVED;Premiere: “E.T. the Extra-Terrestrial”;Continue
+EVENT_RESOLVED;Premiere: “Commando Seven”;Continue
+EVENT_RESOLVED;Premiere: “Beyond Proxima”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($291K)
+EVENT_RESOLVED;Premiere: “The Godfather of Marseille”;Continue
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;Awards season 1981;Applause!
+SIM;solide;5000;1980;52;394282;49553;54;80;4;33;2;5;0;10
+EVENT_RESOLVED;Premiere: “Tootsie”;Continue
+EVENT_RESOLVED;Premiere: “The Empire Strikes Back”;Continue
+EVENT_RESOLVED;Premiere: “Rocky”;Continue
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($42K)
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “Apocalypse Now”;Continue
+EVENT_RESOLVED;Premiere: “Kramer gegen Kramer”;Continue
+EVENT_RESOLVED;Premiere: “Terminator”;Continue
+EVENT_RESOLVED;Premiere: “Terms of Endearment”;Continue
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+EVENT_RESOLVED;The audit spreads;Pay the settlement ($79K)
+SIM;solide;5000;1980;65;165006;15318;51;81;4;36;2;5;0;17
+EVENT_RESOLVED;Premiere: “Streets of San Francisco”;Continue
+EVENT_RESOLVED;Gut check: “A Bitter Winter”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Beyond Titan”;Continue
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($27K)
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($36K)
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Blade Runner”;Continue
+EVENT_RESOLVED;Premiere: “Amadeus”;Continue
+EVENT_RESOLVED;Premiere: “Krieg der Sterne”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Commando Midnight”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($18K)
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Premiere: “Trouble with Millionaires”;Continue
+SIM;solide;5000;1980;78;335868;19965;53;85;4;42;2;5;0;24
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($36K)
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($18K)
+EVENT_RESOLVED;Premiere: “Alien”;Continue
+EVENT_RESOLVED;Premiere: “A Bitter Winter”;Continue
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 26 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Premiere: “Commando Omega”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Falcon”;Continue
+EVENT_RESOLVED;Premiere: “A Short Farewell”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “Ghostbusters”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “Holidays with the Wrong Man”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “Back to the Future”;Continue
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($36K)
+EVENT_RESOLVED;Poaching attempt: Michael Caine;Meet Michael Caine face to face — the full conversation
+EVENT_RESOLVED;Poaching attempt: Michael Caine;Meet Michael Caine face to face — the full conversation
+EVENT_RESOLVED;Poaching attempt: Michael Caine;Meet Michael Caine face to face — the full conversation
+SIM;solide;5000;1980;91;326060;24965;41;93;4;46;4;10;0;32
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($262K)
+EVENT_RESOLVED;Premiere: “The Case Monte Carlo”;Continue
+EVENT_RESOLVED;Premiere: “Jenseits von Afrika”;Continue
+EVENT_RESOLVED;Premiere: “The Treasure of Zanzibar”;Continue
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;Awards season 1982;Applause!
+EVENT_RESOLVED;Premiere: “Codename Midnight”;Continue
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;Premiere: “The Strange Winter”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with Aunt Polly”;Continue
+EVENT_RESOLVED;Premiere: “The Case Havana”;Continue
+SIM;solide;5000;1980;103;-34983;4209;47;95;4;48;3;10;0;39
+SIM;solide;5000;1980;104;-34983;4209;47;95;4;48;3;10;0;39
+SUM;solide;5000;1980;signed 4/4;pitched 20/33;tables 6;haggled 0/0;letters 144;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-905734
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-254949
+LEDGER;1980;provision;1467670
+LEDGER;1980;bonus;-332740
+EVENT_RESOLVED;The leaked audition;Go legal ($148K)
+SIM;solide;5000;2010;0;1321894;30839;20;77;4;25;1;1;0;0
+EVENT_RESOLVED;The franchise trap;Sign immediately
+EVENT_RESOLVED;Poaching attempt: Kim Basinger;Meet Kim Basinger face to face — the full conversation
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($99K)
+SIM;solide;5000;2010;13;2004694;113914;12;100;4;26;2;1;0;0
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;Photos from the past;Buy the exclusive rights ($513K)
+EVENT_RESOLVED;Premiere: “Gravity”;Continue
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 24 %] Talk the producer into a screen test for your roster
+SIM;solide;5000;2010;26;1594079;127229;30;98;4;26;1;2;0;1
+EVENT_RESOLVED;Premiere: “The Artist”;Continue
+EVENT_RESOLVED;Premiere: “Interstellar”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Grand Budapest Hotel”;Continue
+SIM;solide;5000;2010;39;1617001;118780;41;97;4;28;1;2;0;4
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “The Wolf of Wall Street”;Continue
+EVENT_RESOLVED;Premiere: “Slumdog Millionaire”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “No Country for Old Men”;Continue
+EVENT_RESOLVED;Premiere: “Expedition to Macao”;Continue
+EVENT_RESOLVED;Premiere: “A Spring in Casablanca”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($617K)
+EVENT_RESOLVED;Premiere: “Drive”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Premiere: “The Dark Knight”;Continue
+EVENT_RESOLVED;Premiere: “Birdman”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Awards season 2011;Applause!
+SIM;solide;5000;2010;52;1175474;98535;53;75;4;32;2;3;1;12
+EVENT_RESOLVED;Premiere: “Colony Eden”;Continue
+EVENT_RESOLVED;Premiere: “Farewell to Paris”;Continue
+EVENT_RESOLVED;Premiere: “The Curse of Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “The Pursuit of Happyness”;Continue
+EVENT_RESOLVED;Premiere: “Inception”;Continue
+EVENT_RESOLVED;Premiere: “Safari to Borneo”;Continue
+EVENT_RESOLVED;Premiere: “Departed – Unter Feinden”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Premiere: “Inglourious Basterds”;Continue
+EVENT_RESOLVED;Premiere: “Argo”;Continue
+EVENT_RESOLVED;Premiere: “Avatar – Aufbruch nach Pandora”;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Premiere: “The Case Marlowe”;Continue
+EVENT_RESOLVED;Premiere: “Safari to Macao”;Continue
+SIM;solide;5000;2010;65;1321181;53463;40;96;4;38;1;8;1;25
+EVENT_RESOLVED;Premiere: “Chaos with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “Colony Titan”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($775K)
+EVENT_RESOLVED;Premiere: “Reunion in Manhattan”;Continue
+EVENT_RESOLVED;Premiere: “Django Unchained”;Continue
+EVENT_RESOLVED;Premiere: “The Long River”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Mad Max: Fury Road”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “The Social Network”;Continue
+SIM;solide;5000;2010;78;1082431;69431;50;92;4;40;1;10;1;32
+EVENT_RESOLVED;Premiere: “12 Years a Slave”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Premiere: “The King's Speech”;Continue
+EVENT_RESOLVED;Premiere: “There Will Be Blood”;Continue
+EVENT_RESOLVED;Poaching attempt: Dwayne Johnson;Meet Dwayne Johnson face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Trouble with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “The Protocol Kestrel”;Continue
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 25 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($44K)
+EVENT_RESOLVED;Poaching attempt: Dwayne Johnson;Meet Dwayne Johnson face to face — the full conversation
+SIM;solide;5000;2010;91;659678;39580;41;96;4;43;1;13;0;38
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;Premiere: “Protocol Andromeda”;Continue
+EVENT_RESOLVED;Strike in Hollywood;Publicly support the strikers
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Headline;Continue
+EVENT_RESOLVED;Poaching attempt: Kim Basinger;Meet Kim Basinger face to face — the full conversation
+EVENT_RESOLVED;Awards season 2012;Applause!
+EVENT_RESOLVED;Premiere: “A Short Farewell”;Continue
+EVENT_RESOLVED;Premiere: “The Syndicate of Chicago”;Continue
+EVENT_RESOLVED;Poaching attempt: Dwayne Johnson;Meet Dwayne Johnson face to face — the full conversation
+SIM;solide;5000;2010;103;613470;39092;44;90;4;47;4;14;1;41
+SIM;solide;5000;2010;104;613470;39092;44;90;4;47;4;14;1;41
+SUM;solide;5000;2010;signed 4/4;pitched 19/37;tables 8;haggled 0/0;letters 154;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-1467919
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-620068
+LEDGER;2010;provision;3549808
+LEDGER;2010;bonus;-825944
+SIM;aggressiv;0;1925;0;178320;2500;20;77;4;20;2;1;0;0
+SIM;aggressiv;0;1925;13;163459;3053;17;100;4;20;2;1;0;0
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $1011)
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+SIM;aggressiv;0;1925;26;156877;2770;42;94;4;20;1;2;0;0
+EVENT_RESOLVED;Premiere: “The Last Ride to Eldorado”;Continue
+EVENT_RESOLVED;Premiere: “A Spring in Rome”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($29K)
+EVENT_RESOLVED;Premiere: “Wings”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1201)
+EVENT_RESOLVED;Premiere: “Das Phantom der Oper”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “Sonnenaufgang”;Continue
+EVENT_RESOLVED;Premiere: “Der General”;Continue
+EVENT_RESOLVED;Premiere: “The Whisper of Croft Manor”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1948)
+SIM;aggressiv;0;1925;39;100448;2380;42;87;4;26;1;3;1;7
+EVENT_RESOLVED;Premiere: “The Ritual of Ravenhill”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with the Wrong Man”;Continue
+EVENT_RESOLVED;Premiere: “Es tut sich was in Hollywood”;Continue
+EVENT_RESOLVED;Premiere: “Goldrausch”;Continue
+EVENT_RESOLVED;Premiere: “Der Scheich”;Continue
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $863)
+EVENT_RESOLVED;Premiere: “Expedition to Java”;Continue
+EVENT_RESOLVED;Premiere: “Ben Hur”;Continue
+EVENT_RESOLVED;Premiere: “An Evening with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Commando Falcon”;Continue
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 26 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1782)
+EVENT_RESOLVED;Awards season 1926;Applause!
+EVENT_RESOLVED;Premiere: “Letters from Paris”;Continue
+SIM;aggressiv;0;1925;52;126667;5314;48;87;4;25;2;4;1;17
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $841)
+EVENT_RESOLVED;Premiere: “The Syndicate of Havana”;Continue
+EVENT_RESOLVED;Premiere: “The Strange Farewell”;Continue
+EVENT_RESOLVED;Premiere: “The Long Farewell”;Continue
+EVENT_RESOLVED;Premiere: “Pandora's Box”;Continue
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $1077)
+EVENT_RESOLVED;Premiere: “Streets of San Francisco”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($7107)
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1572)
+SIM;aggressiv;0;1925;65;87564;928;39;98;4;25;1;4;1;22
+EVENT_RESOLVED;Premiere: “The Jazz Singer”;Continue
+EVENT_RESOLVED;Premiere: “The Marshal of Cheyenne”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “The Godfather of Brooklyn”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($30K)
+EVENT_RESOLVED;Premiere: “Holidays with Aunt Polly”;Continue
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $922)
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $841)
+EVENT_RESOLVED;Premiere: “The Long Winter”;Continue
+EVENT_RESOLVED;Premiere: “A Short Farewell”;Continue
+EVENT_RESOLVED;Premiere: “The Marshal of Laredo”;Continue
+EVENT_RESOLVED;Premiere: “Stars over Harlem”;Continue
+SIM;aggressiv;0;1925;78;68616;3242;46;94;4;25;1;6;0;30
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($3605)
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Premiere: “Storm over Nairobi”;Continue
+EVENT_RESOLVED;Premiere: “The Last River”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($5356)
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($7107)
+EVENT_RESOLVED;Premiere: “One Night in Manhattan”;Continue
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $841)
+EVENT_RESOLVED;Premiere: “The Treasure of Zanzibar”;Continue
+EVENT_RESOLVED;Premiere: “The Silent Rain”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($5356)
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $841)
+SIM;aggressiv;0;1925;91;23701;1173;46;91;4;27;2;6;0;35
+EVENT_RESOLVED;Premiere: “Twelve Miles to Abilene”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($52K)
+EVENT_RESOLVED;Premiere: “Operation Firestorm”;Continue
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($3713)
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $2122)
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $2122)
+EVENT_RESOLVED;Premiere: “The File Havana”;Continue
+EVENT_RESOLVED;Premiere: “The Long Morning”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($3713)
+EVENT_RESOLVED;In confidence: Pregnancy;Prepare: Align a plannable break with the studios ($5517)
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($7320)
+EVENT_RESOLVED;Awards season 1927;Applause!
+EVENT_RESOLVED;Premiere: “The Night of Brooklyn”;Continue
+EVENT_RESOLVED;Premiere: “The Curse of St. Mary”;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Game Over;New game
+SIM;aggressiv;0;1925;103;-50663;1046;52;99;4;31;2;10;0;41
+SIM;aggressiv;0;1925;104;-50663;1046;52;99;4;31;2;10;0;41
+SUM;aggressiv;0;1925;signed 4/4;pitched 10/21;tables 1;haggled 6/11;letters 138;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-174171
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-32211
+LEDGER;1925;provision;121623
+LEDGER;1925;bonus;-72812
+EVENT_RESOLVED;📺 The television question: Boris Karloff;Sign the series — steady money, smaller screen
+SIM;aggressiv;0;1950;0;248616;5234;20;77;4;23;1;1;0;0
+EVENT_RESOLVED;📺 Season one: Boris Karloff;Lean in — press tour, covers, the whole circus
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($17K)
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+SIM;aggressiv;0;1950;13;231825;6643;19;100;4;24;2;1;0;0
+EVENT_RESOLVED;A new name for a new star;Accept the renaming
+EVENT_RESOLVED;Suspicion of un-American activities;Defend the client publicly
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 25 %] Talk the producer into a screen test for your roster
+SIM;aggressiv;0;1950;26;228324;7637;39;100;4;28;2;2;0;0
+EVENT_RESOLVED;Premiere: “The Treasure of Nairobi”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “Safari to Borneo”;Continue
+EVENT_RESOLVED;Premiere: “Sunset Boulevard”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “An Evening with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Singin' in the Rain”;Continue
+EVENT_RESOLVED;Poaching attempt: Boris Karloff;Meet Boris Karloff face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Twelve Miles to Abilene”;Continue
+SIM;aggressiv;0;1950;39;251851;8079;47;98;4;36;2;5;0;6
+EVENT_RESOLVED;Gut check: “Ein Amerikaner in Paris”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Der dritte Mann”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($105K)
+EVENT_RESOLVED;Premiere: “An Evening with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($15K)
+EVENT_RESOLVED;Premiere: “Tote schlafen fest”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “Die Faust im Nacken”;Continue
+EVENT_RESOLVED;Premiere: “Expedition to Zanzibar”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Awards season 1951;Applause!
+SIM;aggressiv;0;1950;52;244759;16865;36;99;4;44;2;8;0;11
+EVENT_RESOLVED;Premiere: “A Bitter Summer”;Continue
+EVENT_RESOLVED;Premiere: “Project Falcon”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “All About Eve”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;In confidence: Pregnancy;Prepare: Align a plannable break with the studios ($11K)
+EVENT_RESOLVED;Premiere: “High Noon”;Continue
+EVENT_RESOLVED;Premiere: “Ein Amerikaner in Paris”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Innsfield”;Continue
+EVENT_RESOLVED;Premiere: “My Darling Clementine”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($126K)
+EVENT_RESOLVED;Premiere: “Operation Firestorm”;Continue
+SIM;aggressiv;0;1950;65;143918;9433;47;95;4;49;2;9;0;19
+EVENT_RESOLVED;Premiere: “It's a Wonderful Life”;Continue
+EVENT_RESOLVED;Poaching attempt: Ginger Rogers;Meet Ginger Rogers face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Gilda”;Continue
+EVENT_RESOLVED;Premiere: “Red River”;Continue
+EVENT_RESOLVED;Premiere: “Expedition to Java”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “Endstation Sehnsucht”;Continue
+EVENT_RESOLVED;Premiere: “…denn sie wissen nicht, was sie tun”;Continue
+EVENT_RESOLVED;Premiere: “Reunion in Rome”;Continue
+SIM;aggressiv;0;1950;78;124414;450;53;83;4;51;1;11;0;26
+EVENT_RESOLVED;Premiere: “Verdammt in alle Ewigkeit”;Continue
+EVENT_RESOLVED;Premiere: “Letters from Verona”;Continue
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($11K)
+EVENT_RESOLVED;Premiere: “Jenseits von Eden”;Continue
+EVENT_RESOLVED;Premiere: “The Heist of Havana”;Continue
+EVENT_RESOLVED;Gut check: “A Spring in Manhattan”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Safari to Borneo”;Continue
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($108K)
+SIM;aggressiv;0;1950;91;59121;10489;38;94;4;57;3;11;0;31
+EVENT_RESOLVED;Premiere: “Reunion in Rome”;Continue
+EVENT_RESOLVED;Premiere: “Expedition Titan”;Continue
+EVENT_RESOLVED;Premiere: “The Marshal of Laredo”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($15K)
+EVENT_RESOLVED;Premiere: “Expedition to Macao”;Continue
+EVENT_RESOLVED;Gut check: “Countdown Omega”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Rhythm of Manhattan”;Continue
+EVENT_RESOLVED;Premiere: “A Bitter Morning”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;The partnership buy-in;Buy in ($56K)
+EVENT_RESOLVED;Awards season 1952;Applause!
+EVENT_RESOLVED;The censorship office objects to the script;Defuse the script
+EVENT_RESOLVED;Premiere: “The Heist of San Francisco”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+SIM;aggressiv;0;1950;103;63442;7618;54;79;4;59;3;14;1;38
+SIM;aggressiv;0;1950;104;63442;7618;54;79;4;59;3;14;1;38
+SUM;aggressiv;0;1950;signed 4/4;pitched 17/42;tables 11;haggled 14/18;letters 141;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-300363
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-112772
+LEDGER;1950;tv;28494
+LEDGER;1950;provision;577427
+LEDGER;1950;bonus;-125549
+SIM;aggressiv;0;1980;0;601318;12705;22;77;4;24;1;1;0;0
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Photos from the past;Buy the exclusive rights ($213K)
+EVENT_RESOLVED;Gut check: “Ghostbusters”;Yes, this will be a hit
+EVENT_RESOLVED;The staged romance;Accept the campaign
+SIM;aggressiv;0;1980;13;624202;40546;11;100;4;24;1;2;0;0
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;The leaked audition;Go legal ($61K)
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Strike in Hollywood;Publicly support the strikers
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+SIM;aggressiv;0;1980;26;701125;53586;41;100;4;28;2;2;1;0
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($259K)
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 28 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Premiere: “Tootsie”;Continue
+EVENT_RESOLVED;The romance is exposed;Admit it and laugh
+EVENT_RESOLVED;Premiere: “Ghostbusters”;Continue
+EVENT_RESOLVED;Premiere: “Alien”;Continue
+EVENT_RESOLVED;Promotion;Continue
+SIM;aggressiv;0;1980;39;733599;87433;46;94;4;31;1;3;1;3
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($254K)
+EVENT_RESOLVED;Premiere: “Rhythm of Harlem”;Continue
+EVENT_RESOLVED;Premiere: “Krieg der Sterne”;Continue
+EVENT_RESOLVED;Premiere: “Shining”;Continue
+EVENT_RESOLVED;Premiere: “Terms of Endearment”;Continue
+EVENT_RESOLVED;Premiere: “The Godfather of Brooklyn”;Continue
+EVENT_RESOLVED;Awards season 1981;Applause!
+EVENT_RESOLVED;Premiere: “Chaos with Aunt Polly”;Continue
+EVENT_RESOLVED;Premiere: “Taxi Driver”;Continue
+SIM;aggressiv;0;1980;52;393258;59096;52;79;4;39;1;3;0;10
+EVENT_RESOLVED;The other side of the camera;Prepare the director's chair ($105K)
+EVENT_RESOLVED;Premiere: “Der Stadtneurotiker”;Continue
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Chaos with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Havana”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($18K)
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($36K)
+EVENT_RESOLVED;Premiere: “A Wedding with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “The Syndicate of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Blade Runner”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+SIM;aggressiv;0;1980;65;199185;40654;48;88;4;43;1;5;0;16
+EVENT_RESOLVED;Premiere: “One Night in Paris”;Continue
+EVENT_RESOLVED;Premiere: “Farewell to Paris”;Continue
+EVENT_RESOLVED;Premiere: “Nur Samstag Nacht”;Continue
+EVENT_RESOLVED;Premiere: “Back to the Future”;Continue
+EVENT_RESOLVED;Premiere: “Rocky”;Continue
+EVENT_RESOLVED;Premiere: “Terminator”;Continue
+EVENT_RESOLVED;Premiere: “Raiders of the Lost Ark”;Continue
+EVENT_RESOLVED;Premiere: “E.T. the Extra-Terrestrial”;Continue
+SIM;aggressiv;0;1980;78;211965;18002;43;96;4;45;2;6;0;24
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “An Evening with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Kestrel”;Continue
+EVENT_RESOLVED;Premiere: “Signal from Orion”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Monte Carlo”;Continue
+EVENT_RESOLVED;Premiere: “A Short River”;Continue
+EVENT_RESOLVED;Premiere: “The File Blackwood”;Continue
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($27K)
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($262K)
+EVENT_RESOLVED;Premiere: “The Empire Strikes Back”;Continue
+EVENT_RESOLVED;Premiere: “The Godfather of Marseille”;Continue
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($27K)
+SIM;aggressiv;0;1980;91;-163424;6750;71;81;4;49;2;6;0;32
+EVENT_RESOLVED;Premiere: “Apocalypse Now”;Continue
+EVENT_RESOLVED;The staged romance;Accept the campaign
+EVENT_RESOLVED;Premiere: “Amadeus”;Continue
+EVENT_RESOLVED;Premiere: “The Marshal of Abilene”;Continue
+EVENT_RESOLVED;Premiere: “Signal from Eden”;Continue
+EVENT_RESOLVED;Awards season 1982;Applause!
+EVENT_RESOLVED;Premiere: “Operation Midnight”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “The Last Rain”;Continue
+EVENT_RESOLVED;Premiere: “Holidays with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Commando Omega”;Continue
+SIM;aggressiv;0;1980;103;23779;17818;83;74;4;53;4;8;0;41
+SIM;aggressiv;0;1980;104;23779;17818;83;74;4;53;4;8;0;41
+SUM;aggressiv;0;1980;signed 4/4;pitched 22/39;tables 4;haggled 19/23;letters 149;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-926096
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-276958
+LEDGER;1980;provision;1599640
+LEDGER;1980;bonus;-258885
+LEDGER;1980;investition;-104692
+EVENT_RESOLVED;Photos from the past;Buy the exclusive rights ($518K)
+SIM;aggressiv;0;2010;0;951823;30839;22;76;4;25;1;1;0;0
+EVENT_RESOLVED;Poaching attempt: Dwayne Johnson;Meet Dwayne Johnson face to face — the full conversation
+EVENT_RESOLVED;Poaching attempt: Tom Hanks;Meet Tom Hanks face to face — the full conversation
+SIM;aggressiv;0;2010;13;1620394;95620;30;100;4;25;1;1;0;0
+EVENT_RESOLVED;The staged romance;Accept the campaign
+SIM;aggressiv;0;2010;26;1468464;96004;53;89;4;25;1;1;0;0
+EVENT_RESOLVED;Premiere: “Grand Budapest Hotel”;Continue
+EVENT_RESOLVED;Premiere: “Slumdog Millionaire”;Continue
+EVENT_RESOLVED;Premiere: “The Curse of Croft Manor”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 28 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Premiere: “Inception”;Continue
+EVENT_RESOLVED;Premiere: “Colony Eden”;Continue
+EVENT_RESOLVED;Premiere: “Operation Seven”;Continue
+EVENT_RESOLVED;Premiere: “Gravity”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “The Wolf of Wall Street”;Continue
+SIM;aggressiv;0;2010;39;1770630;92115;48;86;4;30;2;6;0;8
+EVENT_RESOLVED;Premiere: “No Country for Old Men”;Continue
+EVENT_RESOLVED;Premiere: “Letters from Verona”;Continue
+EVENT_RESOLVED;Premiere: “Departed – Unter Feinden”;Continue
+EVENT_RESOLVED;Premiere: “Avatar – Aufbruch nach Pandora”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “The Artist”;Continue
+EVENT_RESOLVED;Premiere: “12 Years a Slave”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Premiere: “Protocol Eden”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Awards season 2011;Applause!
+EVENT_RESOLVED;Premiere: “The King's Speech”;Continue
+SIM;aggressiv;0;2010;52;2301225;104280;47;87;4;36;2;8;0;16
+EVENT_RESOLVED;Premiere: “Birdman”;Continue
+EVENT_RESOLVED;Premiere: “Drive”;Continue
+EVENT_RESOLVED;Premiere: “A Wedding with Millionaires”;Continue
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($44K)
+EVENT_RESOLVED;Premiere: “A Short Farewell”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “The Last Farewell”;Continue
+EVENT_RESOLVED;Premiere: “Inglourious Basterds”;Continue
+EVENT_RESOLVED;Premiere: “Django Unchained”;Continue
+EVENT_RESOLVED;A broken promise;Understood
+EVENT_RESOLVED;Poaching attempt: Tom Hanks;Meet Tom Hanks face to face — the full conversation
+SIM;aggressiv;0;2010;65;2170969;50155;50;89;4;33;1;9;0;24
+EVENT_RESOLVED;Premiere: “A Wedding with Aunt Polly”;Continue
+EVENT_RESOLVED;Poaching attempt: Tom Hanks;Meet Tom Hanks face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Trouble with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;Premiere: “An Evening with the Boss”;Continue
+EVENT_RESOLVED;Premiere: “The Dark Knight”;Continue
+EVENT_RESOLVED;Premiere: “A Wedding with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Interstellar”;Continue
+EVENT_RESOLVED;Premiere: “A Short Morning”;Continue
+EVENT_RESOLVED;Premiere: “Argo”;Continue
+SIM;aggressiv;0;2010;78;3182047;86269;50;83;4;39;1;11;0;32
+EVENT_RESOLVED;Premiere: “Countdown Midnight”;Continue
+EVENT_RESOLVED;Premiere: “Farewell to Manhattan”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “The Godfather of Havana”;Continue
+EVENT_RESOLVED;Premiere: “A Short River”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Premiere: “The Night of Marseille”;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Premiere: “The Revenant”;Continue
+EVENT_RESOLVED;Premiere: “The Last Morning”;Continue
+EVENT_RESOLVED;Premiere: “Letters from Casablanca”;Continue
+EVENT_RESOLVED;Premiere: “A Wedding with Aunt Polly”;Continue
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($88K)
+SIM;aggressiv;0;2010;91;3413307;90679;47;85;4;43;3;13;0;41
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($824K)
+EVENT_RESOLVED;Premiere: “The Protocol Kestrel”;Continue
+EVENT_RESOLVED;Premiere: “Stars over Hollywood”;Continue
+EVENT_RESOLVED;Premiere: “There Will Be Blood”;Continue
+EVENT_RESOLVED;Premiere: “The Social Network”;Continue
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($102K)
+EVENT_RESOLVED;Headline;Continue
+EVENT_RESOLVED;Premiere: “Storm over Macao”;Continue
+EVENT_RESOLVED;Premiere: “Protocol Eden”;Continue
+EVENT_RESOLVED;Premiere: “Mad Max: Fury Road”;Continue
+EVENT_RESOLVED;Premiere: “Whiplash”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($90K)
+EVENT_RESOLVED;Awards season 2012;Applause!
+SIM;aggressiv;0;2010;103;2996808;119321;46;96;4;46;1;12;0;49
+SIM;aggressiv;0;2010;104;2996808;119321;46;96;4;46;1;12;0;49
+SUM;aggressiv;0;2010;signed 4/4;pitched 18/31;tables 5;haggled 15/19;letters 135;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-871141
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-781000
+LEDGER;2010;provision;5595089
+LEDGER;2010;bonus;-923733
+SIM;aggressiv;5000;1925;0;179160;2500;20;76;4;20;1;2;0;0
+SIM;aggressiv;5000;1925;13;165065;2677;22;100;4;20;1;2;0;0
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 25 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($29K)
+EVENT_RESOLVED;Premiere: “Das Phantom der Oper”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+SIM;aggressiv;5000;1925;26;137565;1611;35;100;4;19;1;3;0;1
+EVENT_RESOLVED;Poaching attempt: Norma Shearer;Match the terms (signing bonus $1011)
+EVENT_RESOLVED;Premiere: “An Evening with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “Goldrausch”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Premiere: “Es tut sich was in Hollywood”;Continue
+EVENT_RESOLVED;Premiere: “Gold Rush in Abilene”;Continue
+EVENT_RESOLVED;Premiere: “The Jazz Singer”;Continue
+EVENT_RESOLVED;Premiere: “Sonnenaufgang”;Continue
+SIM;aggressiv;5000;1925;39;119380;2363;37;95;4;23;1;5;0;7
+EVENT_RESOLVED;Premiere: “Rhythm of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Der General”;Continue
+EVENT_RESOLVED;Premiere: “Stars over New Orleans”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with the Boss”;Continue
+EVENT_RESOLVED;Premiere: “Pandora's Box”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “A Bitter Morning”;Continue
+EVENT_RESOLVED;Premiere: “Der Scheich”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Awards season 1926;Applause!
+SIM;aggressiv;5000;1925;52;103838;1655;52;79;4;25;3;6;0;14
+EVENT_RESOLVED;Premiere: “The Curse of Croft Manor”;Continue
+EVENT_RESOLVED;Premiere: “Chaos with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “Escape from Java”;Continue
+EVENT_RESOLVED;Premiere: “Stars over Hollywood”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $1080)
+EVENT_RESOLVED;Premiere: “Letters from Rome”;Continue
+EVENT_RESOLVED;Premiere: “The Ritual of St. Mary”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1646)
+EVENT_RESOLVED;Premiere: “Ben Hur”;Continue
+EVENT_RESOLVED;Premiere: “The Heist of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with Aunt Polly”;Continue
+SIM;aggressiv;5000;1925;65;82273;265;44;86;4;27;2;8;0;23
+EVENT_RESOLVED;Premiere: “Escape from Java”;Continue
+EVENT_RESOLVED;Premiere: “Safari to Nairobi”;Continue
+EVENT_RESOLVED;Premiere: “The Syndicate of Brooklyn”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($3605)
+EVENT_RESOLVED;Premiere: “Wings”;Continue
+EVENT_RESOLVED;Premiere: “Holidays with Aunt Polly”;Continue
+EVENT_RESOLVED;Premiere: “The Heist of Brooklyn”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Havana”;Continue
+EVENT_RESOLVED;Premiere: “The Marshal of Cheyenne”;Continue
+EVENT_RESOLVED;Premiere: “The Strange Farewell”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with the Boss”;Continue
+SIM;aggressiv;5000;1925;78;53193;818;56;68;4;27;2;8;0;33
+EVENT_RESOLVED;Premiere: “Swing in New Orleans”;Continue
+EVENT_RESOLVED;Premiere: “Twelve Miles to Laredo”;Continue
+EVENT_RESOLVED;Premiere: “Rhythm of Hollywood”;Continue
+EVENT_RESOLVED;Premiere: “A Spring in Rome”;Continue
+EVENT_RESOLVED;Premiere: “The File Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “One Night in Harlem”;Continue
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($7107)
+EVENT_RESOLVED;Premiere: “The Legend of Eldorado”;Continue
+EVENT_RESOLVED;Premiere: “Twelve Miles to Abilene”;Continue
+EVENT_RESOLVED;Poaching attempt: Bela Lugosi;Match the terms (signing bonus $1069)
+EVENT_RESOLVED;Poaching attempt: Marlene Dietrich;Match the terms (signing bonus $1145)
+SIM;aggressiv;5000;1925;91;27766;273;35;89;4;26;2;8;0;41
+EVENT_RESOLVED;Premiere: “Escape from Macao”;Continue
+EVENT_RESOLVED;Premiere: “Swing in Havana”;Continue
+EVENT_RESOLVED;Premiere: “The Strange Rain”;Continue
+EVENT_RESOLVED;Premiere: “The Long Farewell”;Continue
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($7320)
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($36K)
+EVENT_RESOLVED;Premiere: “Twelve Miles to Abilene”;Continue
+EVENT_RESOLVED;Premiere: “Storm over Borneo”;Continue
+EVENT_RESOLVED;Premiere: “A Short Winter”;Continue
+EVENT_RESOLVED;Awards season 1927;Applause!
+EVENT_RESOLVED;Premiere: “An Evening with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “Holidays with Millionaires”;Continue
+SIM;aggressiv;5000;1925;103;-35779;884;57;95;4;26;3;6;0;50
+SIM;aggressiv;5000;1925;104;-35779;884;57;95;4;26;3;6;0;50
+SUM;aggressiv;5000;1925;signed 4/4;pitched 9/26;tables 0;haggled 6/11;letters 130;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-91607
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-24863
+LEDGER;1925;provision;44925
+LEDGER;1925;bonus;-71142
+SIM;aggressiv;5000;1950;0;249495;5234;20;77;4;23;2;1;0;0
+EVENT_RESOLVED;Suspicion of un-American activities;Defend the client publicly
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($100K)
+EVENT_RESOLVED;Poaching attempt: Claudette Colbert;Meet Claudette Colbert face to face — the full conversation
+EVENT_RESOLVED;The censorship office objects to the script;Defuse the script
+SIM;aggressiv;5000;1950;13;279469;10485;17;100;4;15;1;3;0;0
+EVENT_RESOLVED;Photos from the past;Buy the exclusive rights ($86K)
+EVENT_RESOLVED;A new name for a new star;Accept the renaming
+EVENT_RESOLVED;The leaked audition;Go legal ($25K)
+EVENT_RESOLVED;Strike in Hollywood;Publicly support the strikers
+SIM;aggressiv;5000;1950;26;127425;16070;40;97;4;19;1;4;0;0
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($17K)
+EVENT_RESOLVED;Premiere: “My Darling Clementine”;Continue
+EVENT_RESOLVED;Premiere: “The Last Ride to Eldorado”;Continue
+EVENT_RESOLVED;Premiere: “It's a Wonderful Life”;Continue
+EVENT_RESOLVED;The three a.m. phone call;Say yes immediately
+SIM;aggressiv;5000;1950;39;222074;24703;44;92;4;21;1;7;0;3
+EVENT_RESOLVED;Premiere: “Escape from Java”;Continue
+EVENT_RESOLVED;The audit spreads;Pay the settlement ($31K)
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($105K)
+EVENT_RESOLVED;Premiere: “The Marshal of Eldorado”;Continue
+EVENT_RESOLVED;Premiere: “Ein Amerikaner in Paris”;Continue
+EVENT_RESOLVED;Poaching attempt: Claudette Colbert;Meet Claudette Colbert face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Screams from Croft Manor”;Continue
+EVENT_RESOLVED;Premiere: “Letters from Paris”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Midnight”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($15K)
+EVENT_RESOLVED;Premiere: “The Night of Kestrel”;Continue
+EVENT_RESOLVED;Premiere: “Der dritte Mann”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Awards season 1951;Applause!
+EVENT_RESOLVED;Premiere: “Singin' in the Rain”;Continue
+SIM;aggressiv;5000;1950;52;71383;29328;39;97;4;25;1;7;0;12
+EVENT_RESOLVED;Premiere: “Melody of New Orleans”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with the Wrong Man”;Continue
+EVENT_RESOLVED;Premiere: “Tote schlafen fest”;Continue
+EVENT_RESOLVED;Premiere: “Sunset Boulevard”;Continue
+EVENT_RESOLVED;Bad blood;Noted
+EVENT_RESOLVED;Premiere: “Das Fenster zum Hof”;Continue
+SIM;aggressiv;5000;1950;65;62464;17718;35;97;4;33;1;10;0;17
+EVENT_RESOLVED;Premiere: “Expedition to Zanzibar”;Continue
+EVENT_RESOLVED;Premiere: “Red River”;Continue
+EVENT_RESOLVED;Premiere: “Gilda”;Continue
+EVENT_RESOLVED;Premiere: “High Noon”;Continue
+EVENT_RESOLVED;Premiere: “The Night of Marseille”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with the Boss”;Continue
+EVENT_RESOLVED;Premiere: “Endstation Sehnsucht”;Continue
+EVENT_RESOLVED;The censorship office objects to the script;Defuse the script
+EVENT_RESOLVED;Gut check: “Holidays with Millionaires”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Verdammt in alle Ewigkeit”;Continue
+EVENT_RESOLVED;Premiere: “A Wedding with Aunt Polly”;Continue
+EVENT_RESOLVED;Premiere: “Die Faust im Nacken”;Continue
+EVENT_RESOLVED;Premiere: “Twelve Miles to Eldorado”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($15K)
+SIM;aggressiv;5000;1950;78;83178;12781;49;83;4;37;2;11;0;28
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “A Wedding with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($15K)
+EVENT_RESOLVED;Premiere: “The Heist of Chicago”;Continue
+EVENT_RESOLVED;Premiere: “Streets of Marseille”;Continue
+EVENT_RESOLVED;Premiere: “Operation Midnight”;Continue
+EVENT_RESOLVED;Premiere: “…denn sie wissen nicht, was sie tun”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Kestrel”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($7548)
+EVENT_RESOLVED;Premiere: “Trouble with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Premiere: “One Night in Rome”;Continue
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($15K)
+SIM;aggressiv;5000;1950;91;26776;7102;55;74;4;41;4;13;0;36
+EVENT_RESOLVED;Premiere: “Melody of Hollywood”;Continue
+EVENT_RESOLVED;Premiere: “Expedition to Borneo”;Continue
+EVENT_RESOLVED;Premiere: “Gold Rush in Eldorado”;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Premiere: “Letters from Casablanca”;Continue
+EVENT_RESOLVED;Suspicion of un-American activities;Defend the client publicly
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 29 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Premiere: “Holidays with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “The Case Kestrel”;Continue
+EVENT_RESOLVED;Premiere: “All About Eve”;Continue
+EVENT_RESOLVED;Awards season 1952;Applause!
+EVENT_RESOLVED;Premiere: “The Night of San Francisco”;Continue
+EVENT_RESOLVED;Premiere: “The File Marlowe”;Continue
+EVENT_RESOLVED;Premiere: “Gold Rush in Abilene”;Continue
+SIM;aggressiv;5000;1950;103;162084;15652;47;89;4;52;3;14;0;46
+SIM;aggressiv;5000;1950;104;162084;15652;47;89;4;52;3;14;0;46
+SUM;aggressiv;5000;1950;signed 4/4;pitched 19/32;tables 6;haggled 12/20;letters 141;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-340093
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-106802
+LEDGER;1950;bonus;-99873
+LEDGER;1950;provision;712647
+EVENT_RESOLVED;The leaked audition;Go legal ($61K)
+SIM;aggressiv;5000;1980;0;542467;12705;20;77;4;24;1;1;0;0
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Poaching attempt: Michael Caine;Meet Michael Caine face to face — the full conversation
+EVENT_RESOLVED;Gut check: “Taxi Driver”;Yes, this will be a hit
+SIM;aggressiv;5000;1980;13;781365;23126;27;100;4;24;1;3;0;0
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Premiere: “Commando Seven”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “Raiders of the Lost Ark”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($260K)
+SIM;aggressiv;5000;1980;26;488861;38730;42;100;4;28;1;3;0;2
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Strike in Hollywood;Publicly support the strikers
+EVENT_RESOLVED;The staged romance;Accept the campaign
+EVENT_RESOLVED;Poaching attempt: Michael Caine;Meet Michael Caine face to face — the full conversation
+EVENT_RESOLVED;Premiere: “The Night of Havana”;Continue
+EVENT_RESOLVED;Premiere: “The Legend of Laredo”;Continue
+EVENT_RESOLVED;Premiere: “Rocky”;Continue
+EVENT_RESOLVED;Promotion;Continue
+SIM;aggressiv;5000;1980;39;523961;49547;38;96;4;36;0;6;0;5
+EVENT_RESOLVED;Premiere: “Taxi Driver”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Gut check: “Kramer gegen Kramer”;Yes, this will be a hit
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 29 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Premiere: “The Empire Strikes Back”;Continue
+EVENT_RESOLVED;Premiere: “The Godfather of Marseille”;Continue
+EVENT_RESOLVED;The dangerous stunt;Agree
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($262K)
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($36K)
+EVENT_RESOLVED;Awards season 1981;Applause!
+EVENT_RESOLVED;Premiere: “Blade Runner”;Continue
+SIM;aggressiv;5000;1980;52;384602;49950;50;81;4;47;0;8;0;9
+EVENT_RESOLVED;Premiere: “The Curse of St. Mary”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Terms of Endearment”;Continue
+EVENT_RESOLVED;Premiere: “E.T. the Extra-Terrestrial”;Continue
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+EVENT_RESOLVED;Premiere: “The File Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “One Night in Manhattan”;Continue
+EVENT_RESOLVED;Premiere: “Der Stadtneurotiker”;Continue
+EVENT_RESOLVED;Premiere: “Apocalypse Now”;Continue
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Ghostbusters”;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+SIM;aggressiv;5000;1980;65;463742;37122;57;82;4;51;1;9;0;17
+EVENT_RESOLVED;Premiere: “Tootsie”;Continue
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($331K)
+EVENT_RESOLVED;Premiere: “Nur Samstag Nacht”;Continue
+EVENT_RESOLVED;Premiere: “Kramer gegen Kramer”;Continue
+EVENT_RESOLVED;Premiere: “Terminator”;Continue
+EVENT_RESOLVED;Premiere: “Operation Midnight”;Continue
+EVENT_RESOLVED;Premiere: “Alien”;Continue
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;In confidence: Addiction problem;Prepare: Arrange a discreet clinic before the collapse ($18K)
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Chaos with the Wrong Man”;Continue
+EVENT_RESOLVED;Premiere: “Krieg der Sterne”;Continue
+EVENT_RESOLVED;Premiere: “Codename Midnight”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;Premiere: “Streets of Brooklyn”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Havana”;Continue
+EVENT_RESOLVED;Premiere: “Trouble with the Boss”;Continue
+SIM;aggressiv;5000;1980;78;288733;37581;66;67;4;63;1;11;0;29
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;The partnership buy-in;Buy in ($131K)
+EVENT_RESOLVED;Premiere: “The Strange Farewell”;Continue
+EVENT_RESOLVED;Premiere: “Shining”;Continue
+EVENT_RESOLVED;Premiere: “Amadeus”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Premiere: “The Godfather of Chicago”;Continue
+EVENT_RESOLVED;In confidence: Political activities;Prepare: Prepare lawyers, foreign contacts and a public line ($36K)
+EVENT_RESOLVED;Premiere: “Project Omega”;Continue
+EVENT_RESOLVED;Premiere: “Back to the Future”;Continue
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($42K)
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Michael Caine;Meet Michael Caine face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Holidays with Millionaires”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($262K)
+EVENT_RESOLVED;In confidence: On-set conflict;Prepare: Set up confidential mediation with the production ($27K)
+EVENT_RESOLVED;In confidence: Intention to leave;Prepare: Improve contract and career plan early ($27K)
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+SIM;aggressiv;5000;1980;91;36614;40588;97;35;4;66;3;12;0;36
+EVENT_RESOLVED;Premiere: “Commando Seven”;Continue
+EVENT_RESOLVED;Premiere: “The Godfather of Chicago”;Continue
+EVENT_RESOLVED;Premiere: “Codename Omega”;Continue
+EVENT_RESOLVED;Premiere: “The Ritual of St. Mary”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Premiere: “The Ritual of Ravenhill”;Continue
+EVENT_RESOLVED;Premiere: “Jenseits von Afrika”;Continue
+EVENT_RESOLVED;Premiere: “The Last River”;Continue
+EVENT_RESOLVED;Premiere: “Codename Seven”;Continue
+EVENT_RESOLVED;Gut check: “The Legend of Abilene”;Yes, this will be a hit
+EVENT_RESOLVED;Gut check: “The File Blackwood”;Yes, this will be a hit
+EVENT_RESOLVED;Premiere: “Commando Omega”;Continue
+EVENT_RESOLVED;Burned out;Continue
+EVENT_RESOLVED;Awards season 1982;Applause!
+EVENT_RESOLVED;Premiere: “Expedition Andromeda”;Continue
+EVENT_RESOLVED;Premiere: “Countdown Omega”;Continue
+EVENT_RESOLVED;Premiere: “Commando Falcon”;Continue
+EVENT_RESOLVED;Premiere: “Beyond Titan”;Continue
+EVENT_RESOLVED;Premiere: “The Curse of Croft Manor”;Continue
+EVENT_RESOLVED;Burned out;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Poaching attempt: Richard Burton;Meet Richard Burton face to face — the full conversation
+EVENT_RESOLVED;Poaching attempt: Michael Douglas;Meet Michael Douglas face to face — the full conversation
+SIM;aggressiv;5000;1980;103;530361;83209;99;1;4;72;2;11;0;50
+SIM;aggressiv;5000;1980;104;530361;83209;99;1;4;72;2;11;0;50
+SUM;aggressiv;5000;1980;signed 4/4;pitched 17/41;tables 11;haggled 16/18;letters 145;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-809754
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-388646
+LEDGER;1980;provision;2371209
+LEDGER;1980;bonus;-633218
+SIM;aggressiv;5000;2010;0;1469923;30839;20;77;4;27;1;3;0;0
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($611K)
+EVENT_RESOLVED;The leaked audition;Go legal ($148K)
+SIM;aggressiv;5000;2010;13;1032927;73928;20;100;4;27;2;4;0;0
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 26 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Poaching attempt: Kim Basinger;Meet Kim Basinger face to face — the full conversation
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Premiere: “Interstellar”;Continue
+SIM;aggressiv;5000;2010;26;1166316;89924;38;96;4;31;1;7;0;1
+EVENT_RESOLVED;Premiere: “Chaos with Mr. Pennyworth”;Continue
+EVENT_RESOLVED;Mail from the tax office;Bring in the lawyers ($99K)
+EVENT_RESOLVED;Premiere: “Inception”;Continue
+EVENT_RESOLVED;Premiere: “Gravity”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;Premiere: “Chaos with Millionaires”;Continue
+EVENT_RESOLVED;Premiere: “Departed – Unter Feinden”;Continue
+EVENT_RESOLVED;Premiere: “Slumdog Millionaire”;Continue
+SIM;aggressiv;5000;2010;39;1342431;94742;38;99;4;36;2;7;0;7
+EVENT_RESOLVED;Premiere: “The Dark Knight”;Continue
+EVENT_RESOLVED;Premiere: “Codename Firestorm”;Continue
+EVENT_RESOLVED;Premiere: “Inglourious Basterds”;Continue
+EVENT_RESOLVED;The exclusive invitation;Make connections
+EVENT_RESOLVED;Photos from the past;Call in a favor: the newsroom buries the story
+EVENT_RESOLVED;Poaching attempt: Kim Basinger;Meet Kim Basinger face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Avatar – Aufbruch nach Pandora”;Continue
+EVENT_RESOLVED;Premiere: “The Artist”;Continue
+EVENT_RESOLVED;Premiere: “Drive”;Continue
+EVENT_RESOLVED;The breakdown;Have the production paused
+EVENT_RESOLVED;In confidence: Secret relationship;Prepare: Arrange discreet meetings and a plausible cover story ($44K)
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($635K)
+EVENT_RESOLVED;Premiere: “Django Unchained”;Continue
+EVENT_RESOLVED;A whisper in the anteroom;To the rumor dossier
+EVENT_RESOLVED;Awards season 2011;Applause!
+EVENT_RESOLVED;Premiere: “Farewell to Rome”;Continue
+SIM;aggressiv;5000;2010;52;632496;59539;34;99;4;46;2;9;0;15
+EVENT_RESOLVED;Premiere: “Screams from Blackwood”;Continue
+EVENT_RESOLVED;Premiere: “Beyond Orion”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;The leaked audition;Call in a favor: make the tape disappear
+EVENT_RESOLVED;Premiere: “Protocol Eden”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Poaching attempt: Kim Basinger;Meet Kim Basinger face to face — the full conversation
+EVENT_RESOLVED;The poaching attempt;Outbid them financially ($882K)
+EVENT_RESOLVED;Premiere: “Project Firestorm”;Continue
+EVENT_RESOLVED;Premiere: “Grand Budapest Hotel”;Continue
+EVENT_RESOLVED;Client lost;Continue
+EVENT_RESOLVED;Poaching attempt: Demi Moore;Meet Demi Moore face to face — the full conversation
+SIM;aggressiv;5000;2010;65;719517;110019;47;90;4;50;2;11;1;20
+EVENT_RESOLVED;Premiere: “The Wolf of Wall Street”;Continue
+EVENT_RESOLVED;Premiere: “12 Years a Slave”;Continue
+EVENT_RESOLVED;In confidence: Health problem;Prepare: Coordinate treatment and shooting breaks discreetly ($88K)
+EVENT_RESOLVED;Premiere: “Beyond Orion”;Continue
+EVENT_RESOLVED;Press coup;Say yes
+EVENT_RESOLVED;Premiere: “The Last River”;Continue
+EVENT_RESOLVED;Premiere: “Argo”;Continue
+EVENT_RESOLVED;The staged romance;Accept the campaign
+EVENT_RESOLVED;Premiere: “Expedition Titan”;Continue
+EVENT_RESOLVED;Premiere: “The Shadow of Havana”;Continue
+EVENT_RESOLVED;Premiere: “There Will Be Blood”;Continue
+SIM;aggressiv;5000;2010;78;528447;40085;38;97;4;52;2;11;1;28
+EVENT_RESOLVED;Premiere: “The Case Havana”;Continue
+EVENT_RESOLVED;Poaching attempt: Mahershala Ali;Meet Mahershala Ali face to face — the full conversation
+EVENT_RESOLVED;Premiere: “No Country for Old Men”;Continue
+EVENT_RESOLVED;Premiere: “Streets of Marseille”;Continue
+EVENT_RESOLVED;Premiere: “A Short Morning”;Continue
+EVENT_RESOLVED;Premiere: “The Revenant”;Continue
+EVENT_RESOLVED;Poaching attempt: Mahershala Ali;Meet Mahershala Ali face to face — the full conversation
+EVENT_RESOLVED;Premiere: “Trouble with the Wrong Man”;Continue
+EVENT_RESOLVED;Premiere: “Mad Max: Fury Road”;Continue
+EVENT_RESOLVED;The role got cut;Demand reshoots
+EVENT_RESOLVED;Premiere: “Whiplash”;Continue
+EVENT_RESOLVED;The Oscar campaign;Fund a big campaign ($635K)
+EVENT_RESOLVED;Premiere: “Beyond Andromeda”;Continue
+EVENT_RESOLVED;Promotion;Continue
+EVENT_RESOLVED;The partnership buy-in;Buy in ($318K)
+SIM;aggressiv;5000;2010;91;159932;51880;62;75;4;59;3;10;1;37
+EVENT_RESOLVED;An evening at the Brown Derby;[🤝 Negotiation · 34 %] Talk the producer into a screen test for your roster
+EVENT_RESOLVED;Premiere: “Commando Falcon”;Continue
+EVENT_RESOLVED;Headline;Continue
+EVENT_RESOLVED;Premiere: “Signal from Andromeda”;Continue
+EVENT_RESOLVED;Premiere: “The Curse of St. Mary”;Continue
+EVENT_RESOLVED;Premiere: “The King's Speech”;Continue
+EVENT_RESOLVED;A favor;Agree
+EVENT_RESOLVED;Awards season 2012;Applause!
+EVENT_RESOLVED;Premiere: “Birdman”;Continue
+EVENT_RESOLVED;The director wants your client gone;Defend the client publicly
+EVENT_RESOLVED;Premiere: “The Social Network”;Continue
+EVENT_RESOLVED;Premiere: “Holidays with the Boss”;Continue
+EVENT_RESOLVED;Premiere: “Project Firestorm”;Continue
+EVENT_RESOLVED;Premiere: “Streets of Brooklyn”;Continue
+SIM;aggressiv;5000;2010;103;294228;49651;84;33;4;58;1;12;1;46
+SIM;aggressiv;5000;2010;104;294228;49651;84;33;4;58;1;12;1;46
+SUM;aggressiv;5000;2010;signed 5/5;pitched 18/33;tables 5;haggled 16/18;letters 150;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-1696062
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-762621
+LEDGER;2010;bonus;-1593972
+LEDGER;2010;provision;4369290

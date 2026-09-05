@@ -1,0 +1,18 @@
+{
+  "chunks": 9,
+  "missing_links": [],
+  "screenshots": 40,
+  "size_screenshots": 6,
+  "logic_passes": 4439,
+  "logic_failures": 1,
+  "balance-clean": {
+    "campaigns": 16,
+    "script_errors": 1,
+    "events_resolved": 0
+  },
+  "balance-events": {
+    "campaigns": 16,
+    "script_errors": 0,
+    "events_resolved": 1279
+  }
+}

@@ -1,0 +1,285 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2582)
+=== Hollywood Manager Balance-Sim ===
+SIM;profile;seed;year;week;cash;priv;stress;energy;clients;rep;inboxOpen;favors;debts;films
+SIM;solide;0;1925;0;178320;2500;20;77;4;20;2;1;0;0
+WARNING: Invalid comment in Ogg Vorbis file "res://assets/music/era_ragtime.ogg", should contain '=': "Sony Ogg Vorbis 1.0 Final".
+   at: maybe_update_info (modules/vorbis/audio_stream_ogg_vorbis.cpp:473)
+   GDScript backtrace (most recent call first):
+       [0] _load_track (res://scripts/MusicGen.gd:84)
+       [1] set_era (res://scripts/MusicGen.gd:72)
+       [2] _month_close (res://scripts/Game.gd:1707)
+       [3] end_week (res://scripts/Game.gd:1665)
+       [4] _run_era (res://tools/BalanceSim.gd:52)
+       [5] _ready (res://tools/BalanceSim.gd:30)
+SIM;solide;0;1925;13;167781;3137;23;100;4;20;1;1;0;0
+SIM;solide;0;1925;26;166350;2629;35;100;4;20;1;1;0;1
+SIM;solide;0;1925;39;156525;2773;45;92;4;24;3;1;0;6
+SIM;solide;0;1925;52;141763;2146;41;94;4;26;2;1;0;11
+SIM;solide;0;1925;65;122030;999;52;81;4;28;1;2;0;22
+SIM;solide;0;1925;78;98434;1014;48;89;4;30;2;3;0;31
+SIM;solide;0;1925;91;87371;1063;49;79;3;29;4;5;0;39
+SIM;solide;0;1925;103;71166;1008;50;72;3;29;2;7;0;49
+SIM;solide;0;1925;104;71166;1008;50;72;3;29;2;7;0;49
+SUM;solide;0;1925;signed 5/5;pitched 10/24;tables 1;haggled 0/0;letters 127;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-61910
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-25396
+LEDGER;1925;provision;51564
+SIM;solide;0;1950;0;248616;5234;20;77;4;23;1;1;0;0
+SIM;solide;0;1950;13;243949;7017;18;100;4;23;1;2;0;0
+SIM;solide;0;1950;26;260330;7779;48;92;4;23;1;2;0;0
+SIM;solide;0;1950;39;255324;5203;32;100;4;27;1;3;0;6
+SIM;solide;0;1950;52;311489;4158;49;81;4;31;2;3;0;12
+SIM;solide;0;1950;65;406785;15116;42;84;4;35;1;6;0;21
+SIM;solide;0;1950;78;370554;3646;49;76;4;37;2;8;0;31
+SIM;solide;0;1950;91;445510;10293;30;100;4;39;3;11;0;37
+SIM;solide;0;1950;103;474842;7412;36;100;4;41;1;13;0;42
+SIM;solide;0;1950;104;474842;7412;36;100;4;41;1;13;0;42
+SUM;solide;0;1950;signed 4/4;pitched 18/37;tables 6;haggled 0/0;letters 143;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-25518
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-95917
+LEDGER;1950;provision;600072
+SIM;solide;0;1980;0;605588;12705;20;77;4;24;1;1;0;0
+SIM;solide;0;1980;13;629471;19933;18;100;4;24;1;4;0;0
+SIM;solide;0;1980;26;732477;34004;47;96;4;24;2;4;0;0
+SIM;solide;0;1980;39;781518;33033;43;92;4;30;2;4;0;4
+SIM;solide;0;1980;52;843934;23963;46;92;4;32;1;4;0;8
+SIM;solide;0;1980;65;902572;7513;38;98;4;32;1;5;0;14
+SIM;solide;0;1980;78;1106828;10989;50;89;4;36;1;4;0;21
+SIM;solide;0;1980;91;1097380;14669;31;100;4;42;2;5;0;32
+SIM;solide;0;1980;103;1057110;12003;40;95;4;46;0;8;0;38
+SIM;solide;0;1980;104;1057110;12003;40;95;4;46;0;8;0;38
+SUM;solide;0;1980;signed 4/4;pitched 16/41;tables 12;haggled 0/0;letters 134;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-55830
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-237842
+LEDGER;1980;provision;1360012
+SIM;solide;0;2010;0;1475104;30839;20;76;4;25;1;1;0;0
+SIM;solide;0;2010;13;2678087;26522;14;100;4;25;1;3;0;0
+SIM;solide;0;2010;26;2373190;136517;29;100;4;25;1;3;0;0
+SIM;solide;0;2010;39;2252325;133638;35;98;4;27;0;4;0;2
+SIM;solide;0;2010;52;2507038;117695;36;97;4;29;3;4;1;10
+SIM;solide;0;2010;65;2346635;61664;44;95;4;37;1;5;1;21
+SIM;solide;0;2010;78;2558876;17684;49;92;4;37;1;4;0;29
+SIM;solide;0;2010;91;2336266;24930;39;100;4;43;1;6;0;38
+SIM;solide;0;2010;103;2383259;43675;33;100;4;45;3;6;0;43
+SIM;solide;0;2010;104;2383259;43675;33;100;4;45;3;6;0;43
+SUM;solide;0;2010;signed 4/4;pitched 18/32;tables 3;haggled 0/0;letters 144;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-15543
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-531974
+LEDGER;2010;provision;2953183
+SIM;solide;5000;1925;0;179160;2500;20;76;4;20;1;1;0;0
+SIM;solide;5000;1925;13;170572;2722;21;100;4;20;1;3;0;0
+SIM;solide;5000;1925;26;162538;1640;35;100;4;22;1;4;0;1
+SIM;solide;5000;1925;39;176323;4129;53;87;4;24;0;4;0;6
+SIM;solide;5000;1925;52;155092;3042;38;97;4;24;1;3;0;14
+SIM;solide;5000;1925;65;132731;1127;54;80;4;26;2;1;0;22
+SIM;solide;5000;1925;78;109926;151;46;89;4;28;1;4;0;34
+SIM;solide;5000;1925;91;77114;570;42;91;3;25;1;3;0;41
+SIM;solide;5000;1925;103;68616;1772;48;81;4;26;2;5;0;44
+SIM;solide;5000;1925;104;68616;1772;48;81;4;26;2;5;0;44
+SUM;solide;5000;1925;signed 5/5;pitched 10/19;tables 0;haggled 0/0;letters 124;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-75857
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-25491
+LEDGER;1925;provision;63056
+SIM;solide;5000;1950;0;248616;5234;20;77;4;23;2;1;0;0
+SIM;solide;5000;1950;13;295311;11568;17;100;4;23;1;3;0;0
+SIM;solide;5000;1950;26;302511;14453;51;95;4;25;1;4;0;2
+SIM;solide;5000;1950;39;282231;7806;38;99;4;27;2;5;0;5
+SIM;solide;5000;1950;52;323986;7963;51;87;4;31;1;7;0;12
+SIM;solide;5000;1950;65;394110;6346;36;100;4;35;1;8;0;20
+SIM;solide;5000;1950;78;460644;2705;36;97;4;37;2;8;0;23
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] _run_era (res://tools/BalanceSim.gd:52)
+       [3] _ready (res://tools/BalanceSim.gd:30)
+SIM;solide;5000;1950;91;426452;5130;54;81;4;37;3;11;0;29
+SIM;solide;5000;1950;103;423760;2025;45;88;4;39;3;11;0;35
+SIM;solide;5000;1950;104;423760;2025;45;88;4;39;3;11;0;35
+SUM;solide;5000;1950;signed 4/4;pitched 17/37;tables 10;haggled 0/0;letters 139;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-21975
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-92078
+LEDGER;1950;provision;541608
+SIM;solide;5000;1980;0;605588;12705;20;77;4;24;1;1;0;0
+SIM;solide;5000;1980;13;498552;7621;17;100;4;24;1;2;0;0
+SIM;solide;5000;1980;26;668354;27871;37;99;4;24;1;2;0;0
+SIM;solide;5000;1980;39;720034;39573;54;82;4;26;1;3;0;1
+SIM;solide;5000;1980;52;894685;47052;34;100;4;34;1;4;0;12
+SIM;solide;5000;1980;65;962094;39413;51;90;4;36;2;6;1;18
+SIM;solide;5000;1980;78;932322;4896;49;78;4;40;2;6;1;26
+SIM;solide;5000;1980;91;1136199;15087;50;76;4;44;3;8;1;35
+SIM;solide;5000;1980;103;1150815;15449;46;87;4;46;1;8;1;43
+SIM;solide;5000;1980;104;1150815;15449;46;87;4;46;1;8;1;43
+SUM;solide;5000;1980;signed 4/4;pitched 20/36;tables 6;haggled 0/0;letters 144;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-36295
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-246699
+LEDGER;1980;provision;1443039
+SIM;solide;5000;2010;0;1469923;30839;20;77;4;25;1;1;0;0
+SIM;solide;5000;2010;13;1971237;61607;17;100;4;25;2;1;0;0
+SIM;solide;5000;2010;26;1753093;74980;51;90;4;25;2;1;0;0
+SIM;solide;5000;2010;39;2298288;112396;51;83;4;31;3;1;0;8
+SIM;solide;5000;2010;52;2088975;38966;38;93;4;35;1;3;0;16
+SIM;solide;5000;2010;65;3106409;92992;48;86;4;37;1;3;0;23
+SIM;solide;5000;2010;78;4231435;145370;50;93;4;39;1;5;0;31
+SIM;solide;5000;2010;91;4004226;72425;54;79;4;41;2;4;0;38
+SIM;solide;5000;2010;103;4191409;76054;37;100;4;43;2;6;0;44
+SIM;solide;5000;2010;104;4191409;76054;37;100;4;43;2;6;0;44
+SUM;solide;5000;2010;signed 4/4;pitched 20/33;tables 9;haggled 0/0;letters 146;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-46629
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-702637
+LEDGER;2010;provision;4963082
+SIM;aggressiv;0;1925;0;178320;2500;20;77;4;20;2;1;0;0
+SIM;aggressiv;0;1925;13;163459;3053;17;100;4;20;2;1;0;0
+SIM;aggressiv;0;1925;26;157888;2770;42;94;4;20;1;2;0;0
+SIM;aggressiv;0;1925;39;136819;2630;39;97;4;26;1;2;0;7
+SIM;aggressiv;0;1925;52;162290;4284;41;100;4;26;2;4;0;16
+SIM;aggressiv;0;1925;65;150363;1910;50;91;4;28;1;7;0;21
+SIM;aggressiv;0;1925;78;160146;3634;41;97;4;34;1;6;1;32
+SIM;aggressiv;0;1925;91;146391;1755;54;91;4;34;1;6;1;37
+SIM;aggressiv;0;1925;103;137846;1551;32;97;4;36;3;7;1;43
+SIM;aggressiv;0;1925;104;137846;1551;32;97;4;36;3;7;1;43
+SUM;aggressiv;0;1925;signed 4/4;pitched 11/27;tables 1;haggled 6/12;letters 131;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-44871
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-31029
+LEDGER;1925;provision;106838
+SIM;aggressiv;0;1950;0;248616;5234;20;77;4;23;1;1;0;0
+SIM;aggressiv;0;1950;13;243826;6957;15;100;4;23;1;2;0;0
+SIM;aggressiv;0;1950;26;233800;9618;49;94;4;23;1;3;0;0
+SIM;aggressiv;0;1950;39;322738;12436;50;88;4;29;3;4;0;5
+SIM;aggressiv;0;1950;52;296442;2358;41;93;4;33;1;5;0;10
+SIM;aggressiv;0;1950;65;391180;13341;41;92;4;39;2;6;0;20
+SIM;aggressiv;0;1950;78;530572;20801;34;100;4;45;2;6;0;28
+SIM;aggressiv;0;1950;91;498289;13629;38;96;4;47;2;6;0;35
+SIM;aggressiv;0;1950;103;592618;15445;35;97;4;55;2;9;1;44
+SIM;aggressiv;0;1950;104;592618;15445;35;97;4;55;2;9;1;44
+SUM;aggressiv;0;1950;signed 4/4;pitched 19/36;tables 11;haggled 12/19;letters 144;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-15822
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-118060
+LEDGER;1950;provision;730295
+SIM;aggressiv;0;1980;0;601318;12705;22;77;4;24;1;1;0;0
+SIM;aggressiv;0;1980;13;483607;11687;14;100;4;24;1;1;0;0
+SIM;aggressiv;0;1980;26;877977;47770;25;100;4;24;1;2;0;0
+SIM;aggressiv;0;1980;39;862560;54755;43;97;4;26;0;2;0;2
+SIM;aggressiv;0;1980;52;784353;42197;38;96;4;32;2;2;0;10
+SIM;aggressiv;0;1980;65;1339141;58089;43;96;4;36;1;5;0;16
+SIM;aggressiv;0;1980;78;1446716;59495;46;93;4;38;0;6;0;22
+SIM;aggressiv;0;1980;91;1698017;62302;32;100;4;44;3;9;0;33
+SIM;aggressiv;0;1980;103;1913453;71997;48;90;4;50;4;10;0;40
+SIM;aggressiv;0;1980;104;1913453;71997;48;90;4;50;4;10;0;40
+SUM;aggressiv;0;1980;signed 4/4;pitched 18/46;tables 10;haggled 17/19;letters 141;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-73102
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-312801
+LEDGER;1980;provision;2308586
+SIM;aggressiv;0;2010;0;1469923;30839;22;76;4;25;1;1;0;0
+SIM;aggressiv;0;2010;13;2187837;95620;29;100;4;25;1;3;0;0
+SIM;aggressiv;0;2010;26;2573831;99585;34;99;4;25;1;4;0;2
+SIM;aggressiv;0;2010;39;2270138;83044;35;97;4;27;2;6;0;6
+SIM;aggressiv;0;2010;52;2735791;91634;52;86;4;33;2;8;0;17
+SIM;aggressiv;0;2010;65;2910705;37509;36;93;4;35;2;9;0;24
+SIM;aggressiv;0;2010;78;3504601;109215;50;88;4;35;2;9;0;34
+SIM;aggressiv;0;2010;91;3599782;49438;47;92;4;37;3;9;0;40
+SIM;aggressiv;0;2010;103;3709505;22437;34;98;4;41;3;9;0;46
+SIM;aggressiv;0;2010;104;3709505;22437;34;98;4;41;3;9;0;46
+SUM;aggressiv;0;2010;signed 4/4;pitched 18/34;tables 3;haggled 16/20;letters 133;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-10362
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-646123
+LEDGER;2010;provision;4388397
+SIM;aggressiv;5000;1925;0;179160;2500;20;76;4;20;1;2;0;0
+SIM;aggressiv;5000;1925;13;165065;2677;22;100;4;20;1;2;0;0
+SIM;aggressiv;5000;1925;26;166905;1611;33;99;4;22;1;2;0;1
+SIM;aggressiv;5000;1925;39;149311;2363;38;95;4;26;1;2;0;8
+SIM;aggressiv;5000;1925;52;135127;831;39;92;4;26;2;3;0;13
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] _run_era (res://tools/BalanceSim.gd:52)
+       [3] _ready (res://tools/BalanceSim.gd:30)
+SIM;aggressiv;5000;1925;65;121240;560;47;93;4;30;2;6;0;25
+SIM;aggressiv;5000;1925;78;109387;1427;33;100;4;32;1;8;0;36
+SIM;aggressiv;5000;1925;91;105873;3374;52;83;3;29;2;10;0;40
+SIM;aggressiv;5000;1925;103;91164;1349;36;98;3;29;2;12;0;46
+SIM;aggressiv;5000;1925;104;91164;1349;36;98;3;29;2;12;0;46
+SUM;aggressiv;5000;1925;signed 5/5;pitched 12/22;tables 1;haggled 9/12;letters 127;gameOverWeek 0
+LEDGER;1925;sonstiges;180000
+LEDGER;1925;pr_recht;-52215
+LEDGER;1925;buero;-73092
+LEDGER;1925;gehalt;-27608
+LEDGER;1925;provision;64079
+SIM;aggressiv;5000;1950;0;249495;5234;20;77;4;23;2;1;0;0
+SIM;aggressiv;5000;1950;13;391282;10485;18;100;4;23;2;2;0;0
+SIM;aggressiv;5000;1950;26;349672;17025;50;91;4;23;1;3;0;0
+SIM;aggressiv;5000;1950;39;436455;22336;40;95;4;27;5;5;0;7
+SIM;aggressiv;5000;1950;52;502861;19837;52;83;4;35;2;7;0;14
+SIM;aggressiv;5000;1950;65;528102;16190;45;96;4;39;1;9;0;23
+SIM;aggressiv;5000;1950;78;631623;18884;54;86;4;43;1;9;0;26
+SIM;aggressiv;5000;1950;91;651788;18429;50;82;4;47;2;10;0;36
+SIM;aggressiv;5000;1950;103;808351;21589;33;98;4;49;2;13;0;39
+SIM;aggressiv;5000;1950;104;808351;21589;33;98;4;49;2;13;0;39
+SUM;aggressiv;5000;1950;signed 4/4;pitched 19/37;tables 4;haggled 16/20;letters 139;gameOverWeek 0
+LEDGER;1950;sonstiges;251253
+LEDGER;1950;pr_recht;-4395
+LEDGER;1950;buero;-255048
+LEDGER;1950;gehalt;-133012
+LEDGER;1950;provision;949553
+SIM;aggressiv;5000;1980;0;603453;12705;20;77;4;24;1;1;0;0
+SIM;aggressiv;5000;1980;13;842351;23126;25;100;4;24;1;3;0;0
+SIM;aggressiv;5000;1980;26;870333;43947;32;100;4;24;1;3;0;0
+SIM;aggressiv;5000;1980;39;931837;56689;37;100;4;34;1;5;0;5
+SIM;aggressiv;5000;1980;52;1108048;51196;52;84;4;42;3;6;0;11
+SIM;aggressiv;5000;1980;65;1220291;43811;37;100;4;46;2;8;0;20
+SIM;aggressiv;5000;1980;78;1229458;19050;49;92;4;50;1;8;0;27
+SIM;aggressiv;5000;1980;91;1355489;32028;43;92;4;54;3;9;0;36
+SIM;aggressiv;5000;1980;103;1454278;28861;48;93;4;56;3;10;0;42
+SIM;aggressiv;5000;1980;104;1454278;28861;48;93;4;56;3;10;0;42
+SUM;aggressiv;5000;1980;signed 4/4;pitched 16/40;tables 10;haggled 15/18;letters 140;gameOverWeek 0
+LEDGER;1980;sonstiges;609858
+LEDGER;1980;pr_recht;-34160
+LEDGER;1980;buero;-619088
+LEDGER;1980;gehalt;-295590
+LEDGER;1980;provision;1793258
+SIM;aggressiv;5000;2010;0;1469923;30839;20;77;4;27;1;3;0;0
+SIM;aggressiv;5000;2010;13;1791574;73928;20;100;4;27;2;4;0;0
+SIM;aggressiv;5000;2010;26;1924963;99793;47;93;4;31;1;6;0;1
+SIM;aggressiv;5000;2010;39;2304466;112481;41;97;4;33;2;8;0;7
+SIM;aggressiv;5000;2010;52;2277319;60611;32;99;4;37;2;9;1;16
+SIM;aggressiv;5000;2010;65;2163250;22061;41;100;4;39;1;11;1;19
+SIM;aggressiv;5000;2010;78;2966379;93462;43;100;4;43;2;11;1;26
+SIM;aggressiv;5000;2010;91;3365068;108749;47;93;4;45;2;11;0;27
+SIM;aggressiv;5000;2010;103;3341906;79732;31;100;4;51;2;12;0;35
+SIM;aggressiv;5000;2010;104;3341906;79732;31;100;4;51;2;12;0;35
+SUM;aggressiv;5000;2010;signed 4/4;pitched 15/39;tables 12;haggled 12/18;letters 159;gameOverWeek 0
+LEDGER;2010;sonstiges;1480285
+LEDGER;2010;pr_recht;-110816
+LEDGER;2010;buero;-1502692
+LEDGER;2010;gehalt;-675777
+LEDGER;2010;provision;4150906

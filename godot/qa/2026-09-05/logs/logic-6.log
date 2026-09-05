@@ -1,0 +1,768 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2582)
+=== Hollywood Manager Logiktest ===
+  OK  Talentpool 1950: 60 Schauspieler
+  OK  Bogart 1950 verfügbar
+  OK  Chalamet 1950 nicht verfügbar
+  OK  Körperdaten sind je Schauspieler deterministisch
+  OK  Prozedurale Männergröße liegt im plausiblen Bereich
+  OK  Prozedurale Frauengröße liegt im plausiblen Bereich
+  OK  Prozedurale Gewichte entsprechen einem plausiblen BMI
+  OK  JSON-Körperdaten überschreiben prozedurale Werte (Bogart)
+  OK  DataLoader: body_core-Paket an Bogart gemergt
+  OK  Ruf-Schranke: Wayne (Ruhm 92) gesperrt
+  OK  Monroe verhandelbar (Ruhm 33)
+  OK  Verdeckte Forderungen generiert
+  OK  Monroe unterschrieben
+  OK  Karriere-DNA initialisiert (5 Achsen)
+  OK  Signing initialisiert aktuelles Gewicht und Trend
+  DNA-Start Monroe: { "romantik": 15.0, "popular": 5.0, "verlass": 4.0, "unikat": 15.0, "familie": 28.0 }
+  OK  Kandidat für den Gegenvorschlag ist verhandelbar
+  OK  Gegenvorschlag erzeugt: “My offer: 8% commission — not a point more, $63K signing money up front, a 5-year term, Private coach, PR handling, your word on a prestige project within 18 months. Then I'll sign today.”
+  OK  Quick-Production angelegt: Verdammt in alle Ewigkeit
+  OK  Provision eingegangen
+  OK  Release abgerechnet: Premiere: “Verdammt in alle Ewigkeit”
+  OK  DNA-Prägung: Romantik 15.0 → 23.0
+  OK  Filmografie aktualisiert
+  OK  DNA-Fit: Romanze +16.8 vs. Horror -12.6
+  OK  18 Monate simuliert bis Week 1 · March 1951, Kasse -$180K
+  Events: The Oscar campaign, In confidence: Pregnancy, 📺 The television question: Marilyn Monroe, The three a.m. phone call, 📺 Season one: Marilyn Monroe, A new name for a new star, Premiere: “My Darling Clementine”, The exclusive invitation, Premiere: “Singin' in the Rain”, Premiere: “Streets of Brooklyn”, Premiere: “Die Faust im Nacken”, An evening at the Brown Derby
+  OK  Spielstand geladen
+  OK  Kasse identisch nach Load
+  OK  DNA überlebt Save/Load
+  OK  Klientengewicht überlebt Save/Load
+  OK  Vertrauen wächst monatlich
+  OK  Vertrauen respektiert dauerhaften Deckel
+  OK  Geheimnis wird an Vertrauensschwelle offenbart
+  OK  Sucht-Geheimnis mit Folgepotenzial angelegt
+  OK  Vorbereitete Sucht ersetzt den harten Zusammenbruch
+  OK  Gerücht wandert zu einem weiteren Trägertyp
+  OK  Gerücht wirkt ab Glaubensschwelle
+  OK  Auch ein falsches Gerücht schadet
+  OK  Wechsel-Gerücht erzeugt Studio-Skepsis
+  OK  Feature-Spielstand geladen
+  OK  Geheimnisse überleben Save/Load
+  OK  Gerüchtenetzwerk überlebt Save/Load
+  OK  Gefallen vergeben (grant_favor)
+  OK  has_favor findet die Art
+  OK  consume_favor löst ältesten passenden Gefallen ein
+  OK  consume_favor ohne passenden Gefallen → false
+  OK  Verfallener Gefallen wird entfernt (Verjährung)
+  OK  Schuld angelegt (owe_favor)
+  OK  Schuld beglichen (remove_debt)
+  OK  extraAudition ohne Gefallen → false
+  OK  Ablehnung bleibt ohne Gefallen bestehen
+  OK  extraAudition hebt Ablehnung auf
+  OK  Ablehnungs-Eintrag entfernt
+  OK  Vor der Absage ist der Klient wählbar
+  OK  submit_pitch blockt abgelehnte Klienten (bindende Absage)
+  OK  eligible_clients filtert abgelehnte Klienten (Audition/Paket/Staff-Wege)
+  OK  Vorsprechen für die abgelehnte Rolle wird verweigert
+  OK  extraAudition öffnet die Rolle wieder
+  OK  Nach dem Gefallen ist der Klient wieder wählbar
+  OK  Unter Menschenkenntnis 30 bleibt die Absage eine Floskel
+  OK  Mittlere Stufe: nur die vage Richtung
+  OK  Hohe Stufe nennt den konkreten Grund (Ruhm-Lücke)
+  OK  Prestige 2 mit kleiner Hauptrolle: kein Tisch mehr (war Routine)
+  OK  Prestige 3 versammelt alle Parteien
+  OK  Traumpaar-Casting bleibt Tisch-Ereignis
+  OK  Star-Hauptrolle in Prestige-Stoff: Tisch
+  OK  Nebenrollen versammeln nie den Tisch
+  OK  Kleiner Drehstart wirft kein Hit-Wetten-Modal mehr
+  OK  Großer Drehstart (Hauptrolle, Prestige 2) fragt das Bauchgefühl
+  OK  hit_bet_for findet die laufende Wette (stille Tab-Option)
+  OK  hit_bet_for ohne Wette bleibt leer
+  OK  Kandidat für die Sperrfrist ist verhandelbar
+  OK  Miese Angebote führen zur endgültigen Absage
+  OK  Nach der Absage bleibt die Tür zu (Sperrfrist)
+  OK  Nach Ablauf der Frist öffnet die Tür wieder
+  OK  Gefallen verjähren spätestens nach 18 Monaten
+  OK  Gefallen-Einsatz deckt das verdeckte Projekt auf
+  OK  Ohne Gefallen bleibt nur ein höfliches Nein
+  OK  Ohne verdecktes Projekt bringt der Anruf ein neues ans Licht
+  OK  Tür öffnen: Gefallen wird ans Studio weitergereicht
+  OK  Tür öffnen hebt die Studio-Beziehung um +7
+  OK  Kolumnen-Slots zahlen ein privates Honorar
+  OK  Die Byline hebt das öffentliche Ansehen leicht
+  OK  Migration: alter Spielstand geladen
+  OK  network-Feld entfernt
+  OK  45 Netzwerk → 3 Gefallen (3)
+  OK  Ledger/Schulden-Felder migriert
+  OK  Eröffnungsbuchung im Ledger
+  OK  Signing-Bonus gebucht
+  OK  Provision gebucht
+  OK  Provision positiv & richtig kategorisiert
+  OK  Kasse entspricht der Buchung
+  OK  Cash-Delta == Summe der Buchungen (-13424)
+  OK  Monatsaggregat fortgeschrieben
+  OK  Aggregat stimmt mit Einzelbuchungen überein
+  OK  Burn-Rate berechnet: $15K/Mon.
+  OK  Ledger auf 600 Einträge begrenzt
+  OK  Bilanz-Spielstand geladen
+  OK  Gefallen & Monatsaggregate überleben Save/Load
+  OK  Notenskala
+  OK  Echte Titel geladen: 196
+  OK  Schauspieler: 200
+  OK  Branchenwissen wird ohne öffentliche Schlagzeile wirksam
+  OK  Branchenwissen schadet Casting, nicht Ruhm
+  OK  Öffentlicher Glaube wirkt ohne Branchenmehrheit
+  OK  Öffentliche Geschichte verändert Ruhm/Image
+  OK  Zeitung erzeugt mindestens 4 Kategorien aus Sim-Daten (9)
+  OK  Blind Item bleibt ohne Klarnamen
+  OK  Aktuelle Ausgabe im kompakten Archiv gespeichert
+  OK  Action→Prestige-Narrativ erkannt
+  OK  Narrativ ausgerufen und PR-Budget gebucht
+  OK  Passende Rolle verdoppelt Ruhm/DNA-Wirkung
+  OK  Narrativ abgeschlossen
+  OK  Rivale signiert Pool-Schauspieler
+  OK  Rivalenklient im Pool markierbar, aber gesperrt
+  OK  Groll-Gerücht landet im bestehenden Netzwerk
+  OK  Identität zählt konkrete Verhaltensmuster
+  OK  Künstlerische Identität verbessert Angebot für Ausnahmetalent
+  OK  Neuer Feature-Spielstand geladen
+  OK  Rivalen & Zeitung überleben Save/Load
+  OK  Identität & Narrativ überleben Save/Load
+  OK  Branchenwissen überlebt Save/Load
+  OK  Erfolgsklient 45+ als Machtfigur erkannt
+  OK  Klient übernimmt Regie und bleibt der Agentur verbunden
+  OK  Machtfigur taucht in Casting auf und bevorzugt die Agentur
+  OK  Zerrüttete Beziehung gründet neue Rivalen-Agentur
+  OK  Unabhängige Machtfigur ist mit Rivalenhaus verknüpft
+  OK  Machtfiguren überleben Save/Load
+  OK  Instinkt startet bei 20
+  OK  Falsche Prognose: Instinkt −1 (20 → 19)
+  OK  Richtige Prognose: Instinkt +3 (→ 22)
+  OK  Instinkt fällt nie unter 5
+  OK  Sequel-Krise ohne sequelDue-Flag stumm
+  OK  Sequel-Krise feuert mit sequelDue-Flag
+  OK  Sequel-Krise bietet drei Auswege
+  OK  sequelDue nach Entscheidung gelöscht
+  OK  Release schreibt ins Ledger
+  OK  Gewinnbeteiligung gebucht: Profit share: Marilyn Monroe (“A Bitter Rain”)
+  OK  Studio, Regisseur & Klient am Tisch
+  OK  Deal scheitert am Regisseur-Veto trotz guter Gage
+  OK  Rückweg vorhanden: Rückzug ohne Zusatzschaden
+  OK  Chemie deterministisch (Leinwand -10, persönlich +2)
+  OK  Paar-Schlüssel symmetrisch
+  OK  Gemeinsame Historie gespeichert
+  OK  Leinwandchemie fließt begrenzt in Qualität ein (+7.2 von ±8)
+  OK  Signal generiert: Bad dailies
+  OK  Nachverhandeln wirkt und sperrt sich (1× pro Film)
+  OK  Klienten-Rückzug ersetzt die Besetzung
+  OK  Volle Erholungswoche senkt Erschöpfung (80 → 67.4)
+  OK  Studio-Dinner: 5 Abende ⇒ Beziehung +1
+  OK  Planer beginnt die neue Woche leer
+  OK  Simulations-Spielstand geladen
+  OK  Instinkt überlebt Save/Load
+  OK  Prognosen & Planer überleben Save/Load
+  OK  Planer-Slots (Tag/Abschnitt) überleben Save/Load
+  OK  Chemie-Historie überlebt Save/Load
+  OK  Klausel- & Exklusiv-Felder migriert
+  OK  Coverage-Blatt liegt auf dem Schreibtisch
+  OK  Coverage erzeugt mindestens 4 Aussagen aus Sim-Daten (5)
+  OK  Coverage-Casting bleibt einen Monat verdeckt
+  OK  Marker legt Coverage-Prognose an
+  OK  Marker-Setzen bestätigt
+  OK  Marker-Kontingent begrenzt (2)
+  OK  Richtiger Marker: Instinkt +3 (20 → 23)
+  OK  Falscher Marker: Instinkt fällt nie unter 5
+  OK  Schnitt-Wurf triggert bei markierter Rolle (cutRisk)
+  OK  Schnitt-Prognose wird beim Release aufgelöst (Schnitt eingetreten: nein)
+  OK  Coverage-Blatt verfällt ins Archiv
+  OK  Coverage-Casting erscheint im Folgemonat regulär
+  OK  Drei Plan-Slots angelegt
+  OK  Kontrastfolge erkannt (Transformations-Bonus)
+  OK  Genre-Match füllt Slot 1
+  OK  Erfüllter Slot: DNA-Prägung ×1,5 markiert
+  OK  Slot-Bonus: Heat +1
+  OK  Nicht passende Rolle: Slot 2 bleibt offen
+  OK  Kein Match: kein Abzug, keine Strafe
+  OK  Release prägt ×1,5 ein: populär 5.0 → 14.0
+  OK  Komplettes Brett wird abgeräumt und gewürdigt
+  OK  Abschluss: Ruhm +4 (+4.0)
+  OK  Transformations-Bonus: Einzigartig +6
+  OK  Titelstory „Die Neuerfindung des …“ im Pressespiegel
+  OK  Wiederholungsfolge erkannt (Typecasting-Sog)
+  OK  Typecasting-Risiko erst ab Slot 3
+  OK  Typecasting-Risiko-Flag ab Slot 3 gesetzt
+  OK  Typecasting-Drift: Einzigartig −9 über drei Slots (12.0)
+  OK  Slot älter als 30 Monate verfällt still
+  OK  Bewertungs-Spielstand geladen
+  OK  Coverage-Struktur migriert
+  OK  Aktuelles Blatt überlebt Save/Load
+  OK  Karrierebrett-Slots überleben Save/Load
+  OK  Brett-Abschlüsse überleben Save/Load
+  OK  Regisseur-Profil ist deterministisch und vierdimensional
+  OK  Vorsprechen für Prestige-Hauptrolle gestartet
+  OK  Aufgedeckter Hinweis stimmt mit dem Regisseur-Profil überein
+  OK  Vorsprechen-Sieg besetzt die Rolle
+  OK  Vorsprechen-Sieg läuft durch check_promises_on_deal
+  OK  Regisseur-Chemie erhält den +2-Gedächtniseffekt
+  OK  Niederlage lässt den normalen Casting-Rückweg offen
+  OK  Niederlage verursacht keinen dauerhaften Karriere- oder DNA-Schaden
+  OK  Nur ein einmaliger Regisseur-Malus wird vorgemerkt
+  OK  Bühnen-Spielstand geladen
+  OK  state.audition überlebt Save/Load
+  OK  Regisseur-Gedächtnis überlebt Save/Load
+  OK  Zwei eigene Kandidaten-Paarungen für den Chemistry Read verfügbar
+  OK  Chemistry Read ergänzt den Studio-NPC-Vorschlag
+  OK  Beste Paarung gewinnt bei festem deterministischem Seed
+  OK  Beste Paarung merkt das Set-Signal „Die Chemie stimmt“ vor
+  OK  Positive Signal-Prosa passt zum Vorzeichen des screen-Werts
+  OK  Negative Signal-Prosa passt zum Vorzeichen des screen-Werts
+  OK  Fremdbesetzungs-Pfad lässt mindestens einen eigenen Klienten in der Rolle
+  OK  Chemistry-Read-Ergebnis schreibt die Paarhistorie fort
+  OK  Monatliche Gewichtstrift nach vier Wochen bleibt plausibel (0.15 kg)
+  OK  EventEngine: weight-Op verändert das Klientengewicht
+  OK  Gewichts-Clamp greift bei +25 % des Basiswerts
+  OK  Training zieht das Gewicht Richtung Basiswert
+  OK  weight_dev_min findet deutlich abweichenden Klienten
+  OK  weight_dev_min sperrt bei zu kleiner Abweichung
+  OK  Körper-Ereignisse aus koerper.json geladen
+  OK  Transformations-Folgeglieder bleiben aus dem Zufallspool
+  OK  Gewichts-Spielstand geladen
+  OK  weightKg und weightTrend überleben Save/Load
+  OK  Alt-Spielstand ohne Gewichtsfelder geladen
+  OK  Migration ergänzt Gewichtsfelder aus dem Basiswert
+  OK  Woche 1 → 2, Monat unverändert
+  OK  Wochen 1–3 buchen keine Fixkosten
+  OK  Nach 4 Wochen: Monatswechsel
+  OK  Monatsabschluss bucht Bürokosten
+  OK  Produktion zählt in Wochen herunter
+  OK  Release nach Ablauf der Wochen
+  OK  v1-Spielstand geladen
+  OK  Migration setzt saveVersion 2 + Woche 1
+  OK  Produktion: monthsLeft 3 → weeksLeft 12
+  OK  Casting-Deadline auf Wochen umgestellt (2 → 8)
+  OK  Planer auf 21 Slots erweitert
+  OK  Alt-Save-Fixture vorhanden (tests/fixtures/save_v1.json)
+  OK  Alt-Save-Fixture (v1, ohne saveVersion) geladen
+  OK  Fixture auf aktuelle Save-Version migriert
+  OK  Fixture-Klient: DNA, Vertrauen & Gewicht nachgerüstet
+  OK  Fixture-Produktion: monthsLeft 3 → weeksLeft 12
+  OK  Fixture-Casting: Deadline auf Wochen umgestellt
+  OK  Fixture-Stand ist bespielbar (end_week läuft durch)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] load_game (res://scripts/Game.gd:2315)
+       [1] _ready (res://tests/Test.gd:984)
+WARNING: The save file could not be read (corrupt data). A copy was kept as hm_save.bak.json — the game will not overwrite it.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] load_game (res://scripts/Game.gd:2320)
+       [1] _ready (res://tests/Test.gd:984)
+  OK  Korrupter Save wird abgewiesen statt zu crashen
+  OK  Ladefehler nennt einen Grund für die UI
+  OK  Korrupter Save wurde als hm_save.bak.json gesichert
+WARNING: This save comes from a newer game version (v3, this build reads up to v2). A copy was kept as hm_save.bak.json.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] load_game (res://scripts/Game.gd:2325)
+       [1] _ready (res://tests/Test.gd:992)
+  OK  Save aus neuerer Version wird abgewiesen
+  OK  Fehlertext benennt die neuere Version
+WARNING: DataLoader: unvollständiger Eintrag („kaputt“) — Pflichtfeld(er) ["name", "birth", "g", "debut", "talent", "peak", "peakFame"] fehlen — Eintrag übersprungen.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] load_entries (res://scripts/DataLoader.gd:124)
+       [1] _ready (res://tests/Test.gd:1011)
+  OK  DataLoader: Overlay-Eintrag aus res://qa_userdata/data geladen
+  OK  DataLoader: spätere Datei überschreibt Felder (talent 50→77)
+  OK  DataLoader: Anreicherung ergänzt Felder (films)
+  OK  DataLoader: Schema-Defaults gesetzt
+  OK  DataLoader: Eintrag ohne Pflichtfelder übersprungen
+  OK  DataLoader: Filmografie-Paket an Bogart gemergt
+  OK  DataLoader: Ethnie-Paket gemergt
+  OK  EvEngine: JSON-Events geladen (15, ohne followup_only)
+  OK  EvEngine: Kettenglied bleibt aus dem Zufallspool
+  OK  EvEngine: Jahresfenster + min_rep erfüllt
+  OK  EvEngine: min_year sperrt
+  OK  EvEngine: Backstory-Bedingung sperrt ohne Backstory
+  OK  EvEngine: {client}-Platzhalter ersetzt
+  OK  EvEngine: money-Effekt bucht ins Ledger
+  OK  EvEngine: rep-Effekt angewendet
+  OK  EvEngine: favor_grant delegiert an Game
+  OK  EvEngine: Kette terminiert (4 Wochen ⇒ +1 Monat)
+  OK  EvEngine: Kettenglied per id+ctx gebaut
+  OK  EvEngine: success_chance 0 nimmt den Fail-Pfad
+  OK  Backstory-Kette in data/events geladen
+  OK  Backstory-Event bleibt ohne Vorgeschichte gesperrt
+  OK  Backstory gesetzt
+  OK  Aufsteiger: Ruf-Start 15 − 7 = 8
+  OK  Aufsteiger: Startkapital erhöht
+  OK  Aufsteiger: Bürokosten-Trait aktiv
+  OK  Aufsteiger: A-Lister verlangen +5 Ruf
+  OK  Backstory-Event feuert mit passender Vorgeschichte
+  OK  Anwalt: Instinkt-Start 20 − 8
+  OK  Anwalt: Klienten-Kapazität +1 (dokumentiert, noch kein Limit)
+  OK  Gescheitert: Vertrauensgewinn ×1,25
+  OK  Kolumnist: Neues Gerücht ist sofort bekannt
+  OK  Spielfigur startet mit privatem Erspartem ($5234)
+  OK  Karriere beginnt als Junior-Agent
+  OK  Ruf-Titel ist anfangs unerspielt
+  OK  Monatsabschluss bucht Gehalt & Lebenshaltung privat
+  OK  Junior-Gehalt liegt über der Lebenshaltung
+  OK  Agentur zahlt das Gehalt (getrennte Kassen)
+  OK  Privat-Ledger führt Einzelbuchungen
+  OK  Auszeit erhöht Energie
+  OK  Auszeit nur 1× pro Monat
+  OK  Privatentnahme belastet die Agenturkasse
+  OK  Privateinlage verlässt das Privatkonto
+  OK  Beförderung zum Etablierten Agenten gefeuert
+  OK  Nächste Stufe (Senior) noch gesperrt
+  OK  ensure_player rüstet nach und leitet Karrierestufe her
+  OK  Kontaktbuch initialisiert (6 Personen)
+  OK  Kontaktzeit startet mit 3 Punkten
+  OK  Persönliches Treffen durchgeführt
+  OK  Treffen kostet 2 Kontaktzeit
+  OK  Treffen geht vom Privatkonto ab
+  OK  Beziehung steigt durch das Treffen
+  OK  Kontakt erinnert sich an die Begegnung
+  OK  Gleiche Woche, gleiche Person: gesperrt
+  OK  Assistenten-Besuch bleibt im Gedächtnis
+  OK  Überfällige Zusage gilt als gebrochen
+  OK  Kontaktaufnahme hält offene Zusage
+  OK  Vernachlässigte Kontakte kühlen ab
+  OK  Warten wird im Gedächtnis vermerkt
+  OK  ensure_contacts rüstet alte Stände nach
+  OK  Start in Los Angeles
+  OK  Cannes im Januar gesperrt (Saison Mai)
+  OK  Reise nach New York
+  OK  Anreise frisst die Kontaktzeit der Woche
+  OK  Agentur zahlt die Reisespesen
+  OK  Treffen aus der Ferne unmöglich
+  OK  Telefonat bleibt aus der Ferne möglich
+  OK  Klienten-Vertrauen sinkt, solange du weg bist
+  OK  Ortsaktion in New York verfügbar
+  OK  Pressetermine durchgeführt
+  OK  Öffentlicher Ruf steigt durch Pressetermine
+  OK  Ortsaktion nur 1× pro Woche
+  OK  Cannes zur Festivalsaison erreichbar
+  OK  Nach der Saison automatisch zurück in L.A.
+  OK  ensure_player rüstet den Ort nach
+  OK  No assistant at the start
+  OK  Send-assistant channel blocked without an assistant
+  OK  Assistant hired with a wage
+  OK  Delegation rules on by default
+  OK  Send-assistant channel available with an assistant
+  OK  Upkeep rule keeps a neglected contact warm
+  OK  Assistant briefing surfaces open items
+  OK  Assistant can be let go
+  OK  Start im möblierten Zimmer
+  OK  Umzug in die Hollywood Hills
+  OK  Lebensstil-Unterhalt fällig: $188/Monat
+  OK  Automobil & Chauffeur gekauft
+  OK  Wagen spart Energie im Wochen-Tick
+  OK  Abstieg ins Apartment möglich
+  OK  Abstieg kostet öffentlichen Ruf
+  OK  Hauspersonal braucht ein größeres Haus
+  OK  Jet-Anteil 1950 noch nicht verfügbar
+  OK  Villa in Beverly Hills bezogen
+  OK  Empfang in der Villa ausgerichtet
+  OK  Empfang nur 1× pro Monat
+  OK  Statuskauf wieder verkauft
+  OK  XP heben das Level (L2)
+  OK  Fähigkeit ab Level 2 freigeschaltet
+  OK  Level-4-Fähigkeit bleibt gesperrt
+  OK  Nächste Fähigkeit wird angekündigt
+  OK  Ticker: Firmen + Studio-Aktien gelistet (14)
+  OK  Streaming 1950 nicht handelbar
+  OK  Aktienkauf ausgeführt
+  OK  Depot & Privatkonto verbucht
+  OK  Tipp wird zum Fälligkeitstermin aufgelöst
+  OK  Kurs bleibt positiv
+  OK  Position glattgestellt
+  OK  Depot leer nach Verkauf
+  OK  Vermögensberater engagiert (Honorar fällig)
+  OK  Eigenkapital-Beteiligung gezeichnet
+  OK  Eigener Klient im Film ⇒ Interessenkonflikt markiert
+  OK  Marketing-Nachschuss finanziert
+  OK  Marketing hebt die Qualität
+  OK  Beteiligung beim Release privat ausgezahlt
+  OK  Beteiligung nach Abrechnung abgeräumt
+  OK  Deal-Vorlagen für Produzenten verfügbar
+  OK  Absprache im Hinterzimmer geschlossen
+  OK  Register: offen mit Fälligkeitsdatum
+  OK  Pitch-Boost aus der Absprache aktiv
+  OK  Fällige Absprache bietet Ehren oder Brechen
+  OK  Wortbruch kostet Beziehung
+  OK  Goldene Zusage: der nächste Pitch sitzt
+  OK  Goldene Zusage verbraucht sich beim Einsatz
+  OK  Partner-Einkauf wird angeboten
+  OK  Buy-in macht zum Namenspartner
+  OK  Partner-Gewinnanteil fließt aufs Privatkonto
+  OK  Rivalen-Agentur übernommen
+  OK  Rivale verschwindet vom Markt
+  OK  Studio-Anteil gekauft
+  OK  Studio-Türen stehen dauerhaft offen
+  OK  Empire-Spielstand geladen
+  OK  Skill-XP überleben Save/Load
+  OK  Immobilie überlebt Save/Load
+  OK  Hinterzimmer-Register überlebt Save/Load
+  OK  Endgame-Felder überleben Save/Load
+  OK  Vermögensberater überlebt Save/Load
+  OK  ensure_all rüstet alte Stände nach
+  OK  Kontakte starten mit 6 Beziehungsdimensionen
+  OK  Kontaktnetz: Verbindungen gewoben
+  OK  Dinner baut Nähe und Vertrauen
+  OK  Fauxpas erzeugt Verärgerung
+  OK  rel ist der abgeleitete Kompositwert
+  OK  Sympathie strahlt auf Verbundene aus
+  OK  ensure_network rüstet alte Kontakte nach
+  OK  Studioboss ist VIP mit Vorzimmer
+  OK  Vorzimmer blockiert Treffen & Clubabend
+  OK  Charme hebt die Vorzimmer-Gunst
+  OK  Vorzimmer-Pflege nur 1× pro Woche
+  OK  Gewonnenes Vorzimmer lässt durch
+  OK  Bedeutende Personen warten außerhalb des Zirkels
+  OK  Gemeinsamer Bekannter kann vorstellen
+  OK  Vorstellung fügt neuen Kontakt hinzu
+  OK  Vorstellung landet im Karrieregedächtnis
+  OK  Marker eingelöst: konkreter Gefallen
+  OK  Marker verbraucht Hebel
+  OK  Respektierter Studio-Kontakt öffnet Ohren (Pitch-Bonus)
+  OK  History-Ereignisse landen automatisch im Memoir
+  OK  Alltag bleibt aus dem Memoir draußen
+  OK  Netzwerk-Spielstand geladen
+  OK  Memoir überlebt Save/Load
+  OK  Beziehungsdimensionen überleben Save/Load
+  OK  Gatekeeper überleben Save/Load
+  OK  Persönliche Hilfe im Anlass baut Vertrauen
+  OK  Hilfe wird Teil ihres Bildes von dir (Fakt)
+  OK  Verpasster Rückruf erzeugt Verärgerung
+  OK  Anlass als verpasst registriert
+  OK  Journalist enthüllt ein unbekanntes Gerücht
+  OK  Informationszugang hat eine Abklingzeit
+  OK  Story geteilt: die Presse schuldet dir
+  OK  Wissen wandert nachvollziehbar weiter
+  OK  Fakten verbreiten sich über Verbindungen mit Quellenangabe
+  OK  Produzenten-Kontakt bringt das verdeckte Projekt auf den Tisch
+  OK  Der Tipp bleibt im Gedächtnis des Kontakts
+  OK  Gala: neue Bekanntschaft landet im Kontaktbuch
+  OK  Der Gala-Abend landet im Karrieregedächtnis
+  OK  Journalist steigt zum Kolumnisten auf
+  OK  Kreise folgen der neuen Position
+  OK  Frühe Freundlichkeit zahlt sich beim Aufstieg aus
+  OK  Das umgarnte Vorzimmer wird ein warmer Produzenten-Kontakt
+  OK  Der Aufstieg erinnert sich an frühe Blumen
+  OK  Ex-Assistent taucht als Branchenkontakt wieder auf
+  OK  Netzwerkdynamik-Spielstand geladen
+  OK  Anlässe überleben Save/Load
+  OK  Subjektive Fakten überleben Save/Load
+  OK  Dialogbäume aus data/dialogs geladen (17)
+  OK  Briefvorlagen aus data/letters geladen (28)
+  OK  Dialog startet mit Auswahlmöglichkeiten
+  OK  Platzhalter {contact} wird ersetzt
+  OK  Bedingte Antwort ist bei zu wenig Sympathie gesperrt
+  OK  Antwort-Effekte wirken auf die Beziehungsdimensionen
+  OK  Dialog wechselt in den Folgeknoten
+  OK  Endknoten beendet das Gespräch
+  OK  Knoten-Effekte des Endwegs wirken
+  OK  Dialog-Laufzeitzustand wird aufgeräumt
+  OK  Würfe bleiben im Wahrscheinlichkeitsfenster (0.50)
+  OK  1950 kommt die Post als Brief
+  OK  Brief zugestellt
+  OK  Absender aus dem Kontaktbuch aufgelöst
+  OK  Brief-Antwort ausgeführt und abgelegt
+  OK  Brief-Effekte wirken auf den Absender-Kontakt
+  OK  Brief-Antwort kostet Kontaktzeit
+  OK  Liegengebliebene Post verfällt
+  OK  Verfall mit Konsequenz: Säumniszuschlag gebucht
+  OK  Wöchentliche Zustellung bringt neue Post
+  OK  Ab der Jahrtausendwende kommt die Post als E-Mail
+  OK  Kanal-Dialog respektiert die Wochensperre (bereits kontaktiert)
+  OK  Kanal-Dialog bucht Zeit & Kosten vor dem Gespräch
+  OK  Gala-Dialog-Einstieg konsumiert die Einladung
+  OK  Dialog-Spielstand geladen
+  OK  Posteingang überlebt Save/Load
+  OK  ensure_inbox rüstet alte Stände nach
+  OK  Kanäle tragen Wirkungsprofile aus den Daten
+  OK  Nachricht wirkt laut Datenprofil auf Respekt
+  OK  Brief geht in die Ausgangspost statt sofort zu wirken
+  OK  Zustellung leert die Ausgangspost
+  OK  Der angekommene Brief wirkt verzögert auf die Beziehung
+  OK  Neuigkeitswert wird pro Ereignisart gezählt
+  OK  Routine landet im Wochen-Digest
+  OK  Digest wird zu EINER Ticker-Zeile zusammengefasst
+  OK  Wichtige Vorgänge werden zur Nachricht im Posteingang
+  OK  Hohe Relevanz erzeugt einen beantwortbaren Kurzdialog/Szene (scene)
+  OK  Szenen-Brief kommt vom richtigen Absender
+  OK  Antwort im Kurzdialog wirkt auf die Beziehung
+  OK  Dispatcher-Vorlagen sind als manuell markiert (keine Zufallszustellung)
+  OK  Alle mitgelieferten Dialoge & Briefe validieren sauber
+  OK  Unbekannte Ops, Platzhalter und Sprungziele werden erkannt (3 Befunde)
+  OK  Nach Entfernen der kaputten Definition ist alles wieder sauber
+  OK  Staffelungs-Spielstand geladen
+  OK  Neuigkeitszähler & Ausgangspost überleben Save/Load
+  OK  Gebrochene Zusagen werden konkret angesprochen
+  OK  Jeder Vorwurf wird nur einmal ausgesprochen
+  OK  Frühere Hilfe wird dankbar erinnert
+  OK  Erinnerungen haben eine Abklingzeit
+  OK  Formulierungen wiederholen sich erst, wenn alle Varianten durch sind
+  OK  Zwei große Szenen sind eine normale Woche
+  OK  Die dritte Szene signalisiert Krise (Stress steigt)
+  OK  Das Budget beginnt jede Woche frisch
+  OK  Zusagen tragen Inhalt, Frist und Zeugen
+  OK  Vor Zeugen gehaltenes Wort zahlt stärker auf Vertrauen ein
+  OK  Schriftliche Zusagen werden als solche registriert
+  OK  Gefallen eingefordert
+  OK  Einfordern kühlt die Beziehung einen Hauch ab
+  OK  Schuld-Brief zugestellt
+  OK  Schuld großzügig mit Geld beglichen
+  OK  settle_debt räumt die Verpflichtung aus dem Register
+  OK  Verweigerte Schulden hinterlassen Verärgerung
+  OK  »Vergisst Hilfe« wird Teil des Bildes von dir
+  OK  Verpflichtungs-Spielstand geladen
+  OK  Erweitertes Versprechensregister überlebt Save/Load
+  OK  Reise mit Reise-Organisation angetreten
+  OK  Assistent rettet 1⏱ Kontaktzeit über die Anreise
+  OK  Postfilter: Routinepost wird vom Assistenten beantwortet
+  OK  Briefing erinnert an offene Anlässe
+  OK  Deal-Desk besetzt
+  OK  Ein Desk wird nur einmal besetzt
+  OK  Unsicherheit wird als Sicherheitswert beziffert (70%)
+  OK  Mitarbeiter tragen ein (verdecktes) Eigeninteresse
+  OK  Empfehlung mit Freigeben/Ablehnen/Selbst übernehmen
+  OK  Empfehlung nennt Begründung und Unsicherheit
+  OK  Freigabe: der Mitarbeiter führt den Pitch aus (Erfolg oder Absage)
+  OK  Kein offener Pitch mehr — Eskalationspfad ohne Ziel
+  OK  Autonome Kontaktpflege wärmt den kältesten Kontakt
+  OK  Autonome Arbeit landet im Wochen-Digest
+  OK  Laute Skandale eskalieren trotz Autonomie (Regel)
+  OK  Ohne Regel handelt der Krisen-Desk autonom (Gerücht gedämpft)
+  OK  Monatsende bucht Mitarbeiter-Löhne
+  OK  Mitarbeiter-Spielstand geladen
+  OK  Mitarbeiter & Delegationsregeln überleben Save/Load
+  OK  ensure_staff rüstet alte Stände nach
+  OK  Mitarbeiter tragen Loyalität & Auslastung
+  OK  Überlastung, Illoyalität & schwache Kompetenz erhöhen die Fehlerquote
+  OK  Gehaltserhöhung bindet (Loyalität +15, Lohn +20%)
+  OK  Erhöhungen brauchen Abstand
+  OK  Abwerbung/Abspaltung: der Mitarbeiter geht, der Spieler erfährt es
+  OK  Abspaltung gründet eine Agentur oder stärkt die Konkurrenz
+  OK  Wichtige Kontakte merken, wenn nur noch Personal erscheint
+  OK  Eigenes Erscheinen setzt die persönliche Betreuung zurück
+  OK  Herkunft & Ausbildung bringen Fähigkeiten mit (Anwalt: Vertragswissen)
+  OK  Frühere Tätigkeit bringt ein Anfangsnetzwerk mit
+  OK  Level 5 schaltet die Meister-Spezialisierung frei
+  OK  Der Spezialisierungs-Titel folgt dem stärksten Feld
+  OK  Eigener Club gekauft (Statusbesitz)
+  OK  Der eigene Club wirft Einnahmen ab
+  OK  Unterhalt & Erträge laufen über das Privatkonto
+  OK  Partnerschaft beginnt
+  OK  Gemeinsame Abende stärken die Nähe
+  OK  Heirat registriert
+  OK  Zerrüttung beendet Partnerschaft und Ehe — öffentlich
+  OK  Der Haushalt schrumpft nach der Trennung
+  OK  Freundschaften außerhalb der Branche gezählt
+  OK  Freundschaften nehmen Druck aus dem Monat
+  OK  Privatlebens-Spielstand geladen
+  OK  Privatleben überlebt Save/Load
+  OK  fame_at: vor dem Debüt 0
+  OK  fame_at: am Karrierehoch = peakFame
+  OK  fame_at: Kurve steigt zum Hoch und fällt danach
+  OK  fame_at: lange nach der Karriere nur Sockelruhm
+  OK  Verstorbene Schauspieler fehlen im Pool (Bogart 1980)
+  OK  fit_score: Genre-Match (84) schlägt fremdes Genre (58)
+  OK  DNA-Prägung: Romance schiebt die Romantik-Achse ins Positive
+  OK  DNA-Prägung: Hauptrolle prägt doppelt so stark wie Nebenrolle
+  OK  Attribute-Definitionen aus data/attributes geladen
+  OK  Backstory Anwalt seedet Verhandlung über die Basis
+  OK  attr_gain über 70: nur ×0,25 Ertrag
+  OK  attr_gain unter 40: voller Ertrag
+  OK  attr_gain zwischen 40 und 70: halber Ertrag
+  OK  Attribut-Spielstand geladen
+  OK  Attribute überleben Save/Load
+  OK  Alt-Stand ohne Attribute geladen
+  OK  Migration rüstet Attribute mit Basiswerten nach
+  OK  Probe: Attribut = DC ⇒ 50 %
+  OK  Probe: Untergrenze 5 %
+  OK  Probe: Obergrenze 95 %
+  OK  Proben-Button trägt sichtbares Label-Präfix
+  OK  Proben-Label enthält Prozentangabe
+  OK  Probe mit 95 %: Erfolgspfad läuft (Seed)
+  OK  Erfolgreiche Probe lässt das Attribut wachsen
+  OK  min_attr sperrt bei zu niedrigem Attribut
+  OK  min_attr öffnet bei erfülltem Attribut
+  OK  Schaufenster-Event rpg_proben.json geladen
+  OK  Neues Spiel startet ohne offene Aufträge
+  OK  Kettenstart mit quest-Block legt aktiven Auftrag an
+  OK  Auftrag trägt einen Schritttext
+  OK  Followup transportiert die Quest-Id weiter
+  OK  Kettenende ohne Followup schließt den Auftrag
+  OK  Event ohne quest-Block erzeugt keinen Journal-Eintrag
+  OK  Aufträge überleben Save/Load
+  OK  Sprechstimme ist deterministisch und im Wertebereich
+  OK  Der Pool enthält fragile Stimmen
+  OK  Vor dem Tonfilm ist die Stimme egal
+  OK  1930: fragile Stimme ohne Training ist ein Risiko
+  OK  Sprechtraining beendet das Risiko
+  OK  Nach der Übergangszeit ist der Markt sortiert
+  OK  Tonfilm-Fenster: fragile Stimme kostet Casting-Passung (40 vs 52)
+  OK  Tonfilm-Eventkette geladen
+  OK  Agentur-Ranking enthält die eigene Agentur
+  OK  Ranking listet alle Häuser
+  OK  Ranking ist absteigend sortiert
+  OK  Unzufriedener Klient löst ein Abwerbe-Duell aus
+  OK  Mitbieten hält den Klienten (Loyalität steigt)
+  OK  Ziehen lassen: der Klient verlässt die Agentur
+  OK  Der Rivale übernimmt den Klienten
+  OK  Aufsteigender Star ist kein Comeback-Kandidat
+  OK  Nach dem Zenit mit tiefem Ruhm: Comeback möglich
+  OK  Comeback-Kampagne kostet Budget
+  OK  Comeback-Produktion ist markiert
+  OK  Nur ein Comeback-Versuch zugleich
+  OK  Gelungenes Comeback hebt den Ruhm deutlich
+  OK  Das Comeback ist verbraucht — ein Versuch pro Klient
+  OK  Außerhalb der Saison keine FYC-Kampagne
+  OK  Hauptrolle im Klassenjahr macht kampagnenfähig
+  OK  Trade-Ads buchen Kosten und Boost
+  OK  FYC-Boost ist gekappt
+  OK  Zeremonie verbraucht die Kampagne (Reset auf 0)
+  OK  Gescheiterte Anbahnung hinterlässt keine stale Verhandlung
+  OK  Ein verfügbares Paar mit tragfähiger Basis-Chemie existiert
+  OK  Beide Partner sind im Roster
+  OK  Starke Chemie + gemeinsame Filme ⇒ Couple-Ereignis
+  OK  Traumpaar ist beidseitig verankert
+  OK  Power-Couple: gemeinsames Plakat gibt Casting-Bonus
+  OK  Feud: gemeinsame Besetzung ist blockiert
+  OK  Package-Deal kommt zustande (Seed 1234)
+  OK  Package-Deal: beide Gagen +12 %
+  OK  Box-Office: gleicher Seed → gleiches Ergebnis
+  OK  Flop senkt den Heat des Klienten
+  OK  Hit steigert den Ruhm des Klienten
+  OK  Überfälliges Klienten-Versprechen gilt als gebrochen
+  OK  Wortbruch: Loyalität und Agentur-Ruf sinken
+  OK  Acht Grundemotionen geladen
+  OK  Zufriedener Klient mit Vertrauen ist warm (warm)
+  OK  Gebrochenes Versprechen ⇒ resentful mit konkreter Ursache
+  OK  Menschenkenntnis 80: Emotion korrekt + Ursachenzeile
+  OK  Wahrnehmung ist pro Subjekt und Woche deterministisch
+  OK  Menschenkenntnis 20: unlesbar oder falsche Nachbaremotion
+  OK  Unterhalb der höchsten Stufe keine Ursachenzeile
+  OK  Kontakt mit gebrochener Zusage ist resentful
+  OK  Rivale mit hohem Groll ist resentful
+  OK  requires_emotion/reads/check.attr validieren warnungsfrei
+  OK  requires_emotion filtert auf die WAHRE Emotion (resentful): 3 Antworten
+  OK  Das passende Emotions-Gate bleibt sichtbar
+  OK  Attributs-Probe trägt das Event-Label (sichtbare Chance)
+  OK  Dialog-Probe nutzt DIE Formel der Event-Engine
+  OK  Wahrnehmungszeile (reads) wird geliefert
+  OK  Chip bei Menschenkenntnis 80: Emotion + Ursache
+  OK  reads: höchste Präzisionsstufe liefert die volle Zeile
+  OK  Gates hängen NICHT an der Wahrnehmung — die Lücke ist gewollt
+  OK  Unbekannte Emotion im Gate erzeugt eine Ladewarnung
+  OK  Begegnungsbaum geladen: contract_showdown
+  OK  Begegnungsbaum geladen: poach_defense
+  OK  Begegnungsbaum geladen: crisis_confession
+  OK  Begegnungsbaum geladen: studio_summit
+  OK  Alle Begegnungs-Bäume und -Briefe laden warnungsfrei
+  OK  Niedrige Loyalität am Vertragsende öffnet die Showdown-Szene
+  OK  Fallback: der Vertrag ist trotzdem verlängert (BalanceSim blockiert nicht)
+  OK  Showdown-Szene zeigt den Emotions-Chip
+  OK  Showdown-Pfad läuft bis zum Endknoten durch
+  OK  client_promise-Op legt ein echtes Klienten-Versprechen mit Frist an
+  OK  Abwerbe-Duell ab Ruhm 50: volle Szene steht vorn, Modal bleibt Fallback
+  OK  Wahres Gerücht ab belief 40 löst die Geständnis-Szene aus
+  OK  Das Geständnis kommt nur einmal pro Geheimnis
+  OK  Ein geplatzter Deal allein ruft den Boss nicht
+  OK  Zwei geplatzte Deals: Einladung des Studiobosses mit sid im Kontext
+  OK  Brief-Annahme öffnet den Gipfel mit Studio-Kontext
+  OK  Gipfel-Pfad läuft bis zum Endknoten durch
+  OK  Paket-Zusage plant die Followup-Kette mit Frist
+  OK  Followup-Event der Kette baut sich mit Studio-Kontext
+  OK  Die Paket-Kette erscheint als Auftrag im Journal (quest-Block)
+  OK  Porträt-Anfrage braucht einen Klienten ab Ruhm 40
+  OK  Agentur-Porträt braucht Karrierestufe 1
+  OK  Gerücht-Fishing braucht ein bekanntes Gerücht
+  OK  Porträt-Anfrage bindet den Klienten an den Brief
+  OK  Brief-Betreff nennt den gebundenen Klienten
+  OK  Annahme kostet Kontaktzeit und öffnet den Baum mit Kontext
+  OK  Die Kernfrage bietet die ehrliche Antwort an
+  OK  Interview-Pfad läuft bis zum Ende durch
+  OK  Gelungenes Porträt hebt den öffentlichen Ruf
+  OK  Das Porträt erzeugt eine Schlagzeile im Pressefeed
+  OK  Agentur-Porträt ab Karrierestufe 1 verfügbar
+  OK  Bekanntes Gerücht schaltet das Fishing-Interview frei
+  OK  Abwimmeln füttert das Gerücht (rumor_belief-Op)
+  OK  Unter belief 55 kein Podium-Angebot
+  OK  Ab belief 55 liegt das Podium-Angebot in der Post (mit Klienten-Kontext)
+  OK  Das Gerücht ist als angeboten markiert (1× pro Gerücht)
+  OK  Globaler Cooldown verhindert das zweite Angebot
+  OK  Press-Cooldown überlebt Save/Load
+  OK  Die 1×-Markierung am Gerücht überlebt Save/Load
+  OK  Brief-Annahme öffnet die Podium-Szene
+  OK  Podium-Pfad (Demut → Statement → früher Schluss) läuft durch
+  OK  Die Pressekonferenz nimmt dem Gerücht Glauben
+  OK  Format-Baum geladen: radio_hour
+  OK  Format-Baum geladen: tv_talk_show
+  OK  Format-Baum geladen: boulevard_shoot
+  OK  Format-Baum geladen: social_qa
+  OK  Ära-Formate laden warnungsfrei
+  OK  Radio-Format endet 1945
+  OK  Boulevard beginnt erst 1980
+  OK  Social beginnt erst 2010
+  OK  Live-TV-Talk liegt im Fenster 1946–79
+  OK  Radio-Format im Fenster, mit gebundenem Studio (studio_rel-Patzer)
+  OK  Der virale Clip baut sich als Kettenglied
+  OK  Die Clip-Kette erscheint als Auftrag im Journal (quest-Block)
+  OK  Der Nachhall des Clips ist terminiert
+  OK  Fünf Bedürfnisse geladen
+  OK  Bedürfnis-Profil ist deterministisch
+  OK  Hohes Ego treibt die Anerkennung
+  OK  Kleiner Zenit-Ruhm treibt die Sicherheit
+  OK  Prestige-Genres treiben die Kunst
+  OK  Signing initialisiert die Sättigung bei 55
+  OK  Migration rüstet needsSat bei alten Ständen nach
+  OK  Lücken zehren Sicherheit, Ruhe erholt sich
+  OK  Prestige-Hauptrolle füttert Anerkennung und Kunst
+  OK  Dreharbeiten zehren die Ruhe
+  OK  Engpass unter 35 drückt die Laune
+  OK  Engpass unter 20 kostet zusätzlich Loyalität
+  OK  grievance_cause benennt den Engpass konkret
+  OK  Der Engpass verfeinert die Ursache im Emotionsmodell
+  OK  Unter Menschenkenntnis 30 bleibt das Innenleben unsichtbar
+  OK  Ab 30 zeigt die Karte das Top-Bedürfnis
+  OK  Ab 55 wird der Engpass benannt
+  OK  Ab 75 erscheint das volle Mini-Profil
+  OK  Neue Versprechens-Arten: Auszeit und Gagensprung
+  OK  Der need-Platzhalter liest das schwächste Bedürfnis
+  OK  Nach dem Ritual-Fenster bittet der Klient zum Erwartungsgespräch
+  OK  Höchstens ein Gespräch pro Halbjahr und Klient
+  OK  Die Einladung öffnet den Erwartungs-Baum
+  OK  Die Auszeit-Zusage steht auf dem Tisch
+  OK  Erwartungs-Pfad läuft bis zum Ende durch
+  OK  Die Zusage landet als echtes Versprechen mit Frist
+  OK  Die Frist-Kette (quest-Block) ist terminiert
+  OK  Auszeit gilt als gehalten, sobald der Klient wirklich zur Ruhe kam
+  OK  Die gehaltene Zusage füllt das Bedürfnis stark
+  OK  Der Bruch reißt das Bedürfnis zusätzlich ein
+  OK  tv_appeal ist deterministisch und im Wertebereich
+  OK  Charisma hebt den Fernseh-Appeal (Nudge)
+  OK  Der Pool enthält fernsehtaugliche Gesichter
+  OK  TV-Angebot feuert im Fenster 1948–62 bei hohem Appeal
+  OK  Außerhalb des Fensters keine TV-Angebote
+  OK  tv_contract-Op legt den Serienvertrag über das tvIncome-Flag an
+  OK  Serie: Geld/Sicherheit rauf, DNA wird populärer
+  OK  Die TV-Kette ist terminiert (quest-Block)
+  OK  Mit laufender Serie kein zweites Angebot (without_flag)
+  OK  Laufende Serie kostet Prestige-Casting-Standing (72 vs 77)
+  OK  Der Serienvertrag überlebt Save/Load
+  OK  Ausgelaufener Serienvertrag räumt das tvIncome-Flag ab
+  OK  Nach Vertragsende sind neue TV-Angebote wieder möglich
+  OK  Star-Prognose zählt das frühe Erreichen von Ruhm 70
+  OK  Trostpreis-Nebenrolle bleibt nach Studio-Absage gesperrt
+  OK  Binge-Ruhm: Heat fällt ab 2015 schneller (1.5 vs 1.0)
+  OK  Streaming- und Likeness-Ketten sind geladen
+  OK  Streaming-Angebote erst ab 2015
+  OK  Kreditrahmen ist positiv ($68K)
+  OK  Ausgabe bis exakt zum Rahmen ist erlaubt
+  OK  Jenseits des Rahmens ist Schluss
+  OK  Mehr Ruf, mehr Leine: der Rahmen wächst mit der Reputation
+  OK  Am Limit blockt die Gegen-Kampagne (kein weiteres Minus)
+  OK  Mit Deckung läuft die Gegen-Kampagne wieder
+  OK  Drei Monate insolvent → Game Over
+=== FERTIG: 0 Fehler ===

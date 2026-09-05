@@ -1,0 +1,545 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2582)
+=== Hollywood Manager Logiktest ===
+  OK  Talentpool 1950: 60 Schauspieler
+  OK  Bogart 1950 verfügbar
+  OK  Chalamet 1950 nicht verfügbar
+  OK  Körperdaten sind je Schauspieler deterministisch
+  OK  Prozedurale Männergröße liegt im plausiblen Bereich
+  OK  Prozedurale Frauengröße liegt im plausiblen Bereich
+  OK  Prozedurale Gewichte entsprechen einem plausiblen BMI
+  OK  JSON-Körperdaten überschreiben prozedurale Werte (Bogart)
+  OK  DataLoader: body_core-Paket an Bogart gemergt
+  OK  Ruf-Schranke: Wayne (Ruhm 92) gesperrt
+  OK  Monroe verhandelbar (Ruhm 33)
+  OK  Verdeckte Forderungen generiert
+  OK  Monroe unterschrieben
+  OK  Karriere-DNA initialisiert (5 Achsen)
+  OK  Signing initialisiert aktuelles Gewicht und Trend
+  DNA-Start Monroe: { "romantik": 15.0, "popular": 5.0, "verlass": 4.0, "unikat": 15.0, "familie": 28.0 }
+  OK  Kandidat für den Gegenvorschlag ist verhandelbar
+  OK  Gegenvorschlag erzeugt: “My offer: 8% commission — not a point more, $63K signing money up front, a 5-year term, Script approval, Personal assistant, your word on a prestige project within 18 months. Then I'll sign today.”
+  OK  Quick-Production angelegt: Gilda
+  OK  Provision eingegangen
+  OK  Release abgerechnet: Premiere: “Gilda”
+  OK  DNA-Prägung: Romantik 15.0 → 23.0
+  OK  Filmografie aktualisiert
+  OK  DNA-Fit: Romanze +16.8 vs. Horror -12.6
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] end_week (res://scripts/Game.gd:1670)
+       [2] end_month (res://scripts/Game.gd:1606)
+       [3] _ready (res://tests/Test.gd:83)
+  OK  18 Monate simuliert bis Week 1 · July 1951, Kasse -$69K
+  Events: The Oscar campaign, In confidence: Secret relationship, 📺 The television question: Marilyn Monroe, 📺 Season one: Marilyn Monroe, A favor, Premiere: “Sunset Boulevard”, The passion project, Premiere: “Die Faust im Nacken”, The three a.m. phone call, Premiere: “All About Eve”, The censorship office objects to the script, Premiere: “The File Kestrel”
+SCRIPT ERROR: Attempt to call function 'store_string' in base 'null instance' on a null instance.
+   at: save_game (res://scripts/Game.gd:2294)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2294)
+       [1] _ready (res://tests/Test.gd:95)
+  FAIL Spielstand geladen
+SCRIPT ERROR: Invalid access to property or key 'agency' on a base object of type 'Nil'.
+   at: _ready (res://tests/Test.gd:104)
+   GDScript backtrace (most recent call first):
+       [0] _ready (res://tests/Test.gd:104)
