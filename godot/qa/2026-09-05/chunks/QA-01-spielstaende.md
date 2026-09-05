@@ -1,6 +1,11 @@
 # QA-01 – Spielstände sicher lesen und schreiben
 
-**Priorität:** P1 · **Status:** offen · **Abhängigkeit:** keine
+**Priorität:** P1 · **Status:** umgesetzt (05.09.2026) · **Abhängigkeit:** keine
+
+> Umsetzung: Schema-Validierung vor Übernahme in `state`, atomares Speichern über
+> Tempdatei + Rename mit Fehlerstatus (`Game.save_error`), Backup-Fehler werden im
+> `load_error` benannt; Save-Button/Autosave melden Erfolg und Fehler in der UI.
+> Nachweis gegen frische isolierte Kopie: `../../2026-09-05-qa01-retest/logs/`.
 
 ## Befund und Reproduktion
 

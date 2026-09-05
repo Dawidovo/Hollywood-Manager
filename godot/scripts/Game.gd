@@ -1667,7 +1667,8 @@ func end_week() -> Array:
 		state.week = int(state.get("week", 1)) + 1
 	# Neue Woche, neue Kontaktzeit
 	state.contactAP = Persona.ap_per_week()
-	save_game()
+	if not save_game():
+		log_msg("Autosave failed: %s" % save_error, "history")
 	return events
 
 # ---------- Monatsabschluss (läuft nach der 4. Woche) ----------
@@ -2281,47 +2282,111 @@ func awards_ceremony() -> Variant:
 
 # ---------- Speichern / Laden ----------
 const SAVE_PATH := "user://hm_save.json"
+const SAVE_TMP_PATH := "user://hm_save.tmp.json"
 const SAVE_BACKUP_PATH := "user://hm_save.bak.json"
 const SAVE_VERSION := 2
 
 # Grund des letzten Ladefehlers — die UI zeigt ihn statt still zu scheitern.
 var load_error := ""
+# Grund des letzten Speicherfehlers — leer bei Erfolg.
+var save_error := ""
 
-func save_game() -> void:
+# Atomar: erst in eine Tempdatei schreiben, dann über den alten Save schieben.
+# Der letzte gültige Save geht so auch bei Schreibfehlern nie verloren.
+func save_game() -> bool:
+	# Ohne laufendes Spiel ist Autosave ein stiller No-Op — kein Fehler,
+	# der den Save-Button markieren dürfte.
 	if state == null:
-		return
-	var f = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+		return false
+	var f = FileAccess.open(SAVE_TMP_PATH, FileAccess.WRITE)
+	if f == null:
+		save_error = "The save file could not be written (error %d). The previous save is untouched." % FileAccess.get_open_error()
+		push_warning(save_error)
+		return false
 	f.store_string(JSON.stringify(state))
+	f.flush()
+	var write_err: Error = f.get_error()
 	f.close()
+	if write_err != OK:
+		DirAccess.remove_absolute(SAVE_TMP_PATH)
+		save_error = "Writing the save file failed (error %d). The previous save is untouched." % write_err
+		push_warning(save_error)
+		return false
+	var rename_err := DirAccess.rename_absolute(SAVE_TMP_PATH, SAVE_PATH)
+	if rename_err != OK:
+		DirAccess.remove_absolute(SAVE_TMP_PATH)
+		save_error = "The save file could not be replaced (error %d). The previous save is untouched." % rename_err
+		push_warning(save_error)
+		return false
+	save_error = ""
+	return true
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
 # Nicht ladbare Saves werden nie überschrieben, sondern vorher weggesichert.
-func _backup_save() -> void:
+func _backup_save() -> bool:
 	var src = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if src == null:
-		return
+		return false
 	var dst = FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+	if dst == null:
+		src.close()
+		return false
 	dst.store_string(src.get_as_text())
 	dst.close()
 	src.close()
+	return true
+
+# Meldung je nachdem, ob das Wegsichern des defekten Saves geklappt hat.
+func _backup_note() -> String:
+	if _backup_save():
+		return "A copy was kept as hm_save.bak.json — the game will not overwrite it."
+	return "Warning: a backup copy could not be written; the original file stays in place."
+
+# Kernfelder, die jeder ladbare Save (v1 wie v2) besitzen muss.
+# Leerer String = gültig, sonst der Grund für die Ablehnung.
+func _validate_save(parsed: Dictionary) -> String:
+	for key in ["year", "month", "nextId"]:
+		if not (parsed.get(key) is float or parsed.get(key) is int):
+			return "core field '%s' is missing or not a number" % key
+	if not (parsed.get("agency") is Dictionary):
+		return "core field 'agency' is missing or not an object"
+	var ag: Dictionary = parsed.agency
+	if not (ag.get("name") is String):
+		return "agency is missing a 'name'"
+	for key in ["cash", "rep"]:
+		if not (ag.get(key) is float or ag.get(key) is int):
+			return "agency field '%s' is missing or not a number" % key
+	for key in ["clients", "castings", "productions", "released", "log"]:
+		if not (parsed.get(key) is Array):
+			return "core field '%s' is missing or not a list" % key
+	return ""
 
 func load_game() -> bool:
 	load_error = ""
 	if not has_save():
 		return false
 	var f = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if f == null:
+		load_error = "The save file exists but could not be opened (error %d)." % FileAccess.get_open_error()
+		push_warning(load_error)
+		return false
 	var parsed = JSON.parse_string(f.get_as_text())
 	f.close()
 	if parsed == null or not (parsed is Dictionary):
-		_backup_save()
-		load_error = "The save file could not be read (corrupt data). A copy was kept as hm_save.bak.json — the game will not overwrite it."
+		load_error = "The save file could not be read (corrupt data). " + _backup_note()
 		push_warning(load_error)
 		return false
 	if int(parsed.get("saveVersion", 1)) > SAVE_VERSION:
-		_backup_save()
-		load_error = "This save comes from a newer game version (v%d, this build reads up to v%d). A copy was kept as hm_save.bak.json." % [int(parsed.saveVersion), SAVE_VERSION]
+		load_error = "This save comes from a newer game version (v%d, this build reads up to v%d). %s" % [int(parsed.saveVersion), SAVE_VERSION, _backup_note()]
+		push_warning(load_error)
+		return false
+	# Schema prüfen, BEVOR der aktive Zustand ersetzt wird: ein defekter Save
+	# darf einen laufenden gültigen Spielstand nicht verdrängen.
+	var invalid := _validate_save(parsed)
+	if invalid != "":
+		load_error = "The save file is incomplete (%s). The current game stays untouched. %s" % [invalid, _backup_note()]
 		push_warning(load_error)
 		return false
 	state = parsed

@@ -1,0 +1,9 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+SAVE_IO_BEFORE
+WARNING: The save file could not be replaced (error 1). The previous save is untouched.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] save_game (res://scripts/Game.gd:2319)
+       [1] _ready (res://tests/SaveIO.gd:7)
+SAVE_IO_AFTER;ok=false;save_error=The save file could not be replaced (error 1). The previous save is untouched.

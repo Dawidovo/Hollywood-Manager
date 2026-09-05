@@ -84,6 +84,9 @@ var modal_queue: Array = []
 @onready var market_screens := preload("res://scripts/ui/MarketScreens.gd").new(self)
 @onready var world_screens := preload("res://scripts/ui/WorldScreens.gd").new(self)
 var modal_open := false
+# QA-01: solange true, zeigt der Save-Button die „Saved ✓“-Bestätigung
+# und render() setzt ihn nicht zurück.
+var _save_flash := false
 var pool_filter := ""
 var nego_form: Dictionary = {}
 var _offer_clauses: Array = []
@@ -1017,6 +1020,39 @@ func _on_load_save() -> void:
 		modal_box.add_child(reason_lbl)
 		modal_box.add_child(_btn("Back", _close_modal))
 
+# QA-01: manuelles Speichern meldet Erfolg kurz am Button, Fehler als Modal.
+func _on_save_pressed() -> void:
+	var btn: Button = header_stats["save"]
+	if Game.save_game():
+		_save_flash = true
+		btn.text = "💾 Saved ✓"
+		btn.tooltip_text = ""
+		get_tree().create_timer(1.5).timeout.connect(func():
+			_save_flash = false
+			_update_save_button())
+	else:
+		_update_save_button()
+		_open_modal()
+		modal_box.add_child(_lbl("⚠ Game could not be saved", 22, ACC))
+		var reason_lbl := _lbl(Game.save_error, 13, DIM)
+		reason_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		reason_lbl.custom_minimum_size = Vector2(520, 0)
+		modal_box.add_child(reason_lbl)
+		modal_box.add_child(_btn("Back", _close_modal))
+
+# Fehlgeschlagene Autosaves (end_week, Modal-Schluss) markieren den Button
+# dauerhaft mit Grund im Tooltip, statt still verloren zu gehen.
+func _update_save_button() -> void:
+	if _save_flash or not header_stats.has("save"):
+		return
+	var btn: Button = header_stats["save"]
+	if Game.save_error != "":
+		btn.text = "💾 Save ⚠"
+		btn.tooltip_text = Game.save_error
+	else:
+		btn.text = "💾 Save"
+		btn.tooltip_text = ""
+
 func _enter_game() -> void:
 	start_screen.visible = false
 	game_root.visible = true
@@ -1080,7 +1116,7 @@ func _build_game_ui() -> void:
 	vol.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	vol.value_changed.connect(func(v): Jukebox.set_volume(v / 100.0))
 	hb.add_child(vol)
-	var save_btn := _btn("💾 Save", func(): Game.save_game())
+	var save_btn := _btn("💾 Save", _on_save_pressed)
 	header_stats["save"] = save_btn
 	hb.add_child(save_btn)
 	var next_btn := _btn("End week ▸", _on_end_week, true)
@@ -1182,6 +1218,7 @@ func render() -> void:
 	header_stats.ort.text = "%s %s" % [str(cur_loc.icon), str(cur_loc.name)]
 	header_stats.ort.add_theme_color_override("font_color", AMBER if Persona.is_away() else TEXT_C)
 	header_stats.next.disabled = st.over
+	_update_save_button()
 	side_scroll.custom_minimum_size = Vector2(_sidebar_w(), 0)
 
 	_clear(tab_bar)
