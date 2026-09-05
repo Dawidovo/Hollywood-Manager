@@ -1146,6 +1146,58 @@ func _ready() -> void:
 	var qa03_quest: Dictionary = Game.state.quests[-1]
 	check(int(qa03_quest.dueWi) == int(Game.state.followups[-1].dueWi), "Quest-Frist und Zustelltermin sind identisch")
 
+	# =====================================================================
+	# QA-04: Kreditrahmen gilt für Planer-Ausgaben und Signing-Bonus
+	# =====================================================================
+	Game.new_game("Kredit Planer", 1950)
+	Game.state.strikeMonths = 0
+	Game.start_negotiation("monroe")
+	var qa04_sign: Dictionary = Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	check(bool(qa04_sign.get("accepted", false)), "QA04-Setup: Klientin unter Vertrag")
+	var qa04_c: Dictionary = qa04_sign.client
+	# Am Limit: volle PR-Woche erzeugt weder Schulden noch Gratis-Wirkung
+	Game.state.agency.cash = -Game.credit_limit()
+	var qa04_cash: float = Game.state.agency.cash
+	var qa04_heat: float = float(qa04_c.heat)
+	Planner.planner_fill("client", int(qa04_c.id), "pr")
+	Planner._apply_planner([])
+	check(is_equal_approx(float(Game.state.agency.cash), qa04_cash), "Am Limit: PR-Woche bucht nichts")
+	check(is_equal_approx(float(qa04_c.heat), qa04_heat), "Am Limit: PR-Woche wirkt nicht (kein Gratis-Heat)")
+	check(Game.state.log.any(func(l): return str(l.text).contains("no coverage")), "Abbruch wird dem Spieler mit Ursache gemeldet")
+	# Gala am Limit: weder Kosten noch Gratis-Gefallen/-Heat
+	var qa04_favors: int = Game.state.favors.size()
+	Planner.planner_fill("client", int(qa04_c.id), "gala")
+	Planner._apply_planner([])
+	check(is_equal_approx(float(Game.state.agency.cash), qa04_cash), "Am Limit: Gala-Woche bucht nichts")
+	check(Game.state.favors.size() == qa04_favors and is_equal_approx(float(qa04_c.heat), qa04_heat), "Am Limit: keine Gratis-Gefallen oder Heat aus Galas")
+	# Teilweise deckbare Woche: genau die bezahlbaren Slots laufen
+	Game.state.agency.cash = -Game.credit_limit() + 2.5 * Planner.PR_COST_PER_SLOT * Util.infl(1950)
+	qa04_heat = float(qa04_c.heat)
+	Planner.planner_fill("client", int(qa04_c.id), "pr")
+	Planner._apply_planner([])
+	check(absf(float(qa04_c.heat) - (qa04_heat + 0.16)) < 0.001, "Teilwoche: genau 2 von 21 PR-Slots wirken")
+	check(float(Game.state.agency.cash) >= -Game.credit_limit() - 0.01, "Teilwoche bleibt im Kreditrahmen")
+	# Auto-Planung ohne Deckung: Ersatzplanung statt Kreditüberziehung
+	Game.state.agency.cash = -Game.credit_limit()
+	qa04_c.exhaustion = 30.0
+	qa04_cash = Game.state.agency.cash
+	Planner._apply_planner([])
+	check(is_equal_approx(float(Game.state.agency.cash), qa04_cash), "Auto-Planung ohne Deckung bucht nichts")
+	check(float(qa04_c.exhaustion) < 30.0, "Ersatzplanung: Auto-PR wird zur freien Erholung")
+	# Signing: Bonus 0 gelingt bei roter Kasse, Bonus nur innerhalb des Rahmens
+	Game.new_game("Kredit Signing", 1950)
+	Game.state.agency.cash = -1.0
+	Game.start_negotiation("monroe")
+	check(bool(Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null}).get("accepted", false)), "Kostenloses Signing gelingt bei Kasse −1")
+	Game.new_game("Kredit Signing 2", 1950)
+	Game.state.agency.cash = 0.0
+	Game.start_negotiation("monroe")
+	var qa04_over: int = roundi(Game.credit_limit()) + 1000
+	check(bool(Game.sign_client({"commission": 10, "bonus": qa04_over, "years": 5, "perks": [], "promise": null}).get("broke", false)), "Bonus jenseits des Rahmens wird abgelehnt")
+	var qa04_in: int = roundi(Game.credit_limit()) - 1000
+	check(bool(Game.sign_client({"commission": 10, "bonus": qa04_in, "years": 5, "perks": [], "promise": null}).get("accepted", false)), "Bonus innerhalb des Rahmens gelingt auch auf Kredit")
+	check(float(Game.state.agency.cash) >= -Game.credit_limit(), "Kasse bleibt nach Bonus im Kreditrahmen")
+
 	# Aufräumen: definierten Spielstand für die folgenden Tests herstellen
 	Game.new_game("Nach Fixture", 1950)
 	Game.save_game()

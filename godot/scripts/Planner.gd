@@ -31,6 +31,10 @@ const PLANNER_PLAYER = {
 	"kolumne": {"name": "Trade column", "icon": "🖋", "desc": "Private honorarium per slot — your own money, from day one"},
 }
 
+# Bezahlte Planer-Aktivitäten kosten pro Slot (Basisjahr-Dollar, × Inflation).
+const PR_COST_PER_SLOT := 20.0
+const GALA_COST_PER_SLOT := 60.0
+
 func _empty_week() -> Array:
 	var out: Array = []
 	out.resize(PLANNER_SLOTS)
@@ -166,12 +170,25 @@ func _apply_planner(_events: Array) -> void:
 			var action := "erholung" if float(c.exhaustion) > 50.0 else "pr"
 			if s != null:
 				action = str(s.get("a", action))
+			elif action == "pr" and not Game.can_spend(PR_COST_PER_SLOT * Util.infl(Game.state.year)):
+				# QA-04 Ersatzplanung: automatische PR ohne Deckung wird zur
+				# freien Erholung statt zu stiller Kreditüberziehung.
+				action = "erholung"
 			week_counts[action] = int(week_counts.get(action, 0)) + 1
 		_planner_client_week(c, week_counts)
 	# Die neue Woche beginnt mit leerem Plan
 	Game.state.planner.player = _empty_week()
 	for key in Game.state.planner.clients:
 		Game.state.planner.clients[key] = _empty_week()
+
+# QA-04: Wie viele bezahlte Slots deckt der Kreditrahmen noch? Geprüft wird
+# gegen die tatsächliche Buchungssumme (inkl. Rundung), von hinten kürzend —
+# der letzte bezahlbare Slot läuft, alles danach entfällt ersatzlos.
+func _affordable_slots(cost_per_slot: float, wanted: int) -> int:
+	var paid := wanted
+	while paid > 0 and not Game.can_spend(float(roundi(cost_per_slot * paid))):
+		paid -= 1
+	return paid
 
 func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
 	var base_weight := Game.client_base_weight(c)
@@ -182,19 +199,25 @@ func _planner_client_week(c: Dictionary, counts: Dictionary) -> void:
 	var n_erh := int(counts.get("erholung", 0))
 	if n_erh > 0:
 		c.exhaustion = clampf(c.exhaustion - 0.6 * n_erh, 0.0, 100.0)
-	var n_pr := int(counts.get("pr", 0))
+	# QA-04: PR/Galas nur mit Deckung — unbezahlte Slots wirken nicht und
+	# werden dem Spieler mit Ursache gemeldet.
+	var n_pr := _affordable_slots(PR_COST_PER_SLOT * Util.infl(Game.state.year), int(counts.get("pr", 0)))
+	if n_pr < int(counts.get("pr", 0)):
+		Game.log_msg("Credit line exhausted: %d of %d PR appointment(s) for %s cancelled — no coverage, no effect." % [int(counts.get("pr", 0)) - n_pr, int(counts.get("pr", 0)), Game.client_name(c)], "bad")
 	if n_pr > 0:
 		c.heat = clampf(c.heat + 0.08 * n_pr, -10.0, 10.0)
-		Game.book(-float(roundi(20.0 * n_pr * Util.infl(Game.state.year))), "pr_recht", "PR appointments: %s" % Game.client_name(c))
+		Game.book(-float(roundi(PR_COST_PER_SLOT * n_pr * Util.infl(Game.state.year))), "pr_recht", "PR appointments: %s" % Game.client_name(c))
 	var n_tr := int(counts.get("training", 0))
 	if n_tr > 0:
 		c.talentBonus = minf(10.0, float(c.get("talentBonus", 0.0)) + 0.015 * n_tr)
 		weight_next = move_toward(weight_next, base_weight, 0.05 * n_tr)
-	var n_gala := int(counts.get("gala", 0))
+	var n_gala := _affordable_slots(GALA_COST_PER_SLOT * Util.infl(Game.state.year), int(counts.get("gala", 0)))
+	if n_gala < int(counts.get("gala", 0)):
+		Game.log_msg("Credit line exhausted: %d of %d gala evening(s) for %s cancelled — no coverage, no effect." % [int(counts.get("gala", 0)) - n_gala, int(counts.get("gala", 0)), Game.client_name(c)], "bad")
 	if n_gala > 0:
 		var gala_dir := -1.0 if weight_next < base_weight else 1.0
 		weight_next += gala_dir * 0.02 * n_gala
-		Game.book(-float(roundi(60.0 * n_gala * Util.infl(Game.state.year))), "events", "Gala evenings: %s" % Game.client_name(c))
+		Game.book(-float(roundi(GALA_COST_PER_SLOT * n_gala * Util.infl(Game.state.year))), "events", "Gala evenings: %s" % Game.client_name(c))
 		# Höchstens ein Gefallen pro Woche — Galas sind kein Bauernhof
 		if Util.chance(1.0 - pow(0.95, float(n_gala))):
 			var kind_s: String = Util.pick(["galaInvite", "extraAudition", "billing"])

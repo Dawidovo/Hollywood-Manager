@@ -1,6 +1,17 @@
 # QA-04 – Kreditregeln für Planung und Signing vereinheitlichen
 
-**Priorität:** P1 · **Status:** offen · **Abhängigkeit:** keine
+**Priorität:** P1 · **Status:** umgesetzt (05.09.2026) · **Abhängigkeit:** keine
+
+> Umsetzung: PR/Galas laufen nur noch mit Deckung (`Planner._affordable_slots`
+> gegen `Game.can_spend`, inkl. Buchungsrundung) — bei teilweiser Deckung wirkt
+> genau die bezahlbare Slot-Anzahl, der Rest entfällt ersatzlos mit
+> Ticker-Meldung („no coverage, no effect“). Automatische PR-Planung ohne
+> Deckung wird zur freien Erholung (Ersatzplanung). Der Signing-Bonus hängt an
+> der zentralen Kreditregel (`can_spend`): Bonus 0 gelingt bei roter Kasse,
+> positive Boni nutzen den Rahmen, darüber hinaus `{"broke": true}`.
+> Laufende Kosten (book) bleiben ungebremst, Insolvenzregel unverändert.
+> Nachweis: `../../2026-09-05-qa01-retest/logs/audit-retest-qa04.log` —
+> AUDIT_CREDIT_PR/GALA ohne Kassenänderung, AUDIT_SIGN_CREDIT accepted.
 
 ## Befund und Reproduktion
 

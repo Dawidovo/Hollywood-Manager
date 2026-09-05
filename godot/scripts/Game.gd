@@ -1038,7 +1038,9 @@ func build_counter(offer: Dictionary) -> Variant:
 func sign_client(terms: Dictionary) -> Dictionary:
 	if nego == null:
 		return {"accepted": false}
-	if terms.bonus > state.agency.cash:
+	# QA-04: zentrale Kreditregel — der Signing-Bonus ist eine aktive Ausgabe
+	# und darf den Rahmen nutzen; ein Bonus von 0 scheitert nie an roter Kasse.
+	if not can_spend(float(terms.bonus)):
 		return {"broke": true}
 	if int(terms.bonus) > 0:
 		book(-float(terms.bonus), "bonus", "Signing-Bonus: %s" % nego.actor.name)
