@@ -1643,9 +1643,11 @@ func end_week() -> Array:
 				events.append(release_film(prod))
 				state.productions.erase(prod)
 
-	# Follow-ups (Ketten): fällige Folge-Ereignisse (due bleibt im Monatsindex)
+	# Follow-ups (Ketten): fällig nach echten Wochen (dueWi, QA-03). Der
+	# Abgleich läuft VOR dem Wochensprung — ein Eintrag feuert also in dem
+	# end_week()-Aufruf, der seine Zielwoche abschließt (wi() == dueWi - 1).
 	for fu in state.followups.duplicate():
-		if mi() >= int(fu.due):
+		if wi() >= _fu_due_wi(fu) - 1:
 			state.followups.erase(fu)
 			var ev = EvEngine.build_by_id(str(fu.event), fu.get("ctx", {})) if str(fu.get("type", "")) == "json" else Ev.build_followup(fu)
 			if ev != null:
@@ -1678,6 +1680,14 @@ func end_week() -> Array:
 	if not save_game():
 		log_msg("Autosave failed: %s" % save_error, "history")
 	return events
+
+# Fälligkeitswoche eines Follow-ups (QA-03). Fallback für Alt-/Mod-Einträge
+# mit Monats-due: Woche 1 jenes Monats — entspricht der alten Semantik
+# „feuert im ersten Wochenzug des Zielmonats“; Überfälliges feuert sofort.
+func _fu_due_wi(fu: Dictionary) -> int:
+	if fu.has("dueWi"):
+		return int(fu.dueWi)
+	return int(fu.get("due", 0)) * 4 + 1
 
 # ---------- Offene Entscheidungen (QA-02) ----------
 # Rekonstruierbare Ereignisse (JSON-Events und geskriptete Follow-ups) tragen
@@ -2227,7 +2237,7 @@ func release_film(prod: Dictionary) -> Dictionary:
 			log_msg("In hindsight: the set signals from “%s” deceived — set talk stays set talk." % prod.title, "info")
 	# Heimvideo (Feature 14, 1980+): Flops können nachträglich Geld einspielen
 	if int(state.year) >= 1980 and ratio < 1.0 and fame_deltas.size():
-		state.followups.append({"type": "homevideo", "title": prod.title, "studioId": str(prod.studioId), "budget": int(prod.budget), "due": mi() + Util.rndi(6, 18)})
+		state.followups.append({"type": "homevideo", "title": prod.title, "studioId": str(prod.studioId), "budget": int(prod.budget), "dueWi": wi() + Util.rndi(6, 18) * 4})
 	if affected.size():
 		state.agency.rep = clampi(int(state.agency.rep) + (2 if ratio >= 2.0 else (-1 if ratio < 1.0 else 0)), 0, 100)
 	state.studioRel[prod.studioId] = clampi(int(state.studioRel[prod.studioId]) + (5 if ratio >= 2.0 else (-3 if ratio < 1.0 else 1)), 0, 100)
@@ -2523,6 +2533,16 @@ func _apply_save_defaults() -> void:
 		state["pending"] = []
 	if not state.has("dialogRun"):
 		state["dialogRun"] = null
+	# Migration QA-03: Follow-up-Fristen vom Monats- auf den Wochenindex.
+	# Monats-due wird zu Woche 1 des Zielmonats (alte Feuer-Semantik);
+	# Überfälliges feuert im nächsten Wochenzug genau einmal.
+	for fu in state.get("followups", []):
+		if fu is Dictionary and not fu.has("dueWi"):
+			fu["dueWi"] = int(fu.get("due", 0)) * 4 + 1
+			fu.erase("due")
+	for quest in state.get("quests", []):
+		if quest is Dictionary and quest.has("dueMi") and not quest.has("dueWi"):
+			quest["dueWi"] = int(quest.dueMi) * 4 + 1
 	# Migration RPG-Attribute (Chunk 15): fehlende Werte mit Basis nachrüsten
 	if not state.has("attributes") or not (state.attributes is Dictionary):
 		state["attributes"] = {}

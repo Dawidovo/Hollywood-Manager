@@ -1,0 +1,23 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=1;delay_weeks=1;actual_end_week_calls=1
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=1;delay_weeks=4;actual_end_week_calls=4
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=1;delay_weeks=5;actual_end_week_calls=5
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=1;delay_weeks=6;actual_end_week_calls=6
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=1;delay_weeks=12;actual_end_week_calls=12
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=4;delay_weeks=1;actual_end_week_calls=1
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=4;delay_weeks=4;actual_end_week_calls=4
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=4;delay_weeks=5;actual_end_week_calls=5
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=4;delay_weeks=6;actual_end_week_calls=6
+TIMING_CONTEXT;{ "ctid": 123, "sender": "QA Contact" }
+TIMING;start_week=4;delay_weeks=12;actual_end_week_calls=12
+TIMING_DONE

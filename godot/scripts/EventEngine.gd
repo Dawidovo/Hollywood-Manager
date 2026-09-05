@@ -366,22 +366,28 @@ func _apply_effect(ef: Dictionary, ctx: Dictionary) -> void:
 		"log":
 			Game.log_msg(subst(str(ef.get("text", "")), ctx), str(ef.get("type", "info")))
 		"followup":
-			# Eventkette: delay_weeks bleibt das Datenformat; intern derzeit
-			# Monatsauflösung (aufgerundet), Umstellung auf Wochen folgt.
+			# Eventkette (QA-03): delay_weeks zählt echte Wochen — fällig
+			# genau delay_weeks end_week()-Aufrufe nach der Entscheidung,
+			# unabhängig von der Woche im Monat (dueWi = absoluter Wochenindex).
 			var delay_w := int(ef.get("delay_weeks", 4))
 			_quest_on_followup(ef, ctx)
 			# Nur belegte Schlüssel übernehmen: ein followup aus einem Dialog
 			# ohne cid darf beim Aufbau nicht an client(null) scheitern.
+			# Unterstützte Kontextfelder der Kette: cid, sid, ctid, sender, _questId.
 			var fu_ctx := {}
 			if ctx.get("cid") != null:
 				fu_ctx["cid"] = ctx.cid
 			if ctx.get("sid") != null:
 				fu_ctx["sid"] = str(ctx.sid)
+			if ctx.get("ctid") != null:
+				fu_ctx["ctid"] = ctx.ctid
+			if str(ctx.get("sender", "")) != "":
+				fu_ctx["sender"] = str(ctx.sender)
 			if ctx.has("_questId"):
 				fu_ctx["_questId"] = str(ctx._questId)
 			st.followups.append({"type": "json", "event": str(ef.get("event", "")),
 				"ctx": fu_ctx,
-				"due": Game.mi() + maxi(1, roundi(delay_w / 4.0))})
+				"dueWi": Game.wi() + maxi(1, delay_w)})
 		# ---------- Dialog-/Brief-Ops (Feature: Dialogsystem, alle moddbar) ----------
 		"chance":
 			# Zufallszweig: {"op":"chance","p":0.3,"effects":[...],"else":[...]}
@@ -514,16 +520,19 @@ func _quest_on_followup(ef: Dictionary, ctx: Dictionary) -> void:
 		return
 	var target_def := def_by_id(str(ef.get("event", "")))
 	var step := str(target_def.get("quest", {}).get("step", "To be continued …"))
-	var due := Game.mi() + maxi(1, roundi(int(ef.get("delay_weeks", 4)) / 4.0))
+	# QA-03: Quest-Frist mit derselben Wochenrechnung wie die Zustellung —
+	# Anzeige und tatsächliches Feuern können nicht mehr auseinanderlaufen.
+	var due_wi := Game.wi() + maxi(1, int(ef.get("delay_weeks", 4)))
 	if existing.is_empty():
 		var meta: Dictionary = trigger_def.get("quest", {})
 		Game.state.quests.append({"id": quest_id,
 			"title": subst(str(meta.get("title", trigger_def.get("title", quest_id))), ctx),
 			"icon": str(meta.get("icon", "📜")), "step": subst(step, ctx),
-			"startedMi": Game.mi(), "dueMi": due, "status": "aktiv"})
+			"startedMi": Game.mi(), "dueMi": due_wi / 4, "dueWi": due_wi, "status": "aktiv"})
 	else:
 		existing.step = subst(step, ctx)
-		existing.dueMi = due
+		existing.dueMi = due_wi / 4
+		existing["dueWi"] = due_wi
 		existing.status = "aktiv"
 	ctx["_questId"] = quest_id
 

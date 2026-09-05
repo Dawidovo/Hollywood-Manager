@@ -1,6 +1,17 @@
 # QA-03 – Follow-ups nach echten Wochen terminieren
 
-**Priorität:** P2 · **Status:** offen · **Abhängigkeit:** keine; Save-Migration mit QA-01 abstimmen
+**Priorität:** P2 · **Status:** umgesetzt (05.09.2026) · **Abhängigkeit:** keine; Save-Migration mit QA-01 abstimmen
+
+> Umsetzung: Follow-ups tragen `dueWi` (absoluter Wochenindex); ein Eintrag mit
+> `delay_weeks = N` feuert nach genau N Wochenzügen, unabhängig von der Woche im
+> Monat. Auch die geskripteten Monats-Follow-ups (romanceLeak/photosReturn/
+> homevideo) erzeugen jetzt Wochenindizes. Alte Monats-`due`-Werte werden beim
+> Laden zu Woche 1 des Zielmonats migriert (alte Feuer-Semantik); Überfälliges
+> feuert genau einmal. Quest-Fristen nutzen dieselbe Rechnung (`dueWi`), die
+> Journal-Anzeige rechnet wochengenau. Kontextfelder der Kette: cid, sid, ctid,
+> sender, _questId (Nebenbefund behoben).
+> Nachweis: `../../2026-09-05-qa01-retest/logs/timing-retest.log` — alle zehn
+> Kombinationen exakt; Fristenmatrix zusätzlich in der Test-Suite (Woche 1–4).
 
 ## Befund
 

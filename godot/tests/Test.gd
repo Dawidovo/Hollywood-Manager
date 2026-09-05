@@ -1091,6 +1091,61 @@ func _ready() -> void:
 	check(Game.load_game(), "Alt-Save ohne Entscheidungsfelder geladen")
 	check(Game.state.pending is Array, "Pending-Register wird defensiv nachgerüstet")
 
+	# =====================================================================
+	# QA-03: Follow-up-Fristen zählen echte Wochen, startwochenunabhängig
+	# =====================================================================
+	Data.EVENTS.append({"id": "qa03_ev", "title": "QA03-Frist", "text": "T", "followup_only": true,
+		"choices": [{"label": "Ok"}]})
+	for qa03_start_week in [1, 2, 3, 4]:
+		for qa03_delay in [1, 4, 5, 6, 12]:
+			Game.new_game("Fristen Test", 1950)
+			Game.state.strikeMonths = 0
+			Game.state.week = qa03_start_week
+			EvEngine.apply_effects([{"op": "followup", "event": "qa03_ev", "delay_weeks": qa03_delay}], {})
+			var qa03_found := 0
+			for qa03_step in 16:
+				if Game.end_week().any(func(e): return e is Dictionary and str(e.get("title", "")) == "QA03-Frist"):
+					qa03_found = qa03_step + 1
+					break
+			check(qa03_found == qa03_delay, "Frist %d Wo ab Woche %d feuert nach %d Zügen (ist: %d)" % [qa03_delay, qa03_start_week, qa03_delay, qa03_found])
+	# Kontextfelder überleben die Kette (Nebenbefund QA-03)
+	Game.new_game("Kontext Test", 1950)
+	Game.state.strikeMonths = 0
+	EvEngine.apply_effects([{"op": "followup", "event": "qa03_ev", "delay_weeks": 2}], {"ctid": 42, "sender": "QA Kontakt"})
+	var qa03_fu: Dictionary = Game.state.followups[-1]
+	check(int(qa03_fu.ctx.get("ctid", -1)) == 42 and str(qa03_fu.ctx.get("sender", "")) == "QA Kontakt", "ctid und sender stehen im Follow-up-Kontext")
+	check(qa03_fu.has("dueWi") and not qa03_fu.has("due"), "Neue Follow-ups tragen den Wochenindex")
+	# Save/Load & Migration: Termin unverändert, Alt-Eintrag wird umgerechnet
+	var qa03_due_wi: int = int(qa03_fu.dueWi)
+	Game.state.followups.append({"type": "json", "event": "qa03_ev", "due": Game.mi() + 2, "ctx": {}})
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Fristen-Spielstand geladen")
+	check(int(Game.state.followups[0].dueWi) == qa03_due_wi, "Save/Load verändert den Wochentermin nicht")
+	var qa03_legacy: Dictionary = Game.state.followups[-1]
+	check(qa03_legacy.has("dueWi") and not qa03_legacy.has("due"), "Alt-Eintrag (Monats-due) wird auf den Wochenindex migriert")
+	check(int(qa03_legacy.dueWi) == (Game.mi() + 2) * 4 + 1, "Migrierter Termin entspricht Woche 1 des Zielmonats")
+	# Überfälliger Alt-Eintrag feuert nach dem Laden genau einmal
+	Game.state.followups.clear()
+	Game.state.pending.clear()
+	Game.state.followups.append({"type": "json", "event": "qa03_ev", "due": Game.mi() - 2, "ctx": {}})
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Spielstand mit überfälligem Alt-Eintrag geladen")
+	var qa03_fired: int = Game.end_week().filter(func(e): return e is Dictionary and str(e.get("title", "")) == "QA03-Frist").size()
+	check(qa03_fired == 1, "Überfälliger Alt-Eintrag wird genau einmal zugestellt")
+	check(Game.state.followups.filter(func(f): return str(f.get("event", "")) == "qa03_ev").is_empty(), "Zugestellter Eintrag ist aus der Liste entfernt")
+	# Quest-Anzeige rechnet mit derselben Woche wie die Zustellung
+	Data.EVENTS.append({"id": "qa03_quest", "title": "QA03-Quest", "text": "T", "followup_only": true,
+		"quest": {"title": "QA03-Auftrag", "step": "Warten"},
+		"choices": [{"label": "Weiter", "effects": [{"op": "followup", "event": "qa03_ev", "delay_weeks": 5}], "outcome": "ok"}]})
+	Game.new_game("Quest Fristen", 1950)
+	Game.state.strikeMonths = 0
+	var qa03_qev = EvEngine.build_by_id("qa03_quest", {})
+	qa03_qev.choices[0].fn.call()
+	var qa03_quest: Dictionary = Game.state.quests[-1]
+	check(int(qa03_quest.dueWi) == int(Game.state.followups[-1].dueWi), "Quest-Frist und Zustelltermin sind identisch")
+
 	# Aufräumen: definierten Spielstand für die folgenden Tests herstellen
 	Game.new_game("Nach Fixture", 1950)
 	Game.save_game()
@@ -1154,7 +1209,7 @@ func _ready() -> void:
 	], {"cid": int(ee_c.id)})
 	check(Game.has_favor("suppressStory"), "EvEngine: favor_grant delegiert an Game")
 	var ee_fu: Dictionary = Game.state.followups[-1]
-	check(str(ee_fu.type) == "json" and int(ee_fu.due) == Game.mi() + 1, "EvEngine: Kette terminiert (4 Wochen ⇒ +1 Monat)")
+	check(str(ee_fu.type) == "json" and int(ee_fu.dueWi) == Game.wi() + 4, "EvEngine: Kette terminiert (4 Wochen ⇒ +4 Wochenindex)")
 	var ee_chain = EvEngine.build_by_id(str(ee_fu.event), ee_fu.ctx)
 	check(ee_chain != null and str(ee_chain.title) == "The audit spreads", "EvEngine: Kettenglied per id+ctx gebaut")
 	var ee_fail := {"success_chance": 0.0, "effects": [{"op": "rep", "amount": 5}],

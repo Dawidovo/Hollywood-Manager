@@ -358,7 +358,10 @@ func _render_quests() -> void:
 		qgrid.add_child(qc[0])
 		qc[1].add_child(main._lbl(str(q.step), 13, main.TEXT_C))
 		var meta_s := "since %s" % Game.mi_str(int(q.startedMi))
-		if int(q.get("dueMi", -1)) > Game.mi():
+		# QA-03: Wochenindex zuerst — dieselbe Rechnung wie die Zustellung.
+		if int(q.get("dueWi", -1)) > Game.wi():
+			meta_s += " · next beat in ~%d wk" % maxi(1, int(q.dueWi) - Game.wi())
+		elif int(q.get("dueMi", -1)) > Game.mi():
 			meta_s += " · next beat in ~%d wk" % maxi(1, (int(q.dueMi) - Game.mi()) * 4)
 		qc[1].add_child(main._lbl(meta_s, 11, main.DIM))
 	if done.size():

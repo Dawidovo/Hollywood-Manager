@@ -502,7 +502,7 @@ func _b_romance() -> Dictionary:
 				c.fame = clampf(c.fame + 2.0, 5.0, 100.0)
 				_dna(c, "romantik", 5.0)
 				if Util.chance(0.25):
-					Game.state.followups.append({"type": "romanceLeak", "cid": int(c.id), "due": Game.mi() + Util.rndi(3, 7)})
+					Game.state.followups.append({"type": "romanceLeak", "cid": int(c.id), "dueWi": Game.wi() + Util.rndi(3, 7) * 4})
 				return "The “relationship” dominates the gossip columns. %s is everywhere — as long as nobody asks how real it all is." % _nm(c)},
 			{"label": "Decline", "fn": func():
 				c.loyalty = clampf(c.loyalty + 4.0, 0.0, 100.0)
@@ -542,7 +542,7 @@ func _b_photos() -> Dictionary:
 			if Util.chance(p):
 				c.flags["photosSecured"] = true
 				return "The judge forbids publication. Your lawyers are the best in town."
-			Game.state.followups.append({"type": "photosReturn", "cid": int(c.id), "due": Game.mi() + Util.rndi(3, 8)})
+			Game.state.followups.append({"type": "photosReturn", "cid": int(c.id), "dueWi": Game.wi() + Util.rndi(3, 8) * 4})
 			return "The request is denied. The paper bides its time — the photos keep hovering like a sword of Damocles."},
 		{"label": "Ask for a delay (you will owe a favor)", "fn": func():
 			Game.owe_favor("suppressStory", Game.favor_contact_for("suppressStory"))
