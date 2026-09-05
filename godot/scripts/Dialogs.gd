@@ -28,7 +28,9 @@ const KNOWN_OPS := ["money", "rep", "instinct", "fame", "mood", "heat", "exhaust
 	"client_promise", "press_event", "rumor_belief"]
 const KNOWN_PLACEHOLDERS := ["contact", "sender", "agency", "year", "client", "studio", "need"]
 
-# Laufender Dialog (nur zur Laufzeit, wird nie gespeichert).
+# Laufender Dialog. Die Laufzeitform (mit def-Referenz) lebt nur hier;
+# ein serialisierbarer Spiegel (id/node/ctx/lines) wird in state.dialogRun
+# mitgespeichert, damit ein Neuladen das Gespräch wieder aufnimmt (QA-02).
 var run = null
 
 
@@ -186,6 +188,44 @@ func start(id_s: String, ctx: Dictionary = {}) -> Dictionary:
 		run.lines.append(str(recall.text))
 		Network.adjust(Persona.contact_by_id(ctx.get("ctid", -1)), recall.get("dims", {}), false)
 	_enter_node()
+	_sync_run()
+	return view()
+
+
+# QA-02: Spiegel des laufenden Dialogs in den Spielzustand schreiben und
+# sofort speichern — so liegen bereits angewandte Knoten-Effekte und die
+# Position immer als EIN konsistenter Stand auf der Platte.
+func _sync_run() -> void:
+	var st := _st()
+	if st == null or run == null:
+		return
+	st["dialogRun"] = {"id": str(run.def.id), "node": str(run.node),
+		"ctx": run.ctx.duplicate(true), "lines": run.lines.duplicate()}
+	Game.save_game()
+
+
+func _clear_run_state() -> void:
+	var st := _st()
+	if st != null and st.get("dialogRun") != null:
+		st["dialogRun"] = null
+		Game.save_game()
+
+
+# QA-02: Nach dem Laden einen unterbrochenen Dialog wieder aufnehmen.
+# Die Effekte des gespeicherten Knotens stecken bereits im Save —
+# _enter_node läuft deshalb bewusst NICHT erneut. Leeres Dictionary,
+# wenn nichts wiederaufzunehmen ist.
+func resume() -> Dictionary:
+	var st := _st()
+	var saved = st.get("dialogRun") if st != null else null
+	if saved == null or not (saved is Dictionary):
+		return {}
+	var def := dialog_def(str(saved.get("id", "")))
+	if def.is_empty() or not def.get("nodes", {}).has(str(saved.get("node", ""))):
+		st["dialogRun"] = null
+		return {}
+	run = {"def": def, "node": str(saved.node),
+		"ctx": saved.get("ctx", {}).duplicate(true), "lines": saved.get("lines", []).duplicate()}
 	return view()
 
 
@@ -424,6 +464,7 @@ func choose(idx: int) -> Dictionary:
 		return view()
 	run.node = next
 	_enter_node()
+	_sync_run()
 	if bool(_node().get("end", false)) and _node().get("choices", []).is_empty():
 		# Endknoten ohne eigene Antworten: Text zeigen, dann ist Schluss.
 		pass
@@ -450,6 +491,7 @@ func view() -> Dictionary:
 			out.choices.append({"label": label_s, "disabled": reason != "", "reason": reason})
 	if done:
 		run = null
+		_clear_run_state()
 	return out
 
 

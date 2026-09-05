@@ -333,6 +333,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		"coverage": {"current": null, "history": []}, "coverageQueue": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [], "quests": [],
+		"pending": [], "dialogRun": null,
 		"dealBursts": {}, "summitMi": -999, "negoCooldowns": {},
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
@@ -1648,6 +1649,10 @@ func end_week() -> Array:
 			state.followups.erase(fu)
 			var ev = EvEngine.build_by_id(str(fu.event), fu.get("ctx", {})) if str(fu.get("type", "")) == "json" else Ev.build_followup(fu)
 			if ev != null:
+				# QA-02: geskriptete Follow-ups sind über ihren fu-Eintrag
+				# rekonstruierbar (JSON-Events taggen sich in build_event selbst).
+				if str(fu.get("type", "")) != "json":
+					ev["_pend"] = {"type": "fu", "fu": fu.duplicate(true)}
 				events.append(ev)
 
 	maybe_fire_event(events)
@@ -1667,9 +1672,61 @@ func end_week() -> Array:
 		state.week = int(state.get("week", 1)) + 1
 	# Neue Woche, neue Kontaktzeit
 	state.contactAP = Persona.ap_per_week()
+	# QA-02: rekonstruierbare Entscheidungen VOR dem Autosave registrieren,
+	# damit ein Neuladen sie wieder vorlegen kann.
+	_register_pending_events(events)
 	if not save_game():
 		log_msg("Autosave failed: %s" % save_error, "history")
 	return events
+
+# ---------- Offene Entscheidungen (QA-02) ----------
+# Rekonstruierbare Ereignisse (JSON-Events und geskriptete Follow-ups) tragen
+# einen "_pend"-Bauplan. Er wandert als Beschreibung in state.pending und wird
+# erst beim Beantworten der Entscheidung wieder ausgetragen — Effekte laufen
+# ausschließlich über die Choice, nie über den Wiederaufbau.
+const PENDING_MAX := 20
+
+func _register_pending_events(events: Array) -> void:
+	for ev in events:
+		if ev is Dictionary and ev.has("_pend") and not ev.has("_pendId"):
+			var desc: Dictionary = ev._pend.duplicate(true)
+			desc["id"] = next_id()
+			state.pending.append(desc)
+			ev["_pendId"] = int(desc.id)
+	# Sicherheitsdeckel für Läufe ohne UI (Simulationen): älteste zuerst raus.
+	while state.pending.size() > PENDING_MAX:
+		state.pending.pop_front()
+
+# Entscheidung beantwortet: Beschreibung austragen, damit sie nach dem
+# nächsten Laden nicht erneut erscheint.
+func resolve_pending(ev: Dictionary) -> void:
+	if not ev.has("_pendId"):
+		return
+	for desc in state.pending:
+		if int(desc.id) == int(ev._pendId):
+			state.pending.erase(desc)
+			return
+
+# Nach dem Laden: gespeicherte Beschreibungen wieder zu anzeigbaren
+# Ereignissen machen. Nicht mehr rekonstruierbare (z. B. Klient weg)
+# werden still ausgetragen.
+func rebuild_pending() -> Array:
+	var out: Array = []
+	for desc in state.get("pending", []).duplicate():
+		var ev = null
+		match str(desc.get("type", "")):
+			"json":
+				ev = EvEngine.build_by_id(str(desc.get("event", "")), desc.get("ctx", {}))
+			"fu":
+				var fu: Dictionary = desc.get("fu", {})
+				if fu.has("type"):
+					ev = Ev.build_followup(fu)
+		if ev == null:
+			state.pending.erase(desc)
+		else:
+			ev["_pendId"] = int(desc.id)
+			out.append(ev)
+	return out
 
 # ---------- Monatsabschluss (läuft nach der 4. Woche) ----------
 func _month_close(events: Array) -> void:
@@ -2461,6 +2518,11 @@ func _apply_save_defaults() -> void:
 	# Migration Signing-Sperrfrist: endgültige Absagen haben ein Gedächtnis
 	if not state.has("negoCooldowns") or not (state.negoCooldowns is Dictionary):
 		state["negoCooldowns"] = {}
+	# Migration QA-02: offene Entscheidungen & unterbrochene Dialoge
+	if not state.has("pending") or not (state.pending is Array):
+		state["pending"] = []
+	if not state.has("dialogRun"):
+		state["dialogRun"] = null
 	# Migration RPG-Attribute (Chunk 15): fehlende Werte mit Basis nachrüsten
 	if not state.has("attributes") or not (state.attributes is Dictionary):
 		state["attributes"] = {}

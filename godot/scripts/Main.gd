@@ -1010,6 +1010,7 @@ func _on_load_save() -> void:
 	if Game.load_game():
 		Jukebox.start(int(Game.state.year))
 		_enter_game()
+		_restore_open_decisions()
 	else:
 		_open_modal()
 		modal_box.add_child(_lbl("⚠ Saved game could not be loaded", 22, ACC))
@@ -1058,6 +1059,18 @@ func _enter_game() -> void:
 	game_root.visible = true
 	current_tab = "buero"
 	render()
+
+# QA-02: Nach dem Laden unterbrochene Dialoge und unbeantwortete
+# Entscheidungen wieder vorlegen. Der Dialog hat Vorrang (er war zuletzt
+# aktiv); wartende Events bleiben in der Queue, bis das Modal frei ist.
+func _restore_open_decisions() -> void:
+	var dlg: Dictionary = Dialogs.resume()
+	if not dlg.is_empty():
+		world_screens._render_dialog_view(dlg)
+	var pending_evs: Array = Game.rebuild_pending()
+	if pending_evs.size():
+		modal_queue.append_array(pending_evs)
+		_show_next_modal()
 
 # =====================================================================
 # Spiel-UI-Gerüst
@@ -2486,6 +2499,10 @@ func _show_next_modal() -> void:
 
 func _resolve_choice(ev: Dictionary, idx: int) -> void:
 	var ch: Dictionary = ev.choices[idx]
+	# QA-02: Die Entscheidung ist beantwortet — aus dem Pending-Register
+	# austragen, bevor der Effekt läuft (derselbe Frame, gespeichert wird
+	# gemeinsam beim Modal-Schluss).
+	Game.resolve_pending(ev)
 	if ch.get("action", "") == "restart":
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(Game.SAVE_PATH))
 		get_tree().reload_current_scene()

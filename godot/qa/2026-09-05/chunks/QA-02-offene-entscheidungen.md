@@ -1,6 +1,15 @@
 # QA-02 – Offene Entscheidungen nach Laden wiederherstellen
 
-**Priorität:** P1 · **Status:** offen · **Abhängigkeit:** QA-01 empfohlen
+**Priorität:** P1 · **Status:** umgesetzt (05.09.2026) · **Abhängigkeit:** QA-01 empfohlen
+
+> Umsetzung: Rekonstruierbare Entscheidungen (JSON-Events + geskriptete
+> Follow-ups) tragen einen serialisierbaren Bauplan und wandern in
+> `state.pending`; ausgetragen wird erst beim Beantworten. Laufende Dialoge
+> spiegeln sich in `state.dialogRun` (id/node/ctx) und werden nach Laden
+> wieder aufgenommen, ohne Knoten-Effekte erneut anzuwenden. Nicht abgedeckt:
+> einmalige Info-/Ergebnismeldungen ohne Bauplan (Release-Zusammenfassungen,
+> Staff-Meldungen) — bewusst, da nicht rekonstruierbar und ohne Folgewirkung.
+> Nachweis: `../../2026-09-05-qa01-retest/logs/qa02-check.log`.
 
 ## Befund und Reproduktion
 

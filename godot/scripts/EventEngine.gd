@@ -200,7 +200,12 @@ func build_event(def: Dictionary, ctx: Dictionary = {}) -> Variant:
 		choices_out.append(entry)
 	if choices_out.is_empty():
 		choices_out.append({"label": "Zur Kenntnis genommen", "fn": func(): return ""})
-	return {"title": subst(str(def.title), ctx), "text": subst(str(def.text), ctx), "choices": choices_out}
+	var out := {"title": subst(str(def.title), ctx), "text": subst(str(def.text), ctx), "choices": choices_out}
+	# QA-02: Bauplan für die Wiederherstellung nach Laden — der aufgelöste
+	# Kontext (cid/sid) macht den Wiederaufbau deterministisch. Effekte
+	# laufen weiterhin nur über die gewählte Choice.
+	out["_pend"] = {"type": "json", "event": str(def.get("id", "")), "ctx": ctx.duplicate(true)}
+	return out
 
 
 func _choice_fn(ch: Dictionary, ctx: Dictionary) -> Callable:

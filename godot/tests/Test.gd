@@ -1027,6 +1027,70 @@ func _ready() -> void:
 	check(Game.load_error.containsn("backup"), "Fehlertext meldet das fehlgeschlagene Backup")
 	DirAccess.remove_absolute(Game.SAVE_BACKUP_PATH)
 
+	# =====================================================================
+	# QA-02: Offene Entscheidungen und Dialoge überleben Speichern/Laden
+	# =====================================================================
+	Data.EVENTS.append({"id": "qa02_ev", "title": "QA02-Entscheidung", "text": "T", "followup_only": true,
+		"choices": [{"label": "Zahlen", "effects": [{"op": "money", "amount": -100.0, "label": "QA02"}]}, {"label": "Nichts"}]})
+	Data.EVENTS.append({"id": "qa02_ev2", "title": "QA02-Zweite", "text": "T2", "followup_only": true,
+		"choices": [{"label": "Ok"}]})
+	Game.new_game("Pending Test", 1950)
+	Game.state.strikeMonths = 0
+	Game.state.followups.append({"type": "json", "event": "qa02_ev", "due": Game.mi(), "ctx": {}})
+	Game.state.followups.append({"type": "json", "event": "qa02_ev2", "due": Game.mi(), "ctx": {}})
+	var qa02_evs: Array = Game.end_week().filter(func(e): return e is Dictionary and e.has("_pendId"))
+	check(qa02_evs.size() >= 2, "Fällige Entscheidungen tragen eine Pending-ID")
+	check(Game.state.pending.size() >= 2, "Pending-Register enthält beide Entscheidungen")
+	# Neustart vor Beantwortung: identische Entscheidungen erscheinen wieder
+	Game.state = null
+	check(Game.load_game(), "Spielstand mit offenen Entscheidungen geladen")
+	var qa02_rebuilt: Array = Game.rebuild_pending()
+	check(qa02_rebuilt.any(func(e): return str(e.title) == "QA02-Entscheidung"), "Erste Entscheidung nach Laden wiederhergestellt")
+	check(qa02_rebuilt.any(func(e): return str(e.title) == "QA02-Zweite"), "Zweite Entscheidung nach Laden wiederhergestellt")
+	# Erste beantworten: Effekt genau einmal, Register schrumpft
+	var qa02_first: Dictionary = qa02_rebuilt.filter(func(e): return str(e.title) == "QA02-Entscheidung")[0]
+	var qa02_cash: float = Game.state.agency.cash
+	qa02_first.choices[0].fn.call()
+	Game.resolve_pending(qa02_first)
+	check(absf(float(Game.state.agency.cash) - (qa02_cash - 100.0)) < 0.01, "Effekt der Antwort wirkt genau einmal")
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Spielstand nach erster Antwort geladen")
+	var qa02_rest: Array = Game.rebuild_pending().filter(func(e): return str(e.title).begins_with("QA02"))
+	check(qa02_rest.size() == 1 and str(qa02_rest[0].title) == "QA02-Zweite", "Nur die unbeantwortete Entscheidung bleibt übrig")
+	check(absf(float(Game.state.agency.cash) - (qa02_cash - 100.0)) < 0.01, "Kein doppelter Effekt nach Neuladen")
+	Game.resolve_pending(qa02_rest[0])
+	check(Game.rebuild_pending().filter(func(e): return str(e.title).begins_with("QA02")).is_empty(), "Beantwortete QA02-Entscheidungen sind ausgetragen")
+
+	# Mehrstufiger Dialog: Neustart erhält Knoten, Kontext und Effekte
+	Data.DIALOGS.append({"id": "qa02_dlg", "title": "QA02-Dialog", "start": "a", "nodes": {
+		"a": {"text": "A", "choices": [{"label": "weiter", "goto": "b"}]},
+		"b": {"text": "B", "effects": [{"op": "money", "amount": -50.0, "label": "QA02D"}],
+			"choices": [{"label": "fertig", "goto": "end"}]}}})
+	var qa02_dlg_cash: float = Game.state.agency.cash
+	Dialogs.start("qa02_dlg", {"sender": "QA"})
+	Dialogs.choose(0)
+	check(absf(float(Game.state.agency.cash) - (qa02_dlg_cash - 50.0)) < 0.01, "Knoten-Effekt beim Betreten angewandt")
+	check(str(Game.state.dialogRun.node) == "b", "Dialogposition steht im Spielzustand")
+	Dialogs.run = null
+	Game.state = null
+	check(Game.load_game(), "Spielstand mitten im Dialog geladen")
+	var qa02_dlg_view: Dictionary = Dialogs.resume()
+	check(not qa02_dlg_view.is_empty() and not bool(qa02_dlg_view.done), "Dialog wird nach Laden wieder aufgenommen")
+	check(str(Dialogs.run.node) == "b" and str(Dialogs.run.ctx.get("sender", "")) == "QA", "Knoten und Kontext bleiben erhalten")
+	check(absf(float(Game.state.agency.cash) - (qa02_dlg_cash - 50.0)) < 0.01, "Wiederaufnahme wendet Knoten-Effekte nicht erneut an")
+	Dialogs.choose(0)
+	check(Dialogs.run == null and Game.state.get("dialogRun") == null, "Beendeter Dialog räumt den gespeicherten Zustand ab")
+	check(Dialogs.resume().is_empty(), "Nichts mehr wiederaufzunehmen nach Dialogende")
+
+	# Alt-Saves ohne QA-02-Felder laden weiterhin
+	Game.state.erase("pending")
+	Game.state.erase("dialogRun")
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Alt-Save ohne Entscheidungsfelder geladen")
+	check(Game.state.pending is Array, "Pending-Register wird defensiv nachgerüstet")
+
 	# Aufräumen: definierten Spielstand für die folgenden Tests herstellen
 	Game.new_game("Nach Fixture", 1950)
 	Game.save_game()
