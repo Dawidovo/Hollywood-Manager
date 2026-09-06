@@ -2050,10 +2050,32 @@ func _ready() -> void:
 	cold_ct.dims.liking = 5.0
 	cold_ct.dims.trust = 5.0
 	cold_ct.rel = Network.derived_rel(cold_ct)
+	# QA-07: Zielauswahl — der präparierte Kontakt ist wirklich der kälteste
+	check(Game.state.contacts.all(func(qct): return float(qct.rel) >= float(cold_ct.rel)), "QA07-Setup: Zielkontakt hat den kleinsten Beziehungswert")
+	check(str(Staff._coldest_contact().name) == str(cold_ct.name), "Kontaktpflege wählt den kältesten Kontakt")
+	# Erfolgspfad (Wurf erzwungen): Sympathie steigt, Kosten gebucht
 	var cold0 := Network.dim(cold_ct, "liking")
+	var qa07_cash := float(Game.state.agency.cash)
+	check(Staff._care_gesture(care_staff, cold_ct, 1.0), "Erfolgreiche Geste liefert true")
+	check(Network.dim(cold_ct, "liking") > cold0, "Erfolg wärmt den Kontakt (Sympathie steigt)")
+	check(float(Game.state.agency.cash) < qa07_cash, "Geste kostet die Agentur Kurier-Spesen")
+	# Patzerpfad (Wurf erzwungen): Sympathie sinkt, Kosten trotzdem gebucht
+	var qa07_cold1 := Network.dim(cold_ct, "liking")
+	qa07_cash = float(Game.state.agency.cash)
+	check(not Staff._care_gesture(care_staff, cold_ct, 0.0), "Patzer liefert false")
+	check(Network.dim(cold_ct, "liking") < qa07_cold1, "Patzer kühlt den Kontakt ab")
+	check(float(Game.state.agency.cash) < qa07_cash, "Auch der Patzer kostet die Kurier-Spesen")
+	# Digest meldet das echte Ergebnis — beide Pfade konsistent zur Wirkung
+	Game.state.weekDigest.clear()
+	var qa07_target: Dictionary = Staff._coldest_contact()
+	var qa07_cold2 := Network.dim(qa07_target, "liking")
 	Staff._work_care(care_staff, [])
-	check(Network.dim(cold_ct, "liking") > cold0, "Autonome Kontaktpflege wärmt den kältesten Kontakt")
-	check(Game.state.weekDigest.any(func(d): return str(d).contains("warm")), "Autonome Arbeit landet im Wochen-Digest")
+	check(Game.state.weekDigest.size() == 1, "Autonome Arbeit landet im Wochen-Digest")
+	var qa07_digest := str(Game.state.weekDigest[0])
+	if Network.dim(qa07_target, "liking") >= qa07_cold2:
+		check(qa07_digest.contains("kept") and qa07_digest.contains("warm"), "Erfolg wird positiv gemeldet (Digest: %s)" % qa07_digest)
+	else:
+		check(qa07_digest.contains("botched") and not qa07_digest.contains("warm"), "Patzer wird als Fehler gemeldet, nicht als Erfolg (Digest: %s)" % qa07_digest)
 	var crisis_staff := Staff.hire("crisis")
 	crisis_staff.mode = "auto"
 	var cr_rumor := Scandal.add_rumor("agency", "Eine laute Geschichte.", false, "skandal", ["Journalists"], 70.0, true)

@@ -297,17 +297,21 @@ func _coldest_contact() -> Dictionary:
 	return coldest
 
 
-func _care_gesture(s: Dictionary, ct: Dictionary) -> void:
+# QA-07: liefert das konkrete Ergebnis (true = Geste gelungen), damit die
+# Meldungen der Aufrufer der Wahrheit entsprechen. `roll` erlaubt Tests,
+# den Zufall zu kontrollieren (< mishap_chance ⇒ Patzer); -1 = echter Wurf.
+func _care_gesture(s: Dictionary, ct: Dictionary, roll: float = -1.0) -> bool:
 	Game.book(-roundf(8.0 * Util.infl(_st().year)), "buero", "Care desk: flowers & couriers")
 	# Fehler (Feature 33): die falsche Karte zum falschen Anlass
-	if Util.chance(mishap_chance(s)):
+	if (roll if roll >= 0.0 else randf()) < mishap_chance(s):
 		Network.adjust(ct, {"irritation": 3.0, "liking": -1.0}, false)
 		Persona._memory(ct, "%s sent condolences — to a premiere. People talk." % str(s.name))
 		Game.log_msg("%s mixes up the card files — %s got the wrong flowers with the wrong note." % [str(s.name), str(ct.name)], "bad")
-		return
+		return false
 	Network.adjust(ct, {"liking": 1.5 + float(s.skill) / 60.0, "closeness": 1.0}, false)
 	ct.lastMi = Game.mi()
 	Persona._memory(ct, "%s kept in touch on the agency's behalf." % str(s.name))
+	return true
 
 
 func _work_care(s: Dictionary, events: Array) -> void:
@@ -315,13 +319,19 @@ func _work_care(s: Dictionary, events: Array) -> void:
 	if ct.is_empty():
 		return
 	if str(s.mode) == "auto":
-		_care_gesture(s, ct)
-		_st().weekDigest.append("%s kept %s warm" % [str(s.name), str(ct.name)])
+		# QA-07: der Digest meldet das echte Ergebnis, kein Pauschal-Erfolg.
+		if _care_gesture(s, ct):
+			_st().weekDigest.append("%s kept %s warm" % [str(s.name), str(ct.name)])
+		else:
+			_st().weekDigest.append("%s botched a gesture toward %s — wrong card, wrong note" % [str(s.name), str(ct.name)])
 		return
 	events.append({"title": "A recommendation from %s" % str(s.name),
 		"text": "%s: [b]%s[/b] is cooling off (relationship %d). A gesture from the office would hold the line — though nothing replaces you showing up yourself. Certainty ~%d%%.%s" % [str(s.name), str(ct.name), roundi(float(ct.rel)), confidence(s), _bias_line(s)],
 		"choices": [
-			{"label": "Send a gesture (−%s)" % Util.fmt_money(roundf(8.0 * Util.infl(_st().year))), "fn": func(): _care_gesture(s, ct)},
+			{"label": "Send a gesture (−%s)" % Util.fmt_money(roundf(8.0 * Util.infl(_st().year))), "fn": func():
+				if _care_gesture(s, ct):
+					return "The gesture lands. %s feels remembered." % str(ct.name)
+				return "It backfires: wrong flowers, wrong note. %s is more irritated than before." % str(ct.name)},
 			{"label": "I'll go myself when I can"},
 		]})
 

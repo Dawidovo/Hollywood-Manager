@@ -1,6 +1,16 @@
 # QA-07 – Kontaktpflege-Ergebnis korrekt melden und testen
 
-**Priorität:** P2 · **Status:** offen · **Abhängigkeit:** keine
+**Priorität:** P2 · **Status:** umgesetzt (06.09.2026) · **Abhängigkeit:** keine
+
+> Umsetzung: `_care_gesture` liefert das echte Ergebnis (bool); der
+> Auto-Digest meldet Patzer als „botched a gesture“ statt „kept warm“, der
+> manuelle Pfad zeigt ein wahrheitsgemäßes Outcome-Modal. Die Patzerchance
+> selbst bleibt unangetastet. Der flakige Test ist in Zielauswahl, Erfolgs-
+> und Patzerpfad (Wurf per `roll`-Parameter erzwungen) sowie einen
+> wirkungskonsistenten Digest-Check aufgeteilt; drei vollständige
+> Suite-Läufe hintereinander: je 0 Fehler.
+> Nachweis: `../../2026-09-05-qa01-retest/logs/staff-audit-retest.log` —
+> STAFF_MISHAP (Seed 0): liking 16 → 15 mit „botched“-Digest.
 
 ## Zwei zusammengehörige Befunde
 
