@@ -1254,6 +1254,42 @@ func _ready() -> void:
 	Planner._apply_planner([])
 	check(int(Game.state.studioRel[qa05_sid]) == 52, "Backstory-Multiplikator wirkt auf die Bruchrechnung (+2)")
 
+	# =====================================================================
+	# QA-08: Wiederholte Signings und Null-Verkäufe sind wirkungslos
+	# =====================================================================
+	Game.new_game("Invarianten", 1950)
+	Game.start_negotiation("monroe")
+	check(bool(Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null}).get("accepted", false)), "QA08-Setup: erstes Signing gelingt")
+	var qa08_clients: int = Game.state.clients.size()
+	var qa08_rep: int = int(Game.state.agency.rep)
+	var qa08_nxp: float = Mogul.xp("negotiation")
+	var qa08_res2: Dictionary = Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
+	check(not bool(qa08_res2.get("accepted", false)) and bool(qa08_res2.get("duplicate", false)), "Zweites Signing derselben Verhandlung wird abgelehnt")
+	check(Game.state.clients.size() == qa08_clients, "Kein doppelter Klient mit derselben Actor-ID")
+	check(int(Game.state.agency.rep) == qa08_rep and is_equal_approx(Mogul.xp("negotiation"), qa08_nxp), "Doppel-Signing hat keine Ruf-/XP-Nebenwirkungen")
+	# Bereits vertretener Schauspieler über eine frische Verhandlung
+	Game.start_negotiation("monroe")
+	check(not bool(Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null}).get("accepted", false)), "Signing eines bereits vertretenen Schauspielers wird abgelehnt")
+	check(Game.state.clients.size() == qa08_clients, "Roster bleibt bei erneutem Versuch unverändert")
+	# Neustart räumt Laufzeitkontexte
+	Game.start_negotiation("bogart")
+	Game.new_game("Invarianten 2", 1950)
+	check(Game.nego == null and Game.pitch_ctx == null and Game.table == null, "Neustart räumt Verhandlungs-/Pitch-/Tisch-Kontext")
+	# Aktien: Null-Verkauf wirkungslos, Kauf/Teil-/Gesamtverkauf unverändert
+	var qa08_stock: String = Mogul.stock_defs()[0].id
+	Game.state.player.cash = 100000.0
+	check(Mogul.buy_stock(qa08_stock, 90000.0) == "", "Normaler Kauf funktioniert")
+	var qa08_held: int = Mogul.shares_of(qa08_stock)
+	check(qa08_held >= 2, "QA08-Setup: mindestens zwei Anteile im Depot")
+	var qa08_cash: float = float(Game.state.player.cash)
+	var qa08_fxp: float = Mogul.xp("finance")
+	var qa08_trades: int = Game.state.invest.trades.size()
+	check(Mogul.sell_stock(qa08_stock, 0) != "", "Null-Verkauf wird abgelehnt")
+	check(Mogul.shares_of(qa08_stock) == qa08_held and is_equal_approx(float(Game.state.player.cash), qa08_cash), "Null-Verkauf ändert weder Bestand noch Kasse")
+	check(is_equal_approx(Mogul.xp("finance"), qa08_fxp) and Game.state.invest.trades.size() == qa08_trades, "Null-Verkauf bringt weder XP noch Trade-Eintrag")
+	check(Mogul.sell_stock(qa08_stock, 1) == "" and Mogul.shares_of(qa08_stock) == qa08_held - 1, "Teilverkauf funktioniert unverändert")
+	check(Mogul.sell_stock(qa08_stock) == "" and Mogul.shares_of(qa08_stock) == 0, "Gesamtverkauf (-1) funktioniert unverändert")
+
 	# Aufräumen: definierten Spielstand für die folgenden Tests herstellen
 	Game.new_game("Nach Fixture", 1950)
 	Game.save_game()

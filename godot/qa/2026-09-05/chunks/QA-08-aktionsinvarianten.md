@@ -1,6 +1,16 @@
 # QA-08 – Wiederholte oder wirkungslose Aktionen abfangen
 
-**Priorität:** P3 · **Status:** offen · **Abhängigkeit:** keine
+**Priorität:** P3 · **Status:** umgesetzt (06.09.2026) · **Abhängigkeit:** keine
+
+> Umsetzung: `sign_client` lehnt abgeschlossene Verhandlungen (`nego.done`)
+> und bereits vertretene Schauspieler ab, bevor Kosten/Ruf/XP entstehen
+> (`{"duplicate": true}`); `new_game` räumt die Laufzeitkontexte nego/
+> pitch_ctx/table/Dialogs.run. `Mogul.sell_stock` lehnt Stückzahl 0 ab
+> (keine XP, kein Trade, keine Buchung); -1 bleibt „alles verkaufen“,
+> Kauf/Teil-/Gesamtverkauf unverändert.
+> Nachweis: `../../2026-09-05-qa01-retest/logs/audit-retest-qa08.log` —
+> AUDIT_DUPLICATE_SIGN clients=1 (war 2), AUDIT_ZERO_SALE xp 1.0 → 1.0
+> (war 1 → 11).
 
 Diese Fehler wurden an öffentlichen Spiellogik-Methoden reproduziert. Ein normaler UI-Weg zu den exakten Aufrufen wurde nicht nachgewiesen; entsprechend keine Behauptung eines frei nutzbaren Spieler-Exploits.
 

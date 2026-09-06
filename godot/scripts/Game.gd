@@ -317,6 +317,12 @@ func studio_style(studio_id: String) -> String:
 # Spielzustand
 # =====================================================================
 func new_game(agency_name: String, start_year: int, backstory_id: String = "") -> void:
+	# QA-08: Laufzeitkontexte des vorigen Spiels dürfen den Neustart nicht
+	# überleben (sonst signt eine alte Verhandlung in die neue Partie).
+	nego = null
+	pitch_ctx = null
+	table = null
+	Dialogs.run = null
 	state = {
 		"agency": {"name": agency_name, "cash": 0.0, "rep": 15, "debtMonths": 0},
 		"year": start_year, "month": 1, "week": 1, "startYear": start_year,
@@ -1038,6 +1044,10 @@ func build_counter(offer: Dictionary) -> Variant:
 func sign_client(terms: Dictionary) -> Dictionary:
 	if nego == null:
 		return {"accepted": false}
+	# QA-08: abgeschlossene Verhandlungen und bereits vertretene Schauspieler
+	# ablehnen, BEVOR Kosten, Ruf- oder XP-Effekte entstehen.
+	if bool(nego.get("done", false)) or is_client(str(nego.actor.id)):
+		return {"accepted": false, "duplicate": true}
 	# QA-04: zentrale Kreditregel — der Signing-Bonus ist eine aktive Ausgabe
 	# und darf den Rahmen nutzen; ein Bonus von 0 scheitert nie an roter Kasse.
 	if not can_spend(float(terms.bonus)):

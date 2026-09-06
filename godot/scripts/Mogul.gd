@@ -509,6 +509,10 @@ func buy_stock(id_s: String, budget: float) -> String:
 
 
 func sell_stock(id_s: String, n: int = -1) -> String:
+	# QA-08: Stückzahl 0 ist wirkungslos und wird abgelehnt — keine XP,
+	# kein Trade-Eintrag, keine Buchung. -1 bleibt „alles verkaufen“.
+	if n == 0:
+		return "Nothing to sell"
 	var held := shares_of(id_s)
 	if held <= 0:
 		return "You hold no shares"
