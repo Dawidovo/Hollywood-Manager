@@ -73,11 +73,12 @@ Events, Dialoge und Briefe teilen **eine deklarative Effekt-Sprache** (Ops wie `
 
 - **Editor/Spiel starten:** `Godot_v4.7.1-stable_win64.exe --path godot` (Editor liegt in `C:\Users\Anwender\Downloads\...`, Kopie auch im Repo-Root)
 - **Logiktest:** `Godot_console.exe --headless --path godot res://tests/Test.tscn` (Tests: `godot/tests/Test.gd`)
+- **Test-Runner (QA-09, bevorzugt):** `powershell -File tools\run-tests.ps1` — Timeout, Seed (`-Seed`), Logpfad, Abschlussmarker; wertet SCRIPT ERROR, fehlende Marker und FAIL-Zeilen aus und prüft, dass der echte Spielstand unverändert bleibt. Tests/Sim speichern isoliert unter `user://qa_test*/` (`Game.use_test_savedir()`).
 - **.exe exportieren** (nach JEDER Code-Änderung, Pflicht): `Godot_..._console.exe --headless --path godot --export-release "Windows Desktop" "build/HollywoodManager.exe"` → `godot/build/HollywoodManager.exe`
 - **Screenshots:** `Godot_....exe --path godot --resolution 2000x1100 -- --shot-<name>` — das `--` vor den Shot-Args ist Pflicht, sonst Endlos-Prozess
 - **Lint:** gdlint via `tools\lint.ps1` (Konfig `godot/.gdlintrc`); läuft im Pre-Commit-Hook zusammen mit SonarQube-Quality-Gate (nur `tools/`-Python)
 - **Daten-Reformat:** `tools/ExportData.gd` schreibt die Core-JSONs frisch formatiert zurück
-- **Balance-Sim:** `--headless --path godot res://tools/BalanceSim.tscn` spielt pro Epoche 104 Wochen mit Standard-Heuristik und druckt Ökonomie-Kennzahlen als `SIM;`-CSV — vor/nach Balance-Änderungen laufen lassen (Befunde: Chunks 19/20)
+- **Balance-Sim:** `--headless --path godot res://tools/BalanceSim.tscn` spielt pro Epoche 104 Wochen mit Standard-Heuristik und druckt Ökonomie-Kennzahlen als `SIM;`-CSV — vor/nach Balance-Änderungen laufen lassen (Befunde: Chunks 19/20). Seit QA-09 beantwortet die Sim die Ereignisse/Dialoge der Woche (erste verfügbare Wahl); Anzahl, Ignorierte und blockierte Dialoge stehen in den `SUM;`-Zeilen, Abschlussmarker `SIM_DONE`.
 
 Spielstände/Mods: `%APPDATA%\Godot\app_userdata\Hollywood Manager\` (`hm_save.json`, `data/`).
 

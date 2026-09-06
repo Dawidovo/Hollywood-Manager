@@ -1,6 +1,23 @@
 # QA-09 – Tests als verlässliche Freigabegrundlage ausbauen
 
-**Priorität:** P2 · **Status:** offen · **Abhängigkeit:** QA-07 für die bekannte Zufallsprüfung
+**Priorität:** P2 · **Status:** umgesetzt (06.09.2026) · **Abhängigkeit:** QA-07 für die bekannte Zufallsprüfung
+
+> Umsetzung: (1) `Game.use_test_savedir()` — Suite speichert unter
+> `user://qa_test/`, BalanceSim unter `user://qa_test_sim/`; Save-Pfade sind
+> jetzt Variablen (`Game.save_path` …, alte Harness-Skripte dieses Ordners
+> nutzen noch die Konstanten-API und gelten nur für den alten Snapshot).
+> (2) Runner `tools/run-tests.ps1`: Timeout, Seed (`-- --seed=N`, Suite druckt
+> `TEST_SEED`), Logpfad, Markerpflicht, SCRIPT-ERROR-/FAIL-Auswertung und
+> Hashvergleich des echten Spielstands; verifiziert rot bei Laufzeitfehler,
+> Assertion und Timeout, grün bei sauberem Lauf. (3) BalanceSim beantwortet
+> die Ereignisse/Dialoge der Woche (erste verfügbare Wahl); Anzahl, Ignorierte,
+> Dialogschritte und Blockaden stehen in den `SUM;`-Zeilen, Marker `SIM_DONE`.
+> (4) `--shot-tisch`/`--shot-verhandlung` bauen den Tisch deterministisch auf
+> und brechen mit Exit ≠ 0 ab, wenn kein Tisch steht. (5) `tools/lint.ps1`
+> prüft rekursiv `scripts/` (inkl. `ui/`), `tests/` und `tools/` (34 Dateien,
+> 0 Findings) und meldet fehlendes gdtoolkit mit Einrichtungshinweis.
+> Beobachtung aus dem neuen Sim-Standard (keine Änderung in diesem Chunk):
+> solide/Seed 5000/1925 endet mit Game Over in Woche 100.
 
 ## Nachgewiesene Lücken
 

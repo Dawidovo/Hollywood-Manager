@@ -48,6 +48,12 @@
 
 ## Arbeitsweise & Qualität
 
+- **Tests speichern isoliert** (September 2026, QA-09): Test-Suite und BalanceSim
+  rufen als Erstes `Game.use_test_savedir()` auf und schreiben Spielstände nur
+  unter `user://qa_test*/`. Der Test-Runner `tools/run-tests.ps1` (Timeout, Seed,
+  Marker-/SCRIPT-ERROR-Auswertung, Spielstand-Hashvergleich) ist der
+  Standardweg für Freigabeläufe; Exit 0 des Godot-Prozesses allein gilt nicht
+  als grün.
 - **Ein Chunk pro Session, ein Commit pro Chunk** (`prompts/tasks/`). Vor Beginn
   `git status` sauber.
 - **Nach jeder Code-Änderung:** Logiktest laufen lassen UND die .exe neu exportieren

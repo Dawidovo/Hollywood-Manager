@@ -13,6 +13,16 @@ func check(cond: bool, msg: String) -> void:
 
 func _ready() -> void:
 	print("=== Hollywood Manager Logiktest ===")
+	# QA-09: Saves dieses Laufs landen isoliert unter user://qa_test/ —
+	# der echte Autosave wird nie berührt. Seed via "-- --seed=N" steuerbar,
+	# Standardwert hält wiederholte Läufe identisch.
+	Game.use_test_savedir()
+	var test_seed := 9052026
+	for arg in OS.get_cmdline_user_args():
+		if str(arg).begins_with("--seed="):
+			test_seed = int(str(arg).trim_prefix("--seed="))
+	seed(test_seed)
+	print("TEST_SEED;%d" % test_seed)
 
 	# 1. Epochen & Pool
 	Game.new_game("Testagentur", 1950)
@@ -961,7 +971,7 @@ func _ready() -> void:
 	check(fixture_f != null, "Alt-Save-Fixture vorhanden (tests/fixtures/save_v1.json)")
 	var fixture_text := fixture_f.get_as_text()
 	fixture_f.close()
-	var fixture_save := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+	var fixture_save := FileAccess.open(Game.save_path, FileAccess.WRITE)
 	fixture_save.store_string(fixture_text)
 	fixture_save.close()
 	Game.state = null
@@ -976,17 +986,17 @@ func _ready() -> void:
 	check(int(Game.state.week) == 2 and not Game.state.over, "Fixture-Stand ist bespielbar (end_week läuft durch)")
 
 	# Korrupter Save: abweisen, Grund nennen, Backup anlegen — nie überschreiben
-	if FileAccess.file_exists(Game.SAVE_BACKUP_PATH):
-		DirAccess.remove_absolute(Game.SAVE_BACKUP_PATH)
-	var corrupt_f := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+	if FileAccess.file_exists(Game.save_backup_path):
+		DirAccess.remove_absolute(Game.save_backup_path)
+	var corrupt_f := FileAccess.open(Game.save_path, FileAccess.WRITE)
 	corrupt_f.store_string("{ kaputt und kein JSON")
 	corrupt_f.close()
 	check(not Game.load_game(), "Korrupter Save wird abgewiesen statt zu crashen")
 	check(Game.load_error != "", "Ladefehler nennt einen Grund für die UI")
-	check(FileAccess.file_exists(Game.SAVE_BACKUP_PATH), "Korrupter Save wurde als hm_save.bak.json gesichert")
+	check(FileAccess.file_exists(Game.save_backup_path), "Korrupter Save wurde als hm_save.bak.json gesichert")
 
 	# Save aus einer neueren Spielversion: abweisen + Backup
-	var newer_f := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+	var newer_f := FileAccess.open(Game.save_path, FileAccess.WRITE)
 	newer_f.store_string(JSON.stringify({"saveVersion": Game.SAVE_VERSION + 1}))
 	newer_f.close()
 	check(not Game.load_game(), "Save aus neuerer Version wird abgewiesen")
@@ -999,7 +1009,7 @@ func _ready() -> void:
 	Game.new_game("Vor Defekt", 1950)
 	check(Game.save_game(), "Gültiger Save wird erfolgreich geschrieben")
 	for bad_payload in ["{}", "{\"saveVersion\":2}", "{\"saveVersion\":2,\"year\":1950,\"agency\":null}"]:
-		var bad_f := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+		var bad_f := FileAccess.open(Game.save_path, FileAccess.WRITE)
 		bad_f.store_string(bad_payload)
 		bad_f.close()
 		check(not Game.load_game(), "Unvollständiger Save wird abgewiesen: %s" % bad_payload)
@@ -1008,24 +1018,24 @@ func _ready() -> void:
 	# Schreibfehler simulieren: ein Verzeichnis blockiert die Tempdatei —
 	# save_game() muss false melden und den alten Save bytegleich lassen.
 	check(Game.save_game(), "Save vor Schreibfehler-Test wiederhergestellt")
-	var before_bytes := FileAccess.get_file_as_bytes(Game.SAVE_PATH)
-	DirAccess.make_dir_recursive_absolute(Game.SAVE_TMP_PATH)
+	var before_bytes := FileAccess.get_file_as_bytes(Game.save_path)
+	DirAccess.make_dir_recursive_absolute(Game.save_tmp_path)
 	check(not Game.save_game(), "Blockierte Tempdatei: save_game meldet false")
 	check(Game.save_error != "", "Speicherfehler nennt einen Grund")
-	check(FileAccess.get_file_as_bytes(Game.SAVE_PATH) == before_bytes, "Alter Save bleibt bei Schreibfehler bytegleich")
-	DirAccess.remove_absolute(Game.SAVE_TMP_PATH)
+	check(FileAccess.get_file_as_bytes(Game.save_path) == before_bytes, "Alter Save bleibt bei Schreibfehler bytegleich")
+	DirAccess.remove_absolute(Game.save_tmp_path)
 	check(Game.save_game() and Game.save_error == "", "Nach Freigabe der Tempdatei klappt Speichern wieder")
 	# Backup-Pfad blockiert: Laden eines korrupten Saves darf nicht crashen
 	# und muss das fehlgeschlagene Backup benennen.
-	if FileAccess.file_exists(Game.SAVE_BACKUP_PATH):
-		DirAccess.remove_absolute(Game.SAVE_BACKUP_PATH)
-	DirAccess.make_dir_recursive_absolute(Game.SAVE_BACKUP_PATH)
-	var corrupt2_f := FileAccess.open(Game.SAVE_PATH, FileAccess.WRITE)
+	if FileAccess.file_exists(Game.save_backup_path):
+		DirAccess.remove_absolute(Game.save_backup_path)
+	DirAccess.make_dir_recursive_absolute(Game.save_backup_path)
+	var corrupt2_f := FileAccess.open(Game.save_path, FileAccess.WRITE)
 	corrupt2_f.store_string("{ wieder kein JSON")
 	corrupt2_f.close()
 	check(not Game.load_game(), "Korrupter Save wird auch ohne Backup-Möglichkeit abgewiesen")
 	check(Game.load_error.containsn("backup"), "Fehlertext meldet das fehlgeschlagene Backup")
-	DirAccess.remove_absolute(Game.SAVE_BACKUP_PATH)
+	DirAccess.remove_absolute(Game.save_backup_path)
 
 	# =====================================================================
 	# QA-02: Offene Entscheidungen und Dialoge überleben Speichern/Laden

@@ -401,36 +401,31 @@ func _ready() -> void:
 		_switch_tab("planer")
 		await _take_shot("planer")
 	elif args.has("--shot-verhandlung") or args.has("--shot-tisch"):
+		# QA-09: deterministisches Fixture — der Tisch wird direkt aufgebaut
+		# statt auf zufällige Pitch-Erfolge zu hoffen; vor der Aufnahme wird
+		# der gewünschte UI-Zustand geprüft, sonst endet der Hook rot.
+		seed(20260905)
 		_on_era_selected(1950)
 		Game.state.agency.rep = 80
 		Game.start_negotiation("monroe")
 		Game.sign_client({"commission": 10, "bonus": 0, "years": 5, "perks": [], "promise": null})
 		var table_client: Dictionary = Game.state.clients[0]
 		table_client.fame = 70.0
-		var table_done := false
-		for cs in Game.state.castings:
-			if table_done:
-				break
-			for ri in cs.roles.size():
-				var role: Dictionary = cs.roles[ri]
-				if role.filled == null and str(role.type) == "lead" and int(cs.prestige) >= 2:
-					role.minFame = 10
-					role.ageMin = 18
-					role.ageMax = 60
-					for attempt in 14:
-						var pres = Game.submit_pitch(int(cs.id), ri, int(table_client.id))
-						if pres.get("success", false):
-							table_done = true
-							break
-					if table_done:
-						break
-			if table_done:
-				break
-		if Game.pitch_ctx != null and Game.pitch_ctx.get("table", false):
-			Game.start_table()
-			_render_table("")
-		else:
-			_switch_tab("castings")
+		var table_cs: Dictionary = Game.state.castings[0]
+		table_cs["prestige"] = 3
+		var table_role: Dictionary = table_cs.roles[0]
+		table_role["type"] = "lead"
+		table_role["minFame"] = 10
+		table_role["filled"] = null
+		Game.pitch_ctx = {"casting": table_cs, "roleIdx": 0, "role": table_role,
+			"client": table_client, "fee": Game.role_fee_for(table_cs, table_role, table_client),
+			"haggled": false, "alts": [], "table": true}
+		Game.start_table()
+		_render_table("")
+		if Game.table == null or not modal_open:
+			push_error("Shot-Fixture fehlgeschlagen: kein Verhandlungstisch aufgebaut.")
+			get_tree().quit(1)
+			return
 		await _take_shot("tisch" if args.has("--shot-tisch") else "verhandlung")
 	elif args.has("--shot-produktionsverhandlung"):
 		_on_era_selected(1950)
@@ -2522,7 +2517,7 @@ func _resolve_choice(ev: Dictionary, idx: int) -> void:
 	# gemeinsam beim Modal-Schluss).
 	Game.resolve_pending(ev)
 	if ch.get("action", "") == "restart":
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(Game.SAVE_PATH))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(Game.save_path))
 		get_tree().reload_current_scene()
 		return
 	# Schlüsselbegegnungen (Teil A3): eine Event-Option kann eine volle

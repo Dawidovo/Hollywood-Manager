@@ -2350,10 +2350,20 @@ func awards_ceremony() -> Variant:
 	return {"title": "Awards season %d" % int(state.year), "text": text, "choices": [{"label": "Applause!"}]}
 
 # ---------- Speichern / Laden ----------
-const SAVE_PATH := "user://hm_save.json"
-const SAVE_TMP_PATH := "user://hm_save.tmp.json"
-const SAVE_BACKUP_PATH := "user://hm_save.bak.json"
+# QA-09: Pfade sind Variablen, damit Tests/Simulationen sie auf einen
+# isolierten Ordner umbiegen können — der echte Autosave bleibt unberührt.
+var save_path := "user://hm_save.json"
+var save_tmp_path := "user://hm_save.tmp.json"
+var save_backup_path := "user://hm_save.bak.json"
 const SAVE_VERSION := 2
+
+# Von Test-/Sim-Einstiegen als Erstes aufrufen: alle Save-Dateien dieses
+# Prozesses landen in einem eigenen Unterordner von user://.
+func use_test_savedir(dir: String = "user://qa_test") -> void:
+	DirAccess.make_dir_recursive_absolute(dir)
+	save_path = dir + "/hm_save.json"
+	save_tmp_path = dir + "/hm_save.tmp.json"
+	save_backup_path = dir + "/hm_save.bak.json"
 
 # Grund des letzten Ladefehlers — die UI zeigt ihn statt still zu scheitern.
 var load_error := ""
@@ -2367,7 +2377,7 @@ func save_game() -> bool:
 	# der den Save-Button markieren dürfte.
 	if state == null:
 		return false
-	var f = FileAccess.open(SAVE_TMP_PATH, FileAccess.WRITE)
+	var f = FileAccess.open(save_tmp_path, FileAccess.WRITE)
 	if f == null:
 		save_error = "The save file could not be written (error %d). The previous save is untouched." % FileAccess.get_open_error()
 		push_warning(save_error)
@@ -2377,13 +2387,13 @@ func save_game() -> bool:
 	var write_err: Error = f.get_error()
 	f.close()
 	if write_err != OK:
-		DirAccess.remove_absolute(SAVE_TMP_PATH)
+		DirAccess.remove_absolute(save_tmp_path)
 		save_error = "Writing the save file failed (error %d). The previous save is untouched." % write_err
 		push_warning(save_error)
 		return false
-	var rename_err := DirAccess.rename_absolute(SAVE_TMP_PATH, SAVE_PATH)
+	var rename_err := DirAccess.rename_absolute(save_tmp_path, save_path)
 	if rename_err != OK:
-		DirAccess.remove_absolute(SAVE_TMP_PATH)
+		DirAccess.remove_absolute(save_tmp_path)
 		save_error = "The save file could not be replaced (error %d). The previous save is untouched." % rename_err
 		push_warning(save_error)
 		return false
@@ -2391,14 +2401,14 @@ func save_game() -> bool:
 	return true
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(save_path)
 
 # Nicht ladbare Saves werden nie überschrieben, sondern vorher weggesichert.
 func _backup_save() -> bool:
-	var src = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var src = FileAccess.open(save_path, FileAccess.READ)
 	if src == null:
 		return false
-	var dst = FileAccess.open(SAVE_BACKUP_PATH, FileAccess.WRITE)
+	var dst = FileAccess.open(save_backup_path, FileAccess.WRITE)
 	if dst == null:
 		src.close()
 		return false
@@ -2436,7 +2446,7 @@ func load_game() -> bool:
 	load_error = ""
 	if not has_save():
 		return false
-	var f = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var f = FileAccess.open(save_path, FileAccess.READ)
 	if f == null:
 		load_error = "The save file exists but could not be opened (error %d)." % FileAccess.get_open_error()
 		push_warning(load_error)

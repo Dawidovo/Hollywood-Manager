@@ -4,8 +4,11 @@ extends Node
 # Heuristiken (Signen, Pitchen, Post beantworten, Woche beenden) und
 # protokolliert die Ökonomie als CSV-Zeilen ("SIM;...") für die Auswertung.
 # Aufruf:  godot --headless --path . res://tools/BalanceSim.tscn
-# Kein Spielinhalt — reines Analysewerkzeug. Achtung: end_week() speichert
-# automatisch, der Lauf überschreibt also den Autosave (wie die Testsuite).
+# Kein Spielinhalt — reines Analysewerkzeug. Saves laufen isoliert unter
+# user://qa_test_sim/ (QA-09), der echte Autosave bleibt unberührt.
+# Ereignisse und Dialoge werden beantwortet (erste verfügbare Wahl);
+# Anzahl, blockierte Dialoge und Abbrüche stehen in den SUM-Zeilen.
+# Abschlussmarker: SIM_DONE.
 # =====================================================================
 
 const WEEKS_PER_RUN := 104
@@ -22,12 +25,14 @@ var profile := "solide"
 
 func _ready() -> void:
 	print("=== Hollywood Manager Balance-Sim ===")
+	Game.use_test_savedir("user://qa_test_sim")
 	print("SIM;profile;seed;year;week;cash;priv;stress;energy;clients;rep;inboxOpen;favors;debts;films")
 	for run_profile in PROFILES:
 		profile = str(run_profile)
 		for seed_off in SEED_OFFSETS:
 			for year in [1925, 1950, 1980, 2010]:
 				_run_era(int(year), int(seed_off))
+	print("SIM_DONE")
 	get_tree().call_deferred("quit", 0)
 
 
@@ -35,7 +40,8 @@ func _run_era(year: int, seed_off: int) -> void:
 	seed(1000 + year + seed_off)
 	Game.new_game("Sim %d" % year, year)
 	var stats := {"signTry": 0, "signOk": 0, "pitchTry": 0, "pitchOk": 0,
-		"tableSkips": 0, "haggleTry": 0, "haggleOk": 0, "letters": 0, "overWeek": 0}
+		"tableSkips": 0, "haggleTry": 0, "haggleOk": 0, "letters": 0, "overWeek": 0,
+		"events": 0, "eventsIgnored": 0, "dialogSteps": 0, "dialogsBlocked": 0}
 	for week_no in WEEKS_PER_RUN:
 		if Game.state.over:
 			stats.overWeek = week_no
@@ -49,14 +55,57 @@ func _run_era(year: int, seed_off: int) -> void:
 		if float(Game.state.player.health) < 70.0:
 			Persona.checkup()
 		Game.state.strikeMonths = int(Game.state.strikeMonths)
-		Game.end_week()
+		# QA-09: die zurückgegebenen Entscheidungen werden beantwortet statt
+		# verworfen — die Simulation spielt, was der Spieler auch sähe.
+		_resolve_week(Game.end_week(), stats)
 		if week_no % 13 == 0 or week_no == WEEKS_PER_RUN - 1:
 			_snapshot(year, week_no, seed_off)
 	_snapshot(year, WEEKS_PER_RUN, seed_off)
-	print("SUM;%s;%d;%d;signed %d/%d;pitched %d/%d;tables %d;haggled %d/%d;letters %d;gameOverWeek %d" % [
+	print("SUM;%s;%d;%d;signed %d/%d;pitched %d/%d;tables %d;haggled %d/%d;letters %d;events %d (ignored %d, dialogSteps %d, blocked %d);gameOverWeek %d" % [
 		profile, seed_off, year, stats.signOk, stats.signTry, stats.pitchOk, stats.pitchTry,
-		stats.tableSkips, stats.haggleOk, stats.haggleTry, stats.letters, stats.overWeek])
+		stats.tableSkips, stats.haggleOk, stats.haggleTry, stats.letters,
+		stats.events, stats.eventsIgnored, stats.dialogSteps, stats.dialogsBlocked, stats.overWeek])
 	_print_ledger(year)
+
+
+# Ereignisse der Woche: erste nicht gesperrte Wahl nehmen; öffnet die Wahl
+# eine Dialogszene, wird sie mit derselben Strategie zu Ende gespielt.
+# Blockierte Dialoge und ignorierte (wahl-lose) Ereignisse werden gezählt.
+func _resolve_week(events: Array, stats: Dictionary) -> void:
+	for ev in events:
+		if not (ev is Dictionary):
+			continue
+		var answered := false
+		for choice in ev.get("choices", []):
+			if bool(choice.get("disabled", false)):
+				continue
+			if str(choice.get("action", "")) == "restart":
+				continue  # Game-Over-Neustart ist Sache des Spielers, nicht der Sim
+			if choice.has("dialog") and Dialogs.has_dialog(str(choice.dialog)):
+				var view_data: Dictionary = Dialogs.start(str(choice.dialog), choice.get("ctx", {}))
+				for step in 30:
+					if bool(view_data.get("done", true)):
+						break
+					var picked := -1
+					for i in view_data.get("choices", []).size():
+						if not bool(view_data.choices[i].get("disabled", false)):
+							picked = i
+							break
+					if picked < 0:
+						stats.dialogsBlocked += 1
+						print("SIM_DIALOG_BLOCKED;", choice.dialog)
+						break
+					stats.dialogSteps += 1
+					view_data = Dialogs.choose(picked)
+				Dialogs.run = null
+			elif choice.has("fn"):
+				choice.fn.call()
+			Game.resolve_pending(ev)
+			stats.events += 1
+			answered = true
+			break
+		if not answered:
+			stats.eventsIgnored += 1
 
 
 # Agentur-Buchungen des gesamten Laufs nach Kategorie verdichtet —
