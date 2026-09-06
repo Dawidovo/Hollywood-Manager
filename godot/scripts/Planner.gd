@@ -131,10 +131,16 @@ func _apply_planner(_events: Array) -> void:
 	Game.state["scoutBonus"] = clampi(roundi(scouting / 5.0), 0, 4)
 	for sid in dinner_slots:
 		if Game.state.studioRel.has(sid):
-			var delta := roundi(0.2 * float(dinner_slots[sid]) * Game.backstory_mod("dinner_mult", 1.0))
-			if delta > 0:
-				Game.state.studioRel[sid] = clampi(int(Game.state.studioRel[sid]) + delta, 0, 100)
-				Game.log_msg("Studio dinner: the relationship with %s deepens (+%d)." % [Game._studio(str(sid)).name, delta], "deal")
+			# QA-05: Bruchteile gehen nicht mehr verloren — der Rest unter
+			# einem ganzen Punkt wird je Studio übertragen (state.dinnerCarry),
+			# damit 5 × 1 Slot dasselbe ergibt wie 1 × 5 Slots (+1).
+			var gain := 0.2 * float(dinner_slots[sid]) * Game.backstory_mod("dinner_mult", 1.0)
+			var carry := float(Game.state.dinnerCarry.get(sid, 0.0)) + gain
+			var whole := int(floor(carry + 0.000001))
+			Game.state.dinnerCarry[sid] = carry - float(whole)
+			if whole > 0:
+				Game.state.studioRel[sid] = clampi(int(Game.state.studioRel[sid]) + whole, 0, 100)
+				Game.log_msg("Studio dinner: the relationship with %s deepens (+%d)." % [Game._studio(str(sid)).name, whole], "deal")
 	for pcid in pflege_slots:
 		var pc = Game.client(pcid)
 		if pc != null:

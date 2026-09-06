@@ -1198,6 +1198,52 @@ func _ready() -> void:
 	check(bool(Game.sign_client({"commission": 10, "bonus": qa04_in, "years": 5, "perks": [], "promise": null}).get("accepted", false)), "Bonus innerhalb des Rahmens gelingt auch auf Kredit")
 	check(float(Game.state.agency.cash) >= -Game.credit_limit(), "Kasse bleibt nach Bonus im Kreditrahmen")
 
+	# =====================================================================
+	# QA-05: Studio-Dinner verlieren keine Bruchteile
+	# =====================================================================
+	Game.new_game("Dinner Rundung", 1950)
+	Game.state.strikeMonths = 0
+	var qa05_sid: String = Game.state.studioRel.keys()[0]
+	var qa05_rel: int = int(Game.state.studioRel[qa05_sid])
+	for qa05_i in 5:
+		Planner.planner_slot_set("player", -1, 0, 0, "dinner", qa05_sid)
+		Planner._apply_planner([])
+	check(int(Game.state.studioRel[qa05_sid]) == qa05_rel + 1, "Fünf einzelne Dinner-Slots bringen zusammen +1")
+	var qa05_rel2: int = int(Game.state.studioRel[qa05_sid])
+	Game.state.dinnerCarry = {}
+	for qa05_i in 5:
+		Planner.planner_slot_set("player", -1, qa05_i, 0, "dinner", qa05_sid)
+	Planner._apply_planner([])
+	check(int(Game.state.studioRel[qa05_sid]) == qa05_rel2 + 1, "Fünf gebündelte Slots wirken wie fünf verteilte")
+	# Save/Load erhält den Restwert
+	Game.state.dinnerCarry = {}
+	Planner.planner_slot_set("player", -1, 0, 0, "dinner", qa05_sid)
+	Planner._apply_planner([])
+	Game.save_game()
+	Game.state = null
+	check(Game.load_game(), "Rundungs-Spielstand geladen")
+	check(absf(float(Game.state.dinnerCarry.get(qa05_sid, 0.0)) - 0.2) < 0.001, "Restwert (0.2) überlebt Save/Load")
+	var qa05_rel3: int = int(Game.state.studioRel[qa05_sid])
+	for qa05_i in 4:
+		Planner.planner_slot_set("player", -1, 0, 0, "dinner", qa05_sid)
+		Planner._apply_planner([])
+	check(int(Game.state.studioRel[qa05_sid]) == qa05_rel3 + 1, "Nach Laden zählt der Rest weiter (4 weitere Slots ⇒ +1)")
+	# Obergrenze 100 hält, Übertrag läuft nicht über die Kappe hinaus
+	Game.state.studioRel[qa05_sid] = 100
+	Game.state.dinnerCarry = {qa05_sid: 0.8}
+	Planner.planner_slot_set("player", -1, 0, 0, "dinner", qa05_sid)
+	Planner._apply_planner([])
+	check(int(Game.state.studioRel[qa05_sid]) == 100, "Obergrenze 100 hält")
+	# Backstory-Multiplikator fließt in die Bruchrechnung ein
+	Data.BACKSTORIES.append({"id": "qa05_bs", "name": "QA05", "trait": {"effects": {"dinner_mult": 2.0}}, "weakness": {"effects": {}}})
+	Game.state.backstory = "qa05_bs"
+	Game.state.studioRel[qa05_sid] = 50
+	Game.state.dinnerCarry = {}
+	for qa05_i in 5:
+		Planner.planner_slot_set("player", -1, qa05_i, 0, "dinner", qa05_sid)
+	Planner._apply_planner([])
+	check(int(Game.state.studioRel[qa05_sid]) == 52, "Backstory-Multiplikator wirkt auf die Bruchrechnung (+2)")
+
 	# Aufräumen: definierten Spielstand für die folgenden Tests herstellen
 	Game.new_game("Nach Fixture", 1950)
 	Game.save_game()

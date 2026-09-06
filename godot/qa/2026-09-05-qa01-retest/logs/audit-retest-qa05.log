@@ -1,0 +1,35 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+AUDIT_BEGIN
+AUDIT_PATH;C:/Users/Anwender/Desktop/Hollywood Manager/godot/qa/2026-09-05-qa01-retest/project/qa_userdata/hm_save.json
+AUDIT_CREDIT_PR;before=-70142.0;after=-70142.0;limit=70142.0
+AUDIT_CREDIT_GALA;before=-70142.0;after=-70142.0;limit=70142.0
+AUDIT_DINNER;five_separate_slots;before=27.0;after=28
+AUDIT_SIGN_CREDIT;can_spend_zero=true
+AUDIT_SIGN_CREDIT;result={ "accepted": true, "client": { "id": 9, "aid": "monroe", "fame": 33.0, "heat": 0.0, "loyalty": 49.0, "mood": 60.0, "exhaustion": 0.0, "weightKg": 54.0, "weightTrend": 0.0, "commission": 10, "perks": [], "years": 5, "contractEnd": 23460, "promises": [], "busyUntil": 0, "films": [], "flags": {  }, "talentBonus": 0.0, "campaign": 0.0, "awards": 0, "dna": { "romantik": 15.0, "popular": 5.0, "verlass": 4.0, "unikat": 15.0, "familie": 28.0 }, "signedAt": 23400, "trust": 30.0, "trustCap": 100.0, "secrets": [], "secretThresholds": [], "narrative": {  }, "fameHistory": [{ "mi": 23400, "v": 33.0 }], "dnaHistory": [{ "mi": 23400, "romantik": 15.0, "popular": 5.0, "verlass": 4.0, "unikat": 15.0, "familie": 28.0 }], "clauses": [], "exclusiveStudio": "", "needsSat": { "anerkennung": 55.0, "sicherheit": 55.0, "kunst": 55.0, "geld": 55.0, "ruhe": 55.0 } } }
+AUDIT_DUPLICATE_SIGN;clients=2
+AUDIT_ZERO_SALE;xp_before=1.0;xp_after=11.0;cash_delta=0.0;shares_before=17;shares_after=17
+AUDIT_EVENT_SAVE;returned_events=1;followups_before_load=0;followups_after_load=0;state_keys=["agency", "attributes", "audition", "backroom", "backstory", "castings", "clients", "contactAP", "contacts", "coverage", "coverageQueue", "dealBursts", "debts", "delegation", "dialogRun", "dinnerCarry", "directors", "endgame", "estate", "eventCd", "favors", "filmStakes", "followups", "history_pairs", "identity", "identityLastTop", "inbox", "inboxSeen", "instinct", "invest", "ledger", "ledgerMonthly", "log", "market", "marketHistory", "memoirs", "month", "negoCooldowns", "newspaper", "nextId", "occasions", "outMail", "over", "pending", "planner", "plannerMonthCounts", "player", "powerFigures", "predictions", "press", "pressFeed", "productions", "promises", "quests", "released", "rivals", "rumors", "saveVersion", "scoutBonus", "seenKinds", "skills", "staff", "startYear", "strikeExempt", "strikeMonths", "studioRel", "summitMi", "usedHistory", "usedLines", "usedTitles", "week", "weekDigest", "weekScenes", "weekScenesNoted", "year", "assistant"]
+AUDIT_EVENT_TITLE;The test reel
+AUDIT_BAD_SAVE_BEGIN;{}
+WARNING: The save file is incomplete (core field 'year' is missing or not a number). The current game stays untouched. A copy was kept as hm_save.bak.json â€” the game will not overwrite it.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] load_game (res://scripts/Game.gd:2459)
+       [1] _ready (res://tests/Audit.gd:69)
+AUDIT_BAD_SAVE_END;accepted=false;load_error=The save file is incomplete (core field 'year' is missing or not a number). The current game stays untouched. A copy was kept as hm_save.bak.json â€” the game will not overwrite it.;has_agency=true
+AUDIT_BAD_SAVE_BEGIN;{"saveVersion":2}
+WARNING: The save file is incomplete (core field 'year' is missing or not a number). The current game stays untouched. A copy was kept as hm_save.bak.json â€” the game will not overwrite it.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] load_game (res://scripts/Game.gd:2459)
+       [1] _ready (res://tests/Audit.gd:69)
+AUDIT_BAD_SAVE_END;accepted=false;load_error=The save file is incomplete (core field 'year' is missing or not a number). The current game stays untouched. A copy was kept as hm_save.bak.json â€” the game will not overwrite it.;has_agency=true
+AUDIT_BAD_SAVE_BEGIN;{"saveVersion":2,"year":1950,"agency":null}
+WARNING: The save file is incomplete (core field 'month' is missing or not a number). The current game stays untouched. A copy was kept as hm_save.bak.json â€” the game will not overwrite it.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] load_game (res://scripts/Game.gd:2459)
+       [1] _ready (res://tests/Audit.gd:69)
+AUDIT_BAD_SAVE_END;accepted=false;load_error=The save file is incomplete (core field 'month' is missing or not a number). The current game stays untouched. A copy was kept as hm_save.bak.json â€” the game will not overwrite it.;has_agency=true
+AUDIT_DONE

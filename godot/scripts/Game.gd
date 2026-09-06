@@ -333,7 +333,7 @@ func new_game(agency_name: String, start_year: int, backstory_id: String = "") -
 		"coverage": {"current": null, "history": []}, "coverageQueue": 0,
 		"studioRel": {}, "market": 1.0, "marketHistory": [], "usedHistory": [],
 		"eventCd": {}, "followups": [], "usedTitles": [], "quests": [],
-		"pending": [], "dialogRun": null,
+		"pending": [], "dialogRun": null, "dinnerCarry": {},
 		"dealBursts": {}, "summitMi": -999, "negoCooldowns": {},
 		"strikeMonths": 0, "strikeExempt": false,
 		"nextId": 1, "over": false,
@@ -2535,6 +2535,9 @@ func _apply_save_defaults() -> void:
 		state["pending"] = []
 	if not state.has("dialogRun"):
 		state["dialogRun"] = null
+	# Migration QA-05: Restwert-Übertrag der Studio-Dinner
+	if not state.has("dinnerCarry") or not (state.dinnerCarry is Dictionary):
+		state["dinnerCarry"] = {}
 	# Migration QA-03: Follow-up-Fristen vom Monats- auf den Wochenindex.
 	# Monats-due wird zu Woche 1 des Zielmonats (alte Feuer-Semantik);
 	# Überfälliges feuert im nächsten Wochenzug genau einmal.

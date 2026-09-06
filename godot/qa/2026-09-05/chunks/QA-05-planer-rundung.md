@@ -1,6 +1,15 @@
 # QA-05 – Studio-Dinner verlieren keine Bruchteile mehr
 
-**Priorität:** P2 · **Status:** offen · **Abhängigkeit:** keine
+**Priorität:** P2 · **Status:** umgesetzt (06.09.2026) · **Abhängigkeit:** keine
+
+> Umsetzung: Bruchteile werden als Restwert je Studio übertragen
+> (`state.dinnerCarry`); der Beziehungswert selbst bleibt ganzzahlig, ganze
+> Punkte werden gutgeschrieben, sobald der Übertrag ≥ 1 ist. 5 × 1 Slot ==
+> 1 × 5 Slots (+1), Backstory-Multiplikator fließt in die Bruchrechnung ein,
+> Obergrenze 100 und Save/Load bleiben korrekt. Migration rüstet
+> `dinnerCarry` für Alt-Saves nach.
+> Nachweis: `../../2026-09-05-qa01-retest/logs/audit-retest-qa05.log` —
+> AUDIT_DINNER before=27 → after=28.
 
 ## Reproduktion und Ergebnis
 
