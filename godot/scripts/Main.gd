@@ -71,6 +71,8 @@ var sidebar_box: VBoxContainer
 var modal_layer: Control
 var modal_panel: PanelContainer
 var modal_box: VBoxContainer
+# QA-06: Scrollhülle um den Modal-Inhalt — begrenzt die Höhe auf das Fenster.
+var modal_scroll: ScrollContainer
 
 var current_tab := "buero"
 var modal_queue: Array = []
@@ -1183,14 +1185,23 @@ func _build_modal_layer() -> void:
 	modal_sb.set_content_margin_all(20)
 	modal_panel.add_theme_stylebox_override("panel", modal_sb)
 	center.add_child(modal_panel)
+	# QA-06: Der Inhalt lebt in einem ScrollContainer — überlange Dialoge
+	# scrollen vertikal, statt unten aus dem Fenster zu laufen. follow_focus
+	# hält per Tastatur fokussierte Antworten im sichtbaren Bereich.
+	modal_scroll = ScrollContainer.new()
+	modal_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	modal_scroll.follow_focus = true
+	modal_panel.add_child(modal_scroll)
 	modal_box = VBoxContainer.new()
 	modal_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	modal_box.add_theme_constant_override("separation", 8)
-	modal_panel.add_child(modal_box)
+	modal_scroll.add_child(modal_box)
+	# Höhe nachführen, wenn Inhalt dazukommt oder sich das Fenster ändert.
+	modal_box.minimum_size_changed.connect(_update_modal_width)
 	_update_modal_width()
 
 func _update_modal_width() -> void:
-	if modal_box == null or modal_panel == null:
+	if modal_box == null or modal_panel == null or modal_scroll == null:
 		return
 	# Verhindert schmale Buchstabensäulen, bleibt aber auch bei kleinen
 	# Viewports vollständig sichtbar. Der Panelwert enthält die Innenränder.
@@ -1198,6 +1209,13 @@ func _update_modal_width() -> void:
 	var content_w := minf(720.0 * font_scale, maxf(360.0, viewport_w - 120.0))
 	modal_box.custom_minimum_size.x = content_w
 	modal_panel.custom_minimum_size.x = minf(content_w + 40.0 * font_scale, viewport_w - 72.0)
+	# QA-06: Höhe auf den Viewport deckeln (72 Außenabstand + 40 Panel-
+	# Innenränder). Der Scroller ist so hoch wie der Inhalt — aber nie höher
+	# als das Fenster; die Scrollleiste braucht zudem etwas Breitenreserve.
+	var avail_h := maxf(200.0, float(get_viewport_rect().size.y) - 112.0)
+	var want_h := modal_box.get_combined_minimum_size().y
+	modal_scroll.custom_minimum_size.y = minf(want_h, avail_h)
+	modal_scroll.custom_minimum_size.x = content_w + 12.0
 
 # =====================================================================
 # Rendering

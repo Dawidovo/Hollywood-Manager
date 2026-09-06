@@ -1,6 +1,15 @@
 # QA-06 – Dialoge an die verfügbare Fensterhöhe anpassen
 
-**Priorität:** P2 · **Status:** offen · **Abhängigkeit:** keine
+**Priorität:** P2 · **Status:** umgesetzt (06.09.2026) · **Abhängigkeit:** keine
+
+> Umsetzung: Der Modal-Inhalt (`modal_box`) steckt jetzt in einem
+> ScrollContainer; `_update_modal_width` deckelt die Höhe auf den Viewport
+> (−112 px Ränder) und führt sie bei Inhalts- oder Fensteränderungen nach
+> (`minimum_size_changed` + bestehender Resize-Handler). Mausrad scrollt
+> nativ, `follow_focus` hält per Tastatur fokussierte Antworten sichtbar.
+> Nachweis: `../../2026-09-05-qa01-retest/logs/ui-size-retest.log` — alle
+> sechs Messungen innerhalb des Fensters (Backstory 1024×600: unten 564
+> statt 897; Vertragsdialog 631 → 564), Sichtprüfung produktiv bei 1024×600.
 
 ## Reproduktion und Nachweis
 
